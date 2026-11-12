@@ -1,0 +1,30 @@
+# Local Python environments and generated knowledge artifacts
+.venv/
+docs/.rag/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Credentials and local environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Personal editor / OS state (shared Obsidian core settings stay tracked)
+docs/.obsidian/workspace*.json
+docs/.obsidian/cache/
+docs/.obsidian/plugins/
+.DS_Store
+Thumbs.db
+~$*
+
+# Future app build artifacts
+node_modules/
+.next/
+.vercel/
+dist/
+coverage/

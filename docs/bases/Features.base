@@ -1,0 +1,48 @@
+filters:
+  and:
+    - 'file.ext == "md"'
+    - 'note.type == "Feature"'
+properties:
+  file.name:
+    displayName: 문서
+  note.title:
+    displayName: 기능
+  note.source_priority:
+    displayName: 사용자 원안
+  note.proposed_phase:
+    displayName: 이번 단계
+  note.work_status:
+    displayName: 구현 상태
+  note.build_order:
+    displayName: 구현 순서
+  note.decision_status:
+    displayName: 결정 상태
+views:
+  - type: table
+    name: 첫 MVP
+    filters:
+      and:
+        - 'note.proposed_phase == "MVP"'
+    order: [file.name, note.title, note.source_priority, note.proposed_phase, note.build_order, note.work_status]
+  - type: table
+    name: 2순위
+    filters:
+      and:
+        - 'note.proposed_phase == "P2"'
+    order: [file.name, note.title, note.source_priority, note.proposed_phase, note.depends_on]
+  - type: table
+    name: 후속 검토
+    filters:
+      or:
+        - 'note.proposed_phase == "Later"'
+        - 'note.proposed_phase == "Hold"'
+    order: [file.name, note.title, note.source_priority, note.proposed_phase, note.decision_status]
+  - type: table
+    name: 원래 1순위
+    filters:
+      and:
+        - 'note.source_priority == "P1"'
+    order: [file.name, note.title, note.source_priority, note.proposed_phase]
+  - type: table
+    name: 전체 기능
+    order: [file.name, note.title, note.source_priority, note.proposed_phase, note.work_status, note.depends_on]

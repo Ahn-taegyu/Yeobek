@@ -1,0 +1,39 @@
+name: Knowledge checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  knowledge:
+    name: Knowledge (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: docs/tools/requirements.txt
+      - name: Bootstrap from a clean checkout
+        run: python scripts/knowledge.py setup
+      - name: Validate documents and retrieval behavior
+        run: python scripts/knowledge.py verify
+      - name: Exercise Korean search and context generation
+        run: |
+          python scripts/knowledge.py search "사업안 선택" --accepted-only --json
+          python scripts/knowledge.py context "관람객 입력과 출력 모드" --output docs/.rag/ci-context.md
+      - name: Ensure generated files stay out of version control
+        run: git diff --exit-code

@@ -1,0 +1,32 @@
+---
+okf_version: "0.2"
+---
+
+# MAWD AI 도슨트 기획
+
+- [사용법](README.md) — Obsidian 열기·검색 명령·갱신 방법.
+- [에이전트 작업 절차](agent-workflow.md) — 새 환경 준비·OKF/Bases/RAG·출처를 보존하는 수정·자동 검증.
+- [대시보드](dashboard.md) — 기능·결정·출처 Bases.
+
+# MVP부터 읽기
+
+- [우선순위](product/mvp-priorities.md) — 사용자 원안과 이번 단계.
+- [기능명세 v1.0](specs/functional-spec.md) — 범위·권한·입력·상태·API 업무 계약.
+- [화면 상세](specs/screen-spec.md) — 와이어프레임 기준이 되는 11개 논리 화면·버튼·표시 상태.
+- [사용자 시나리오와 예외](specs/user-scenarios.md) — 16개 흐름·26개 예외·수용 기준.
+- [통합 도슨트 채팅](specs/chat-interaction.md) — 해설·질문·작품 문맥과 독립적인 네 입출력 조합.
+- [기술 스택](specs/technology-stack.md) — Next.js·Supabase·Liner·OpenAI 음성, 입력/저장/API 경계.
+- [기술 재검토](research/index.md) — Live/한국어 TTS·Supabase와 큰 파일·무료 PostgreSQL 서버·배포 대안.
+- [개발 계획](product/delivery-plan.md) — 사전 개발·팀 역할·11/15 04:30 내부 목표.
+- [검토 결과](product/review-findings.md) — 충돌·불필요한 복잡성·누락.
+- [제품 방향](product/overview.md) — 사업안 비교·가설.
+- [검증 계획](product/validation-plan.md) — 실측 방법·검증 한계.
+
+# 개념 목록
+
+- [기능 22개](features/index.md) — 기능별 우선순위·수용 기준·의존성.
+- [결정](decisions/index.md) — 확정과 미결정.
+- [설계](specs/index.md) — 데이터·제품 RAG·파트너·저장소.
+- [출처](references/index.md) — 원문과 사용자 추가 응답.
+- [RAG 예시](rag/example-answer.md) — 실제 검색 결과를 이용한 답변.
+- [변경 이력](log.md) — 출처와 결정 변경 기록.

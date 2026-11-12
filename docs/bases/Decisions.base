@@ -1,0 +1,29 @@
+filters:
+  and:
+    - 'file.ext == "md"'
+    - 'note.type == "Decision"'
+properties:
+  file.name:
+    displayName: 문서
+  note.title:
+    displayName: 결정할 문제
+  note.decision_status:
+    displayName: 결정 상태
+  note.decision_basis:
+    displayName: 결정 근거
+views:
+  - type: table
+    name: 남은 결정
+    filters:
+      and:
+        - 'note.decision_status != "accepted"'
+    order: [file.name, note.title, note.decision_status, note.description]
+  - type: table
+    name: 확인된 결정
+    filters:
+      and:
+        - 'note.decision_status == "accepted"'
+    order: [file.name, note.title, note.decision_status, note.decision_basis]
+  - type: table
+    name: 전체 결정
+    order: [file.name, note.title, note.decision_status, note.decision_basis, note.updated]

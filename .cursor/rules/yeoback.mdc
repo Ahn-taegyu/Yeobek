@@ -1,0 +1,8 @@
+---
+description: Shared yeoback planning and knowledge-workflow instructions
+alwaysApply: true
+---
+
+Read and follow `AGENTS.md` at the repository root. Before searching or editing docs, read `docs/AGENTS.md` and `docs/agent-workflow.md`.
+First setup: `python scripts/knowledge.py setup`. Search: `python scripts/knowledge.py search "query" --json`. After edits: `python scripts/knowledge.py verify`.
+Preserve sources and IDs; distinguish accepted decisions, proposals, and actual implementation. This rule delegates detailed instructions to those canonical files.

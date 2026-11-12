@@ -1,0 +1,15 @@
+filters:
+  and:
+    - 'file.ext == "md"'
+    - 'note.type == "Reference"'
+properties:
+  file.name:
+    displayName: 문서
+  note.title:
+    displayName: 출처
+  note.evidence:
+    displayName: 자료 성격
+views:
+  - type: table
+    name: 원문과 근거
+    order: [file.name, note.title, note.evidence, note.resource, note.updated, note.rag_include]
