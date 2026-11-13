@@ -60,7 +60,7 @@ sources:
 - 오류는 400 `INVALID_INPUT`/`SOURCE_UNAVAILABLE`, 401 `UNAUTHENTICATED`/`INVALID_CREDENTIALS`, 404 `NOT_FOUND`, 409 `CONFLICT`/`REVISION_CONFLICT`/`SOURCE_REVISION_CONFLICT`/`DUPLICATE_NUMBER`/`REQUEST_ID_CONFLICT`, 413 `TOO_LARGE`, 429 `RATE_LIMITED`, 500 `INTERNAL_ERROR`를 사용한다. 소유하지 않거나 비공개인 리소스는 존재를 드러내지 않는 404다. 로그인 실패는 일반적인 자격 오류다.
 - 관리자 요청은 `@supabase/ssr` 쿠키 세션을 사용하고 서버에서 `getUser` 또는 검증된 `getClaims`로 사용자를 확인한다. 모든 관리자 조회·변경에 소유권과 RLS를 적용한다. 클라이언트의 owner, 승인 상태, 공개 상태를 신뢰하지 않는다. 변경 요청은 same-origin을 검사한다. 로그아웃은 세션과 클라이언트 관리자 캐시를 지운다.
 - PATCH는 `expectedRevision`을 요구하며 정형 필드와 문서를 함께 바꾸면 `expectedDocumentRevision`도 요구한다. DB에서 두 버전을 원자적으로 확인·저장하고 충돌 시 409로 재조회하게 한다. 초안 변경은 기존 공개 스냅샷을 바꾸지 않는다. 목록은 소유 또는 공개 범위를 서버에서 제한하고 안정적인 순서로 반환한다.
-- 입력은 서버에서 타입·길이·관계·UUID를 검사한다. 요청 크기와 횟수 제한을 적용한다. 관람 글 요청은 세션 전체 분 6회·전시 일일 1,000회를 DB 정책으로 원자 적용하며 인식·합성 연결은 후속이다. 녹음 30초/3MB, 질문 500자 등 상세 값은 [초기 상한](technology-stack.md#초기-상한과-실패-처리)을 따른다. 실제 한도와 오류 정책은 구현 시 검증한다.
+- 입력은 서버에서 타입·길이·관계·UUID를 검사한다. 요청 크기와 횟수 제한을 적용한다. 관람 글 요청은 세션 전체 분 6회·전시 일일 1,000회를 DB 정책으로 원자 적용하며 인식·합성도 같은 한도를 공유한다. 녹음 30초/3MB, 질문 500자 등 상세 값은 [초기 상한](technology-stack.md#초기-상한과-실패-처리)을 따른다. 실제 한도와 오류 정책은 구현 시 검증한다.
 
 # W1 해설 작업 경로 (PR #5 병합)
 
@@ -89,7 +89,7 @@ sources:
 | `POST /api/admin/evidence/{id}/impact` | `expectedVersion`으로 다른 전시까지 포함한 철회 영향과 token 조회 |
 | `POST /api/admin/evidence/{id}/revoke` | `expectedVersion,impactToken`으로 영향 재검사 후 철회 |
 
-소개 `intro`는 `bio,introduction,theme` 각각 승인 근거의 `{id,version}` 또는 null을 명시한다. 출처가 바뀐 근거는 현재 버전 검사에 실패한다. 게시·재개의 현재 음성 필수 설정은 신뢰된 worker만 전달하며 DB가 같은 트랜잭션에서 동기화·검사한다. 플래그 변경 자체는 기존 공개본을 바꾸지 않는다. `audio_assets` 스키마만 준비되어 현재 음성 없는 새 게시·재게시에는 `FEATURE_VOICE_REQUIRED=false`가 필요하다. W3 업로드 후 음성 작업·Storage를 연결한다. W5 글 채팅은 공개 문맥 RPC를 호출한다. 음성 경로는 후속이다. 로컬 DB 197개·단위 357개·typecheck·build와 새 게시 HTTP 5개가 통과했다. 이미지 준비는 DB fixture이며 실제 업로드·미디어 검증은 W3에서 연결한다.
+소개 `intro`는 `bio,introduction,theme` 각각 승인 근거의 `{id,version}` 또는 null을 명시한다. 출처가 바뀐 근거는 현재 버전 검사에 실패한다. 게시·재개의 현재 음성 필수 설정은 신뢰된 worker만 전달하며 DB가 같은 트랜잭션에서 동기화·검사한다. 플래그 변경 자체는 기존 공개본을 바꾸지 않는다. 음성이 선택 사항이고 설정이 없으면 글 전용 게시가 가능하다. W4 작가 음성 작업과 비공개 Storage는 PR #9로 병합됐고 W5 글 채팅은 공개 문맥 RPC를 호출한다. 로컬 DB 197개·단위 357개·typecheck·build와 새 게시 HTTP 5개가 통과했다. 이미지 준비는 DB fixture이며 실제 업로드·미디어 검증은 W3에서 연결한다.
 
 # 초기 기반 경로
 
@@ -173,7 +173,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 다음은 구현 예정 계약이다. 아직 제공하지 않는 기능에 성공을 가장하는 엔드포인트를 만들지 않는다. 관리자 경로는 모두 인증·소유권, 변경은 revision과 동일 출처 검사 대상이다. 비동기 요청의 `id`는 중복 실행 방지용 UUID다.
 
-[AI 하네스](ai-harness.md)의 서버 모듈·제공사 어댑터와 오프라인 검사는 준비되어 있다. W1·W4 글 게시와 W5 글 채팅·공개 버전 확인은 구현했고 W4 작가 음성 작업은 개발·검증 중이다. 관람 음성·미디어 등 나머지 경로는 제안이다. 내부 camelCase 타입은 아래 업무 필드와 HTTP 연결 시 매핑하며, 인증·현재 공개 DB gate·세션·작업 멱등성·예산을 통과한 서버에서만 호출한다. 범용 프롬프트/임의 텍스트 프록시로 노출하지 않는다.
+[AI 하네스](ai-harness.md)의 서버 모듈·제공사 어댑터와 오프라인 검사는 준비되어 있다. W1·W4와 W5 글 채팅·공개 버전 확인은 병합됐고 W5 관람 음성·미디어는 로컬 구현·검증을 마치고 CI 대기 중이다. 내부 camelCase 타입은 아래 업무 필드와 HTTP 연결 시 매핑하며, 인증·현재 공개 DB gate·세션·작업 멱등성·예산을 통과한 서버에서만 호출한다. 범용 프롬프트/임의 텍스트 프록시로 노출하지 않는다.
 
 | OP | 경로와 입력 | 결과·조건 |
 | --- | --- | --- |
@@ -190,8 +190,8 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | 15 | `POST /api/public/exhibitions/{id}/versions/check` `{publications:[{artworkId,publicationId,version}]}` | 최대 100개 참조의 `current`를 단일 DB 조회로 반환. 미공개·철회·없는 참조는 false |
 | 16 | `POST /api/transcribe` multipart `exhibition_id,session_id,id,file` | 인식문·상태 반환; 사용자가 수정 후 별도 전송, 원음 장기 저장 없음 |
 | 17 | `POST /api/chat` `{requestId,exhibitionId,artworkId,question,artworkNumber?,intent?,contextSequence,inputMode,outputMode}` | 아래 W5 계약. 세션은 서버 쿠키이며 body의 sessionId·recentContext·conversationId는 받지 않음 |
-| 18 | `POST /api/speech` `{id,session_id,answer_id? ,narration_id?}` | 둘 중 하나만 허용; 같은 세션의 서버 답변 또는 활성 공개 해설의 글 해시·음성 상태·미디어 참조. 임의 텍스트 불허 |
-| 19 | `GET /api/media/{id}` | 현재 공개 버전과 필요한 세션 검사 후 이미지/음성 바이트, `no-store`; 원본 PDF 제외 |
+| 18 | `POST /api/speech` `{requestId,answerId}` | 같은 세션의 저장된 답변을 현재 공개 상태 확인 후 MP3로 반환. 임의 텍스트 불허 |
+| 19 | `GET /api/media/{id}?kind=image\|audio` | 현재 공개 publication의 이미지/기본 해설 음성 바이트, `no-store`; 원본 PDF 제외 |
 | 20 | `GET /api/jobs/{id}`; `POST /api/jobs/{id}/retry` `{id,revision}` | 소유자 또는 소유 세션 확인 후 상태·재시도 가능 여부·대기 시간; 중복 실행 방지 |
 | 22 | `GET /api/admin/exhibitions/{id}/knowledge`; `POST /api/admin/exhibitions/{id}/evidence/apply` `{document_id,section_id,revision,artwork_id?}` | 작가 검수용 근거·출처·변경 여부; 다른 소유자/전시 작품 거부, 적용은 승인 아님 |
 
@@ -221,7 +221,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 # 남은 설계 확인
 
-실행 경로의 요청·응답 원천은 `src/lib/contracts/`이며 `routes.ts`가 각 스키마를 연결한다. 기존 `api/schemas.ts`와 `ai/contracts.ts`의 HTTP 관련 export는 호환 재수출한다. `src/lib/client`의 `requestApi`는 동일 출처 fetch·응답 봉투 검증·구조화 오류를 제공하며 로그인·로그아웃·프로필·전시 목록에서 사용한다. JSON Schema 스냅샷은 요청 변환 전 입력과 응답 출력을 구분하고 미등록 실행 경로를 검사한다. 목록 조회의 query도 같은 계약에서 검증하고 클라이언트가 인코딩한다. 작가 음성 작업 경로는 개발·검증 중이며 관람 음성·미디어 경로는 미구현이다. [백엔드 작업 추적](backend-completion.md).
+실행 경로의 요청·응답 원천은 `src/lib/contracts/`이며 `routes.ts`가 각 스키마를 연결한다. 기존 `api/schemas.ts`와 `ai/contracts.ts`의 HTTP 관련 export는 호환 재수출한다. `src/lib/client`의 `requestApi`는 동일 출처 fetch·응답 봉투 검증·구조화 오류를 제공하며 로그인·로그아웃·프로필·전시 목록에서 사용한다. JSON Schema 스냅샷은 요청 변환 전 입력과 응답 출력을 구분하고 미등록 실행 경로를 검사한다. 목록 조회의 query도 같은 계약에서 검증하고 클라이언트가 인코딩한다. 작가 음성 작업은 병합됐으며 관람 음성·미디어 경로는 로컬 검증을 마치고 CI 대기 중이다. [백엔드 작업 추적](backend-completion.md).
 
 후속 자료·근거·작업의 세부 스키마, 목록 페이지네이션, 후속 생성 중복 정책은 구현 시 검토한다. 관람 세션과 보존 기간은 아래 W5 계약을 따른다. 제한 값은 설계 제안이며 실제 제공사·환경 검증 결과가 아니다. 서버와 DB 오류 매핑, 동시 수정·타인 접근·공개 중지 후 접근을 실제 구현에서 검증해야 한다.
 
@@ -229,7 +229,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 [PR2 검토](../reviews/ai-harness-fix-review.md)의 구조화 `intent` (`narration`·`question`)와 `artworkNumber` (1~9999)는 공개 HTTP에도 같은 camelCase 이름으로 구현했다. 질문은 필수다. 해설 버튼은 `narration`과 `artworkId`, 숫자 입력은 `narration`과 번호를 보낸다. 명시적 question은 Q&A이며 구조화 번호와 명백한 텍스트 번호가 충돌하면 확인한다.
 
-승인 해설은 2,000 Unicode 코드 포인트까지 원문 그대로, 관람 생성 답은 600, 작가 해설 후보는 2,000까지 다루며 `overTarget`이 600자 초과 여부를 나타낸다. 낭독은 신뢰할 수 있게 저장한 답변의 출처·outcome·인용과 현재 공개 문맥을 검사하고 승인 해설이면 글·인용·publication 버전까지 비교해야 한다. W5 `api_requests.result`는 검증된 답변·인용·출처·공개 버전을 저장하며 낭독용 저장소 포트도 이를 읽는다. 실제 음성 HTTP는 후속이다. 음성 전송 상한은 2,000 코드 포인트다. 게시 근거 검증은 위 W4 계약으로 구현·검증 중이다.
+승인 해설은 2,000 Unicode 코드 포인트까지 원문 그대로, 관람 생성 답은 600, 작가 해설 후보는 2,000까지 다루며 `overTarget`이 600자 초과 여부를 나타낸다. 낭독은 신뢰할 수 있게 저장한 답변의 출처·outcome·인용과 현재 공개 문맥을 검사하고 승인 해설이면 글·인용·publication 버전까지 비교해야 한다. W5 `api_requests.result`는 검증된 답변·인용·출처·공개 버전을 저장하며 낭독용 저장소 포트도 이를 읽는다. 관람 음성 HTTP는 로컬 검증을 마치고 CI 대기 중이다. 음성 전송 상한은 2,000 코드 포인트다. 게시 근거 검증은 위 W4 계약으로 구현·검증 중이다.
 
 
 # W3 자료 경로
@@ -248,7 +248,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이지 수·이미지 치수·생성/수정/삭제 시각·cleanupPending을 포함한다. `cleanupPending=true`는 ready 자료의 임시 파일 또는 삭제 자료의 실제 파일 정리가 남았다는 뜻이다. ready는 게시 승인을 뜻하지 않는다. 파일의 신규 버전은 새 업로드 ID로 만들며 기존 final 객체를 덮어쓰지 않는다.
 
-오류: 400 `INVALID_FILE`/`INVALID_INPUT`, 409 `UPLOAD_INCOMPLETE`/`UPLOAD_CONTENT_CONFLICT`/`MATERIAL_IN_USE`/`ACTIVE_PUBLICATION`, 410 `UPLOAD_EXPIRED`, 429 `AUTHOR_UPLOAD_LIMIT`, 503 `STORAGE_UNAVAILABLE`. 버전·요청 ID 충돌은 공통 오류를 따른다. 삭제 응답 손실 시 원래 expectedVersion/revision으로 재요청 가능하다. 개인 다운로드 URL은 짧은 시간 유효한 접근권이므로 로그·공개 채팅에 넣지 않는다. 공개 이미지·음성은 W5의 별도 현재 공개 검사 경로에서 제공할 예정이다.
+오류: 400 `INVALID_FILE`/`INVALID_INPUT`, 409 `UPLOAD_INCOMPLETE`/`UPLOAD_CONTENT_CONFLICT`/`MATERIAL_IN_USE`/`ACTIVE_PUBLICATION`, 410 `UPLOAD_EXPIRED`, 429 `AUTHOR_UPLOAD_LIMIT`, 503 `STORAGE_UNAVAILABLE`. 버전·요청 ID 충돌은 공통 오류를 따른다. 삭제 응답 손실 시 원래 expectedVersion/revision으로 재요청 가능하다. 개인 다운로드 URL은 짧은 시간 유효한 접근권이므로 로그·공개 채팅에 넣지 않는다. 공개 이미지·음성은 W5의 별도 현재 공개 검사 경로에서 제공한다.
 
 # W4 작가 음성 작업 (로컬 검증)
 
@@ -256,6 +256,26 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 
 서버는 승인과 현재 근거·설정을 합성 전후 재확인하고 MP3 헤더·MIME·최대 8 MiB를 검사해 비공개 `artist-audio`에 저장한다. 제공사·모델·목소리·형식·모의 여부의 SHA-256 지문이 기존 설정 버전과 다르면 거부하므로 변경 시 DB 정책 `voice_config_version`을 올린다. 정리 cron은 실패·철회 등의 정리 대상 음성 객체도 처리한다. 음성이 선택 사항이고 설정이 없으면 글 전용 게시가 가능하다. 실환경 재개는 `resume_with_audio_mode`에서 모의 음성 사용을 차단한다.
 
-로컬 모의 합성 HTTP와 실제 Storage의 저장·권한·정리를 검증했다. 전체 MP3 디코딩·실제 AI 호출과 음질 검증은 수행하지 않았다. 관람객 음성 인식·낭독·공개 미디어와 프런트엔드는 W5 후속 범위다.
+로컬 모의 합성 HTTP와 실제 Storage의 저장·권한·정리를 검증했다. 전체 MP3 디코딩·실제 AI 호출과 음질 검증은 수행하지 않았다. 관람객 음성 인식·낭독·공개 미디어는 로컬 검증을 마치고 CI 대기 중이며 프런트엔드는 후속이다.
 
 정리 cron은 기존 결과에 `materials:{attempted,completed}`와 `audio:{attempted,completed}`를 추가한다. 작업 실패는 정리 표시를 유지하고 다음 실행에서 재시도한다. 기존 60초 다운로드 URL과 이미 전송된 바이트를 즉시 회수할 수는 없다. DB 전진 적용 후 서버를 배포하며, 이전 앱으로 되돌려도 새 비공개 버킷·논리 삭제·정리 표시는 유지한다. DB를 되돌리거나 공유 migration을 지우지 않는다.
+
+# W5 공개 미디어 (로컬 검증)
+
+`GET /api/media/{id}?kind=image|audio`에서 id는 현재 공개본 UUID다. 공개 전시·작품의 `image`/`audio`는 `{id,kind}` 또는 null이며 키나 서명 URL을 포함하지 않는다. 기존 클라이언트 호환을 위해 스키마에서는 추가 필드를 optional로 둔다. 이미지 최대 기술 상한은 50MiB(현재 업로드 정책 3MiB), 기본 해설 음성은 8MiB다. 현재 공개본·철회·모의 출처를 검사한 뒤 검증 바이트를 반환하기 직전에 다시 확인한다. 공개가 끝나면 404다. 이미 전송한 바이트는 회수할 수 없다.
+
+성공 응답만 해당 MIME의 바이너리이며 `requestApi("getMedia", {params:{id},query:{kind}})`는 Blob을 반환한다. 오류는 기존 JSON 오류 봉투다. no-store·nosniff·X-Request-Id를 유지하며 자동 리디렉션이나 public signed URL은 사용하지 않는다. 미디어 참조 조회가 실패하면 기존 공개 글 조회는 유지하고 image/audio를 null로 반환한다.
+
+# W5 관람 전사와 낭독 (로컬 검증)
+
+`POST /api/transcribe`는 동일 출처 multipart `{requestId,exhibitionId,file}`을 받아 `{requestId,transcript,mock,overLimit}`을 반환한다. 제공사 응답 안전 상한 4,000자 안의 인식문은 그대로 돌려주고 질문 상한 500자를 넘으면 `overLimit=true`로 편집을 안내한다. 수정 후 별도로 채팅에 보내야 하며 500자 초과 질문 제출은 거부한다. 임의 절단·자동 전송은 하지 않는다. 서버는 실제 수신량과 녹음 파일 최대 3 MiB, 확장자·MIME·헤더를 검사하지만 재생 시간이나 코덱을 디코딩해 확인하지 않는다. 30초 녹음 중지는 브라우저에서 구현해야 한다.
+
+`POST /api/speech`는 JSON `{requestId,answerId}`만 받는다. 서버 세션이 소유한 만료 전 답변과 현재 공개 상태를 확인한 후 최대 8 MiB `audio/mpeg` 바이트를 반환한다. 승인 해설의 준비된 음성은 TTS 설정 없이 재사용할 수 있고 생성 답변 음성은 답변·음성 설정 지문에 묶어 비공개 저장한다. 동일 요청 재전송은 제공사를 다시 호출하지 않는다. 채팅·인식·합성은 공통 관람 한도에 포함된다. 만료된 관람 음성 객체는 비공개 Storage에 별도 정리 기록을 두고 만료/lease 이후 3분 유예 후 cron으로 삭제한다.
+
+작품 미선택·번호 확인 안내도 저장된 고정 문구만 낭독할 수 있다. 작품 공개본이 없는 경우에는 같은 세션·답변 만료·전시 공개 상태를 검사한다. 임의 텍스트의 음성 프록시로 사용할 수 없다. 준비된 승인 음성 재생은 새 작업 원장을 만들거나 한도를 차감하지 않는다. 생성 음성의 새 요청 ID도 동일 답변·설정의 유효한 캐시를 재사용하며, 이미 사용한 요청 ID를 다른 입력에 재사용하면 409다. 승인 음성의 단순 읽기에는 이 요청 ID 충돌 검사가 적용되지 않는다.
+
+타입 클라이언트는 전사 multipart와 낭독·미디어 Blob을 지원한다. 음성 바이너리의 `X-Yeobek-Mock`과 전사 응답의 `mock`은 모의 출처를 나타낸다. 전사 인식문은 수정·재시도를 위해 답변 보존 기간 동안만 서버에 저장하며 녹음 바이트는 저장하지 않는다. MP4 오디오 녹음의 서버 전달 파일명은 파트너 전사 어댑터에 맞춰 `recording.m4a`로 정규화한다. 정리 cron에는 `visitorAudio:{attempted,completed}`가 추가된다. 로컬 검사 근거는 [백엔드 작업 추적](backend-completion.md)에 기록한다. CI와 실제 제공사 호출, 한국어 음질 및 프런트 연결은 남아 있다.
+
+음성 두 경로의 60초 처리 기한에는 요청 본문 수신도 포함한다. Next.js `maxDuration=120`은 취소 후 DB 실패 확정·정리 기록을 위한 플랫폼 여유이며 생성 허용 시간을 늘리지 않는다. 같은 세션의 만료 답변은 공개 상태가 유지될 때 410 `ANSWER_EXPIRED`, 타인 세션이나 비공개 전시는 404다. 준비된 승인 음성의 파일 오류·해시 불일치는 오류로 반환하고 새 유료 합성을 시작하지 않는다. 확인된 실패는 새 요청 ID로 재시도하고, 진행 중/응답 유실/캐시 다운로드 오류에는 같은 ID를 재사용한다.
+
+새 ID의 생성 음성 캐시 재사용은 생성 한도를 차감하지 않지만 원장 행이 무한히 늘지 않도록 세션당 분당 60개 초기 정책 `visitor_audio_cache_requests_per_minute`를 별도로 적용한다. 기존 요청 ID 조회는 이 한도에서도 재사용 가능하다. 60은 측정 전 구현 초기값이며 DB 정책에서 변경한다.

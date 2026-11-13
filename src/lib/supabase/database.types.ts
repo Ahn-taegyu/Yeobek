@@ -59,14 +59,14 @@ isOneToOne: false
                   ]
                 },"api_requests": {
                   Row: {
-                    "answer_text": string | null,"artwork_id": string | null,"created_at": string,"exhibition_id": string,"expires_at": string,"failure_code": string | null,"id": string,"input_hash": string | null,"kind": string,"lease_until": string | null,"mock": boolean,"publication_id": string | null,"reply_audio_key": string | null,"request_id": string,"result": Json | null,"session_hash": string,"state": string,"steps": Json | null,"updated_at": string,"usage": NonNullable<Json>
+                    "answer_text": string | null,"artwork_id": string | null,"created_at": string,"exhibition_id": string,"expires_at": string,"failure_code": string | null,"id": string,"input_hash": string | null,"kind": string,"lease_until": string | null,"mock": boolean,"publication_id": string | null,"reply_audio_key": string | null,"request_id": string,"result": Json | null,"session_hash": string,"source_answer_id": string | null,"state": string,"steps": Json | null,"updated_at": string,"usage": NonNullable<Json>,"voice_fingerprint": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "answer_text"?: string | null,"artwork_id"?: string | null,"created_at"?: string,"exhibition_id": string,"expires_at"?: string,"failure_code"?: string | null,"id"?: string,"input_hash"?: string | null,"kind": string,"lease_until"?: string | null,"mock"?: boolean,"publication_id"?: string | null,"reply_audio_key"?: string | null,"request_id": string,"result"?: Json | null,"session_hash": string,"state"?: string,"steps"?: Json | null,"updated_at"?: string,"usage"?: NonNullable<Json>
+                    "answer_text"?: string | null,"artwork_id"?: string | null,"created_at"?: string,"exhibition_id": string,"expires_at"?: string,"failure_code"?: string | null,"id"?: string,"input_hash"?: string | null,"kind": string,"lease_until"?: string | null,"mock"?: boolean,"publication_id"?: string | null,"reply_audio_key"?: string | null,"request_id": string,"result"?: Json | null,"session_hash": string,"source_answer_id"?: string | null,"state"?: string,"steps"?: Json | null,"updated_at"?: string,"usage"?: NonNullable<Json>,"voice_fingerprint"?: string | null
                   }
                   Update: {
-                    "answer_text"?: string | null,"artwork_id"?: string | null,"created_at"?: string,"exhibition_id"?: string,"expires_at"?: string,"failure_code"?: string | null,"id"?: string,"input_hash"?: string | null,"kind"?: string,"lease_until"?: string | null,"mock"?: boolean,"publication_id"?: string | null,"reply_audio_key"?: string | null,"request_id"?: string,"result"?: Json | null,"session_hash"?: string,"state"?: string,"steps"?: Json | null,"updated_at"?: string,"usage"?: NonNullable<Json>
+                    "answer_text"?: string | null,"artwork_id"?: string | null,"created_at"?: string,"exhibition_id"?: string,"expires_at"?: string,"failure_code"?: string | null,"id"?: string,"input_hash"?: string | null,"kind"?: string,"lease_until"?: string | null,"mock"?: boolean,"publication_id"?: string | null,"reply_audio_key"?: string | null,"request_id"?: string,"result"?: Json | null,"session_hash"?: string,"source_answer_id"?: string | null,"state"?: string,"steps"?: Json | null,"updated_at"?: string,"usage"?: NonNullable<Json>,"voice_fingerprint"?: string | null
                   }
                   Relationships: [
                     {
@@ -425,6 +425,20 @@ isOneToOne: false
       referencedColumns: ["exhibition_id","artwork_id","id"]
     }
                   ]
+                },"visitor_audio_assets": {
+                  Row: {
+                    "cleanup_after": string | null,"cleanup_claimed": boolean,"id": string,"storage_key": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cleanup_after"?: string | null,"cleanup_claimed"?: boolean,"id": string,"storage_key": string
+                  }
+                  Update: {
+                    "cleanup_after"?: string | null,"cleanup_claimed"?: boolean,"id"?: string,"storage_key"?: string
+                  }
+                  Relationships: [
+
+                  ]
                 },"visitor_quota_events": {
                   Row: {
                     "exhibition_id": string,"reserved_at": string,"session_hash": string
@@ -503,8 +517,14 @@ isOneToOne: false
 "complete_upload":
 { Args: { "p_byte_size": number,"p_content_hash": string,"p_content_type": string,"p_expected_version": number,"p_height": number,"p_id": string,"p_owner": string,"p_pages": number,"p_width": number }; Returns: Json
                            },
+"complete_visitor_audio_cleanup":
+{ Args: { "p_id": string }; Returns: boolean
+                           },
 "complete_visitor_request":
 { Args: { "p_failure_code"?: string,"p_id": string,"p_result": Json,"p_session_hash": string,"p_steps"?: Json }; Returns: Json
+                           },
+"complete_visitor_voice":
+{ Args: { "p_failure_code"?: string,"p_id": string,"p_result": Json,"p_session_hash": string }; Returns: Json
                            },
 "create_artwork":
 { Args: { "p_creation_year": string,"p_dimensions": string,"p_exhibition_id": string,"p_id": string,"p_medium": string,"p_number": number,"p_sections": Json,"p_source_refs": Json,"p_title": string }; Returns: Json
@@ -548,6 +568,12 @@ isOneToOne: false
 "get_public_exhibition":
 { Args: { "p_id": string }; Returns: Json
                            },
+"get_public_media":
+{ Args: { "p_kind": string,"p_mock": boolean,"p_publication_id": string }; Returns: Json
+                           },
+"get_public_media_refs":
+{ Args: { "p_mock": boolean,"p_publication_ids": (string)[] }; Returns: Json
+                           },
 "get_review_bundle":
 { Args: { "p_artwork_id": string }; Returns: Json
                            },
@@ -556,6 +582,9 @@ isOneToOne: false
                            },
 "get_upload":
 { Args: { "p_allow_cleanup"?: boolean,"p_id": string,"p_owner": string }; Returns: Json
+                           },
+"get_visitor_answer_exhibition":
+{ Args: { "p_id": string,"p_session_hash": string }; Returns: string
                            },
 "is_publication_current":
 { Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_publication_id": string,"p_version": number }; Returns: boolean
@@ -581,10 +610,16 @@ isOneToOne: false
 "list_materials":
 { Args: { "p_subject_id": string,"p_subject_type": string }; Returns: Json
                            },
+"list_visitor_audio_cleanup":
+{ Args: { "p_limit"?: number }; Returns: Json
+                           },
 "load_publication_context":
 { Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_number": number }; Returns: Json
                            },
 "load_visitor_answer":
+{ Args: { "p_id": string,"p_session_hash": string }; Returns: Json
+                           },
+"load_visitor_voice":
 { Args: { "p_id": string,"p_session_hash": string }; Returns: Json
                            },
 "pause":
@@ -602,6 +637,9 @@ isOneToOne: false
 "record_gap":
 { Args: { "p_enabled": boolean,"p_question": string,"p_request_id": string,"p_session_hash": string }; Returns: boolean
                            },
+"record_visitor_execution":
+{ Args: { "p_elapsed_ms": number,"p_id": string,"p_session_hash": string,"p_steps": Json,"p_usage": Json }; Returns: undefined
+                           },
 "record_visitor_steps":
 { Args: { "p_id": string,"p_session_hash": string,"p_steps": Json }; Returns: undefined
                            },
@@ -618,6 +656,9 @@ isOneToOne: false
                            },
 "reserve_visitor_request":
 { Args: { "p_exhibition_id": string,"p_input_hash": string,"p_mock": boolean,"p_request_id": string,"p_session_hash": string }; Returns: Json
+                           },
+"reserve_visitor_voice":
+{ Args: { "p_answer_id"?: string,"p_exhibition_id": string,"p_input_hash": string,"p_kind": string,"p_mock": boolean,"p_request_id": string,"p_session_hash": string,"p_voice_fingerprint"?: string }; Returns: Json
                            },
 "resume":
 { Args: { "p_artwork_id"?: string,"p_exhibition_id": string,"p_expected_revision": number,"p_owner": string,"p_voice_required": boolean }; Returns: Json

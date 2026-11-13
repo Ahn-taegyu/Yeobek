@@ -11,7 +11,7 @@ assert.ok(["localhost", "127.0.0.1"].includes(new URL(origin).hostname));
 
 function browser() {
   const jar = new Map();
-  return async (path, body, { method = body === undefined ? "GET" : "POST", expected = 200 } = {}) => {
+  return async (path, body, { method = body === undefined ? "GET" : "POST", expected = 200, binary = false } = {}) => {
     const response = await fetch(origin + path, {
       method,
       headers: { Origin: origin, "Content-Type": "application/json",
@@ -23,6 +23,11 @@ function browser() {
       jar.set(key, value.join("="));
     }
     assert.match(response.headers.get("cache-control") || "", /no-store/, path);
+    if (binary && expected < 400) {
+      assert.equal(response.status, expected);
+      assert.equal(response.headers.get("content-type"), "audio/mpeg");
+      return Buffer.from(await response.arrayBuffer());
+    }
     const result = await response.json();
     assert.equal(response.status, expected, `${method} ${path}: ${result.error?.code ?? "unexpected status"}`);
     return expected < 400 ? result.data : result.error;
@@ -134,8 +139,30 @@ test("approved narration creates private mock audio through HTTP and Storage", a
   assert.equal(pub.data.audio_text_hash, "\\x" + textHash);
   const publicWork = await browser()(`/api/public/exhibitions/${exhibition.id}/artworks/${artwork.id}`);
   assert.equal(publicWork.narrationText, narration);
+  const publicId = published.publications[0].publicationId;
+  assert.deepEqual(publicWork.image, { id: publicId, kind: "image" });
+  assert.deepEqual(publicWork.audio, { id: publicId, kind: "audio" });
+  for (const [kind, expectedBytes, mime] of [["image", png, "image/png"],
+    ["audio", Buffer.from(await asset.data.arrayBuffer()), "audio/mpeg"]]) {
+    const media = await fetch(`${origin}/api/media/${publicId}?kind=${kind}`);
+    assert.equal(media.status, 200);
+    assert.equal(media.headers.get("content-type"), mime);
+    assert.match(media.headers.get("cache-control"), /no-store/);
+    assert.equal(media.headers.get("x-content-type-options"), "nosniff");
+    assert.deepEqual(Buffer.from(await media.arrayBuffer()), expectedBytes);
+  }
   assert.equal("audioKey" in publicWork, false);
   assert.ok((await anonymous.storage.from("artist-audio").download(audioKey)).error);
+
+  const visitor = browser();
+  const answer = await visitor("/api/chat", { requestId: randomUUID(), exhibitionId: exhibition.id, artworkId: null,
+    question: "18", contextSequence: 0, inputMode: "text", outputMode: "voice" });
+  const speechInput = { requestId: randomUUID(), answerId: answer.answerId };
+  assert.deepEqual(await visitor("/api/speech", speechInput, { binary: true }), Buffer.from(await asset.data.arrayBuffer()));
+  const voiceCount = execFileSync("docker", ["exec", "-i", "supabase_db_yeobek-mvp", "psql", "-U", "postgres", "-d", "postgres", "-At", "-v", "ON_ERROR_STOP=1"], {
+    input: `select count(*) from public.api_requests where source_answer_id='${answer.answerId}';`, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"],
+  }).trim();
+  assert.equal(voiceCount, "0", "published narration reuses stored bytes without another synthesis reservation");
 
   // Simulate a failed attempt whose upload arrived late. Only this disposable
   // fixture's clock is advanced; deletion itself must go through Storage HTTP.
@@ -159,5 +186,10 @@ test("approved narration creates private mock audio through HTTP and Storage", a
   // Keep the local fixture's pinned asset intact. Revoke access through the
   // normal public gate, and remove the now-unneeded staging object only.
   await artist(exhibitionPath + "/publication", { action: "pause", expectedRevision: published.revision });
+  await visitor("/api/speech", speechInput, { expected: 404 });
+  for (const kind of ["image", "audio"]) {
+    const media = await fetch(`${origin}/api/media/${publicId}?kind=${kind}`);
+    assert.equal(media.status, 404);
+  }
   assert.equal((await worker.storage.from(reserved.upload.bucket).remove([reserved.upload.path])).error, null);
 });

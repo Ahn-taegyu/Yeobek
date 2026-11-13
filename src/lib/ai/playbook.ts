@@ -89,8 +89,7 @@ export function startPlaybook<Id extends PlaybookId>(id: Id) {
       return snapshot();
     },
     /** A reserved job must settle even after an earlier operational failure. */
-    async settleJob(complete: ((steps: readonly PlaybookStepRecord[]) => Promise<void>) | undefined) {
-      const stepId = "job.complete" as PlaybookStepId<Id>;
+    async settleStep(stepId: PlaybookStepId<Id>, complete: ((steps: readonly PlaybookStepRecord[]) => Promise<void>) | undefined) {
       assertIdle();
       if (declared.at(-1)?.id !== stepId) throw new PlaybookOrderError("step_out_of_order");
       const previousFailure = failure;
@@ -110,6 +109,9 @@ export function startPlaybook<Id extends PlaybookId>(id: Id) {
       const steps = this.finish();
       if (previousFailure && canTrack(previousFailure.error)) failureSteps.set(previousFailure.error, steps);
       return steps;
+    },
+    async settleJob(complete: ((steps: readonly PlaybookStepRecord[]) => Promise<void>) | undefined) {
+      return this.settleStep("job.complete" as PlaybookStepId<Id>, complete);
     },
     /** Close an operational failure so callers can propagate the original error. */
     fail(error: unknown) {

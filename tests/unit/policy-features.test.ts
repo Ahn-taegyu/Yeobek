@@ -6,7 +6,7 @@ import { getFeatures, requireFeature } from "../../src/lib/features";
 
 describe("application policies", () => {
   it("keeps migration seed and typed defaults aligned", () => {
-    const sql = ["20261114020000_app_policies.sql", "20261114030000_ai_jobs.sql", "20261114040000_evidence_approval.sql", "20261114060000_material_uploads.sql"]
+    const sql = ["20261114020000_app_policies.sql", "20261114030000_ai_jobs.sql", "20261114040000_evidence_approval.sql", "20261114060000_material_uploads.sql", "20261114085000_visitor_voice_limits.sql"]
       .map(file => readFileSync(`supabase/migrations/${file}`, "utf8")).join("\n");
     const seeded = Object.fromEntries(Array.from(sql.matchAll(/\('([a-z_]+)',\s*(\d+)\)/g), ([, key, value]) => [key, Number(value)]));
     expect(seeded).toEqual(DEFAULT_POLICIES);

@@ -6,7 +6,7 @@ import { z } from "zod";
 const root = new URL("../ai/yeobek/", import.meta.url);
 const target = new URL("../src/lib/ai/plugin.generated.ts", import.meta.url);
 const names = ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration"];
-const tools = ["audio.read", "audio.store", "request.reserve", "answer.store", "gap.record", "job.reserve", "job.complete", "publication.read", "publication.recheck", "author.read", "proposal.store", "proposal.read", "proposal.apply"];
+const tools = ["voice.read", "voice.store", "voice.reserve", "voice.complete", "audio.read", "audio.store", "request.reserve", "answer.store", "gap.record", "job.reserve", "job.complete", "publication.read", "publication.recheck", "author.read", "proposal.store", "proposal.read", "proposal.apply"];
 const step = z.strictObject({
   id: z.string().regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$/),
   tool: z.enum(tools).optional(),
@@ -18,13 +18,13 @@ const task = z.strictObject({
 });
 const schema = z.strictObject({ id: z.literal("yeobek"), version: z.string().regex(/^\d+\.\d+\.\d+$/),
   instructions: z.literal("instructions.md"), messages: z.literal("messages.json"), skills: z.array(z.enum(names)).length(names.length),
-  playbooks: z.strictObject({ "narration-audio": task, "visitor-answer": task, "narration-draft": task, "narration-evaluate": task, "artist-organize": task, "artist-apply": task }) });
+  playbooks: z.strictObject({ "visitor-transcribe": task, "visitor-speech": task, "narration-audio": task, "visitor-answer": task, "narration-draft": task, "narration-evaluate": task, "artist-organize": task, "artist-apply": task }) });
 const normalize = text => text.replace(/\r\n?/g, "\n").trimEnd() + "\n";
 const read = path => normalize(readFileSync(new URL(path, root), "utf8"));
 export function validateManifest(input) {
   const manifest = schema.parse(input);
   if (new Set(manifest.skills).size !== names.length) throw new Error("Duplicate plugin skill");
-  const capabilities = { "narration-audio": ["job.reserve", "audio.read", "audio.store", "job.complete"], "visitor-answer": ["request.reserve", "answer.store", "gap.record", "publication.read", "publication.recheck"], "narration-draft": ["author.read", "job.reserve", "job.complete"], "narration-evaluate": ["author.read"],
+  const capabilities = { "visitor-transcribe": ["voice.reserve", "voice.complete"], "visitor-speech": ["voice.read", "voice.store", "voice.reserve", "voice.complete"], "narration-audio": ["job.reserve", "audio.read", "audio.store", "job.complete"], "visitor-answer": ["request.reserve", "answer.store", "gap.record", "publication.read", "publication.recheck"], "narration-draft": ["author.read", "job.reserve", "job.complete"], "narration-evaluate": ["author.read"],
     "artist-organize": ["author.read", "proposal.store", "job.reserve", "job.complete"], "artist-apply": ["author.read", "proposal.read", "proposal.apply"] };
   for (const [name, playbook] of Object.entries(manifest.playbooks)) {
     if (new Set(playbook.skills).size !== playbook.skills.length || new Set(playbook.tools).size !== playbook.tools.length ||

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { mediaBinary, mediaQuery } from "./media";
+import { speechRequest, transcribeRequest, transcribeResponse } from "./voice";
 import { requestUploadSchema, completeUploadSchema, deleteMaterialSchema, deleteArtworkSchema,
   setArtworkImageSchema, materialResponse, materialListResponse, uploadResponse, listMaterialsQuery,
   materialDownloadResponse, deletedArtworkResponse } from "./materials";
@@ -17,20 +19,28 @@ import {
   publicExhibitionResponse, successEnvelope,
 } from "./responses";
 
-export type RouteContract = {
+type RouteBase = {
   method: "GET" | "POST" | "PATCH" | "DELETE" | "PUT";
   path: `/api/${string}`;
   params?: z.ZodType<Record<string, string>>;
   query?: z.ZodType<Record<string, string>>;
   body?: z.ZodType;
-  response: z.ZodType;
+  bodyEncoding?: "multipart";
   statuses: readonly number[];
 };
+export type BinaryRouteContract = RouteBase & {
+  binary: { mimeTypes: readonly string[]; maxBytes: number };
+  response?: never;
+};
+export type RouteContract = BinaryRouteContract | (RouteBase & { response: z.ZodType; binary?: never });
 
 const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  transcribe: { method: "POST", path: "/api/transcribe", body: transcribeRequest, bodyEncoding: "multipart", response: successEnvelope(transcribeResponse), statuses: [200] },
+  speech: { method: "POST", path: "/api/speech", body: speechRequest, binary: { mimeTypes: ["audio/mpeg"], maxBytes: 8 * 1024 * 1024 }, statuses: [200] },
+  getMedia: { method: "GET", path: "/api/media/{id}", params: byId, query: mediaQuery, binary: mediaBinary, statuses: [200] },
   requestUpload: { method: "POST", path: "/api/admin/uploads", body: requestUploadSchema, response: successEnvelope(uploadResponse), statuses: [200, 201] },
   completeUpload: { method: "POST", path: "/api/admin/uploads/{id}/complete", params: byId, body: completeUploadSchema, response: successEnvelope(materialResponse), statuses: [200] },
   listMaterials: { method: "GET", path: "/api/admin/materials", query: listMaterialsQuery, response: successEnvelope(materialListResponse), statuses: [200] },

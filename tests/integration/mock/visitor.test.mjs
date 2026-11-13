@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 import { localStatus } from "../../../scripts/local-supabase.mjs";
 
@@ -13,11 +14,12 @@ for (const base of [origin, disabledOrigin].filter(Boolean)) {
 
 function browser(base) {
   const jar = new Map();
-  return async function request(path, body, { method = body === undefined ? "GET" : "POST", expected = 200 } = {}) {
+  return async function request(path, body, { method = body === undefined ? "GET" : "POST", expected = 200, binary = false } = {}) {
+    const multipart = body instanceof FormData;
     const response = await fetch(base + path, { method, headers: {
-      Origin: base, "Content-Type": "application/json",
+      Origin: base, ...(multipart ? {} : { "Content-Type": "application/json" }),
       Cookie: [...jar].map(([key, value]) => `${key}=${value}`).join("; "),
-    }, body: body === undefined ? undefined : JSON.stringify(body) });
+    }, body: body === undefined ? undefined : multipart ? body : JSON.stringify(body) });
     for (const value of response.headers.getSetCookie()) {
       const [key, ...parts] = value.split(";")[0].split("=");
       if (key === "yeobek_visitor") {
@@ -27,6 +29,13 @@ function browser(base) {
       jar.set(key, parts.join("="));
     }
     assert.match(response.headers.get("cache-control") || "", /no-store/, path);
+    if (binary && expected < 400) {
+      assert.equal(response.status, expected, path);
+      assert.equal(response.headers.get("content-type"), "audio/mpeg");
+      assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+      assert.equal(response.headers.get("x-yeobek-mock"), "true");
+      return new Uint8Array(await response.arrayBuffer());
+    }
     const result = await response.json();
     assert.equal(response.status, expected, `${method} ${path}: ${result.error?.code ?? "unexpected status"}`);
     return expected < 400 ? result.data : result.error;
@@ -118,7 +127,14 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
     assert.equal(generated.contextSequence, 3);
     assert.equal(generated.publication.publicationId, published.publications[0].publicationId);
     assert.deepEqual(await visitor("/api/chat", generatedRequest), generated, "normalized UUID replays the same saved reply");
-    for (const key of ["steps", "promptVersion", "ownerId", "question", "inputHash", "sessionHash"]) {
+    const execution = JSON.parse(execFileSync("docker", ["exec", "-i", "supabase_db_yeobek-mvp", "psql", "-U", "postgres", "-d", "postgres", "-At", "-v", "ON_ERROR_STOP=1"], {
+      input: `select usage from public.api_requests where id='${generated.answerId}';`, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"],
+    }).trim());
+    assert.equal(execution.calls.length, 1, "replay must not duplicate usage");
+    assert.equal(execution.calls[0].provider, "mock");
+    assert.ok(execution.elapsedMs >= 0);
+    assert.equal("answer" in execution, false);
+    for (const key of ["steps", "usage", "promptVersion", "ownerId", "question", "inputHash", "sessionHash"]) {
       assert.equal(key in generated, false);
     }
   });
@@ -156,6 +172,64 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
     assert.equal(gaps.data.length, disabledOnly ? 0 : 1);
   });
   if (disabledOnly) return;
+
+  await t.test("recording returns editable text; speech uses session-owned answers and caches one synthesis", async () => {
+    const voice = browser(origin);
+    const requestId = randomUUID();
+    const recording = (id = requestId, extra = "") => {
+      const form = new FormData();
+      form.set("requestId", id);
+      form.set("exhibitionId", exhibition.id);
+      form.set("file", new Blob(["RIFF0000WAVE", extra], { type: "audio/wav" }), "private-filename.wav");
+      return form;
+    };
+    const transcript = await voice("/api/transcribe", recording());
+    assert.deepEqual(Object.keys(transcript).sort(), ["mock", "overLimit", "requestId", "transcript"]);
+    assert.equal(transcript.overLimit, false);
+    assert.equal(transcript.mock, true);
+    assert.equal(transcript.transcript, "이 작품의 재료를 알려주세요.");
+    assert.deepEqual(await voice("/api/transcribe", recording()), transcript);
+    assert.equal((await voice("/api/transcribe", recording(requestId, "different"), { expected: 409 })).code, "REQUEST_ID_CONFLICT");
+    assert.equal((await voice("/api/chat", payload({ requestId }), { expected: 409 })).code, "REQUEST_ID_CONFLICT");
+    // Sending the reviewed transcript is a separate chat action; text output can still be spoken later.
+    const reply = await voice("/api/chat", payload({ question: transcript.transcript, inputMode: "voice", outputMode: "text" }));
+    const speech = { requestId: randomUUID(), answerId: reply.answerId };
+    const bytes = await voice("/api/speech", speech, { binary: true });
+    assert.ok(bytes.length > 4);
+    assert.deepEqual(await voice("/api/speech", speech, { binary: true }), bytes);
+    assert.deepEqual(await voice("/api/speech", { ...speech, requestId: randomUUID() }, { binary: true }), bytes);
+    await browser(origin)("/api/speech", { ...speech, requestId: randomUUID() }, { expected: 404 });
+    await voice("/api/speech", { ...speech, text: "arbitrary text" }, { expected: 400 });
+    const ledger = JSON.parse(execFileSync("docker", ["exec", "-i", "supabase_db_yeobek-mvp", "psql", "-U", "postgres", "-d", "postgres", "-At", "-v", "ON_ERROR_STOP=1"], {
+      input: `select json_build_object('transcription', (select json_build_object('kind',kind,'result',result,'usage',usage) from public.api_requests where request_id='${requestId}'), 'speech',(select json_build_object('id',id,'result',result,'usage',usage) from public.api_requests where request_id='${speech.requestId}'));`,
+      encoding: "utf8", stdio: ["pipe", "pipe", "pipe"],
+    }).trim());
+    assert.equal(ledger.transcription.kind, "transcription");
+    const storedTranscript = { requestId: transcript.requestId, transcript: transcript.transcript, mock: transcript.mock };
+    assert.deepEqual(ledger.transcription.result, storedTranscript);
+    assert.equal(ledger.transcription.usage.calls.length, 1);
+    assert.equal(ledger.speech.usage.calls.length, 1);
+    assert.equal(ledger.speech.result.byteSize, bytes.length);
+    assert.equal(ledger.speech.result.mock, true);
+    const selection = await voice("/api/chat", payload({ question: "작품을 설명해 주세요", artworkId: null }));
+    assert.equal(selection.source, "fixed");
+    assert.equal(selection.publication, null);
+    const selectionAudio = { requestId: randomUUID(), answerId: selection.answerId };
+    assert.ok((await voice("/api/speech", selectionAudio, { binary: true })).length > 4);
+    assert.ok((await voice("/api/speech", selectionAudio, { binary: true })).length > 4);
+    // Retention is server enforced, independent of a fresh HTTP request ID.
+    execFileSync("docker", ["exec", "-i", "supabase_db_yeobek-mvp", "psql", "-U", "postgres", "-d", "postgres", "-At", "-v", "ON_ERROR_STOP=1"], {
+      input: `update public.api_requests set created_at=now()-interval '2 hours',expires_at=now()-interval '1 hour' where id='${reply.answerId}'; update public.visitor_audio_assets set cleanup_after=now()-interval '1 second' where id='${ledger.speech.id}';`,
+      encoding: "utf8", stdio: ["pipe", "pipe", "pipe"],
+    });
+    assert.equal((await voice("/api/speech", speech, { expected: 410 })).code, "ANSWER_EXPIRED");
+    if (process.env.TEST_CRON_SECRET) {
+      const cleanup = await fetch(origin + "/api/cron/purge", { method: "POST", headers: { Authorization: `Bearer ${process.env.TEST_CRON_SECRET}` } });
+      assert.equal(cleanup.status, 200);
+      assert.ok((await cleanup.json()).data.visitorAudio.completed >= 1);
+      assert.ok((await admin.storage.from("visitor-audio").download(ledger.speech.result.storageKey)).error);
+    }
+  });
 
   await t.test("a cookie retains one quota across requests; another cookie can ask", async () => {
     const limited = browser(origin);

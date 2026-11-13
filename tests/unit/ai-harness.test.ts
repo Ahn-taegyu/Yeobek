@@ -180,4 +180,20 @@ describe("docent harness offline evaluation (synthetic; no semantic quality clai
     await expect(speakVerifiedReply({ sessionId: ids.session, answerId: ids.request }, { answers, publications: s.publications, speech })).rejects.toMatchObject({ code: "publication_unavailable" });
     await expect(speakVerifiedReply({ sessionId: ids.session, answerId: ids.request }, { answers: { loadAnswer: async () => null }, publications: s.publications, speech })).rejects.toMatchObject({ code: "answer_unavailable" });
   });
+  it("speaks a saved selection prompt only while the session-owned answer remains available", async () => {
+    const s = setup();
+    const reply = await s.harness.answer({ ...syntheticRequest(), artworkId: null, question: "설명해 주세요" });
+    expect(reply.publication).toBeNull();
+    const answers = { loadAnswer: vi.fn<() => Promise<typeof reply | null>>(async () => reply) };
+    const speech = { synthesize: vi.fn(async () => ({ audio: new Uint8Array([1]), contentType: "audio/mpeg",
+      trace: { provider: "mock" as const, model: "mock", mock: true as const } })) };
+    const input = { sessionId: ids.session, answerId: ids.request };
+    expect((await speakVerifiedReply(input, { answers, publications: s.publications, speech })).publication).toBeNull();
+    expect(speech.synthesize).toHaveBeenCalledOnce();
+    answers.loadAnswer.mockResolvedValueOnce(reply).mockResolvedValueOnce(null);
+    await expect(speakVerifiedReply(input, { answers, publications: s.publications, speech })).rejects.toMatchObject({ code: "answer_unavailable" });
+    answers.loadAnswer.mockResolvedValue({ ...reply, answer: "사용자가 임의로 바꾼 문장" });
+    await expect(speakVerifiedReply(input, { answers, publications: s.publications, speech })).rejects.toMatchObject({ code: "invalid_output" });
+    expect(speech.synthesize).toHaveBeenCalledTimes(2);
+  });
 });

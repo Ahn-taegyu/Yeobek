@@ -141,10 +141,16 @@ describe("AI capability routes", () => {
     vi.stubEnv("AI_PROVIDER_MODE", "mock");
     vi.stubEnv("NODE_ENV", "test");
     const publication = syntheticPublication();
+    const recordUsage = vi.fn();
     const runtime = createDocentRuntime({ load: async () => publication, isCurrent: async () => true },
-      { loadAnswer: async () => null });
+      { loadAnswer: async () => null }, undefined, recordUsage);
     const grounded = await runtime.answer(syntheticRequest());
     expect(grounded).toMatchObject({ outcome: "answered", mock: true, citations: [ids.evidence], answer: publication.evidence[0].body });
+    expect(recordUsage).toHaveBeenCalledOnce();
+    expect(recordUsage.mock.calls[0][0]).toMatchObject({ provider: "mock", mock: true });
+    expect(grounded).not.toHaveProperty("usage");
+    await runtime.answer(syntheticRequest({ intent: "narration" }));
+    expect(recordUsage).toHaveBeenCalledOnce(); // Stored narration does not claim a model call.
     expect(await runtime.answer(syntheticRequest({ question: "보관 장소는 어디인가요?" })))
       .toMatchObject({ outcome: "insufficient_evidence", mock: true, citations: [] });
 

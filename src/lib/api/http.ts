@@ -35,9 +35,16 @@ export async function readJson<T>(request: Request, schema: z.ZodType<T>): Promi
   if (!reader) throw new ApiError(400, "INVALID_INPUT", "입력 내용이 필요합니다.");
   const chunks: Uint8Array[] = [];
   let size = 0;
+  const active = () => {
+    if (request.signal.aborted) throw new ApiError(499, "REQUEST_CANCELLED", "요청이 취소되었습니다.");
+  };
+  const cancel = () => { void reader.cancel().catch(() => {}); };
+  request.signal.addEventListener("abort", cancel, { once: true });
   try {
     while (true) {
+      active();
       const { value, done } = await reader.read();
+      active();
       if (done) break;
       size += value.byteLength;
       if (size > MAX_JSON_BYTES) {
@@ -46,7 +53,7 @@ export async function readJson<T>(request: Request, schema: z.ZodType<T>): Promi
       }
       chunks.push(value);
     }
-  } finally { reader.releaseLock(); }
+  } finally { request.signal.removeEventListener("abort", cancel); reader.releaseLock(); }
   const bytes = new Uint8Array(size);
   let offset = 0;
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
@@ -61,6 +68,12 @@ export function handleApi(action: () => Promise<unknown>, status = 200) {
   return (async () => {
     try {
       let data = await action();
+      if (data instanceof Response) {
+        const headers = new Headers(data.headers);
+        for (const [key, value] of Object.entries(PRIVATE_HEADERS)) headers.set(key, value);
+        headers.set("X-Request-Id", requestId);
+        return new Response(data.body, { status: data.status, statusText: data.statusText, headers });
+      }
       let actualStatus = status;
       if (data && typeof data === "object" && "_created" in data) {
         const { _created, ...resource } = data;
