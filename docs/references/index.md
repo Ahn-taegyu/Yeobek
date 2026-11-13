@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [MVP 개발 시작·협업 규칙 요청](user-development-start.md) — 역할별 브랜치, Sol/Terra 위임 선호와 교차 검증.
+
 - [Render 제외와 스택 추천 요청](user-render-excluded.md) — 11/13 사용자 최신 행사 정보·부드러운 경험 요구.
 
 - [GitHub 공유·에이전트 협업 요청](user-repository-handoff.md) — yeoback 비공개 저장소와 자동 검색/수정 준비.
