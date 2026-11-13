@@ -102,7 +102,7 @@ sources:
 - 정형 정보와 문서를 함께 저장하면 `expectedRevision`과 `expectedDocumentRevision`을 검사한다. 한쪽이 오래되어도 409이며 전체 저장이 취소된다.
 - 문서 저장은 현재 revision과 출처 검사를 먼저 통과해야 한다. 그 뒤 sections와 sourceRefs가 기존 JSONB 값과 동일하면 문서 revision을 유지하고, 달라지면 증가시킨다. 정형 정보 revision은 저장 성공마다 증가한다. UI는 성공 횟수로 버전을 추정하지 않고 반환값을 사용해야 한다.
 - 새 전시/작품 최초 요청은 201이다. 같은 소유자의 삭제되지 않은 리소스에 대해 동일 ID·동일 정규화 입력을 재전송하면 200과 현재 저장본, 같은 ID에 다른 입력을 보내면 409다. 다른 소유자나 삭제된 리소스의 ID는 404로 처리한다.
-- `document` 출처는 같은 소유자의 상위 작가/전시 문서로 제한하고, 저장 시 현재 revision과 section 존재를 검사한다. 상위 문서를 나중에 수정해도 이미 저장된 하위 출처는 자동 갱신되지 않으며 재저장할 때 오래된 참조를 409로 거부한다. `material` 출처는 자기/상위 주체 소속의 ready 자료 ID와 PDF 쪽수 형식을 검사하며 자료 version을 고정하지 않는다.
+- `document` 출처는 같은 소유자의 상위 작가/전시 문서로 제한하고, 저장 시 현재 revision과 section 존재를 검사한다. 상위 문서를 나중에 수정해도 이미 저장된 하위 출처는 자동 갱신되지 않으며 재저장할 때 오래된 참조를 409로 거부한다. 이 거부가 미치는 범위와 오류 구분 문제는 [9.1](#91-화면-구현-전에-결정할-항목)에 정리했다. `material` 출처는 자기/상위 주체 소속의 ready 자료 ID와 PDF 쪽수 형식을 검사하며 자료 version을 고정하지 않는다.
 - 초안의 공개 조회는 404다. 공개 전시는 게시 상태에 더해 적격 작품이 하나 이상 있어야 한다. 작품은 현재 전시·작품의 게시 상태와 활성·비철회 publication을 확인한다. 게시 API가 없으므로 현재 일반 사용자 경로로 공개 상태까지 만들 수 없다.
 - HTTP 요청 크기·Origin 검사는 Next.js API의 경계다. Supabase의 공개 데이터 API를 직접 호출하는 경우에도 안전해야 할 소유권·본문·출처 검사는 SQL/RLS가 담당한다.
 - `/api/health`는 DB의 공개 조회 RPC까지 호출해 준비 여부를 확인한다. Auth·Storage·AI 제공사 전체의 상태를 검사하는 엔드포인트는 아니다.
@@ -193,3 +193,45 @@ node --input-type=module -e 'import { z } from "zod"; console.log(z.string().max
 5. [협업 규칙](../collaboration.md)의 리뷰어 1명·squash·긴급 예외·공유 migration 수정·worktree 격리를 팀 운영 기준으로 채택할지 검토한다. 작성된 규칙과 실제 원격 보호 설정을 구별한다.
 
 로컬 재현 명령은 저장소 루트 README의 앱 실행·검사 절을 따른다. 리뷰를 위해 전체 DB를 초기화할 필요는 없다. 실제 작가 자료·키를 문서나 PR에 붙이지 않고, 가짜 로컬 계정과 테스트 자료만 사용한다.
+
+# 9. 후속 교차 검토에서 추가한 항목
+
+2026-11-13에 Claude Code가 `497b61b`의 스키마·RPC·API·테스트 소스를 이 검토서와 읽기 전용으로 대조한 결과다. 1~8절의 수치(단위 16·pgTAP 53·HTTP 1+6, 경로 파일 11·처리 함수 17)와 CI 성공은 소스·실행 기록과 일치했다. Zod 문자열 상한이 코드포인트 기준이라는 정정도 설치된 4.6.7의 `checks.js`에서 `codePointLength` 사용을 확인했다. 아래는 1~8절에 없거나 범위가 덜 드러난 항목이며 **기록만 했고 제품 코드와 테스트는 수정하지 않았다.** 앱 검사를 다시 실행하지 않았고 동작은 코드와 기존 테스트를 읽어 판단했다.
+
+## 9.1 화면 구현 전에 결정할 항목
+
+4절은 오래된 상위 참조를 재저장 때 409로 거부한다고 적었다. 아래는 그 거부가 화면에 미치는 범위다.
+
+| 항목 | 확인한 내용 | 권고 |
+| --- | --- | --- |
+| **상위 문서 수정 후 하위 리소스의 모든 저장이 409** | 정형 정보 PATCH는 전체 값 계약이어서 기존 `sourceRefs`를 다시 보낸다. [save_document](https://github.com/Ahn-taegyu/Yeobek/blob/497b61b4baec776ffd9a9205fb0abc867efae207/supabase/migrations/20261113030100_mvp_rpc.sql#L189)는 동일 내용 확인보다 출처 검증을 먼저 실행한다. 따라서 상위 문서 revision이 오른 뒤에는 출처와 무관한 변경(예: 작품 제목만 수정)도 거부된다. [pgTAP 78~80행](https://github.com/Ahn-taegyu/Yeobek/blob/497b61b4baec776ffd9a9205fb0abc867efae207/supabase/tests/mvp_foundation_test.sql#L78)이 이 거부를 검사하므로 의도된 동작이다 | 유지 여부를 먼저 결정. 유지한다면 아래 두 행을 함께 처리 |
+| 위 충돌을 일반 충돌과 구별할 수 없음 | 출처 revision 불일치와 자기 revision 충돌이 모두 `40001`이며 [HTTP에서 같은 `REVISION_CONFLICT`와 같은 안내 문구](https://github.com/Ahn-taegyu/Yeobek/blob/497b61b4baec776ffd9a9205fb0abc867efae207/src/lib/api/errors.ts#L18)로 나간다. BR-01의 "최신본 조회·수동 재적용"을 따라 리소스를 다시 불러와도 같은 낡은 참조가 돌아와 해결되지 않는다. 화면이 상위 문서의 현재 revision을 따로 조회해 참조를 고쳐 써야 한다 | 별도 오류 코드와 해당 참조 정보를 반환하는 안. 또는 저장본과 달라지지 않은 참조는 재검증에서 제외하는 안 |
+| 같은 유형의 400 | 참조한 상위 section이 삭제되거나 참조 자료가 `revoked`가 되면 400 `INVALID_INPUT`으로 같은 방식의 저장 차단이 생긴다 | 위 결정과 같은 계약으로 처리 |
+
+## 9.2 테스트가 실제로 닿지 않는 경로
+
+5절이 이미 적은 공백(빈 `sourceRefs`만 다루는 HTTP 검사, 무변경 문서 재저장, 선택 필드 생략, 기존 토큰 폐기) 외에 아래 경로도 검사가 없다. 결함을 확인한 것이 아니라 검사가 없다는 뜻이다.
+
+| 경로 | 현재 상태 |
+| --- | --- |
+| `update_exhibition` 성공 | SQL·HTTP 모두 없음. 문서 revision 충돌 1건만 검사 |
+| 유효한 전시 날짜 저장 | 없음. 날짜 쌍 오류의 거부만 검사 |
+| 전시·작품 PATCH의 HTTP 성공 | 없음. 작품 PATCH는 409만, 전시 PATCH는 호출 자체가 없음 |
+| `list_artworks`와 두 목록 GET 경로 | 없음. `list_exhibitions`는 타인 계정의 빈 목록만 검사 |
+| 익명 로그인 차단 | SQL의 `is_anonymous` 조건은 있으나 검사 없음. 로컬 설정은 익명 로그인을 끄지만 클라우드 프로젝트 설정은 별개 |
+
+우선 `update_exhibition` 성공, 날짜 저장, HTTP PATCH 성공을 채우는 것을 권고한다.
+
+## 9.3 작은 항목
+
+| 항목 | 확인한 내용 | 권고 |
+| --- | --- | --- |
+| 작품 번호 재사용 | [`unique (exhibition_id, number)`](https://github.com/Ahn-taegyu/Yeobek/blob/497b61b4baec776ffd9a9205fb0abc867efae207/supabase/migrations/20261113030000_mvp_schema.sql#L68)가 논리 삭제된 행도 포함 | 삭제 API 구현 때 `deleted_at is null` 부분 유니크 인덱스로 변경 |
+| 409 `CONFLICT` 구분 | 번호 중복과 생성 ID 재사용이 같은 코드·문구 | 화면에서 번호 필드를 표시하려면 코드 또는 `fields` 분리 |
+| 없는 구성요소를 가리키는 주석 | [server.ts 20행](https://github.com/Ahn-taegyu/Yeobek/blob/497b61b4baec776ffd9a9205fb0abc867efae207/src/lib/supabase/server.ts#L20)이 "page proxy"를 언급하나 미들웨어·proxy 파일이 없음 | 주석 정정 |
+| 배포 전 설정 | `next.config.ts`에 CSP·프레임 차단 등 보안 헤더 없음. `APP_ORIGIN`이 없으면 `request.url`로 대체 | 배포 전에 헤더 추가, 운영에서는 `APP_ORIGIN` 필수화 |
+| 계정 삭제 | `auth.users`를 참조하는 FK에 삭제 동작이 없어 작가 계정을 지울 수 없음 | 의도라면 명세에 기록, 아니면 탈퇴 절차와 함께 설계 |
+| CI | health 대기 실패 시 앱 로그를 출력하지 않음. `push`와 `pull_request`가 모두 걸려 PR 브랜치는 두 번 실행 | 실패 시 로그 출력, 트리거 범위 조정 |
+| 오류 문구 | [artist-home.tsx 21행](https://github.com/Ahn-taegyu/Yeobek/blob/497b61b4baec776ffd9a9205fb0abc867efae207/src/components/artist-home.tsx#L21)은 응답이 JSON이 아니면 파싱 오류 원문을 표시 | 고정 안내 문구로 대체 |
+
+7절의 Tailwind·프로필 생성 시점 항목은 이번 대조 범위에 넣지 않았다.
