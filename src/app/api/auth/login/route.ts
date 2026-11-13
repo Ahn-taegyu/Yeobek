@@ -9,7 +9,7 @@ export function POST(request: Request) {
     const input = await readJson(request, loginSchema);
     const db = await createServerSupabase();
     const { error } = await db.auth.signInWithPassword(input);
-    if (error) throw authenticationError(error, "이메일과 비밀번호를 확인해 주세요.");
+    if (error) throw authenticationError(error, "이메일과 비밀번호를 확인해 주세요.", "INVALID_CREDENTIALS");
     return { authenticated: true };
   });
 }

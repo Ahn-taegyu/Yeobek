@@ -14,11 +14,13 @@ npm run db:artist
 npm run dev
 ```
 
-`db:start`는 `yeobek-mvp` 프로젝트를 localhost에 바인딩한 `yeobek-local` 네트워크에서 시작하고 migration을 적용합니다. `db:env`는 Git에서 제외한 `.env.local`을 생성하며 기존 파일은 덮어쓰지 않습니다. `db:artist`는 가짜 로컬 작가 계정을 만들고 로그인 정보를 `.env.artist.local`에 저장합니다. 터미널·Git에 키나 비밀번호를 출력하지 않습니다. [로그인](http://localhost:3000/login)에서 그 계정을 사용합니다. 현재 작가 홈은 이름과 전시 목록 조회까지 제공합니다. 입력/검수 화면은 다음 구현입니다.
+`db:start`는 `yeobek-mvp` 프로젝트를 localhost에 바인딩한 `yeobek-local` 네트워크에서 시작하고 migration을 적용합니다. `db:env`는 Git에서 제외한 `.env.local`을 생성하며 기존 파일은 덮어쓰지 않습니다. `db:artist`는 가짜 로컬 작가 계정을 만들고 로그인 정보를 `.env.artist.local`에 저장합니다. 터미널·Git에 키나 비밀번호를 출력하지 않습니다. [로그인](http://localhost:3000/login)에서 그 계정을 사용합니다. 로그인에서 비밀번호를 표시하거나 숨길 수 있습니다. 현재 작가 홈은 계정 이메일과 이름, 전시 기간·장소·작품 수를 포함한 목록 조회를 제공합니다. 입력/검수 화면은 다음 구현입니다.
 
 클라우드 연결 시에는 `.env.example`의 세 변수만 개발 환경의 비밀값 설정에 넣습니다. 앱은 service-role 키를 쓰지 않습니다. `APP_ORIGIN`은 실제 접속 주소와 정확히 맞춥니다. HTTPS에서는 인증 쿠키에 Secure가 적용됩니다. 클라우드에는 migration과 사전 발급 계정이 필요하며, 이 작업은 클라우드 생성·배포를 수행하지 않았습니다.
 
 ## 앱 검사와 DB 변경
+
+Tailwind CSS 4·PostCSS를 사용합니다. 현재 Windows에서 재현된 Turbopack PostCSS worker 종료를 피하도록 `dev`·`build`는 Next.js의 `--webpack` 옵션을 사용합니다. 기존 로컬 스택이 실행 중일 때 새 migration 적용은 `npx supabase migration up --local`로 수행하며 DB reset은 필요하지 않습니다.
 
 ```sh
 npm run lint
@@ -33,7 +35,7 @@ npm run start
 
 자기 소유의 폐기 가능한 로컬 DB를 새로 만들 때만 `npm run db:reset`을 실행합니다. 이 명령은 로컬 자료와 계정을 지우므로 계정 예제 파일도 더 이상 유효하지 않습니다. 필요하면 해당 로컬 파일을 정리한 뒤 계정을 다시 발급합니다. schema 변경 후 `npm run db:types`로 타입을 갱신하고 migration·타입·호출자를 함께 검토합니다. 공유 migration은 새 파일로 정정합니다. 기본 보조 스크립트는 `yeobek-mvp` 스택만 허용하므로 worktree별 병렬 DB는 [격리 규칙](docs/collaboration.md#5-worktree)에 따라 프로젝트/포트/네트워크와 스크립트 검사를 함께 조정해야 합니다.
 
-`App checks` CI는 잠금 버전 설치·린트·타입·단위 테스트·실제 Supabase 테스트·타입 차이·빌드·HTTP 통합 검사를 수행합니다. AI 서비스나 클라우드 DB 키는 필요 없습니다. 배포는 수행하지 않습니다.
+`App checks` CI는 main push·PR·수동 실행에서 잠금 버전 설치·린트·타입·단위 테스트·실제 Supabase 테스트·타입 차이·빌드·HTTP 통합 검사를 수행합니다. AI 서비스나 클라우드 DB 키는 필요 없습니다. 배포는 수행하지 않습니다.
 
 ## 에이전트와 시작하기
 
@@ -63,6 +65,6 @@ python scripts/knowledge.py verify
 
 ## 협업과 검증
 
-수정 시 [기여 안내](CONTRIBUTING.md)를 따릅니다. 출처 → 결정 → 기능·명세 → 목차·변경 이력을 연결하고 `python scripts/knowledge.py verify`를 실행합니다. GitHub Actions도 push와 PR에서 Windows/Linux 검증을 수행합니다.
+수정 시 [기여 안내](CONTRIBUTING.md)를 따릅니다. 출처 → 결정 → 기능·명세 → 목차·변경 이력을 연결하고 `python scripts/knowledge.py verify`를 실행합니다. Knowledge checks는 main push·PR·수동 실행에서 Windows/Linux 검증을 수행합니다.
 
 가상환경, 검색 인덱스, 개인 Obsidian 배치, 비밀키는 커밋하지 않습니다. 새 clone에서 인덱스를 재생성하므로 문서 원문이 유일한 편집 기준입니다. 검색 점수나 `stable` 상태는 사용자 확정·제품 구현 완료를 뜻하지 않습니다.

@@ -11,6 +11,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-13T02:37:18+00:00'
 sources:
+- id: review-implementation
+  resource: /references/user-review-implementation.md
+  title: MVP 기반 리뷰 반영 요청
 - id: decision
   resource: /decisions/D-011-knowledge-and-screens.md
   title: 사용자 확정 목적·저장·화면
@@ -36,6 +39,8 @@ decision_status: proposed
 | 원자료·발췌 | A02~A05의 입력/검수 영역 | 파일, 직접 입력 출처, 발췌·페이지·관련 문서 | material ID, 문서 ID·revision, 근거 ID·버전 |
 
 관계는 `작가 → 전시 → 작품`을 기본으로 하고, 작품에서 같은 작가·전시 공통 자료를 참조한다. 계정당 작가 프로필 1개, 전시당 작가 1명을 현재 DB 제약으로 구현했다. 초기 제안은 계정 발급 때 빈 프로필을 준비하는 방식이었으나, 현재 구현은 첫 프로필 조회 또는 첫 전시 생성 시 프로필·빈 문서를 함께 만든다. 계정 생성·로그인·전시 목록 조회만으로 생성하지 않는다. 이름·소개 편집 UI는 후속이며 내용이 비어 있어도 관계 ID는 안정적으로 유지하고 미완성 정보는 게시하지 않는다. 공동전시·작품 원장을 통한 여러 전시 동시 출품은 후속이며 다른 전시 작품 전체를 자동 연결하지 않는다.
+
+현재 초안 API는 기존과 동일한 출처 참조를 보존하고 문서 응답의 `sourceWarnings`로 상위 문서 변경(`source_changed`)이나 문서·자료 이용 불가(`source_unavailable`)를 알린다. 신규·변경 참조는 소유·상위 범위·section·revision 또는 자료 상태를 검증한다. 이는 승인·게시 근거의 검수 흐름을 구현했다는 뜻이 아니다.
 
 작가 홈의 전시 기록은 이 서비스에 등록한 전시의 제목·기간·장소·준비/공개 상태다. 지난 전시도 남기되 종료일이 지났다는 이유로 삭제/중지하지 않는다. 외부 과거 이력을 자동 수집하거나 분석 통계를 만들지 않는다.
 

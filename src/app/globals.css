@@ -1,3 +1,5 @@
+@import "tailwindcss" source("..");
+
 :root { color-scheme: light; --ink: #252d27; --muted: #657069; --accent: #344f41; --paper: #faf9f5; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; line-height: 1.6; }
@@ -21,10 +23,13 @@ button.secondary { background: transparent; border: 1px solid #bfc7bc; color: va
 form { display: grid; margin-top: 32px; gap: 10px; }
 label { font-size: 14px; margin-top: 8px; }
 input { font: inherit; background: #fff; border: 1px solid #bfc7bc; border-radius: 4px; padding: 13px; min-width: 0; width: 100%; }
+.password-field { display: flex; gap: 8px; }
+.password-field button { flex-shrink: 0; }
 .error { color: #a33127; font-size: 14px; min-height: 22px; }
 .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .exhibitions { padding: 0; list-style: none; border-top: 1px solid #dedfd5; }
 .exhibitions li { padding: 24px 0; border-bottom: 1px solid #dedfd5; display: flex; justify-content: space-between; gap: 20px; }
 .exhibitions span { color: var(--muted); font-size: 13px; }
+.exhibition-details { color: var(--muted); font-size: 13px; margin-top: 4px; }
 .empty { padding: 48px 0; border-top: 1px solid #dedfd5; }
 @media (max-width: 600px) { .hero { padding: 60px 0; } .panel { margin-top: 36px; } .row { flex-wrap: wrap; } }

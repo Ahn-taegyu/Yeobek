@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [검토 내용의 구현 반영 요청](user-review-implementation.md) — 추가 검토의 실제 코드 반영과 재검증.
+
 - [실제 코드 검토와 기획 대조 요청](user-code-plan-review.md) — 코드를 실행해 검토하고 기획 적용 여부를 검토서에 기록.
 - [검토서 재확인 요청](user-review-revision.md) — 코드·명세·검증 근거를 다시 대조해 검토서 수정.
 

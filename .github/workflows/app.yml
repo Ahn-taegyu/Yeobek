@@ -2,6 +2,7 @@ name: App checks
 
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -46,6 +47,7 @@ jobs:
             fi
             if (( attempt == 60 )); then
               echo "App health check did not become ready."
+              tail -n 100 /tmp/yeobek-app.log
               exit 1
             fi
             sleep 1

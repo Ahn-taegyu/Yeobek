@@ -2,7 +2,7 @@
 type: Guide
 id: GUIDE-006
 title: Yeobek MVP 개발 기반 작업 검토서
-description: 초기 구현 497b61b와 이름 정정 후 460e87d를 대조해 근거·검증 범위·명세 차이 및 이전 검토의 오류를 정정한다.
+description: 초기 구현의 근거·재검토 이력과 검토 결과를 실제 코드에 반영한 내용 및 재검증 범위를 기록한다.
 status: stable
 updated: '2026-11-13'
 tags: [yeobek, review, foundation]
@@ -11,6 +11,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-13T14:29:32+09:00'
 sources:
+- id: review-implementation
+  resource: /references/user-review-implementation.md
+  title: 검토 내용의 실제 구현 반영 요청
 - id: code-plan-review-request
   resource: /references/user-code-plan-review.md
   title: 실제 코드 검토와 기획 대조 기록 요청
@@ -53,6 +56,8 @@ sources:
 ---
 
 # 먼저 판단할 내용
+
+**최신 구현 반영 결과는 12절이다.** 1~11절은 당시 커밋의 검토 이력이다. 그 절의 미수정·검사 수·코드 기준은 과거 시점이며, 현재 계약은 [API 계약](../specs/api-contract.md)과 [개발 기반](../specs/development-foundation.md)을 따른다.
 
 현재 Yeobek은 **작가 초안을 소유자별로 저장할 개발 기반**까지 구현했다. 로그인과 전시 목록의 최소 화면, 전시·작품 생성/조회/수정 API, 작가 프로필·내부 문서 조회/수정 API가 있다. 프로필과 내부 문서는 관련 조회·생성 작업에서 자동으로 마련된다. **작가 정보·전시·작품 편집 폼, 파일 업로드, AI 해설·Q&A·음성, 승인/게시, 관람 채팅은 후속 구현 범위다.**
 
@@ -368,3 +373,44 @@ HTTP 통합 검사와 직접 요청은 프로젝트 통합 테스트와 같은 �
 3. 작가명 선택 여부와 500 응답 두 건(7절, 10.2). 명세에 맞춰 바로 고칠 수 있다.
 
 AC-01~19 가운데 API 수준에서 확인한 것은 AC-01뿐이며 화면을 포함한 시나리오 실행은 아니다. 나머지는 [시나리오 문서](../specs/user-scenarios.md)의 표시대로 미실행이다.
+
+# 12. 검토 내용의 구현 반영
+
+2026-11-13 [SRC-022](../references/user-review-implementation.md)에 따라 별도 검토 worktree의 `b966cce`·`ea92e2a`를 `feat/mvp-foundation`에 fast-forward로 통합한 뒤 수정했다. 변경 기준은 `ea92e2a`다. 공유된 초기 migration을 고치지 않고 `supabase/migrations/20261113070000_review_fixes.sql`을 추가했다. 기존 개인 Obsidian 설정 변경은 제외했다.
+
+## 12.1 처리 결과와 근거
+
+| 검토 항목 | 반영 결과와 이유 | 확인할 코드·검사 |
+| --- | --- | --- |
+| 9.1·11.1 상위 출처 변경 후 모든 저장 차단 | 같은 초안·같은 section의 기존 출처 객체는 저장된 개수만큼 보존한다. 원본 revision은 자동 갱신하지 않는다. `sourceWarnings`로 변경·이용 불가를 알리고 다른 편집을 허용한다. 새 문서·새 section·추가 복사·변경 참조는 재검증한다. 초안 복구를 위한 기술 판단이며 승인·게시 검증을 생략하는 결정은 아니다. | 새 migration의 validate_document·save_document·document_json, pgTAP 및 실제 HTTP |
+| 출처 오류와 자기 revision 충돌 혼동 | 신규/변경 출처가 낡으면 P1001→409 SOURCE_REVISION_CONFLICT, 사용할 수 없으면 P1002→400 SOURCE_UNAVAILABLE. 자기 revision 충돌은 REVISION_CONFLICT 유지. | errors.ts, 신규/기존 출처 HTTP 검사 |
+| 7·10.2·11.1 입력 검증 | 작가명 선택·null/빈 값 저장, 연도 0·NUL 거부, 제어/기본 비표시 문자만 있는 제목 거부. SQLSTATE 22008·22P05도 400 처리. 본문은 앞뒤 공백 제거 후 코드포인트 5,000개로 검사·저장. 기존 본문과 정규화 결과가 같으면 원문을 보존하며 생성 재시도 해시는 기존 raw 본문 입력 유지. | schemas.ts, 새 migration, 단위·SQL·HTTP 경계 검사 |
+| 전체 값 PATCH | 선택 필드 생략 시 null 계약 유지·명시. 부분 PATCH로 바꾸지 않는다. | 날짜/장소 저장 후 생략, 이름 지우기 HTTP 검사 |
+| 9.3·11.1 오류 식별·재시도 | 번호 중복·생성 ID 재사용·잘못된 자격 정보를 별도 코드로 구별. retryable, 선택적 retryAfter와 Retry-After 헤더 추가. 기존 EX ID와 HTTP 이름은 매핑표로 연결. | errors.ts·http.ts, API 계약, 실제 SQLSTATE 변환 검사 |
+| 11.1 로그인·작가 홈 | 비밀번호 표시 전환, 자기 계정 이메일, 작가명 미입력 안내, 전시 기간·장소·삭제되지 않은 작품 수. 최근 수정순 및 ID 동률 정렬. JSON 파싱 오류 원문 대신 안내 문구. | 두 client 컴포넌트, 프로필 GET, list_exhibitions, 브라우저·목록 검사 |
+| 7 Tailwind | Tailwind 4/PostCSS 설정. Windows에서 Turbopack PostCSS worker 종료를 샌드박스 안/밖 모두 재현해 설치된 Next.js 16.4.6 문서가 지원하는 --webpack으로 dev/build를 맞췄다. 모든 Windows 환경의 결함으로 일반화하지 않는다. | package/lockfile, PostCSS, 프로덕션 build |
+| 9.3 설정·주석 | 운영 APP_ORIGIN 누락·잘못된 URL은 503 SERVER_CONFIGURATION_ERROR와 retryable:false. 기본 프레임/MIME/referrer 헤더와 제한된 CSP 추가. 없는 proxy 주석 정정. CSP의 script 제한 전체를 구현한 것은 아니다. | next.config.ts, http.ts, 단위 검사 |
+| 9.3 CI·검사 공백 | 앱 CI는 main push·PR·수동 실행, health 실패에 앱 로그 출력. 중첩 .claude/worktrees를 lint/TypeScript 범위에서 제외. 전시 PATCH·유효 날짜·목록·작품 PATCH·익명 JWT·nonempty 출처·no-op·기존 본문 보존 검사 추가. | workflow, eslint/tsconfig, SQL·HTTP tests |
+
+`sourceWarnings`는 현재 초안 상태에서 계산하는 메타데이터이며 영구 승인 이력이 아니다. 문서 경고는 `sectionId`, `sourceDocumentId`, `sourceSectionId`, `sourceRevision`, 자료 경고는 `sectionId`, `materialId`를 포함한다. `source_changed`에만 안전하게 조회한 `currentRevision`을 추가하며 원본 본문·비공개 파일 경로는 노출하지 않는다.
+
+과거에 저장한 보이지 않는 문자만의 제목은 전체 값 PATCH 전에 정상 제목으로 수정해야 한다. 생성 재전송도 현재 HTTP 검사를 통과해야 한다. 기존 생성 요청에서 본문의 앞뒤 공백만 다르게 보내면 별도 입력으로 판단될 수 있으므로 재시도는 원래 요청을 그대로 사용한다.
+
+## 12.2 직접 재검증과 교차 검토
+
+- 주 담당자가 위임된 SQL·UI·문서 diff를 요구·기존 코드와 대조했다. Sol이 API·SQL을 교차 검토하고 Terra가 UI와 문서를 작업했다. 피드백으로 경고의 sourceSectionId, 제어 문자 검증, Origin 설정의 비재시도 오류, 로그인 장애 안내를 보완했다. 성공 보고만으로 완료 처리하지 않고 아래 검사를 직접 실행했다.
+- 단위 **35개**, 로컬 Supabase pgTAP **79개**, 실제 Auth 쿠키 HTTP **10개(상위 1 + 하위 9)** 통과. HTTP는 프로덕션 서버 localhost:3200과 가짜 계정으로 수행했다. 로컬 fixture는 남고 pgTAP 변경은 rollback한다.
+- npm run lint·typecheck·build·db:types 통과. 생성 타입은 기존 파일과 차이가 없다. build는 Webpack으로 전 경로를 생성했다. Turbopack 실패는 12.1의 선택 근거다.
+- 브라우저에서 비밀번호 표시/숨김, 가짜 계정 로그인, 계정·미입력 안내·전시 기간/장소/작품 수를 확인했다. 1280px 기본 화면과 390px viewport를 확인했고 390px에서 문서 가로폭도 390px이었다. 전체 기획 시나리오나 실제 휴대기기 검증은 아니다.
+- 신규 migration은 기존 로컬 스키마·fixture에 업그레이드해 검증했다. 새 DB·잠금 설치는 원격 App checks 결과로 별도 확인한다. 문서·원격 검사 결과는 아래 최종 기록을 따른다.
+
+## 12.3 후속으로 남긴 항목
+
+| 항목 | 유지 이유와 다음 작업 |
+| --- | --- |
+| 삭제 작품 번호 재사용(9.3) | 현재 유일 제약 유지. 삭제·게시 API가 없고 공개 번호 예약과 함께 설계해야 하므로 부분 unique만 먼저 적용하지 않는다. OP-05·OP-12에서 확정·검사. |
+| 계정 삭제 FK(9.3) | 자료가 있는 작가 계정의 즉시 삭제 제한 유지. 탈퇴·자료 보존·공개 차단·파일 정리 순서를 설계한 뒤 실행 경로 제공. cascade 자동 추가 없음. |
+| 작가 생성 작업 상태(11.3) | api_requests는 관람 세션 계약이므로 GenerationJob으로 재사용하지 않는다. 해설/음성 생성 단계에서 최소 작업 저장·재시도 설계. |
+| 승인·게시·파일·관람(11.3) | 편집 폼 → 업로드·발췌 → 생성·검수·음성·게시 → QR/번호/통합 채팅 순서로 구현. 변경 출처의 승인 근거 재확인도 그 단계에서 검증. |
+
+F-001·F-002·F-023과 전체 MVP는 완료로 올리지 않는다. AI 호출·클라우드 배포·실제 작가/관람객 검증·원격 권한 설정은 이번 수정 범위가 아니다.

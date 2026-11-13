@@ -11,7 +11,7 @@ okf_version: "0.2"
 
 # MVP부터 읽기
 
-- [개발 기반 작업 검토서](reviews/mvp-foundation-2026-11-13.md) — 460e87d 재검토, 초기 497b61b 증거·잘못된 길이 진단 정정·남은 명세 차이.
+- [개발 기반 작업 검토서](reviews/mvp-foundation-2026-11-13.md) — 12절에 검토 반영 결과·재검증·후속 범위, 1~11절에 초기 구현 증거와 재검토 이력.
 
 - [개발 기반 현황](specs/development-foundation.md) — 실제 Next.js·Supabase 코드, 검증 범위와 다음 작업.
 - [API 계약](specs/api-contract.md) — 초기 구현 경로와 후속 경로·입출력·오류.

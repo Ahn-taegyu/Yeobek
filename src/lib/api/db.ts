@@ -5,13 +5,15 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type DbClient = SupabaseClient<Database>;
-export async function authenticatedDb() {
+export async function authenticatedContext() {
   const db = await createServerSupabase();
   const { data, error } = await db.auth.getUser();
   if (error) throw authenticationError(error);
   if (!data.user) throw new ApiError(401, "UNAUTHENTICATED", "로그인이 필요합니다.");
-  return db;
+  return { db, user: data.user };
 }
+
+export async function authenticatedDb() { return (await authenticatedContext()).db; }
 type Functions = Database["public"]["Functions"];
 export async function rpc<Name extends keyof Functions>(
   db: DbClient, name: Name, args: Record<string, unknown>,

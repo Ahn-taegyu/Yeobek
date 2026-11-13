@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: review-implementation
+  resource: /references/user-review-implementation.md
+  title: MVP 기반 리뷰 반영 요청
 - id: request
   resource: /references/user-development-start.md
   title: MVP 개발 시작·협업·위임 검증 요청
@@ -38,11 +41,11 @@ sources:
 
 # 현재 범위
 
-사용자의 개발 시작 요청에 따라 `feat/mvp-foundation`에서 Next.js App Router·TypeScript와 Supabase PostgreSQL/Auth를 연결한다. 기획 검색용 `docs/`와 작가 입력의 DB 원본은 분리한다. 현재 UI는 로그인과 자기 전시 목록 조회의 최소 골격이다. 작가 정보·전시·작품의 편집 폼과 관람 화면은 아직 연결하지 않았다.
+사용자의 개발 시작 요청에 따라 `feat/mvp-foundation`에서 Next.js App Router·TypeScript와 Supabase PostgreSQL/Auth를 연결한다. 기획 검색용 `docs/`와 작가 입력의 DB 원본은 분리한다. 현재 UI는 비밀번호 표시 전환을 포함한 로그인과 계정 이메일·작가명 미입력 안내·전시 기간/장소/작품 수를 제공하는 자기 전시 목록의 최소 골격이다. 작가 정보·전시·작품의 편집 폼과 관람 화면은 아직 연결하지 않았다.
 
 | 구분 | 현재 코드 | 후속 |
 | --- | --- | --- |
-| 앱 | Next.js 16.4.6, React 19.3.1, Route Handlers, Zod 입력 검사 | 전시/작품 편집 UI, 관람 온보딩·채팅 |
+| 앱 | Next.js 16.4.6, React 19.3.1, Tailwind CSS 4·PostCSS 설정, Route Handlers, Zod 입력 검사 | 전시/작품 편집 UI, 관람 온보딩·채팅 |
 | 인증 | 사전 생성 계정 로그인·로그아웃, 서버 getUser 검증, HttpOnly 쿠키 | 운영 계정 발급·복구 절차 |
 | 작가 자료 | 전시·작품 생성/조회/수정, 프로필·문서 조회/수정 API. 프로필·문서는 관련 작업에서 자동 생성 | 이미지/PDF 직접 업로드·검수 |
 | 데이터 | 7개 테이블·RPC·RLS·버전 검사·공개 조회 gate | 승인·게시·철회 실행 경로와 TTL 정리 |
@@ -51,7 +54,11 @@ sources:
 
 의존성 버전은 루트 `package.json`과 `package-lock.json`이 기준이며 Node 24·npm을 사용한다. 설치 시 발견한 개발 도구의 minimatch 취약점은 `@typescript-eslint/typescript-estree` 하위 패키지에 11.0.1 override를 둔다. 상위 도구가 수정 버전을 채택하면 override를 제거하고 린트를 재확인한다. Next.js의 자동 AGENTS 갱신은 껐으며 버전별 문서는 설치된 `node_modules/next/dist/docs/`를 먼저 읽는다.
 
+앱 설정은 부분 CSP(`base-uri`, `object-src`, `frame-ancestors`)와 frame·MIME·referrer 헤더를 제공한다. 전체 CSP 보호를 구현했다는 뜻은 아니다. App checks CI는 main push, PR, 수동 실행으로 구성한다.
+
 # DB 구현
+
+현재 dev/build는 Next.js 내장 Webpack을 명시한다. Tailwind 설정 후 이 Windows 환경에서 Turbopack PostCSS worker 종료를 재현했고 Webpack 검증은 통과했다. 번들러 재전환은 같은 스타일·API 검사로 확인한다.
 
 실제 SQL은 저장소 루트의 `supabase/migrations/`에 있으며 [논리 모델](data-model.md)을 다음처럼 구체화한다.
 
@@ -69,11 +76,15 @@ sources:
 
 초안 저장은 정형 필드와 내부 문서를 같은 트랜잭션에서 바꾼다. 두 revision 중 하나라도 오래되면 전체 변경을 되돌린다. 문서는 revision과 출처 검사 후 sections/sourceRefs가 기존 JSONB 값과 다를 때만 revision이 증가한다. 같으면 유지한다. 정형 정보 revision은 성공 저장마다 증가하며 UI는 각각의 서버 반환값을 사용한다. 생성 ID와 정규화 입력의 UTF-8 해시로 재시도를 구분한다. 정상 최초 생성은 201, 같은 소유자의 삭제되지 않은 리소스에 대한 동일 입력 재시도는 현재 저장본과 200, 같은 ID의 다른 입력은 409다. 타인·삭제된 리소스의 ID는 404다.
 
-출처는 저장하는 section을 가리킨다. 문서 출처는 같은 소유자의 상위 작가·전시 문서로 제한하고 저장 시 원본의 현재 revision과 section 존재를 검사한다. 상위 문서 수정 후 이미 저장된 참조는 자동 갱신되지 않으며 오래된 참조로 재저장하면 409다. 자료 출처는 자기/상위 주체의 ready 자료 ID를 검사하며 material version을 고정하지 않는다. PDF 쪽수는 양의 정수·순서·정수 상한을 검사하며 실제 파일의 총 페이지 수는 확인하지 않는다. 이것은 **초안 연결 검사**이며 승인 근거의 역사·검색·철회 기능을 완료했다는 뜻이 아니다.
+출처는 저장하는 section을 가리킨다. 기존 초안의 정확히 같은 참조는 보존하며 변경·이용 불가 여부를 문서 응답의 `sourceWarnings`로 알린다. 신규·변경 참조는 소유·상위 범위와 section 및 현재 revision을 검증한다. 문서 revision 충돌 P1001은 409 `SOURCE_REVISION_CONFLICT`, 사용 불가 P1002는 400 `SOURCE_UNAVAILABLE`이다. 자료 출처는 자기/상위 주체의 ready 자료를 검사하며 material version이나 실제 PDF 총 페이지 수는 확인하지 않는다. 이것은 **초안 연결 검사**이며 승인 근거의 역사·검색·철회 기능을 완료했다는 뜻이 아니다.
+
+프로필 표시 이름은 선택이고 생략 또는 null을 허용한다. section 본문은 JavaScript `trim()` 기준 앞뒤 공백 제거 후 유니코드 코드포인트 5,000개 이하다. 기존 본문과 정규화 결과가 같으면 기존 원문을 유지한다. 정형 PATCH는 전체 값 저장으로 선택 필드 생략 시 null이다.
 
 # API와 공개 경계
 
-[API 계약](api-contract.md)의 초기 경로를 구현한다. 요청 JSON은 최대 64KiB이며 실제 수신 바이트도 검사한다. owner·state 등 정의 밖 필드는 거부한다. 변경 요청은 Origin을 검사하며 운영 환경에서는 `APP_ORIGIN`을 실제 앱 주소로 지정한다. 인증 서비스 장애 503, 요청 제한 429, 로그인 필요 401을 구별한다. 세션 쿠키는 HttpOnly/Lax이며 HTTPS 앱에서 Secure로 설정한다.
+기존 계정 삭제 FK 제한과 논리 삭제된 작품의 번호 예약은 유지했다. 자동 cascade나 부분 unique 변경은 하지 않았으며 탈퇴·삭제·게시 기능에서 공개 차단 및 번호 예약 정책과 함께 구현한다.
+
+[API 계약](api-contract.md)의 초기 경로를 구현한다. 요청 JSON은 최대 64KiB이며 실제 수신 바이트도 검사한다. owner·state 등 정의 밖 필드는 거부한다. 변경 요청은 Origin을 검사하며 운영 환경에서는 `APP_ORIGIN`을 실제 앱 주소로 지정한다. 인증 서비스 장애 503, 요청 제한 429, 로그인 필요 401을 구별한다. 잘못되거나 운영에서 누락된 `APP_ORIGIN`은 503 `SERVER_CONFIGURATION_ERROR`이며 재시도 불가로 표시한다. 오류에는 `retryable`과 선택적 `retryAfter`를 반환한다. 프로필 조회는 `accountEmail`을 포함하고 전시 목록은 삭제되지 않은 작품 수 `artworkCount`와 최근 수정순을 제공한다. 세션 쿠키는 HttpOnly/Lax이며 HTTPS 앱에서 Secure로 설정한다.
 
 공개 전시/작품 RPC는 현재 전시와 작품이 게시 상태이고 활성 publication이 철회되지 않은 경우에만 명시된 공개 필드를 반환한다. 전시는 적격 작품이 최소 하나 있어야 한다. 작품의 publications 행은 불변성 제약이 있지만 전시의 public_*는 별도 가변 컬럼이며 버전 이력 테이블이 아니다. 내부 문서, 비공개 파일 경로, PDF 원본은 반환하지 않고 이미지·음성 전달도 아직 구현하지 않았다. 게시 실행 API가 없으므로 현재 앱으로 만든 초안의 공개 조회는 404가 정상이다. SQL 테스트의 승인 데이터는 신뢰된 테스트 픽스처이며 제품의 게시 기능으로 세지 않는다. 공개·관리자 응답은 모두 no-store다.
 
@@ -86,7 +97,7 @@ sources:
 - `npm run test:integration`: 실행 중인 로컬 앱과 Supabase에서 실제 쿠키 로그인→자료 저장→충돌/타인 접근 거부→로그아웃. 가짜 계정·초안은 로컬 DB에 남는다.
 - `python scripts/knowledge.py verify`: 문서/검색 검사이며 제품 테스트와 별개.
 
-초기 구현 497b61b에서 로컬 lint·typecheck·프로덕션 build, 단위 테스트 16개, Supabase pgTAP 53개, HTTP 통합 테스트 7개(상위 1 + 하위 6)가 통과했다. HTTP는 Node fetch와 쿠키 jar로 확인했고 실제 브라우저는 로그인 렌더링·기본 POST 폼만 확인했다. 해당 커밋의 App checks CI도 성공했으며 [재검토서](../reviews/mvp-foundation-2026-11-13.md)에 링크·범위·확인 시점을 기록한다. 배포·음성·실제 작가 자료·관람 시연은 미검증이다.
+과거 초기 검사로서 구현 497b61b에서 로컬 lint·typecheck·프로덕션 build, 단위 테스트 16개, Supabase pgTAP 53개, HTTP 통합 테스트 7개(상위 1 + 하위 6)가 통과했다. HTTP는 Node fetch와 쿠키 jar로 확인했고 실제 브라우저는 로그인 렌더링·기본 POST 폼만 확인했다. 해당 커밋의 App checks CI도 성공했으며 [재검토서](../reviews/mvp-foundation-2026-11-13.md)에 링크·범위·확인 시점을 기록한다. 최신 재검증은 재검토서 12절을 확인한다. 배포·음성·실제 작가 자료·관람 시연은 미검증이다.
 
 # 다음 구현 순서
 

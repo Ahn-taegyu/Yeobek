@@ -17,7 +17,7 @@ export async function createServerSupabase() {
     cookies: {
       getAll: () => store.getAll(),
       setAll: (values) => {
-        // All API responses and the page proxy set private/no-store headers.
+        // Route handlers that mutate cookies return private/no-store API responses.
         for (const { name, value, options } of values) store.set(name, value, options);
       },
     },

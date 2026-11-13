@@ -10,8 +10,16 @@ export const PRIVATE_HEADERS = {
 };
 
 export function assertSameOrigin(request: Request) {
+  let expected: string;
+  try {
+    if (process.env.NODE_ENV === "production" && !process.env.APP_ORIGIN) throw new Error();
+    const url = new URL(process.env.APP_ORIGIN || request.url);
+    if (!["http:", "https:"].includes(url.protocol)) throw new Error();
+    expected = url.origin;
+  } catch {
+    throw new ApiError(503, "SERVER_CONFIGURATION_ERROR", "서비스 연결 설정을 확인하고 있습니다.");
+  }
   const origin = request.headers.get("origin");
-  const expected = new URL(process.env.APP_ORIGIN || request.url).origin;
   if (!origin || origin !== expected || request.headers.get("sec-fetch-site") === "cross-site") {
     throw new ApiError(403, "FORBIDDEN", "같은 사이트에서 다시 요청해 주세요.");
   }
@@ -69,8 +77,11 @@ export function handleApi(action: () => Promise<unknown>, status = 200) {
         : new ApiError(500, "INTERNAL_ERROR", "요청을 처리하지 못했습니다.");
       // Request identifiers are safe to log; bodies, tokens and database details are not.
       if (failure.status >= 500) console.error("api_failure", { requestId, code: failure.code });
-      return Response.json({ error: { code: failure.code, message: failure.message, ...(failure.fields ? { fields: failure.fields } : {}) }, requestId }, {
-        status: failure.status, headers: { ...PRIVATE_HEADERS, "X-Request-Id": requestId },
+      return Response.json({ error: { code: failure.code, message: failure.message, retryable: failure.retryable,
+        ...(failure.retryAfter !== undefined ? { retryAfter: failure.retryAfter } : {}),
+        ...(failure.fields ? { fields: failure.fields } : {}) }, requestId }, {
+        status: failure.status, headers: { ...PRIVATE_HEADERS, "X-Request-Id": requestId,
+          ...(failure.retryAfter !== undefined ? { "Retry-After": String(failure.retryAfter) } : {}) },
       });
     }
   })();
