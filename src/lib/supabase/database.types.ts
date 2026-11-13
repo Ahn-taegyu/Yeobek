@@ -47,14 +47,14 @@ isOneToOne: false
                   ]
                 },"api_requests": {
                   Row: {
-                    "answer_text": string | null,"artwork_id": string | null,"created_at": string,"exhibition_id": string,"expires_at": string,"kind": string,"publication_id": string | null,"reply_audio_key": string | null,"request_id": string,"session_hash": string,"state": string,"updated_at": string,"usage": NonNullable<Json>
+                    "answer_text": string | null,"artwork_id": string | null,"created_at": string,"exhibition_id": string,"expires_at": string,"failure_code": string | null,"id": string,"input_hash": string | null,"kind": string,"lease_until": string | null,"mock": boolean,"publication_id": string | null,"reply_audio_key": string | null,"request_id": string,"result": Json | null,"session_hash": string,"state": string,"steps": Json | null,"updated_at": string,"usage": NonNullable<Json>
                   }
                   ComputedFields: never
                   Insert: {
-                    "answer_text"?: string | null,"artwork_id"?: string | null,"created_at"?: string,"exhibition_id": string,"expires_at"?: string,"kind": string,"publication_id"?: string | null,"reply_audio_key"?: string | null,"request_id": string,"session_hash": string,"state"?: string,"updated_at"?: string,"usage"?: NonNullable<Json>
+                    "answer_text"?: string | null,"artwork_id"?: string | null,"created_at"?: string,"exhibition_id": string,"expires_at"?: string,"failure_code"?: string | null,"id"?: string,"input_hash"?: string | null,"kind": string,"lease_until"?: string | null,"mock"?: boolean,"publication_id"?: string | null,"reply_audio_key"?: string | null,"request_id": string,"result"?: Json | null,"session_hash": string,"state"?: string,"steps"?: Json | null,"updated_at"?: string,"usage"?: NonNullable<Json>
                   }
                   Update: {
-                    "answer_text"?: string | null,"artwork_id"?: string | null,"created_at"?: string,"exhibition_id"?: string,"expires_at"?: string,"kind"?: string,"publication_id"?: string | null,"reply_audio_key"?: string | null,"request_id"?: string,"session_hash"?: string,"state"?: string,"updated_at"?: string,"usage"?: NonNullable<Json>
+                    "answer_text"?: string | null,"artwork_id"?: string | null,"created_at"?: string,"exhibition_id"?: string,"expires_at"?: string,"failure_code"?: string | null,"id"?: string,"input_hash"?: string | null,"kind"?: string,"lease_until"?: string | null,"mock"?: boolean,"publication_id"?: string | null,"reply_audio_key"?: string | null,"request_id"?: string,"result"?: Json | null,"session_hash"?: string,"state"?: string,"steps"?: Json | null,"updated_at"?: string,"usage"?: NonNullable<Json>
                   }
                   Relationships: [
                     {
@@ -393,6 +393,46 @@ isOneToOne: false
       referencedColumns: ["owner_id","exhibition_id","id"]
     }
                   ]
+                },"qa_gaps": {
+                  Row: {
+                    "artwork_id": string,"created_at": string,"exhibition_id": string,"expires_at": string,"id": string,"occurrences": number,"publication_id": string,"publication_version": number,"question": string,"question_key": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "artwork_id": string,"created_at"?: string,"exhibition_id": string,"expires_at": string,"id"?: string,"occurrences"?: number,"publication_id": string,"publication_version": number,"question": string,"question_key": string,"status"?: string
+                  }
+                  Update: {
+                    "artwork_id"?: string,"created_at"?: string,"exhibition_id"?: string,"expires_at"?: string,"id"?: string,"occurrences"?: number,"publication_id"?: string,"publication_version"?: number,"question"?: string,"question_key"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "qa_gaps_exhibition_id_artwork_id_publication_id_fkey"
+      columns: ["exhibition_id","artwork_id","publication_id"]
+isOneToOne: false
+      referencedRelation: "publications"
+      referencedColumns: ["exhibition_id","artwork_id","id"]
+    }
+                  ]
+                },"visitor_quota_events": {
+                  Row: {
+                    "exhibition_id": string,"reserved_at": string,"session_hash": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "exhibition_id": string,"reserved_at": string,"session_hash": string
+                  }
+                  Update: {
+                    "exhibition_id"?: string,"reserved_at"?: string,"session_hash"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "visitor_quota_events_exhibition_id_fkey"
+      columns: ["exhibition_id"]
+isOneToOne: false
+      referencedRelation: "exhibitions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"withdrawn_evidence_sources": {
                   Row: {
                     "owner_id": string,"source_key": string
@@ -419,14 +459,23 @@ isOneToOne: false
 "approve_narration":
 { Args: { "p_artwork_id": string,"p_citations": Json,"p_expected_revision": number }; Returns: Json
                            },
+"check_publication_versions":
+{ Args: { "p_exhibition_id": string,"p_publications": Json }; Returns: Json
+                           },
 "complete_ai_job":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
+                           },
+"complete_visitor_request":
+{ Args: { "p_failure_code"?: string,"p_id": string,"p_result": Json,"p_session_hash": string,"p_steps"?: Json }; Returns: Json
                            },
 "create_artwork":
 { Args: { "p_creation_year": string,"p_dimensions": string,"p_exhibition_id": string,"p_id": string,"p_medium": string,"p_number": number,"p_sections": Json,"p_source_refs": Json,"p_title": string }; Returns: Json
                            },
 "create_exhibition":
 { Args: { "p_end_date": string,"p_id": string,"p_place": string,"p_sections": Json,"p_source_refs": Json,"p_start_date": string,"p_title": string }; Returns: Json
+                           },
+"dismiss_gap":
+{ Args: { "p_enabled": boolean,"p_id": string,"p_owner": string }; Returns: Json
                            },
 "get_ai_job":
 { Args: { "p_job_id": string }; Returns: Json
@@ -467,11 +516,17 @@ isOneToOne: false
 "list_exhibitions":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"list_gaps":
+{ Args: { "p_enabled": boolean,"p_exhibition_id": string,"p_owner": string }; Returns: Json
+                           },
 "list_labels":
 { Args: { "p_exhibition_id": string }; Returns: Json
                            },
 "load_publication_context":
 { Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_number": number }; Returns: Json
+                           },
+"load_visitor_answer":
+{ Args: { "p_id": string,"p_session_hash": string }; Returns: Json
                            },
 "pause":
 { Args: { "p_artwork_id"?: string,"p_exhibition_id": string,"p_expected_revision": number }; Returns: Json
@@ -479,10 +534,22 @@ isOneToOne: false
 "publish":
 { Args: { "p_artworks": Json,"p_exhibition_id": string,"p_expected_revision": number,"p_intro": Json,"p_owner": string,"p_request_id": string,"p_voice_required": boolean }; Returns: Json
                            },
+"purge_expired":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"record_gap":
+{ Args: { "p_enabled": boolean,"p_question": string,"p_request_id": string,"p_session_hash": string }; Returns: boolean
+                           },
+"record_visitor_steps":
+{ Args: { "p_id": string,"p_session_hash": string,"p_steps": Json }; Returns: undefined
+                           },
 "reserve_ai_job":
 { Args: { "p_artwork_id": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_owner": string,"p_request_id": string,"p_strategy": string }; Returns: Json
                            } |
 { Args: { "p_artwork_id": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_mock": boolean,"p_owner": string,"p_request_id": string,"p_strategy": string }; Returns: Json
+                           },
+"reserve_visitor_request":
+{ Args: { "p_exhibition_id": string,"p_input_hash": string,"p_mock": boolean,"p_request_id": string,"p_session_hash": string }; Returns: Json
                            },
 "resume":
 { Args: { "p_artwork_id"?: string,"p_exhibition_id": string,"p_expected_revision": number,"p_owner": string,"p_voice_required": boolean }; Returns: Json

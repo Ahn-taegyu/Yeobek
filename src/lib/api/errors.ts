@@ -2,7 +2,7 @@ export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string,
     public fields?: Record<string, string[]>,
     public retryAfter?: number) { super(message); }
-  get retryable() { return this.code !== "SERVER_CONFIGURATION_ERROR" && (this.status === 429 || this.status >= 500); }
+  get retryable() { return this.code === "REQUEST_IN_PROGRESS" || this.code !== "SERVER_CONFIGURATION_ERROR" && (this.status === 429 || this.status >= 500); }
 }
 
 export function authenticationError(error: { status?: number; name?: string }, message = "로그인이 필요합니다.", code = "UNAUTHENTICATED"): ApiError {
@@ -21,6 +21,9 @@ export function databaseError(error: { code?: string; message?: string }): ApiEr
     case "P1004": return new ApiError(429, "AUTHOR_JOB_LIMIT", "오늘 사용할 수 있는 생성 횟수를 모두 사용했습니다.");
     case "P1005": return new ApiError(409, "REQUEST_ID_CONFLICT", "이 요청 ID는 다른 작업에 이미 사용했습니다.");
     case "P1006": return new ApiError(409, "JOB_ATTEMPT_CONFLICT", "작업 상태가 변경되었습니다. 새로 불러와 확인해 주세요.");
+    case "P1010": return new ApiError(429, "VISITOR_REQUEST_LIMIT", "요청이 많습니다. 잠시 후 다시 시도해 주세요.", undefined, 60);
+    case "P1011": return new ApiError(409, "REQUEST_IN_PROGRESS", "답변을 준비하고 있습니다. 잠시 후 확인해 주세요.", undefined, 2);
+    case "P1012": return new ApiError(410, "ANSWER_EXPIRED", "답변 보관 시간이 지났습니다. 새 요청으로 질문해 주세요.");
     case "42501": return new ApiError(403, "FORBIDDEN", "허용되지 않은 요청입니다.");
     case "40001": return new ApiError(409, "REVISION_CONFLICT", "다른 변경이 저장되었습니다. 새로 불러온 뒤 다시 수정해 주세요.");
     case "P1001": return new ApiError(409, "SOURCE_REVISION_CONFLICT", "새로 연결한 출처가 변경되었습니다. 출처를 확인해 주세요.", { sourceRefs: ["최신 출처를 확인한 뒤 다시 연결해 주세요."] });

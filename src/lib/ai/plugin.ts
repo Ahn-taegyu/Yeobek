@@ -3,6 +3,7 @@ import type { JobLifecycle } from "./job-lifecycle";
 import type { NarrationResult } from "./narration";
 import type { ArtistKnowledgeStore, KnowledgeOrganizationResult } from "./artist-knowledge";
 import type { PublicationStore } from "./contracts";
+import type { VisitorLifecycle } from "./visitor-lifecycle";
 import { yeobekPlugin } from "./plugin.generated";
 
 type Playbooks = typeof yeobekPlugin.playbooks;
@@ -17,6 +18,9 @@ export function playbookPrompt(id: PlaybookId): string {
 }
 type JobResult<Id> = Id extends "narration-draft" ? NarrationResult : KnowledgeOrganizationResult;
 type CapabilityMap<Id> = {
+  "request.reserve": VisitorLifecycle["reserve"] | undefined;
+  "answer.store": VisitorLifecycle["store"] | undefined;
+  "gap.record": VisitorLifecycle["recordGap"] | undefined;
   "job.reserve": JobLifecycle<JobResult<Id>>["reserve"] | undefined;
   "job.complete": JobLifecycle<JobResult<Id>>["complete"] | undefined;
   "publication.read": PublicationStore["load"];
@@ -32,6 +36,7 @@ type PlaybookCapabilities = {
 };
 
 type CapabilityStores<Id> = {
+  visitor?: VisitorLifecycle;
   jobs?: JobLifecycle<JobResult<Id>>;
   publications?: PublicationStore;
   author?: Pick<ArtistKnowledgeStore, "loadOwnedContext">;
@@ -44,6 +49,9 @@ function requireStore<Store>(store: Store | undefined): Store {
 }
 
 const bindCapability = {
+  "request.reserve": ({ visitor }) => visitor?.reserve.bind(visitor),
+  "answer.store": ({ visitor }) => visitor?.store.bind(visitor),
+  "gap.record": ({ visitor }) => visitor?.recordGap?.bind(visitor),
   "job.reserve": ({ jobs }) => jobs?.reserve.bind(jobs),
   "job.complete": ({ jobs }) => jobs?.complete.bind(jobs),
   "publication.read": ({ publications }) => requireStore(publications).load.bind(publications),

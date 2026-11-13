@@ -1,6 +1,6 @@
 # Yeobek
 
-작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**, 해설 생성·작업 저장 API, 서버 AI 어댑터·하네스와 기획 문서·검색 도구가 있습니다. 글 승인·게시 API는 로컬 DB·HTTP 검증을 마쳤고 음성·관람 채팅 연결과 화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
+작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**, 해설 생성·작업 저장 API, 서버 AI 어댑터·하네스와 기획 문서·검색 도구가 있습니다. 글 승인·게시 API는 PR #6으로 병합됐고 관람 글 채팅·보완 요청 API는 로컬 검증 중입니다. 업로드·음성·화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
 
 ## 앱 실행
 
@@ -20,7 +20,7 @@ npm run dev
 
 ## AI 연결 준비
 
-`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 실제 외부 모델 호출은 아직 0회입니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증과 [PR #5 CI](https://github.com/Ahn-taegyu/Yeobek/pull/5)를 통과해 병합됐습니다. 글 승인·게시 API는 DB 검증을 마치고 HTTP 검증 전이며 관람 채팅 HTTP는 연결 전입니다. 키를 넣어도 관람 화면이 활성화되지는 않습니다.
+`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 실제 외부 모델 호출은 아직 0회입니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증과 [PR #5 CI](https://github.com/Ahn-taegyu/Yeobek/pull/5)를 통과해 병합됐습니다. 글 승인·게시 API는 PR #6 CI를 통과해 병합됐으며 관람 글 채팅 HTTP도 연결했습니다. 키를 넣어도 관람 화면이 활성화되지는 않습니다.
 
 1. `.env.example`의 AI 항목을 기존 `.env.local`에 추가하고 `LINER_API_KEY`를 서버에 설정합니다. 키에 `NEXT_PUBLIC_`를 붙이지 않습니다.
 2. `AI_ROUTE_DRAFT`, `AI_ROUTE_ORGANIZE`, `AI_ROUTE_JUDGE`, `AI_ROUTE_QA`, `AI_ROUTE_STT`, `AI_ROUTE_TTS`는 `제공사:모델` 형식으로 선택합니다. Liner TTS는 계정에서 확인한 고정 모델을 `AI_ROUTE_TTS` 또는 `LINER_TTS_MODEL`에, 음성을 `LINER_TTS_VOICE`에 지정해야 합니다. 평가 모델은 초안과 다른 인식 가능한 계열이어야 합니다.
@@ -42,9 +42,9 @@ npm run ai:smoke -- stt --audio=path/to/test.webm
 
 `ai:check`는 설정을 검사하며 키를 출력하거나 접속하지 않습니다. `ai:smoke`는 `AI_PROVIDER_MODE=live`가 필요하며 `typecast-tts`, `openai-tts`, `exaone`도 선택할 수 있습니다. 시험은 응답 계약을 확인하며 한국어 품질·근거 충실도와 행사 키 권한은 별도 실측이 필요합니다.
 
-기존 인증·작가 CRUD와 공개 조회의 경로는 `src/lib/contracts/`에 계약을 두고 프런트에서 `requestApi`를 `@/lib/client`로 가져와 사용합니다. W4 글 게시 HTTP는 검증 중이며 관람 채팅 HTTP는 아직 없습니다.
+기존 인증·작가 CRUD와 공개 조회의 경로는 `src/lib/contracts/`에 계약을 두고 프런트에서 `requestApi`를 `@/lib/client`로 가져와 사용합니다. 글 게시와 관람 채팅·보완 요청 HTTP도 같은 계약과 클라이언트로 호출합니다.
 
-W1 해설 작업은 소유자별 일일 초기 한도 100회, 180초 lease, 30일 작업 만료를 사용합니다. 요청 중 동기 실행하고 중단되면 작업 조회 후 재시도하며, 결과는 작가가 별도로 적용해야 초안이 바뀝니다. 모의 모드는 development/test에서만 허용합니다. 30일 만료 후 접근을 차단하며 실제 삭제 정리는 W5에서 구현할 예정입니다.
+W1 해설 작업은 소유자별 일일 초기 한도 100회, 180초 lease, 30일 작업 만료를 사용합니다. 요청 중 동기 실행하고 중단되면 작업 조회 후 재시도하며, 결과는 작가가 별도로 적용해야 초안이 바뀝니다. 모의 모드는 development/test에서만 허용합니다. 30일 만료 후 접근을 차단하며 실제 삭제는 비밀값으로 보호한 POST /api/cron/purge를 외부 스케줄러가 호출합니다. 이 저장소 작업에서 운영 스케줄러를 배포하지는 않았습니다.
 
 모의 작업 HTTP 검사는 별도 개발 서버에서 실행합니다. PowerShell에서 다음을 실행하고, 서버가 준비되면 다른 터미널에서 테스트합니다. 로컬 DB와 작가 계정이 필요합니다.
 
@@ -137,3 +137,9 @@ python scripts/knowledge.py verify
 수정 시 [기여 안내](CONTRIBUTING.md)를 따릅니다. 출처 → 결정 → 기능·명세 → 목차·변경 이력을 연결하고 `python scripts/knowledge.py verify`를 실행합니다. Knowledge checks는 main push·PR·수동 실행에서 Windows/Linux 검증을 수행합니다.
 
 가상환경, 검색 인덱스, 개인 Obsidian 배치, 비밀키는 커밋하지 않습니다. 새 clone에서 인덱스를 재생성하므로 문서 원문이 유일한 편집 기준입니다. 검색 점수나 `stable` 상태는 사용자 확정·제품 구현 완료를 뜻하지 않습니다.
+
+## 관람 글 API 검사와 만료 정리
+
+모의 서버에 `FEATURE_VOICE_REQUIRED=false`, `FEATURE_GAPS=true`와 테스트용 `CRON_SECRET`(32자 이상)을 설정한 뒤 `npm run test:visitor`를 실행합니다. 서버를 `FEATURE_GAPS=false`로 다시 시작하고 검사 쪽에 `TEST_GAPS_DISABLED_ONLY=true`를 설정하면 보완 요청 경로 404·필드 생략·채팅 유지도 확인합니다. 실제 이미지 업로드는 아직 없으므로 HTTP 검사에서는 준비된 이미지 메타데이터 fixture를 사용합니다.
+
+운영 배포 시 스케줄러가 매시간 `POST /api/cron/purge`를 `Authorization: Bearer <CRON_SECRET>` 헤더로 호출하도록 설정해야 합니다. DB 접근 만료는 즉시 적용되며 물리 삭제는 이 호출로 실행됩니다. 서버 비밀값을 프런트나 URL에 넣지 않습니다. 현재 스케줄러를 배포하거나 실제 외부 AI를 호출하지 않았습니다.

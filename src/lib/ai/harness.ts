@@ -7,6 +7,7 @@ import { DOCENT_SYSTEM_PROMPT, PROMPT_VERSION } from "./prompts";
 import type { AiSpeechProvider, AiTextProvider } from "./providers/types";
 import { capabilitiesFor, DOCENT_COPY } from "./plugin";
 import { PlaybookOrderError, startPlaybook } from "./playbook";
+import type { VisitorLifecycle } from "./visitor-lifecycle";
 
 const reference = (context: PublicationContext): PublicationRef => ({ exhibitionId: context.exhibitionId,
   artworkId: context.artworkId, publicationId: context.publicationId, version: context.version });
@@ -37,12 +38,10 @@ async function assertCurrent(recheck: PublicationStore["isCurrent"], ref: Public
   assertNotCancelled(signal);
 }
 
-/** One bounded text call, with no tool loop or automatic repair/retry.
- * The caller must reserve a persisted request/budget before invoking this module.
- * No public route currently exposes this function.
- */
-export function createDocentHarness(deps: { publications: PublicationStore; text: AiTextProvider }) {
-  const caps = capabilitiesFor("visitor-answer", { publications: deps.publications });
+/** One bounded text call. HTTP must bind visitor persistence; isolated model
+ * evaluations may leave it unbound and record the skipped lifecycle explicitly. */
+export function createDocentHarness(deps: { publications: PublicationStore; text: AiTextProvider; visitor?: VisitorLifecycle }) {
+  const caps = capabilitiesFor("visitor-answer", { publications: deps.publications, visitor: deps.visitor });
   return {
     async answer(input: unknown, signal?: AbortSignal): Promise<DocentReply> {
       const flow = startPlaybook("visitor-answer");
@@ -56,10 +55,20 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
             ? parsed.data.intent : undefined;
           return { request: parsed.data, explicitIntent };
         });
+        if (caps["request.reserve"]) await flow.step("request.reserve", () => caps["request.reserve"]!(request));
+        else flow.skip("request.reserve", "request_unbound");
         const base = { requestId: request.requestId, contextSequence: request.contextSequence,
           inputMode: request.inputMode, outputMode: request.outputMode, promptVersion: PROMPT_VERSION };
         const fixed = (answer: string, outcome: "clarify" | "insufficient_evidence", publication: PublicationRef | null = null): Omit<DocentReply, "steps"> =>
           ({ ...base, answer, outcome, citations: [], publication, source: "fixed" });
+        const persist = async (reply: Omit<DocentReply, "steps">): Promise<DocentReply> => {
+          if (caps["answer.store"]) await flow.step("answer.store", () => caps["answer.store"]!(reply));
+          else flow.skip("answer.store", "request_unbound");
+          if (caps["gap.record"] && reply.publication && reply.outcome === "insufficient_evidence") {
+            await flow.step("gap.record", () => caps["gap.record"]!(request.question, reply));
+          } else flow.skip("gap.record", "gap_not_applicable");
+          return { ...reply, steps: flow.finish() };
+        };
         const resolved = await flow.step("intent.resolve", () => {
           assertNotCancelled(signal);
           const intent = resolveIntent({ question: request.question, intent: explicitIntent });
@@ -73,7 +82,7 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
         });
         if (!resolved.selector) {
           for (const id of ["publication.read", "publication.recheck", "evidence.select", "model.generate", "output.validate", "publication.recheck.final"] as const) flow.skip(id, "selection_required");
-          return { ...fixed(resolved.message, "clarify"), steps: flow.finish() };
+          return await persist(fixed(resolved.message, "clarify"));
         }
         const selector = resolved.selector;
         const context = await flow.step("publication.read", async () => {
@@ -88,13 +97,13 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
         });
         if (!context) {
           for (const id of ["publication.recheck", "evidence.select", "model.generate", "output.validate", "publication.recheck.final"] as const) flow.skip(id, "number_unavailable");
-          return { ...fixed(DOCENT_COPY.artworkUnavailable, "clarify"), steps: flow.finish() };
+          return await persist(fixed(DOCENT_COPY.artworkUnavailable, "clarify"));
         }
         const ref = reference(context);
         await flow.step("publication.recheck", () => assertCurrent(caps["publication.recheck"], ref, signal));
         const finish = async (result: Omit<DocentReply, "steps">): Promise<DocentReply> => {
           await flow.step("publication.recheck.final", () => assertCurrent(caps["publication.recheck"], ref, signal));
-          return { ...result, steps: flow.finish() };
+          return persist(result);
         };
         if (resolved.intent === "narration") {
           for (const id of ["evidence.select", "model.generate", "output.validate"] as const) flow.skip(id, "approved_narration");
@@ -144,7 +153,7 @@ export async function speakVerifiedReply(input: { sessionId: string; answerId: s
   answers: SpeechSourceStore; publications: PublicationStore; speech: AiSpeechProvider;
 }, signal?: AbortSignal) {
   const caps = capabilitiesFor("visitor-answer", { publications: deps.publications });
-  const parsed = z.strictObject({ sessionId: z.uuid(), answerId: z.uuid() }).safeParse(input);
+  const parsed = z.strictObject({ sessionId: z.union([z.uuid(), z.string().regex(/^[a-f0-9]{64}$/)]), answerId: z.uuid() }).safeParse(input);
   if (!parsed.success) throw new HarnessError("invalid_request");
   assertNotCancelled(signal);
   const reply = await deps.answers.loadAnswer(parsed.data.sessionId, parsed.data.answerId, signal);
