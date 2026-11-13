@@ -11,6 +11,8 @@ okf_version: "0.2"
 
 # MVP부터 읽기
 
+- [AI 하네스 PR2 수정 검토](reviews/ai-harness-fix-review.md) — 재현 결함·검증 상태·후속 통합 조건.
+
 - [제품 AI 플러그인과 품질 기준](specs/product-ai-plugin.md) — 스킬·도구·지침 조합, 작가 정리 후보·검수, 실제 품질 검증 경계.
 - [다중 후보와 문맥 계승 검토](research/candidate-selection.md) — 병렬 생성·평가 하한·제한된 재생성·채택 대화 동기화 제안.
 

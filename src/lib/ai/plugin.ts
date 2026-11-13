@@ -10,9 +10,11 @@ export function playbookPrompt(id: PlaybookId): string {
   return [yeobekPlugin.instructions, ...yeobekPlugin.playbooks[id].skills.map(name =>
     yeobekPlugin.skills[name].instructions)].join("\n\n");
 }
-export function assertPluginTool(id: PlaybookId, tool: PluginTool) {
+/** Static workflow/config consistency only, never an authorization boundary.
+ * The trusted store ports enforce caller ownership and publication access. */
+export function assertPlaybookToolConfigured(id: PlaybookId, tool: PluginTool) {
   const allowed: readonly string[] = yeobekPlugin.playbooks[id].tools;
-  if (!allowed.includes(tool)) throw new Error("plugin_tool_not_allowed");
+  if (!allowed.includes(tool)) throw new Error("playbook_tool_not_configured");
 }
 
 export const DOCENT_COPY = yeobekPlugin.messages;

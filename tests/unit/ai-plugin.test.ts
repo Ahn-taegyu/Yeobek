@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import { assertPluginTool, DOCENT_COPY, PLUGIN_VERSION, playbookPrompt } from "../../src/lib/ai/plugin";
+import { assertPlaybookToolConfigured, DOCENT_COPY, PLUGIN_VERSION, playbookPrompt } from "../../src/lib/ai/plugin";
 import { createDocentHarness } from "../../src/lib/ai/harness";
 import { selectEvidence } from "../../src/lib/ai/context";
 import { createArtistKnowledgeHarness, type ArtistKnowledgeContext, type KnowledgeProposal } from "../../src/lib/ai/artist-knowledge";
@@ -30,13 +30,13 @@ function artistSetup() {
   return { context, store, text, harness, proposal: () => saved! };
 }
 describe("product plugin boundaries", () => {
-  it("selects only skills for the server-assigned task and denies visitor writes", () => {
+  it("selects task skills and detects unconfigured playbook tools (not authorization)", () => {
     expect(PLUGIN_VERSION).toMatch(/^yeobek@0\.3\.0:[a-f0-9]{12}$/);
     expect(playbookPrompt("visitor-answer")).toContain("차분한 존댓말");
     expect(playbookPrompt("visitor-answer")).not.toContain("출력은 sections 배열");
     expect(playbookPrompt("artist-organize")).not.toContain("기본 말투는 차분한 존댓말");
-    expect(() => assertPluginTool("visitor-answer", "proposal.apply")).toThrow("plugin_tool_not_allowed");
-    expect(() => assertPluginTool("artist-organize", "proposal.apply")).toThrow("plugin_tool_not_allowed");
+    expect(() => assertPlaybookToolConfigured("visitor-answer", "proposal.apply")).toThrow("playbook_tool_not_configured");
+    expect(() => assertPlaybookToolConfigured("artist-organize", "proposal.apply")).toThrow("playbook_tool_not_configured");
   });
   it("replaces prose in an ungrounded model outcome with reviewed formal copy", async () => {
     const publications = { load: async () => syntheticPublication(), isCurrent: async () => true };

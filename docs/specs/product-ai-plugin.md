@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: pr2-review
+  resource: /references/user-ai-pr2-review.md
+  title: AI 하네스 PR2 검토와 수정 요청
 - id: direction
   resource: /decisions/D-012-product-ai-plugin.md
   title: 사용자 확정 제품 플러그인 방향
@@ -91,3 +94,7 @@ clarify/insufficient_evidence 결과는 모델이 쓴 문장을 버리고 고정
 Sol의 독립 코드 검토에서 무변경 적용 재요청·동시 적용 결과 조회·상위 문서 출처 손실 문제를 찾아 수정했다. 원문 보존의 범위도 후보 생성·선택되지 않은 section·별도 원자료로 명확히 했다. Terra는 독립적으로 세 합성 사례에 스킬을 적용해 근거 답변·의도 부족·작가 블록 분류 결과를 만들었다. 혼합 주제 블록 분류에는 재량이 남는다고 확인했다. 이 결과는 실제 서비스 모델의 품질 통과율이 아니다.
 
 높은 일관성은 평가로 개선하는 목표다. "완벽"이라는 무측정 완료 기준을 쓰지 않는다. [작가 해설 후보 실행과 비교 평가](narration-evaluation.md)는 두 후보와 제한된 재생성의 별도 경로다. 관람객 문맥 계승은 여전히 제안이다.
+
+# PR2 후속 계약
+
+`assertPlaybookToolConfigured`는 절차 설정의 일관성만 확인하며 인증·인가가 아니다. 실제 적용 어댑터는 이전 section·sourceRefs·revision 이력을 동일 CAS 트랜잭션에서 append-only로 보존하고 소유권·만료·고정 출처·멱등성을 검증해야 한다. 무변경·재실행에 중복 이력을 남기지 않는다. 이 DB 어댑터는 아직 없다. 합친 section이 5,000자를 초과하면 저장 전 거부되며 재선택·분할 UX가 필요하고 조용히 자르지 않는다. 정확한 공백 토큰 검색은 한국어 조사에 취약하다. 생성 URL 문자 패턴 차단은 공개 작가 URL도 거부할 수 있어 공개 링크 정책이 필요하다. [검토](../reviews/ai-harness-fix-review.md)

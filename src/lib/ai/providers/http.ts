@@ -1,6 +1,7 @@
 import "server-only";
 
 import { AI_REQUEST_TIMEOUT_MS } from "../config";
+import { AI_LIMITS, codepoints } from "../contracts";
 import { AiError } from "../errors";
 import type { AiProviderOptions, AiProviderTrace, AiUsage } from "./types";
 
@@ -205,7 +206,8 @@ export async function requestSpeech(
 }
 
 export function validateSpeechText(text: string): void {
-  if (typeof text !== "string" || !text.trim() || text.length > 2000) {
+  // Match the publication contract: Unicode code points, not UTF-16 units.
+  if (typeof text !== "string" || !text.trim() || codepoints(text) > AI_LIMITS.approvedNarration || text.includes("\u0000")) {
     throw new AiError("invalid_input");
   }
 }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const AI_LIMITS = { question: 500, answer: 600, evidenceCount: 12, evidenceChars: 8000 } as const;
+export const AI_LIMITS = { question: 500, answer: 600, approvedNarration: 2000, evidenceCount: 12, evidenceChars: 8000 } as const;
 export const codepoints = (value: string) => Array.from(value).length;
 const visible = (value: string) => /[^\s\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}]/u.test(value);
 const boundedText = (max: number) => z.string().min(1).refine(value =>
@@ -12,6 +12,9 @@ export const chatRequestSchema = z.strictObject({
   requestId: id,
   exhibitionId: id,
   artworkId: id.nullable(),
+  // Structured UI intent takes precedence; omitted fields retain legacy fallback.
+  intent: z.enum(["auto", "narration", "question"]).optional(),
+  artworkNumber: z.number().int().min(1).max(9999).optional(),
   question: boundedText(AI_LIMITS.question),
   contextSequence: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
   inputMode: z.enum(["text", "voice"]),
@@ -47,11 +50,14 @@ export const evidenceSchema = z.strictObject({
   contentHash: z.string().regex(/^[a-f0-9]{64}$/),
 });
 export type Evidence = z.infer<typeof evidenceSchema>;
+export const approvedNarrationSchema = z.strictObject({
+  text: boundedText(AI_LIMITS.approvedNarration), citations: z.array(id).min(1).max(AI_LIMITS.evidenceCount),
+});
 export const publicationContextSchema = z.strictObject({
   ownerId: id, exhibitionId: id, artworkId: id, publicationId: id, version,
   number: z.number().int().min(1).max(9999), title: boundedText(100),
   evidence: z.array(evidenceSchema).max(100),
-  narration: z.strictObject({ text: boundedText(AI_LIMITS.answer), citations: z.array(id).min(1).max(12) }).nullable(),
+  narration: approvedNarrationSchema.nullable(),
 });
 export type PublicationContext = z.infer<typeof publicationContextSchema>;
 export type PublicationRef = Pick<PublicationContext, "exhibitionId" | "artworkId" | "publicationId" | "version">;
@@ -60,6 +66,9 @@ export type ArtworkSelector = { exhibitionId: string } & ({ artworkId: string } 
 /** Server capability, never constructed from a browser-supplied snapshot.
  * load must enforce tenant/current publication/source revocation BEFORE reading
  * evidence. isCurrent rechecks all gates, including common-source revocation.
+ * The publisher must persist approved citation IDs and validate each pinned
+ * source's ownership/version/hash. The current SQL JSON-array check is not this
+ * contract; never invent narration citations by citing every evidence row.
  * No production DB adapter exists until the approval/publication workflow lands.
  */
 export interface PublicationStore {
@@ -75,8 +84,9 @@ export type DocentReply = ModelAnswer & {
   promptVersion: string;
 };
 
-/** Session ownership/expiry and the saved validated reply are checked by the
- * implementation. An HTTP speech endpoint must accept IDs, never arbitrary text.
+/** Session ownership/expiry and the saved validated reply (including trusted
+ * source, outcome and citations) are checked by the implementation. An HTTP
+ * speech endpoint must accept IDs, never arbitrary text/source assertions.
  */
 export interface SpeechSourceStore {
   loadAnswer(sessionId: string, answerId: string, signal?: AbortSignal): Promise<DocentReply | null>;

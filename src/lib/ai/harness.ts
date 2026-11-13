@@ -5,7 +5,7 @@ import { answerJsonSchema, answerSchema, chatRequestSchema, type DocentReply, ty
 import { assertNotCancelled, HarnessError, isNarrationRequest, mentionedNumbers, selectEvidence, textHash, validateContext } from "./context";
 import { DOCENT_SYSTEM_PROMPT, PROMPT_VERSION } from "./prompts";
 import type { AiSpeechProvider, AiTextProvider } from "./providers/types";
-import { assertPluginTool, DOCENT_COPY } from "./plugin";
+import { assertPlaybookToolConfigured, DOCENT_COPY } from "./plugin";
 
 const reference = (context: PublicationContext): PublicationRef => ({ exhibitionId: context.exhibitionId,
   artworkId: context.artworkId, publicationId: context.publicationId, version: context.version });
@@ -25,7 +25,7 @@ export function validateAnswer(output: unknown, allowedIds: string[]): ModelAnsw
 }
 
 async function assertCurrent(store: PublicationStore, ref: PublicationRef, signal?: AbortSignal) {
-  assertPluginTool("visitor-answer", "publication.recheck");
+  assertPlaybookToolConfigured("visitor-answer", "publication.recheck");
   assertNotCancelled(signal);
   if (!await store.isCurrent(ref, signal)) throw new HarnessError("publication_unavailable");
   assertNotCancelled(signal);
@@ -47,11 +47,15 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
       const fixed = (answer: string, outcome: "clarify" | "insufficient_evidence", publication: PublicationRef | null = null): DocentReply =>
         ({ ...base, answer, outcome, citations: [], publication, source: "fixed" });
       const { numbers, invalid } = mentionedNumbers(request.question);
-      if (invalid || numbers.length > 1) return fixed(DOCENT_COPY.chooseOne, "clarify");
-      const selector = numbers.length ? { exhibitionId: request.exhibitionId, number: numbers[0] }
+      if (invalid || numbers.length > 1 ||
+        (request.artworkNumber !== undefined && numbers.length === 1 && numbers[0] !== request.artworkNumber)) {
+        return fixed(DOCENT_COPY.chooseOne, "clarify");
+      }
+      const number = request.artworkNumber ?? numbers[0];
+      const selector = number !== undefined ? { exhibitionId: request.exhibitionId, number }
         : request.artworkId ? { exhibitionId: request.exhibitionId, artworkId: request.artworkId } : null;
       if (!selector) return fixed(DOCENT_COPY.chooseArtwork, "clarify");
-      assertPluginTool("visitor-answer", "publication.read");
+      assertPlaybookToolConfigured("visitor-answer", "publication.read");
       const loaded = await deps.publications.load(selector, signal);
       assertNotCancelled(signal);
       if (!loaded) throw new HarnessError("publication_unavailable");
@@ -62,7 +66,8 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
         await assertCurrent(deps.publications, ref, signal);
         return result;
       };
-      if (isNarrationRequest(request.question)) {
+      if (request.intent === "narration" ||
+        (request.intent !== "question" && isNarrationRequest(request.question))) {
         if (!context.narration) return finish(fixed(DOCENT_COPY.noNarration, "insufficient_evidence", ref));
         return finish({ ...base, publication: ref, source: "approved_narration", outcome: "answered",
           answer: context.narration.text, citations: [...context.narration.citations] });
@@ -103,8 +108,26 @@ export async function speakVerifiedReply(input: { sessionId: string; answerId: s
   assertNotCancelled(signal);
   if (!reply?.publication) throw new HarnessError("answer_unavailable");
   // Provenance comes from the trusted saved record, not from request parameters.
-  validateAnswer({ answer: reply.answer, citations: reply.citations, outcome: reply.outcome }, reply.citations);
   await assertCurrent(deps.publications, reply.publication, signal);
+  if (reply.source === "approved_narration") {
+    assertPlaybookToolConfigured("visitor-answer", "publication.read");
+    const selector = { exhibitionId: reply.publication.exhibitionId, artworkId: reply.publication.artworkId };
+    const loaded = await deps.publications.load(selector, signal);
+    assertNotCancelled(signal);
+    if (!loaded) throw new HarnessError("publication_unavailable");
+    const context = validateContext(loaded, selector);
+    const approved = context.narration;
+    // An approved source label alone cannot grant the larger text budget or
+    // bypass generated-text guards. Match the current immutable publication.
+    if (!approved || reply.outcome !== "answered" || context.publicationId !== reply.publication.publicationId ||
+      context.version !== reply.publication.version || reply.answer !== approved.text ||
+      !Array.isArray(reply.citations) || reply.citations.length !== approved.citations.length ||
+      reply.citations.some((id, index) => id !== approved.citations[index])) throw new HarnessError("invalid_output");
+  } else if (reply.source === "generated" || reply.source === "fixed") {
+    validateAnswer({ answer: reply.answer, citations: reply.citations, outcome: reply.outcome }, reply.citations);
+  } else {
+    throw new HarnessError("invalid_output");
+  }
   const audio = await deps.speech.synthesize({ text: reply.answer, signal });
   await assertCurrent(deps.publications, reply.publication, signal);
   return { ...audio, textHash: textHash(reply.answer), publication: reply.publication };

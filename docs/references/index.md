@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [AI 하네스 PR2 검토와 수정 요청](user-ai-pr2-review.md) — 검토 전달 내용 요약과 후속 계약.
+
 - [제품 플러그인과 품질 요구](user-plugin-quality.md) — pstack과 같은 스킬·도구·지침 조합.
 - [병렬 답변·평가·문맥 복제 검토](user-candidate-selection.md) — 평가 하한·재생성·채택 세션 계승 아이디어.
 

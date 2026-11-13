@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: pr2-review
+  resource: /references/user-ai-pr2-review.md
+  title: AI 하네스 PR2 검토와 수정 요청
 - id: harness
   resource: /specs/ai-harness.md
   title: 제품 AI 실행 하네스 준비 범위
@@ -126,7 +129,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | 14 | `GET /api/admin/exhibitions/{id}/labels` | 현재 공개 전시·작품만 안정 URL·번호·제목 반환 |
 | 15 | `POST /api/public/exhibitions/{id}/versions/check` `{publication_ids}` | 현재 이용 가능한 공개 버전만 확인; 번호 조회도 해당 전시 공개 범위로 제한 |
 | 16 | `POST /api/transcribe` multipart `exhibition_id,session_id,id,file` | 인식문·상태 반환; 사용자가 수정 후 별도 전송, 원음 장기 저장 없음 |
-| 17 | `POST /api/chat` `{id,exhibition_id,session_id,conversation_id,question,artwork_id?,number?,context_sequence,input_mode,output_mode,recent_context}` | `message_id,reply_to,resolved_artwork_id,publication_id,answer,citations,outcome`; 공개 재검사 후 승인 근거만 사용 |
+| 17 | `POST /api/chat` `{id,exhibition_id,session_id,conversation_id,question,artwork_id?,number?,intent?,context_sequence,input_mode,output_mode,recent_context}` | `message_id,reply_to,resolved_artwork_id,publication_id,answer,citations,outcome`; 공개 재검사 후 승인 근거만 사용; 선택적 `intent`는 `auto`·`narration`·`question`, `number`는 1~9999 정수 |
 | 18 | `POST /api/speech` `{id,session_id,answer_id? ,narration_id?}` | 둘 중 하나만 허용; 같은 세션의 서버 답변 또는 활성 공개 해설의 글 해시·음성 상태·미디어 참조. 임의 텍스트 불허 |
 | 19 | `GET /api/media/{id}` | 현재 공개 버전과 필요한 세션 검사 후 이미지/음성 바이트, `no-store`; 원본 PDF 제외 |
 | 20 | `GET /api/jobs/{id}`; `POST /api/jobs/{id}/retry` `{id,revision}` | 소유자 또는 소유 세션 확인 후 상태·재시도 가능 여부·대기 시간; 중복 실행 방지 |
@@ -137,3 +140,9 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 # 남은 설계 확인
 
 후속 자료·근거·작업의 세부 스키마, 목록 페이지네이션, 생성 중복 요청 보존 기간과 공개 세션 식별 방식은 구현 전에 확정한다. 제한 값은 설계 제안이며 실제 제공사·환경 검증 결과가 아니다. 서버와 DB 오류 매핑, 동시 수정·타인 접근·공개 중지 후 접근을 실제 구현에서 검증해야 한다.
+
+# AI HTTP 통합 전 추가 조건
+
+[PR2 검토](../reviews/ai-harness-fix-review.md)의 구조화 `intent` (`auto`·`narration`·`question`)와 `artworkNumber` (1~9999)는 내부 모듈에 구현되며 공개 HTTP는 미구현이다. 계획된 OP-17 HTTP의 `number`를 내부 `artworkNumber`로, `artwork_id`를 `artworkId`로 매핑한다. 질문은 필수다. 해설 버튼은 `narration`과 `artworkId`, 숫자 입력은 `narration`과 번호를 보낸다. 명시적 question은 Q&A이며 구조화 번호와 명백한 텍스트 번호가 충돌하면 확인한다.
+
+승인 해설은 2,000 Unicode 코드 포인트까지 원문 그대로, 생성 답·작가 후보는 600까지 다룬다. 낭독은 신뢰할 수 있게 저장한 답변의 출처·outcome·인용과 현재 공개 문맥을 검사하고 승인 해설이면 글·인용·publication 버전까지 비교해야 한다. 현재 `api_requests`에는 해당 필드가 없어 영속 저장 구현이 선행된다. 음성 전송 상한은 2,000 코드 포인트다. 게시자의 근거 검증과 신규 migration은 [데이터 모델](data-model.md)에 정의하며 아직 미구현이다.

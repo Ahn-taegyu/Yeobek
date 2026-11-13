@@ -13,6 +13,9 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: pr2-review
+  resource: /references/user-ai-pr2-review.md
+  title: AI 하네스 PR2 검토와 수정 요청
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -80,3 +83,9 @@ mode 값은 각각 text/voice이며 하나를 바꿔 다른 하나를 덮어쓰�
 온보딩 완료는 탭의 전시별 임시 상태이며 관람 분석이나 개인 기록 기능이 아니다.
 
 MVP 관람객 계정, 결제·주문·재고, 실시간 그룹 방, 추적용 세션 장기 보관은 이 모델에 포함하지 않는다. 대화에 필요한 임시 인식문·문맥과 원음/질문 장기 보관은 별개다. P2 질문/행동 수집은 별도 결정 후 추가한다. 파일·원문·키를 기획 저장소의 RAG 인덱스에 넣지 않는다.
+
+# AI 게시·후보 통합 선행 조건
+
+[PR2 검토](../reviews/ai-harness-fix-review.md)에 따른 후속 DB 계약이다. 게시자는 승인 해설의 권위 있는 citation ID를 저장하고 해당 근거의 ID·버전·소유자·전시·publication·작품 범위·label·본문·해시를 검증하며 철회된 출처를 차단해야 한다. 모든 근거를 자동 인용으로 채우지 않는다. 현재 SQL의 비어 있지 않은 JSON 배열 검사는 이 조건을 강제하지 못하므로 공유 migration 수정 대신 신규 migration이 필요하다. 승인 전에 텍스트를 한 번 정규화해 같은 값으로 해시하거나 원문이 2,000 Unicode 코드 포인트를 넘으면 거부하고, 읽을 때는 수정하지 않는다.
+
+현재 `api_requests`에는 답변 source/outcome/citations가 없으므로 낭독 endpoint 전 신뢰 가능한 영속 저장이 필요하다. 작가 후보 적용은 이전 section·sourceRefs·revision 이력을 동일 CAS 트랜잭션에서 append-only로 남기고 만료·소유권·고정 출처·멱등성을 검증한다. 무변경이나 재실행에 이력을 중복하지 않는다. 실제 어댑터와 원자성 검증은 후속이다.

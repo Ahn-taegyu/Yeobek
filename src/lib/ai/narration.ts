@@ -6,7 +6,7 @@ import { textHash } from "./context";
 import { answerJsonSchema, type ModelAnswer } from "./contracts";
 import { AiError, type AiErrorCode } from "./errors";
 import { validateAnswer } from "./harness";
-import { assertPluginTool, playbookPrompt } from "./plugin";
+import { assertPlaybookToolConfigured, playbookPrompt } from "./plugin";
 import { NARRATION_SYSTEM_PROMPT, PROMPT_VERSION } from "./prompts";
 import type { AiProviderTrace, AiTextProvider, AiTextRequest } from "./providers/types";
 
@@ -170,7 +170,7 @@ export function createNarrationHarness(actorId: string, deps: {
         if (deadline.signal.aborted || now() - started >= NARRATION_LIMITS.deadlineMs) return "timeout";
       }
       const load = () => {
-        assertPluginTool("narration-draft", "author.read");
+        assertPlaybookToolConfigured("narration-draft", "author.read");
         return abortable(requestSignal, activeSignal => deps.store.loadOwnedContext(actorId, documentId, activeSignal));
       };
 
@@ -281,7 +281,7 @@ export function createNarrationHarness(actorId: string, deps: {
 
           let reason: AbstentionReason = missingEvidence ?? (failureFeedback.size ? "invalid_candidate" : "generation_failed");
           if (candidates.length) {
-            assertPluginTool("narration-evaluate", "author.read");
+            assertPlaybookToolConfigured("narration-evaluate", "author.read");
             if (!await checkSnapshot()) return abstain(interrupted() ?? "stale_context");
             const ordered = candidates.length === 2 && randomInt(2) ? [...candidates].reverse() : candidates;
             const assessment = await invoke(deps.judge, {

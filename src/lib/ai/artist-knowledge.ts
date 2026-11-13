@@ -4,7 +4,7 @@ import { z } from "zod";
 import { section, sourceRef } from "../api/schemas";
 import { assertNotCancelled, textHash } from "./context";
 import { codepoints } from "./contracts";
-import { assertPluginTool, PLUGIN_VERSION, playbookPrompt } from "./plugin";
+import { assertPlaybookToolConfigured, PLUGIN_VERSION, playbookPrompt } from "./plugin";
 import type { AiTextProvider } from "./providers/types";
 
 const uuid = z.uuid();
@@ -39,6 +39,9 @@ export type KnowledgeProposal = z.infer<typeof proposalSchema>;
  * ancestry. Proposals are private/immutable. commitOwnedProposal must atomically
  * recheck owner, expiry, target CAS and every source pin, consume/apply once, and
  * return the original result on replay. No generic unchecked PATCH is sufficient.
+ * Before replacing sections, append the previous sections/sourceRefs/revision
+ * to immutable owner-scoped history in that same transaction. No-op/replay must
+ * not add a revision or duplicate history. This port alone does not persist it.
  */
 export interface ArtistKnowledgeStore {
   loadOwnedContext(actorId: string, documentId: string, signal?: AbortSignal): Promise<unknown | null>;
@@ -129,7 +132,7 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
     async propose(input: { documentId: string; expectedRevision: number }, signal?: AbortSignal): Promise<KnowledgeProposal | null> {
       const parsed = z.strictObject({ documentId: uuid, expectedRevision: revision }).safeParse(input);
       if (!parsed.success) throw new KnowledgeError("invalid_input");
-      assertNotCancelled(signal); assertPluginTool("artist-organize", "author.read");
+      assertNotCancelled(signal); assertPlaybookToolConfigured("artist-organize", "author.read");
       const raw = await deps.store.loadOwnedContext(actorId, parsed.data.documentId, signal);
       assertNotCancelled(signal);
       if (!raw) throw new KnowledgeError("unavailable");
@@ -144,14 +147,14 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
       const proposal: KnowledgeProposal = { id: randomUUID(), ownerId: actorId, documentId: context.documentId,
         targetRevision: context.revision, pluginVersion: PLUGIN_VERSION, expiresAt: now() + 15 * 60 * 1000,
         ...plan, appliedRevision: null };
-      assertPluginTool("artist-organize", "proposal.store");
+      assertPlaybookToolConfigured("artist-organize", "proposal.store");
       await deps.store.storeProposal(proposal, signal);
       return proposal;
     },
     async apply(input: { proposalId: string; reviewed: true }, signal?: AbortSignal): Promise<{ documentRevision: number }> {
       const parsed = z.strictObject({ proposalId: uuid, reviewed: z.literal(true) }).safeParse(input);
       if (!parsed.success) throw new KnowledgeError("invalid_input");
-      assertNotCancelled(signal); assertPluginTool("artist-apply", "proposal.read");
+      assertNotCancelled(signal); assertPlaybookToolConfigured("artist-apply", "proposal.read");
       const proposal = await readProposal(parsed.data.proposalId, signal);
       if (proposal.appliedRevision !== null) {
         return { documentRevision: proposal.appliedRevision };
@@ -159,7 +162,7 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
       try {
         if (proposal.expiresAt <= now()) throw new KnowledgeError("proposal_expired");
         if (proposal.pluginVersion !== PLUGIN_VERSION) throw new KnowledgeError("revision_conflict");
-        assertPluginTool("artist-apply", "author.read");
+        assertPlaybookToolConfigured("artist-apply", "author.read");
         const context = validateArtistKnowledgeContext(await deps.store.loadOwnedContext(actorId, proposal.documentId, signal), actorId, proposal.documentId);
         assertNotCancelled(signal);
         if (context.revision !== proposal.targetRevision) throw new KnowledgeError("revision_conflict");
@@ -176,7 +179,7 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
         if (latest.appliedRevision !== null) return { documentRevision: latest.appliedRevision };
         throw error;
       }
-      assertPluginTool("artist-apply", "proposal.apply");
+      assertPlaybookToolConfigured("artist-apply", "proposal.apply");
       // Atomic adapter is the final authority for races after these prechecks.
       // Don't report cancellation after the store has committed successfully.
       return deps.store.commitOwnedProposal(actorId, proposal.id, signal);

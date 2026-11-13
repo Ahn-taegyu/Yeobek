@@ -63,16 +63,62 @@ function koreanNumber(value: string): number | null {
   }
   return total + digit || null;
 }
+const arabicNumber = String.raw`-?[0-9]+`;
+const numeral = `(?:${arabicNumber}|[일이삼사오육칠팔구십백천]+)`;
+const label = String.raw`(?!이번)${numeral}\s*번`;
+const listJoin = String.raw`\s*(?:[,、/]|또는|과|와|이랑|하고|보다)\s*`;
+const labelList = `(?:(?:${label}|${arabicNumber})${listJoin})+${label}`;
+const standaloneNumber = new RegExp(String.raw`^(?:작품\s*번호\s*${arabicNumber}|(?:작품(?:\s*번호)?\s*)?${label}|${arabicNumber})$`, "u");
+const standaloneNumberList = new RegExp(`^${arabicNumber}(?:${listJoin}${arabicNumber})+$`, "u");
+const numberCandidate = new RegExp(String.raw`(?<![\p{L}\p{N}-])(?<![0-9]\.)(?:${labelList}|${label})`, "gu");
+const candidateNumerals = new RegExp(numeral, "gu");
+const initialLabel = new RegExp(String.raw`^${label}[은는을를의도]?\s*`, "u");
+const coordinatedLabels = new RegExp(`^(?:${label}${listJoin})+${label}$`, "u");
+
+const requestText = (question: string) => question.trim().replace(/[.!?。]+$/u, "").trimEnd();
+
+// '번' also counts occurrences. In free text, require a nearby artwork cue.
+const artworkBeforeNumber = /(?:^|[^\p{L}\p{N}])작품\s*번호\s*$/u;
+const artworkTopicAfterNumber = /^\s*[은는이를을의도]?\s*(?:어떤\s*작품|작품(?=$|[\s.,!?。은는이를을도에서의과와])|재료|제목|작가|기법|제작\s*연도|크기|주제|의도|무엇으로\s*만들)/u;
+const artworkQuestionAfterNumber = /^(?:[은는이가]\s*(?:뭐야|뭔가요|뭐예요|무엇인가요)[.!?。]*$|에서\s*(?:쓰인|사용한|사용된)|[은는]$)/u;
+const narrationAfterNumber = /^\s*[은는을를의도]?\s*(?:기본\s*)?(?:(?:해설|설명|소개)(?=$|[\s을를은는]|해\s*(?:줘|주세요))|알려\s*(?:줘|주세요))/u;
+const listComparison = /^\s*[을를의]?\s*(?:비교|차이)/u;
+const occurrenceAfterNumber = /^(?:째|이나|씩|에\s*(?:본|봤|봐))|^[을를은는도]?\s*(?:(?:더|다시|왜)\s+)*(?:봐|봤|보았|본|보면|보는|보기|볼|덧칠|반복|전시했|전시됐|관람했)/u;
+const possibleReferenceAfterNumber = /^(?:[은는의을를이](?=$|[\s.,!?。])|에서(?=\s)|[\s.,!?。])/u;
+
 export function mentionedNumbers(question: string): { numbers: number[]; invalid: boolean } {
-  const normalized = question.replace(/번(과|와)(?=[0-9일이삼사오육칠팔구십백천])/gu, "번$1 ");
-  const matches = [...normalized.matchAll(/(?<![\p{L}\p{N}])(-?[0-9]+|[일이삼사오육칠팔구십백천]+)\s*번(?=$|[\s.,!?。]|작품|과|와|을|를|의|은|는|에|도|이랑|하고)/gu)]
-    .filter(m => m[0] !== "이번"); // '이번 작품' means this work, not work #2.
-  const values = matches.map(m => /^\d+$/.test(m[1]) ? Number(m[1]) : koreanNumber(m[1]));
-  return { numbers: [...new Set(values.filter((n): n is number => n !== null && n >= 1 && n <= 9999))],
-    invalid: values.some(n => n === null || n < 1 || n > 9999) ||
-      /[0-9]+\s*(?:[,、/]|또는|와|과)\s*[0-9]+\s*번/u.test(question) };
+  const text = requestText(question);
+  const wholeRequest = standaloneNumber.test(text) || standaloneNumberList.test(text);
+  let ambiguous = false;
+  const mentions = wholeRequest ? (text.match(candidateNumerals) ?? []) : [...text.matchAll(numberCandidate)].flatMap(match => {
+    const [candidate] = match;
+    const before = text.slice(0, match.index);
+    const after = text.slice(match.index + candidate.length);
+    const numerals = candidate.match(candidateNumerals) ?? [];
+    if (artworkBeforeNumber.test(before)) return numerals;
+    if (occurrenceAfterNumber.test(after)) return [];
+    const clearReference = (!before && /^\s*왜/u.test(after)) ||
+      artworkTopicAfterNumber.test(after) || artworkQuestionAfterNumber.test(after) || narrationAfterNumber.test(after) ||
+      coordinatedLabels.test(candidate) || (numerals.length > 1 && listComparison.test(after));
+    if (clearReference) return numerals;
+    if (possibleReferenceAfterNumber.test(after) || /^[은는의](?=\s)/u.test(after)) ambiguous = true;
+    return [];
+  });
+  const values = mentions.map(value => /^-?[0-9]+$/u.test(value) ? Number(value) : koreanNumber(value));
+  const numbers = values.filter((value): value is number => value !== null && value >= 1 && value <= 9999);
+  return { numbers: [...new Set(numbers)], invalid: ambiguous || numbers.length !== values.length };
 }
-// A narrow fast path: additional questions (e.g. 왜?) must not disappear.
+
+const artworkTopic = /^(?:(?:이|이번)\s*)?작품(?:에\s*대해(?:서)?|도|을|의|은)?\s*/u;
+const narrationCommand = /^(?:기본\s*)?(?:설명|해설|소개)(?:\s*(?:해\s*(?:줘(?:요)?|주세요)|[을를]?\s*(?:부탁(?:해요|합니다|드려요)|들려\s*(?:줘(?:요)?|주세요)|보여\s*(?:줘(?:요)?|주세요)|보기|듣기)))?$/u;
+
+// Match a complete basic request so follow-up questions and transformations survive.
 export function isNarrationRequest(question: string): boolean {
-  return /^(?:(?:[0-9]+|[일이삼사오육칠팔구십백천]+)\s*번\s*(?:작품)?(?:도)?|이\s*작품)?\s*(?:설명|해설)(?:해\s*줘|해\s*주세요|\s*보기)[.!?。]*$/u.test(question.trim());
+  const text = requestText(question);
+  if (standaloneNumber.test(text)) return true;
+  const prefix = text.match(initialLabel);
+  const rest = prefix ? text.slice(prefix[0].length) : text;
+  const topic = rest.match(artworkTopic);
+  const command = topic ? rest.slice(topic[0].length) : rest;
+  return narrationCommand.test(command) || Boolean((prefix || topic) && /^알려\s*(?:줘(?:요)?|주세요)$/u.test(command));
 }
