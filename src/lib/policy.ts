@@ -13,6 +13,7 @@ export const DEFAULT_POLICIES = Object.freeze({
   gap_retention_days: 30,
   answer_ttl_seconds: 3600,
   job_retention_days: 30,
+  job_lease_seconds: 180,
   proposal_ttl_seconds: 86400,
 });
 export type PolicyKey = keyof typeof DEFAULT_POLICIES;

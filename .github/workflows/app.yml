@@ -53,6 +53,25 @@ jobs:
             sleep 1
           done
           npm run test:integration
+      - name: Verify mock AI jobs in development mode
+        env:
+          AI_PROVIDER_MODE: mock
+          APP_ORIGIN: http://localhost:3001
+          TEST_APP_ORIGIN: http://localhost:3001
+        run: |
+          node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-mock.log 2>&1 &
+          for attempt in {1..60}; do
+            if curl --silent --fail http://localhost:3001/api/health > /dev/null; then
+              break
+            fi
+            if (( attempt == 60 )); then
+              echo "Mock app did not become ready."
+              tail -n 100 /tmp/yeobek-mock.log
+              exit 1
+            fi
+            sleep 1
+          done
+          npm run test:jobs
       - name: Stop the disposable stack
         if: always()
         run: npm run db:stop

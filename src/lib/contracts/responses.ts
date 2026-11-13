@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { revision, section, sourceRefSchema } from "./requests";
+import { narrationText } from "./jobs";
 
 const id = z.guid();
 const nullableText = z.string().nullable();
@@ -53,7 +54,7 @@ const artwork = {
   id, number, title: z.string(), creationYear: nullableText, medium: nullableText, dimensions: nullableText,
 };
 export const artworkResponse = z.object({
-  ...resource, ...artwork, exhibitionId: id, state, imageMaterialId: id.nullable(),
+  ...resource, ...artwork, exhibitionId: id, state, imageMaterialId: id.nullable(), narrationDraft: narrationText.nullable(),
 });
 export const artworkListResponse = z.object({ items: z.array(artworkResponse) });
 

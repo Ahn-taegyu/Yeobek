@@ -6,7 +6,7 @@ import { z } from "zod";
 const root = new URL("../ai/yeobek/", import.meta.url);
 const target = new URL("../src/lib/ai/plugin.generated.ts", import.meta.url);
 const names = ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration"];
-const tools = ["publication.read", "publication.recheck", "author.read", "proposal.store", "proposal.read", "proposal.apply"];
+const tools = ["job.reserve", "job.complete", "publication.read", "publication.recheck", "author.read", "proposal.store", "proposal.read", "proposal.apply"];
 const step = z.strictObject({
   id: z.string().regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$/),
   tool: z.enum(tools).optional(),
@@ -24,8 +24,8 @@ const read = path => normalize(readFileSync(new URL(path, root), "utf8"));
 export function validateManifest(input) {
   const manifest = schema.parse(input);
   if (new Set(manifest.skills).size !== names.length) throw new Error("Duplicate plugin skill");
-  const capabilities = { "visitor-answer": ["publication.read", "publication.recheck"], "narration-draft": ["author.read"], "narration-evaluate": ["author.read"],
-    "artist-organize": ["author.read", "proposal.store"], "artist-apply": ["author.read", "proposal.read", "proposal.apply"] };
+  const capabilities = { "visitor-answer": ["publication.read", "publication.recheck"], "narration-draft": ["author.read", "job.reserve", "job.complete"], "narration-evaluate": ["author.read"],
+    "artist-organize": ["author.read", "proposal.store", "job.reserve", "job.complete"], "artist-apply": ["author.read", "proposal.read", "proposal.apply"] };
   for (const [name, playbook] of Object.entries(manifest.playbooks)) {
     if (new Set(playbook.skills).size !== playbook.skills.length || new Set(playbook.tools).size !== playbook.tools.length ||
       playbook.tools.some(tool => !capabilities[name].includes(tool))) throw new Error(`Invalid playbook capabilities: ${name}`);

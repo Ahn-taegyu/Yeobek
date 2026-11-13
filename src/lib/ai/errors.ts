@@ -25,3 +25,9 @@ export class AiError extends Error {
     return this.code === "rate_limited" || this.code === "provider_unavailable";
   }
 }
+
+export class KnowledgeError extends Error {
+  constructor(public readonly code: "invalid_input" | "unavailable" | "invalid_context" | "invalid_output" | "revision_conflict" | "proposal_expired") {
+    super(code); this.name = "KnowledgeError";
+  }
+}

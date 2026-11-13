@@ -15,7 +15,7 @@ export const answerSchema = z.strictObject({
   outcome: z.enum(["answered", "clarify", "insufficient_evidence"]),
 });
 export type ModelAnswer = z.infer<typeof answerSchema>;
-export const narrationDraftSchema = answerSchema.extend({ answer: boundedText(AI_LIMITS.narration) });
+export const narrationDraftSchema = answerSchema.extend({ answer: boundedText(AI_LIMITS.narration), followUpQuestions: z.array(boundedText(200)).max(3).optional() });
 export type NarrationDraft = z.infer<typeof narrationDraftSchema>;
 
 // Provider schema is deliberately simple; local validation additionally checks
@@ -33,6 +33,18 @@ export const answerJsonSchema = {
   },
 };
 export const narrationDraftJsonSchema = { ...answerJsonSchema, name: "yeobek_narration_draft" };
+export const narrationDraftWithQuestionsJsonSchema = {
+  name: "yeobek_narration_draft_with_questions",
+  definition: {
+    ...answerJsonSchema.definition,
+    properties: {
+      ...answerJsonSchema.definition.properties,
+      followUpQuestions: { type: "array", maxItems: 3, items: { type: "string", maxLength: 200 } },
+    },
+    required: [...answerJsonSchema.definition.required, "followUpQuestions"],
+  },
+};
+
 
 export const evidenceSchema = z.strictObject({
   id, version, ownerId: id, exhibitionId: id, publicationId: id,

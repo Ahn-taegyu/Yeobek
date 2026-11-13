@@ -1,9 +1,12 @@
 import "server-only";
+import { ApiError } from "../api/errors";
+import { normalizeAiOutcome, type AiOutcome } from "./outcome";
+import type { JobLifecycle } from "./job-lifecycle";
 import { randomInt } from "node:crypto";
 import { z } from "zod";
 import { KnowledgeError, validateArtistKnowledgeContext, type ArtistKnowledgeStore } from "./artist-knowledge";
-import { textHash } from "./context";
-import { AI_LIMITS, codepoints, narrationDraftJsonSchema, type NarrationDraft } from "./contracts";
+import { HarnessError, textHash } from "./context";
+import { AI_LIMITS, codepoints, narrationDraftJsonSchema, narrationDraftWithQuestionsJsonSchema, type NarrationDraft } from "./contracts";
 import { AiError, type AiErrorCode } from "./errors";
 import { validateNarrationDraft } from "./harness";
 import { abortable, createDeadline } from "./deadline";
@@ -93,7 +96,7 @@ type NarrationResultBase = {
 };
 export type NarrationResult = NarrationResultBase & (
   { status: "selected"; reason: "passed"; selected: NarrationDraft; selectedCandidateId: string; overTarget: boolean } |
-  { status: "abstained"; reason: AbstentionReason; selected: null; selectedCandidateId: null }
+  { status: "abstained"; reason: AbstentionReason; failure?: AiOutcome; selected: null; selectedCandidateId: null }
 );
 
 type Candidate = { id: string; draft: NarrationDraft };
@@ -138,9 +141,12 @@ export function createNarrationHarness(actorId: string, deps: {
   generator: AiTextProvider;
   judge: AiTextProvider;
   now?: () => number;
+  jobs?: JobLifecycle<NarrationResult>;
+  followUpQuestions?: boolean;
+  prepare?: () => { followUpQuestions: boolean };
 }) {
   const now = deps.now ?? (() => performance.now());
-  const draftCapabilities = capabilitiesFor("narration-draft", { author: deps.store });
+  const draftCapabilities = capabilitiesFor("narration-draft", { author: deps.store, jobs: deps.jobs });
   const evaluationCapabilities = capabilitiesFor("narration-evaluate", { author: deps.store });
   return {
     async draft(input: NarrationRequest, signal?: AbortSignal): Promise<NarrationResult> {
@@ -158,18 +164,40 @@ export function createNarrationHarness(actorId: string, deps: {
       const resultBase = (steps: readonly PlaybookStepRecord[]): NarrationResultBase => ({
         contextHash, promptVersion: PROMPT_VERSION, steps, metrics: { ...metrics, elapsedMs: now() - started },
       });
-      const abstained = (reason: AbstentionReason, steps: readonly PlaybookStepRecord[]): NarrationResult => ({
+      const abstained = (reason: AbstentionReason, steps: readonly PlaybookStepRecord[]): Extract<NarrationResult, { status: "abstained" }> => ({
         ...resultBase(steps), status: "abstained", reason, selected: null, selectedCandidateId: null,
       });
+      const finish = async (result: NarrationResult): Promise<NarrationResult> => {
+        const complete = draftCapabilities["job.complete"];
+        const steps = await run.settleJob(complete ? snapshot => complete({ ...result, steps: snapshot }) : undefined);
+        return { ...result, steps };
+      };
       const abstain = (reason: AbstentionReason, ...remaining: PlaybookStepId<"narration-draft">[]) => {
         for (const id of remaining) run.skip(id, reason);
-        return abstained(reason, run.finish());
+        return finish(abstained(reason, []));
       };
       const afterRounds = ["author.recheck.final", "output.validate"] as const;
       const afterEvidence = ["candidate.rounds", ...afterRounds] as const;
       const afterRead = ["evidence.select", ...afterEvidence] as const;
       const afterValidation = ["author.read", ...afterRead] as const;
-      if (!parsed.request.success || !parsed.validActor) return abstain("invalid_request", ...afterValidation);
+      if (!parsed.request.success || !parsed.validActor) {
+        run.skip("job.reserve", "invalid_request");
+        for (const id of afterValidation) run.skip(id, "invalid_request");
+        run.skip("job.complete", "invalid_request");
+        return abstained("invalid_request", run.finish());
+      }
+      const reserve = draftCapabilities["job.reserve"];
+      if (reserve) {
+        try { await run.step("job.reserve", reserve); }
+        catch (error) { run.fail(error); throw error; }
+      } else run.skip("job.reserve", "job_unbound");
+      let withQuestions = false;
+      function validateDraft(output: unknown, allowedIds: string[]): NarrationDraft {
+        const { followUpQuestions, ...draft } = validateNarrationDraft(output, allowedIds);
+        if (!withQuestions) return draft;
+        if (followUpQuestions === undefined) throw new HarnessError("invalid_output");
+        return { ...draft, followUpQuestions };
+      }
       const { documentId, expectedRevision, strategy } = parsed.request.data;
       const budget = NARRATION_LIMITS[strategy];
       const deadline = createDeadline(NARRATION_LIMITS.deadlineMs, signal);
@@ -231,7 +259,10 @@ export function createNarrationHarness(actorId: string, deps: {
       try {
         const stopped = interrupted();
         if (stopped) return abstain(stopped, ...afterValidation);
-        const raw = await run.step("author.read", () => load(draftCapabilities["author.read"]));
+        const raw = await run.step("author.read", () => {
+          withQuestions = deps.prepare?.().followUpQuestions ?? deps.followUpQuestions === true;
+          return load(draftCapabilities["author.read"]);
+        });
         const stoppedAfterLoad = interrupted();
         if (stoppedAfterLoad) return abstain(stoppedAfterLoad, ...afterRead);
         if (raw === null) return abstain("unavailable", ...afterRead);
@@ -314,12 +345,12 @@ export function createNarrationHarness(actorId: string, deps: {
               const id = `r${round}-c${index + 1}`;
               try {
                 const value = await invoke(deps.generator, () => ({
-                  system: NARRATION_SYSTEM_PROMPT, schema: narrationDraftJsonSchema,
+                  system: NARRATION_SYSTEM_PROMPT, schema: withQuestions ? narrationDraftWithQuestionsJsonSchema : narrationDraftJsonSchema,
                   input: JSON.stringify({ sources, strategy: expression, feedback }),
                 }), { role: "generation", round, candidateId: id }, async generate => {
                   const output = await generate();
                   try {
-                    return validateNarrationDraft(output, allowedIds);
+                    return validateDraft(output, allowedIds);
                   } catch {
                     throw new InvalidModelOutput("invalid_candidate");
                   }
@@ -360,18 +391,20 @@ export function createNarrationHarness(actorId: string, deps: {
         await run.step("author.recheck.final", () => assertSnapshot(draftCapabilities["author.read"]));
         const stoppedBeforeSelection = interrupted();
         if (stoppedBeforeSelection) return abstain(stoppedBeforeSelection, "output.validate");
-        const selected = await run.step("output.validate", () => validateNarrationDraft(selection.winner.draft, allowedIds));
+        const selected = await run.step("output.validate", () => validateDraft(selection.winner.draft, allowedIds));
         const stoppedAfterValidation = interrupted();
         if (stoppedAfterValidation) return abstain(stoppedAfterValidation);
-        return { ...resultBase(run.finish()), status: "selected", reason: "passed", selected, selectedCandidateId: selection.winner.id,
-          overTarget: codepoints(selected.answer) > AI_LIMITS.narrationTarget };
+        return finish({ ...resultBase([]), status: "selected", reason: "passed", selected, selectedCandidateId: selection.winner.id,
+          overTarget: codepoints(selected.answer) > AI_LIMITS.narrationTarget });
       } catch (error) {
         if (error instanceof PlaybookOrderError) throw error;
-        const steps = run.fail(error);
         const stopped = interrupted();
-        if (stopped) return abstained(stopped, steps);
-        if (error instanceof StaleNarrationContext) return abstained("stale_context", steps);
-        return abstained(error instanceof KnowledgeError && error.code === "invalid_context" ? "invalid_context" : "unavailable", steps);
+        const failure = !stopped && (error instanceof ApiError || error instanceof AiError)
+          ? normalizeAiOutcome(error) : undefined;
+        const reason = stopped ?? (error instanceof StaleNarrationContext ? "stale_context" :
+          failure?.routing === "operator" || error instanceof KnowledgeError && error.code === "invalid_context"
+            ? "invalid_context" : "unavailable");
+        return finish({ ...abstained(reason, []), ...(failure ? { failure } : {}) });
       } finally {
         deadline.dispose();
       }

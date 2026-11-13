@@ -53,7 +53,7 @@ sources:
 
 # 범위와 공통 계약
 
-[기능명세 OP-01~22](functional-spec.md#8-api-명세로-넘길-업무-계약)를 HTTP로 구체화한 계약이다. 아래 **초기 기반 경로는 구현했으며 후속 경로는 설계 제안**이다. 검증 범위와 한계는 [개발 기반 현황](development-foundation.md)에 기록한다. [D-011](../decisions/D-011-knowledge-and-screens.md), [내부 지식](artist-knowledge.md), [데이터 모델](data-model.md), [채팅](chat-interaction.md)을 함께 적용한다.
+[기능명세 OP-01~22](functional-spec.md#8-api-명세로-넘길-업무-계약)를 HTTP로 구체화한 계약이다. 초기 기반과 W1 해설 작업 경로는 구현 중이며 그 밖의 후속 경로는 설계 제안이다. W1 로컬 DB·HTTP 검증은 통과했고 최신 head CI는 대기 중이다. 검증 범위와 한계는 [개발 기반 현황](development-foundation.md)에 기록한다. [D-011](../decisions/D-011-knowledge-and-screens.md), [내부 지식](artist-knowledge.md), [데이터 모델](data-model.md), [채팅](chat-interaction.md)을 함께 적용한다.
 
 - JSON 성공 응답은 `{ "data": ..., "requestId": "UUID" }`, 오류는 `{ "error": { "code": "...", "message": "...", "retryable": true, "retryAfter": 5, "fields": {} }, "requestId": "UUID" }` 형태다. `retryAfter`(초)와 `fields`는 선택 사항이며, `retryAfter`가 있으면 `Retry-After` 헤더도 반환한다. `retryable`은 429와 5xx에서 true이되 서버 설정 오류는 false다. 오류는 비밀·내부 오류를 노출하지 않는다. 미디어 바이트는 예외다.
 - 리소스 ID와 생성 요청 ID는 UUID다. 생성 요청은 클라이언트가 안정적인 `id`를 생성해 재시도하며, 같은 소유자·ID·동일 입력은 기존 결과를 반환하고 다른 입력이면 409다. `requestId`는 추적용이고 리소스 ID와 구별한다. `POST` 생성 성공은 201, 동일 재시도는 200, 조회·변경은 200이다.
@@ -61,6 +61,21 @@ sources:
 - 관리자 요청은 `@supabase/ssr` 쿠키 세션을 사용하고 서버에서 `getUser` 또는 검증된 `getClaims`로 사용자를 확인한다. 모든 관리자 조회·변경에 소유권과 RLS를 적용한다. 클라이언트의 owner, 승인 상태, 공개 상태를 신뢰하지 않는다. 변경 요청은 same-origin을 검사한다. 로그아웃은 세션과 클라이언트 관리자 캐시를 지운다.
 - PATCH는 `expectedRevision`을 요구하며 정형 필드와 문서를 함께 바꾸면 `expectedDocumentRevision`도 요구한다. DB에서 두 버전을 원자적으로 확인·저장하고 충돌 시 409로 재조회하게 한다. 초안 변경은 기존 공개 스냅샷을 바꾸지 않는다. 목록은 소유 또는 공개 범위를 서버에서 제한하고 안정적인 순서로 반환한다.
 - 입력은 서버에서 타입·길이·관계·UUID를 검사한다. 요청 크기와 횟수 제한을 적용한다. 생성·인식·합성은 세션당 분 6회와 전시 일일 상한을 원자적으로 적용하는 제안이며, 녹음 30초/3MB, 질문 500자 등 상세 값은 [초기 상한](technology-stack.md#초기-상한과-실패-처리)을 따른다. 실제 한도와 오류 정책은 구현 시 검증한다.
+
+# W1 해설 작업 경로 (로컬 검증 완료, CI 대기)
+
+| 경로 | 요청과 동작 |
+| --- | --- |
+| `POST /api/admin/artworks/{id}/generations` | `{requestId,expectedRevision,expectedDocumentRevision,strategy?}`로 소유 작품의 작업을 예약하고 동기 실행. 동일 요청 재실행은 기존 작업 반환 |
+| `GET /api/admin/jobs/{id}` | 소유 작업 상태와 결과 조회 |
+| `POST /api/admin/jobs/{id}/retry` | `{requestId,expectedAttempt}`로 실패·중단된 시도 재시도 |
+| `PATCH /api/admin/artworks/{id}/narration` | `{expectedRevision,text,sourceJobId?}`로 작가가 명시적으로 초안 적용. 생성만으로 편집본이나 공개본을 바꾸지 않음 |
+
+작업은 소유자별 일일 한도(초기 100회), 180초 lease와 30일 만료 정책을 사용한다. 요청 안에서 동기 실행하며 프로세스 중단 시 조회와 재시도로 복구한다. 작업 예약·완료는 서버 전용 `SUPABASE_SERVICE_ROLE_KEY`를 쓰는 신뢰된 worker가 수행하고 owner는 검증된 세션에서 전달한다. 타인 작업은 노출하지 않는다. 모의 모드는 개발·테스트 환경에 한정한다. DB 타입·권한·모의 HTTP 로컬 검증은 통과했고 최신 head CI는 대기 중이다. 만료 후 접근은 차단하며 물리 삭제 정리는 W5에서 구현할 예정이다.
+
+작업 응답은 `id,kind,artworkId,documentId,requestId,attempt,status,routing,resultCode,expectedRevision,expectedDocumentRevision,strategy,result,mock,createdAt,updatedAt,expiresAt`를 포함한다. 성공 결과는 `result.selected.answer/citations/followUpQuestions?`, `overTarget`, `mock`이며 내부 단계·사용량·원자료는 HTTP에 넣지 않는다. 추가 질문 플래그를 끄면 저장된 작업을 읽을 때도 해당 필드를 생략한다. 요청 본문의 `requestId`는 작업 중복 방지 키이며 응답 봉투의 추적 ID와 별개다.
+
+최초 예약은 최종 작업이 실패해도 HTTP 201이므로 `status`를 확인한다. 동일 생성 요청 재전송은 200이며, 재시도는 새 요청 ID와 현재 `expectedAttempt`를 사용한다. `running`은 조회로 확인하고 임대 만료 시 `failed/REQUEST_TIMEOUT`으로 표시된다. `succeeded`는 명시적 저장 가능, `abstained`는 자료·후보 검토 필요, `failed/cancelled`는 재시도 가능 상태다. 입력 자료가 바뀌면 새 revision으로 새 생성 요청을 보낸다. 예약 거부는 429 `AUTHOR_JOB_LIMIT`, 요청 ID 재사용 충돌은 409 `REQUEST_ID_CONFLICT`, 진행 중·완료 시도 재시도는 409 `JOB_ATTEMPT_CONFLICT`다. `routing`은 작가 수정이 필요한 `author`, 설정·시스템 점검이 필요한 `operator`, 정상·취소의 `none`을 구별한다.
 
 # 초기 기반 경로
 
@@ -150,7 +165,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | 06 | `POST /api/admin/uploads` `{id,subject_type,subject_id,kind,size,mime}`; `POST /api/admin/uploads/{id}/complete` `{file_id}` | 범위 제한 업로드 권한 → 소유권·파일 검증 후 자료 ID·상태. 이미지 3MB, PDF 6MB |
 | 07 | `GET/POST /api/admin/materials`; `GET/PATCH /api/admin/materials/{id}`; `POST /api/admin/evidence` | 소유 범위의 원본·출처·발췌·쪽수·대상과 문서/section/revision 관리. 변경은 버전 검사 |
 | 08 | `GET /api/admin/artworks/{id}/review` | 초안·근거·승인·음성·공개 버전·차단 사유 |
-| 09 | `POST /api/admin/artworks/{id}/generations` `{id,revision,evidence_versions}` | 작업 ID·상태·후보·근거. 기존 편집본 자동 덮어쓰기 금지 |
+| 09 | `POST /api/admin/artworks/{id}/generations` | 위 W1 계약을 따름. 기존 편집본 자동 덮어쓰기 금지 |
 | 10 | `POST /api/admin/artworks/{id}/approvals` `{kind,version,revision}` | 승인자·시각·정확한 버전. 미승인 인용 및 충돌 거부 |
 | 11 | `POST /api/admin/artworks/{id}/audio` `{id,narration_version,revision}` | 작업 상태·글 해시·음성 설정 버전. 승인된 글만 합성 |
 | 12 | `POST /api/admin/exhibitions/{id}/publication` `{action,revision,artwork_versions}` | 게시/중지/재개 상태·버전·작품별 차단 사유. 게시 원자성 및 최소 한 작품 검사 |

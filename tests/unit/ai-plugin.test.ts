@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 import { DOCENT_COPY, PLUGIN_VERSION, playbookPrompt } from "../../src/lib/ai/plugin";
+import { ApiError } from "../../src/lib/api/errors";
 import { createDocentHarness } from "../../src/lib/ai/harness";
 import { getPlaybookFailureSteps } from "../../src/lib/ai/playbook";
 import { selectEvidence } from "../../src/lib/ai/context";
-import { createArtistKnowledgeHarness, type ArtistKnowledgeContext, type KnowledgeProposal } from "../../src/lib/ai/artist-knowledge";
+import { createArtistKnowledgeHarness, type ArtistKnowledgeContext, type KnowledgeProposal, type KnowledgeOrganizationResult } from "../../src/lib/ai/artist-knowledge";
 import { ids, syntheticPublication, syntheticRequest } from "../fixtures/ai";
 
 function artistSetup() {
@@ -32,7 +33,7 @@ function artistSetup() {
 }
 describe("product plugin boundaries", () => {
   it("selects only skills for the declared server task", () => {
-    expect(PLUGIN_VERSION).toMatch(/^yeobek@0\.4\.0:[a-f0-9]{12}$/);
+    expect(PLUGIN_VERSION).toMatch(/^yeobek@0\.5\.0:[a-f0-9]{12}$/);
     expect(playbookPrompt("visitor-answer")).toContain("차분한 존댓말");
     expect(playbookPrompt("visitor-answer")).not.toContain("출력은 sections 배열");
     expect(playbookPrompt("artist-organize")).not.toContain("기본 말투는 차분한 존댓말");
@@ -59,7 +60,7 @@ describe("artist organization proposals", () => {
     const s = artistSetup(); const error = new Error("clock unavailable");
     const harness = createArtistKnowledgeHarness(ids.owner, { store: s.store, text: s.text, now: () => { throw error; } });
     await expect(harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).rejects.toBe(error);
-    expect(getPlaybookFailureSteps(error)?.at(-1)).toMatchObject({ id: "proposal.store", status: "failed" });
+    expect(getPlaybookFailureSteps(error)?.find(step => step.id === "proposal.store")).toMatchObject({ id: "proposal.store", status: "failed" });
     expect(s.store.storeProposal).not.toHaveBeenCalled();
   });
   it("checks cancellation immediately before storing a newly assembled proposal", async () => {
@@ -80,8 +81,8 @@ describe("artist organization proposals", () => {
   it("copies whole sources with negation intact, preserves untouched fields, and needs review before applying", async () => {
     const s = artistSetup(); const { proposal, steps } = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
     expect(steps.map(step => [step.id, step.status])).toEqual([
-      ["request.validate", "done"], ["author.read", "done"], ["model.generate", "done"],
-      ["output.validate", "done"], ["proposal.store", "done"],
+      ["request.validate", "done"], ["job.reserve", "skipped"], ["author.read", "done"], ["model.generate", "done"],
+      ["output.validate", "done"], ["proposal.store", "done"], ["job.complete", "skipped"],
     ]);
     expect(s.proposal()).not.toHaveProperty("steps");
     expect(proposal?.sections).toEqual([{ id: "bio", body: "기존 소개입니다." }, { id: "practice", body: s.context.sources[0].text }]);
@@ -169,7 +170,7 @@ describe("artist organization proposals", () => {
     const s = artistSetup(); s.context.sources = [];
     const result = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
     expect(result.proposal).toBeNull();
-    expect(result.steps.slice(2).every(step => step.status === "skipped" && step.reason === "no_sources")).toBe(true);
+    expect(result.steps.slice(3, -1).every(step => step.status === "skipped" && step.reason === "no_sources")).toBe(true);
     expect(s.text.generate).not.toHaveBeenCalled();
     const empty = artistSetup(); empty.text.generate.mockResolvedValue({ output: { sections: [] }, trace: { provider: "liner", model: "fake" } });
     expect(await empty.harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).toMatchObject({ proposal: null });
@@ -185,5 +186,30 @@ describe("artist organization proposals", () => {
     await expect(s.harness.apply({ proposalId: proposal!.id, reviewed: true })).resolves.toMatchObject({ documentRevision: 3 });
     expect(s.store.loadOwnedProposal).toHaveBeenCalledTimes(2);
     expect(s.store.commitOwnedProposal).not.toHaveBeenCalled();
+  });
+});
+
+describe("organization job lifecycle", () => {
+  it("completes a failed proposal and rethrows the original access error", async () => {
+    const s = artistSetup();
+    const failure = new ApiError(403, "FORBIDDEN", "denied");
+    s.store.loadOwnedContext.mockRejectedValueOnce(failure);
+    const jobs = { reserve: vi.fn(async () => {}), complete: vi.fn<(result: KnowledgeOrganizationResult) => Promise<void>>(async () => {}) };
+    const harness = createArtistKnowledgeHarness(ids.owner, { ...s, jobs });
+    await expect(harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).rejects.toBe(failure);
+    expect(jobs.complete).toHaveBeenCalledOnce();
+    expect(jobs.complete.mock.calls[0][0]).toMatchObject({ proposal: null, failure: { code: "FORBIDDEN", routing: "author" } });
+    expect(getPlaybookFailureSteps(failure)?.at(-1)).toMatchObject({ id: "job.complete", status: "done" });
+    expect(s.text.generate).not.toHaveBeenCalled();
+  });
+
+  it("does not retry completion or hide its error", async () => {
+    const s = artistSetup();
+    const error = new Error("completion failed");
+    const jobs = { reserve: vi.fn(async () => {}), complete: vi.fn(async () => { throw error; }) };
+    const harness = createArtistKnowledgeHarness(ids.owner, { ...s, jobs });
+    await expect(harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).rejects.toBe(error);
+    expect(jobs.complete).toHaveBeenCalledOnce();
+    expect(getPlaybookFailureSteps(error)?.at(-1)).toMatchObject({ id: "job.complete", status: "failed" });
   });
 });

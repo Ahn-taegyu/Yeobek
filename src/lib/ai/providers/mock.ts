@@ -54,14 +54,16 @@ function result(data: Record<string, unknown>, name: string) {
     const sourceIds = excerpts(data.sources, "text").slice(0, 12).map(source => source.id);
     return { sections: sourceIds.length ? [{ id: section, sourceIds }] : [] };
   }
-  const narration = name === "yeobek_narration_draft";
+  const withQuestions = name === "yeobek_narration_draft_with_questions";
+  const narration = withQuestions || name === "yeobek_narration_draft";
   if (!narration && name !== "yeobek_docent_answer") throw new AiError("invalid_input");
   const terms = typeof data.question === "string" ? keywords(data.question) : [];
   const source = (narration ? excerpts(data.sources, "text") : excerpts(data.evidence, "body"))
     .find(row => codepoints(row.text) <= (narration ? AI_LIMITS.narration : AI_LIMITS.answer) &&
       (narration || terms.some(term => row.text.toLowerCase().includes(term))));
-  return source ? { answer: source.text, citations: [source.id], outcome: "answered" } :
+  const output = source ? { answer: source.text, citations: [source.id], outcome: "answered" } :
     { answer: "제공된 자료에서 답을 찾지 못했습니다.", citations: [], outcome: "insufficient_evidence" };
+  return withQuestions ? { ...output, followUpQuestions: [] } : output;
 }
 
 export function createMockTextProvider(model: string, env: AiEnvironment = process.env): AiTextProvider {

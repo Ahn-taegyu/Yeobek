@@ -1,6 +1,6 @@
 {
   "id": "yeobek",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "instructions": "instructions.md",
   "messages": "messages.json",
   "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration"],
@@ -21,14 +21,16 @@
     },
     "narration-draft": {
       "skills": ["retrieve-wiki", "speak-docent", "draft-narration"],
-      "tools": ["author.read"],
+      "tools": ["job.reserve", "job.complete", "author.read"],
       "steps": [
         { "id": "request.validate" },
+        { "id": "job.reserve", "tool": "job.reserve" },
         { "id": "author.read", "tool": "author.read" },
         { "id": "evidence.select" },
         { "id": "candidate.rounds" },
         { "id": "author.recheck.final", "tool": "author.read" },
-        { "id": "output.validate" }
+        { "id": "output.validate" },
+        { "id": "job.complete", "tool": "job.complete" }
       ]
     },
     "narration-evaluate": {
@@ -43,13 +45,15 @@
     },
     "artist-organize": {
       "skills": ["organize-artist"],
-      "tools": ["author.read", "proposal.store"],
+      "tools": ["job.reserve", "job.complete", "author.read", "proposal.store"],
       "steps": [
         { "id": "request.validate" },
+        { "id": "job.reserve", "tool": "job.reserve" },
         { "id": "author.read", "tool": "author.read" },
         { "id": "model.generate" },
         { "id": "output.validate" },
-        { "id": "proposal.store", "tool": "proposal.store" }
+        { "id": "proposal.store", "tool": "proposal.store" },
+        { "id": "job.complete", "tool": "job.complete" }
       ]
     },
     "artist-apply": {

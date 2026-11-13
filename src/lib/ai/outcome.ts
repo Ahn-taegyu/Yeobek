@@ -1,12 +1,13 @@
 import "server-only";
 
-import { KnowledgeError } from "./artist-knowledge";
+import { ApiError } from "../api/errors";
 import { HarnessError } from "./context";
-import { AiError, type AiErrorCode } from "./errors";
+import { AiError, KnowledgeError, type AiErrorCode } from "./errors";
 import type { AbstentionReason } from "./narration";
 
 type HttpFailure = { status: number; code: string };
-type AiOutcome = HttpFailure & { retryable: boolean };
+export type AiRouting = "author" | "operator" | "none";
+export type AiOutcome = HttpFailure & { retryable: boolean; routing: AiRouting };
 
 const invalidInput = { status: 400, code: "INVALID_INPUT" };
 const notFound = { status: 404, code: "NOT_FOUND" };
@@ -68,7 +69,9 @@ const abstentions = {
 
 export function normalizeAiOutcome(value: unknown): AiOutcome {
   let failure = internalError;
-  if (value instanceof HarnessError && Object.hasOwn(harnessFailures, value.code)) {
+  if (value instanceof ApiError) {
+    failure = value;
+  } else if (value instanceof HarnessError && Object.hasOwn(harnessFailures, value.code)) {
     failure = harnessFailures[value.code];
   } else if (value instanceof KnowledgeError && Object.hasOwn(knowledgeFailures, value.code)) {
     failure = knowledgeFailures[value.code];
@@ -81,5 +84,6 @@ export function normalizeAiOutcome(value: unknown): AiOutcome {
 
   const { status, code } = failure;
   // Match the HTTP contract. Provider retry policy remains local to AiError.
-  return { status, code, retryable: code !== "SERVER_CONFIGURATION_ERROR" && (status === 429 || status >= 500) };
+  const routing: AiRouting = status === 499 ? "none" : status === 429 || status >= 500 ? "operator" : "author";
+  return { status, code, routing, retryable: code !== "SERVER_CONFIGURATION_ERROR" && (status === 429 || status >= 500) };
 }

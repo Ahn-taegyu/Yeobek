@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 import type { ArtistKnowledgeContext } from "../../src/lib/ai/artist-knowledge";
+import { ApiError } from "../../src/lib/api/errors";
 import { AiError } from "../../src/lib/ai/errors";
 import { createNarrationHarness, NARRATION_LIMITS, type JudgeEvaluation } from "../../src/lib/ai/narration";
 import * as playbook from "../../src/lib/ai/playbook";
@@ -18,9 +19,14 @@ const readCandidates = (call: AiTextRequest): { candidateId: string; answer: str
 const assessment = (call: AiTextRequest, score: (candidateId: string) => JudgeEvaluation = passing) =>
   response({ evaluations: readCandidates(call).map(({ candidateId }) => score(candidateId)) }, "fake-judge");
 const draftSteps = ["request.validate", "author.read", "evidence.select", "candidate.rounds", "author.recheck.final", "output.validate"];
+const reserveSkipped = { id: "job.reserve", status: "skipped", reason: "job_unbound" };
+const completeSkipped = { id: "job.complete", status: "skipped", reason: "job_unbound" };
+function withUnboundJobs(steps: { id: string; status: string; reason?: string }[]) {
+  return [steps[0], reserveSkipped, ...steps.slice(1), completeSkipped];
+}
 const evaluationSteps = ["author.recheck", "model.evaluate", "output.validate", "candidate.rank"];
 
-function setup(actorId = ids.owner) {
+function setup(actorId = ids.owner, options?: Pick<Parameters<typeof createNarrationHarness>[1], "jobs" | "followUpQuestions">) {
   const context: ArtistKnowledgeContext = {
     documentId: ids.artwork, ownerId: ids.owner, artistId: ids.owner,
     subjectId: ids.artwork, subjectType: "artwork", exhibitionId: ids.exhibition, revision: 2,
@@ -38,7 +44,7 @@ function setup(actorId = ids.owner) {
   const generator = { generate: vi.fn(async (call: AiTextRequest) =>
     response(JSON.parse(call.input).strategy === "overview" ? overview : focused)) };
   const judge = { generate: vi.fn(async (call: AiTextRequest) => assessment(call)) };
-  return { context, store, generator, judge, harness: createNarrationHarness(actorId, { store, generator, judge }) };
+  return { context, store, generator, judge, harness: createNarrationHarness(actorId, { store, generator, judge, ...options }) };
 }
 
 afterEach(() => vi.useRealTimers());
@@ -49,8 +55,8 @@ describe("artist narration candidate selection", () => {
     const pending = s.harness.draft(request, controller.signal);
     controller.abort();
     expect(await pending).toMatchObject({ status: "abstained", reason: "cancelled",
-      steps: [{ id: "request.validate", status: "done" },
-        ...draftSteps.slice(1).map(id => ({ id, status: "skipped", reason: "cancelled" }))] });
+      steps: withUnboundJobs([{ id: "request.validate", status: "done" },
+        ...draftSteps.slice(1).map(id => ({ id, status: "skipped", reason: "cancelled" }))]) });
     expect(s.store.loadOwnedContext).not.toHaveBeenCalled();
     expect(s.generator.generate).not.toHaveBeenCalled();
   });
@@ -60,7 +66,7 @@ describe("artist narration candidate selection", () => {
     s.generator.generate.mockResolvedValue(response(draft));
     const result = await s.harness.draft({ ...request, strategy: "single" });
     expect(result).toMatchObject({ status: "selected", selected: draft, overTarget: length > 600,
-      steps: draftSteps.map(id => ({ id, status: "done" })),
+      steps: withUnboundJobs(draftSteps.map(id => ({ id, status: "done" }))),
       metrics: { evaluationSteps: [{ round: 1, steps: evaluationSteps.map(id => ({ id, status: "done" })) }] } });
     expect(s.generator.generate.mock.calls[0][0].schema.name).toBe("yeobek_narration_draft");
     expect(s.judge.generate).toHaveBeenCalledOnce();
@@ -95,8 +101,8 @@ describe("artist narration candidate selection", () => {
     s.judge.generate.mockImplementation(async call => assessment(call, id => ({ ...passing(id), grounding: 3, tone: 5 })));
     const result = await s.harness.draft({ ...request, strategy: "single" });
     expect(result).toMatchObject({ status: "abstained", reason: "below_threshold",
-      steps: [...draftSteps.slice(0, 4).map(id => ({ id, status: "done" })),
-        ...draftSteps.slice(4).map(id => ({ id, status: "skipped", reason: "below_threshold" }))],
+      steps: withUnboundJobs([...draftSteps.slice(0, 4).map(id => ({ id, status: "done" })),
+        ...draftSteps.slice(4).map(id => ({ id, status: "skipped", reason: "below_threshold" }))]),
       metrics: { rounds: 1, reservedCalls: 2, reservedOutputTokens: 4600,
         evaluationSteps: [{ round: 1, steps: evaluationSteps.map(id => ({ id, status: "done" })) }] } });
     expect(s.generator.generate).toHaveBeenCalledOnce();
@@ -141,7 +147,7 @@ describe("artist narration candidate selection", () => {
     s.judge.generate.mockImplementationOnce(async call => assessment(call, id => ({ ...passing(id), tone: 2, unsupportedIntent: true })));
     const result = await s.harness.draft(request);
     expect(result).toMatchObject({ status: "selected", selectedCandidateId: "r2-c1",
-      steps: draftSteps.map(id => ({ id, status: "done" })),
+      steps: withUnboundJobs(draftSteps.map(id => ({ id, status: "done" }))),
       metrics: { rounds: 2, reservedCalls: 6, reservedOutputTokens: 12400,
         evaluationSteps: [1, 2].map(round => ({ round, steps: evaluationSteps.map(id => ({ id, status: "done" })) })) } });
     expect(result.metrics.calls).toHaveLength(6);
@@ -202,7 +208,7 @@ describe("artist narration candidate selection", () => {
     expect(await s.harness.draft({ ...request, expectedRevision: 0 })).toMatchObject({
       status: "abstained", reason: "invalid_request",
       steps: [{ id: "request.validate", status: "done" },
-        ...draftSteps.slice(1).map(id => ({ id, status: "skipped", reason: "invalid_request" }))],
+        ...["job.reserve", ...draftSteps.slice(1), "job.complete"].map(id => ({ id, status: "skipped", reason: "invalid_request" }))],
       metrics: { evaluationSteps: [] },
     });
     expect(s.store.loadOwnedContext).not.toHaveBeenCalled();
@@ -329,8 +335,8 @@ describe("artist narration candidate selection", () => {
     const startPlaybook = vi.spyOn(playbook, "startPlaybook").mockReturnValueOnce(runner);
     try {
       expect(await s.harness.draft(request, cancel.signal)).toMatchObject({ status: "abstained", reason: "cancelled",
-        steps: [...draftSteps.slice(0, 4).map(id => ({ id, status: "done" })),
-          ...draftSteps.slice(4).map(id => ({ id, status: "skipped", reason: "cancelled" }))] });
+        steps: withUnboundJobs([...draftSteps.slice(0, 4).map(id => ({ id, status: "done" })),
+          ...draftSteps.slice(4).map(id => ({ id, status: "skipped", reason: "cancelled" }))]) });
       expect(s.store.loadOwnedContext).toHaveBeenCalledOnce();
     } finally {
       startPlaybook.mockRestore();
@@ -348,8 +354,8 @@ describe("artist narration candidate selection", () => {
     await vi.waitFor(() => expect(s.store.loadOwnedContext).toHaveBeenCalledTimes(3));
     cancel.abort();
     expect(await pending).toMatchObject({ status: "abstained", reason: "cancelled", selected: null, metrics: { rounds: 1 },
-      steps: [...draftSteps.slice(0, 4).map(id => ({ id, status: "done" })),
-        { id: "author.recheck.final", status: "failed" }, { id: "output.validate", status: "skipped", reason: "previous_step_failed" }] });
+      steps: withUnboundJobs([...draftSteps.slice(0, 4).map(id => ({ id, status: "done" })),
+        { id: "author.recheck.final", status: "failed" }, { id: "output.validate", status: "skipped", reason: "previous_step_failed" }]) });
   });
 
   it("keeps a cancelled invocation isolated from a concurrent baseline", async () => {
@@ -365,5 +371,68 @@ describe("artist narration candidate selection", () => {
     expect(await baseline).toMatchObject({ status: "selected", selected: overview,
       metrics: { strategy: "single", reservedCalls: 2 } });
     expect(s.judge.generate).toHaveBeenCalledOnce();
+  });
+});
+
+describe("narration job lifecycle", () => {
+  it("propagates reservation errors unchanged before reading or generating", async () => {
+    const replay = new Error("job replay");
+    const jobs = { reserve: vi.fn(async () => { throw replay; }), complete: vi.fn(async () => {}) };
+    const s = setup(ids.owner, { jobs });
+    await expect(s.harness.draft(request)).rejects.toBe(replay);
+    expect(s.store.loadOwnedContext).not.toHaveBeenCalled();
+    expect(s.generator.generate).not.toHaveBeenCalled();
+    expect(jobs.complete).not.toHaveBeenCalled();
+    expect(playbook.getPlaybookFailureSteps(replay)?.[1]).toMatchObject({ id: "job.reserve", status: "failed" });
+  });
+
+  it("completes a reserved job after cancellation during a store read", async () => {
+    const cancel = new AbortController();
+    const jobs = { reserve: vi.fn(async () => {}), complete: vi.fn<NonNullable<Parameters<typeof createNarrationHarness>[1]["jobs"]>["complete"]>(async () => {}) };
+    const s = setup(ids.owner, { jobs });
+    s.store.loadOwnedContext.mockImplementationOnce(async () => { cancel.abort(); return s.context; });
+    const result = await s.harness.draft(request, cancel.signal);
+    expect(jobs.complete).toHaveBeenCalledTimes(1);
+    const snapshot = jobs.complete.mock.calls[0][0];
+    expect(snapshot.reason).toBe("cancelled");
+    expect(snapshot.steps).toContainEqual(expect.objectContaining({ id: "author.read", status: "failed" }));
+    expect(snapshot.steps.some(step => step.id === "job.complete")).toBe(false);
+    expect(result.steps.at(-1)).toMatchObject({ id: "job.complete", status: "done" });
+    expect(s.generator.generate).not.toHaveBeenCalled();
+  });
+
+  it("preserves the completion RPC error and records the failed terminal step", async () => {
+    const failure = new ApiError(503, "SERVICE_UNAVAILABLE", "completion failed");
+    const jobs = { reserve: vi.fn(async () => {}), complete: vi.fn(async () => { throw failure; }) };
+    const s = setup(ids.owner, { jobs });
+    await expect(s.harness.draft(request)).rejects.toBe(failure);
+    expect(jobs.complete).toHaveBeenCalledTimes(1);
+    expect(playbook.getPlaybookFailureSteps(failure)?.at(-1)).toMatchObject({ id: "job.complete", status: "failed" });
+  });
+});
+
+describe("narration follow-up questions", () => {
+  it.each([true, false])("selects the schema and returned fields with the flag %s", async followUpQuestions => {
+    const s = setup(ids.owner, { followUpQuestions });
+    const questions = ["수채 물감 외에 사용한 재료가 있나요?"];
+    s.generator.generate.mockResolvedValueOnce(response({ ...overview, followUpQuestions: questions }));
+    const result = await s.harness.draft({ ...request, strategy: "single" });
+    expect(result.status).toBe("selected");
+    const definition = s.generator.generate.mock.calls[0][0].schema.definition;
+    const required = definition.required as string[];
+    expect(required.includes("followUpQuestions")).toBe(followUpQuestions);
+    if (followUpQuestions) expect(result.selected?.followUpQuestions).toEqual(questions);
+    else expect(result.selected).not.toHaveProperty("followUpQuestions");
+    expect(readCandidates(s.judge.generate.mock.calls[0][0])[0]).not.toHaveProperty("followUpQuestions");
+  });
+
+  it.each([
+    { ...overview, followUpQuestions: ["가".repeat(201)] },
+    overview,
+  ])("rejects an invalid or absent follow-up field when enabled", async output => {
+    const s = setup(ids.owner, { followUpQuestions: true });
+    s.generator.generate.mockResolvedValueOnce(response(output));
+    expect(await s.harness.draft({ ...request, strategy: "single" })).toMatchObject({ reason: "invalid_candidate" });
+    expect(s.judge.generate).not.toHaveBeenCalled();
   });
 });
