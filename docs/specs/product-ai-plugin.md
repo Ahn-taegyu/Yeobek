@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: playbooks-plan
+  resource: /references/user-harness-playbooks-plan.md
+  title: AI 하네스 수정·발전 계획 요청 원문
 - id: pr2-review
   resource: /references/user-ai-pr2-review.md
   title: AI 하네스 PR2 검토와 수정 요청
@@ -98,3 +101,14 @@ Sol의 독립 코드 검토에서 무변경 적용 재요청·동시 적용 결�
 # PR2 후속 계약
 
 `assertPlaybookToolConfigured`는 절차 설정의 일관성만 확인하며 인증·인가가 아니다. 실제 적용 어댑터는 이전 section·sourceRefs·revision 이력을 동일 CAS 트랜잭션에서 append-only로 보존하고 소유권·만료·고정 출처·멱등성을 검증해야 한다. 무변경·재실행에 중복 이력을 남기지 않는다. 이 DB 어댑터는 아직 없다. 합친 section이 5,000자를 초과하면 저장 전 거부되며 재선택·분할 UX가 필요하고 조용히 자르지 않는다. 정확한 공백 토큰 검색은 한국어 조사에 취약하다. 생성 URL 문자 패턴 차단은 공개 작가 URL도 거부할 수 있어 공개 링크 정책이 필요하다. [검토](../reviews/ai-harness-fix-review.md)
+
+# 플레이북 발전 계획 (proposed)
+
+[요청 원문](../references/user-harness-playbooks-plan.md)과 [검토](../reviews/ai-harness-review-2026-11-13.md)의 후속 제안이다. 기존 `e20bd2f` 수정은 보존한다. 이 절은 구현 완료나 새 확정 결정이 아니다.
+
+1. 해설 전용 스키마와 오류 대응표·공통 시간 제한, 명시적 의도와 없는 작품 안내를 기존 회귀와 대조해 정리한다.
+2. 각 업무 manifest에 순서 있는 단계와 도구를 선언하고 지문에 포함한다. 실행기는 순서·완료·이유 있는 생략을 검증하고 내부 기록을 남긴다. 도구별 capability 객체로 실제 접근을 제한하고 서버 검색 절차는 스킬 본문과 구분한다.
+3. **별도 승인 후 계획**: 소유 자료 로더·요청 원장·HTTP 연결을 만든 뒤 해설 초안 실호출, 비교 및 사람 라벨로 검증한다. 스킬 변경 시 실호출 평가 절차도 제안한다.
+4. **게시 기능 이후 계획**: 승인 근거·인용의 게시 계약과 관람 저장소, 제한·표본 평가 및 자료 정리 이력 보존을 연결한다.
+
+0~2단계의 오프라인 검사만으로 모델 품질 향상을 주장하지 않는다. 3단계에는 키·migration과 별도 승인이 필요하며 4단계는 게시 기능 이후다.

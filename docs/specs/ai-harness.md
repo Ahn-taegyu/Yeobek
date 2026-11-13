@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: playbooks-plan
+  resource: /references/user-harness-playbooks-plan.md
+  title: AI 하네스 수정·발전 계획 요청 원문
 - id: pr2-review
   resource: /references/user-ai-pr2-review.md
   title: AI 하네스 PR2 검토와 수정 요청
@@ -120,3 +123,14 @@ Liner는 `POST https://platform.liner.com/api/v1/chat/completions`에 서버 인
 # PR2 수정 및 통합 계약
 
 낭독 전 저장된 승인 해설의 글·인용·publication 버전을 현재 공개 문맥과 비교한다. 생성 답변은 600, 음성 전송 상한은 2,000 Unicode 코드 포인트다. 음성 HTTP 전 신뢰 가능한 답변 source/outcome/citations 영속 저장이 필요하다. DB publisher의 권위 있는 인용 검증과 승인 전 정규화/해시 계약은 [데이터 모델](data-model.md)을 따른다. 실제 제공사 포맷은 실호출 0회로 미검증이다. smoke 및 제공 API 최소 1개의 실제 사용과 사람 평가가 필요하다. 모델 심사 4/4/4/3은 잠정이며 사람 라벨 보정 전 품질 주장에 사용하지 않는다.
+
+# 하네스 발전 계획 (proposed)
+
+[요청 원문](../references/user-harness-playbooks-plan.md)과 [검토](../reviews/ai-harness-review-2026-11-13.md)에 따른 제안이며 완료 또는 확정 결정이 아니다. 기존 `e20bd2f`의 네 결함 수정과 안전 검사를 보존한다.
+
+1. 승인 해설은 최대 2,000자, 관람 생성 답은 600자를 유지하며 해설 초안 전용 최대 2,000자 계약과 600자 초과 경고를 제안한다. 오류 대응표와 공통 시간 제한을 정리하고 없는 번호는 고정 안내를 제안한다. 의도는 호출자가 명시한 값 여부를 기본값 적용 전 보존하여 명시 `question`/`narration`을 우선하고, 생략 시 번호만 입력, 기존 해설 정규식 순으로 판별한다. 새 enum은 `question`/`narration`이며 내부 `auto`는 제거한다.
+2. 순서 있는 플레이북 단계의 실행·생략·실패 기록과 누락 검증을 제안한다. capability는 선언된 저장소 함수만 제공하며 단계 기록은 내부 메타데이터다. 조기 반환도 남은 단계를 이유와 함께 생략한다.
+3. **별도 승인 후 계획**: 소유 작가 자료 RPC와 로더, 원자적인 요청 원장과 해설 초안 HTTP 경로, 실호출·비교·사람 라벨을 연결한다. 키와 신규 migration이 필요하다.
+4. **게시 기능 이후 계획**: 게시 근거·인용의 저장 계약, 관람 DB 어댑터와 호출 제한, 표본 평가 및 작가 자료 이력 보존을 연결한다.
+
+단계별 오프라인 번들·lint·typecheck·테스트·build·모의 비교를 확인한다. 실호출 전에는 모델 품질을 검증했다고 주장하지 않는다. 3~4단계는 이번 작업에서 실행하지 않는다.

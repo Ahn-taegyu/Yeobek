@@ -11,6 +11,8 @@ okf_version: "0.2"
 
 # MVP부터 읽기
 
+- [AI 하네스 플레이북 발전 검토](reviews/ai-harness-review-2026-11-13.md) — 기존 수정, 재현 원자료와 후속 계획의 범위.
+
 - [AI 하네스 PR2 수정 검토](reviews/ai-harness-fix-review.md) — 재현 결함·검증 상태·후속 통합 조건.
 
 - [제품 AI 플러그인과 품질 기준](specs/product-ai-plugin.md) — 스킬·도구·지침 조합, 작가 정리 후보·검수, 실제 품질 검증 경계.

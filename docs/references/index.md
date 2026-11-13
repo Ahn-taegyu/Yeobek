@@ -1,5 +1,9 @@
 # 출처와 보존본
 
+- [Claude AI 하네스 PR2 검토 메모 원문](claude-ai-harness-review-notes.md) — 과거 재현·pstack 대응의 원자료.
+
+- [AI 하네스 수정·발전 계획 요청 원문](user-harness-playbooks-plan.md) — 단계별 제안과 승인 범위.
+
 - [AI 하네스 PR2 검토와 수정 요청](user-ai-pr2-review.md) — 검토 전달 내용 요약과 후속 계약.
 
 - [제품 플러그인과 품질 요구](user-plugin-quality.md) — pstack과 같은 스킬·도구·지침 조합.
