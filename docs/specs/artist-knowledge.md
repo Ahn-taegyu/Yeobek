@@ -11,6 +11,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-13T02:37:18+00:00'
 sources:
+- id: plugin
+  resource: /specs/product-ai-plugin.md
+  title: 작가 자료 정리 스킬·비공개 후보·검토 후 적용
 - id: review-implementation
   resource: /references/user-review-implementation.md
   title: MVP 기반 리뷰 반영 요청
@@ -70,6 +73,8 @@ decision_status: proposed
 5. 타인 문서, 삭제된 대상, 다른 전시의 작품을 링크로 연결해 접근 범위를 늘리지 않는다. 같은 작가의 다른 전시도 관람객에게 자동 공개하지 않는다.
 
 # AI 검색 경로
+
+[제품 AI 플러그인](product-ai-plugin.md)에 원문 전체 블록을 안정 section으로 분류하고 출처·버전·미변경 section을 보존하는 후보/적용 모듈을 추가했다. 후보 생성은 원본을 변경하지 않으며 작가 검토 후 서버에 저장된 후보 ID로만 적용한다. 실제 후보 DB·원자적 저장 RPC·검수 UI는 후속이다. 일반 폼 저장은 기존 경로를 유지하며 모델 호출이 필수인 것은 아니다.
 
 작가 제작 단계는 소유한 입력과 연결 자료로 **비공개 초안**을 만든다. 관람 단계는 현재 전시·작품의 활성 공개 묶음에서 **승인된 작가 공통 + 전시 공통 + 작품 근거**를 읽는다. 링크를 재귀적으로 따라 전체 작가 위키를 모델에 전달하지 않는다. [제품 RAG](rag-design.md)의 예산·인용·철회 계약을 유지한다.
 

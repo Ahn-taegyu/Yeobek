@@ -44,6 +44,10 @@ npm run ai:smoke -- stt --audio=path/to/test.webm
 
 ## 앱 검사와 DB 변경
 
+AI의 업무 절차와 말투는 [제품 플러그인](docs/specs/product-ai-plugin.md)으로 관리합니다. `ai/yeobek/plugin.json`, `instructions.md`, `messages.json`, `skills/*/SKILL.md`를 수정한 뒤 `npm run ai:bundle`을 실행합니다. 생성된 `src/lib/ai/plugin.generated.ts`는 직접 편집하지 않습니다. 테스트와 빌드가 원본/생성물 불일치를 차단하며, 필요한 스킬만 업무별로 조합하고 플러그인 해시를 답변에 기록합니다.
+
+작가 자료 정리는 원문 블록을 분류한 비공개 후보 → 작가 검토 → 버전 재검사 → 적용의 서버 실행 모듈을 제공합니다. 실제 DB 저장소·검수 UI는 아직 연결하지 않았습니다. Cursor/Codex 마켓플레이스용 플러그인을 설치한 것은 아닙니다. [병렬 후보 평가와 문맥 계승 검토](docs/research/candidate-selection.md)는 제안 단계로, 실제 호출 수는 늘리지 않았습니다.
+
 Tailwind CSS 4·PostCSS를 사용합니다. 현재 Windows에서 재현된 Turbopack PostCSS worker 종료를 피하도록 `dev`·`build`는 Next.js의 `--webpack` 옵션을 사용합니다. 기존 로컬 스택이 실행 중일 때 새 migration 적용은 `npx supabase migration up --local`로 수행하며 DB reset은 필요하지 않습니다.
 
 ```sh

@@ -12,6 +12,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: plugin
+  resource: /specs/product-ai-plugin.md
+  title: 자연스럽고 격식 있는 관람 응대 스킬
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -71,6 +74,8 @@ input_mode와 output_mode를 서로 다른 값으로 저장한다. 입력 선택
 - 다른 전시로 이동하면 명시적으로 전시 문맥을 바꾸고 기존 전시의 근거를 자동 혼입하지 않는다. v1.0 상세안은 같은 탭에서 전시별 sessionStorage 기록을 분리하고 복귀 시 공개 버전을 검증하는 방식이다. 새 탭/기기 간 복원은 보장하지 않는다.
 
 # 해설과 답변의 근거
+
+관람 말투는 [제품 플러그인](product-ai-plugin.md)의 speak-docent 스킬로 관리한다. 자연스럽고 격식 있는 존댓말, 질문에 대한 직접 답변, 없는 의도 추측 금지를 함께 적용한다. [병렬 후보와 채택 문맥 계승](../research/candidate-selection.md)은 검토안이며 현재 채팅 이력 저장·다중 생성을 구현한 것으로 보지 않는다.
 
 “18번 설명해줘”는 검수된 해설을 반환하는 기본 경로다. 꼬리 질문·요약 요청은 해당 전시에서 공개 승인한 작가 공통·전시 공통·작품 근거에서 답변을 생성한다. 내부 위키 원본 전체를 검색하지 않는다. 실시간 생성 답변마다 작가의 사전 승인을 요구하지 않으며 출처·불확실성을 표시한다.
 

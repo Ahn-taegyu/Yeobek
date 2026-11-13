@@ -52,7 +52,7 @@ sources:
 | 인증 | 사전 생성 계정 로그인·로그아웃, 서버 getUser 검증, HttpOnly 쿠키 | 운영 계정 발급·복구 절차 |
 | 작가 자료 | 전시·작품 생성/조회/수정, 프로필·문서 조회/수정 API. 프로필·문서는 관련 작업에서 자동 생성 | 이미지/PDF 직접 업로드·검수 |
 | 데이터 | 7개 테이블·RPC·RLS·버전 검사·공개 조회 gate | 승인·게시·철회 실행 경로와 TTL 정리 |
-| AI | 서버 전용 어댑터·공개 문맥/출력 검사 하네스·오프라인 계약 평가; [준비 범위](ai-harness.md) | 실제 승인·게시 DB/HTTP 연결, 제공사 접근·음성 품질·의미 평가 |
+| AI | 서버 전용 어댑터·공개 문맥/출력 검사·업무별 지침/스킬/도구 패키지·작가 원문 분류/검토 후 적용 모듈; [플러그인 범위](product-ai-plugin.md) | 실제 후보/승인·게시 DB/HTTP 연결, 제공사 접근·음성 품질·의미 평가·다중 후보 실험 |
 | 배포 | 로컬 Supabase·Next.js, CI 구성 | 실제 클라우드 프로젝트 연결·배포·성능 측정 |
 
 의존성 버전은 루트 `package.json`과 `package-lock.json`이 기준이며 Node 24·npm을 사용한다. 설치 시 발견한 개발 도구의 minimatch 취약점은 `@typescript-eslint/typescript-estree` 하위 패키지에 11.0.1 override를 둔다. 상위 도구가 수정 버전을 채택하면 override를 제거하고 린트를 재확인한다. Next.js의 자동 AGENTS 갱신은 껐으며 버전별 문서는 설치된 `node_modules/next/dist/docs/`를 먼저 읽는다.

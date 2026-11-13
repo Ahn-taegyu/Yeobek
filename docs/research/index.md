@@ -1,5 +1,7 @@
 # 기술 선택 재검토
 
+- [다중 후보 평가·재생성과 채택 문맥 계승](candidate-selection.md) — 적용 가능성·평가 하한·비용/지연·서버 대화 상태 설계. 미구현·미측정 제안.
+
 공식 문서 조사 결과와 이번 MVP에 대한 판단을 구분한다. 실제 음성 청취·API 호출·부하 시험·배포 결과가 아니다.
 
 - **최신 11/13:** [Render 제외 후 추천 스택·AI별 모델/API](recommended-stack.md), [D-010](../decisions/D-010-practical-stack.md). 사용자 안내로 Render 제외 반영, 나머지는 권고 단계.

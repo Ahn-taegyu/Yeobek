@@ -24,7 +24,7 @@ describe("docent harness offline evaluation (synthetic; no semantic quality clai
     expect(s.publications.isCurrent).toHaveBeenCalledTimes(2);
     const prompt = s.text.generate.mock.calls[0] as unknown as [{ input: string; system: string }];
     expect(prompt[0].input).not.toContain(ids.owner);
-    expect(prompt[0].system).toContain("이미지나 카메라 입력은 없습니다");
+    expect(prompt[0].system).toContain("이미지/카메라 분석이 없으므로");
   });
   it.each(["18번 작품 설명해줘.", "18번 작품도 설명해줘.", "십팔 번 설명해 주세요!", "해설 보기"])("reuses approved narration without a model: %s", async question => {
     const s = setup();

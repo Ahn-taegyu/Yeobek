@@ -36,8 +36,8 @@ export function validateContext(value: unknown, selector: ArtworkSelector): Publ
 export function selectEvidence(evidence: Evidence[], question: string): Evidence[] {
   const terms = question.toLocaleLowerCase("ko").split(/[^\p{L}\p{N}]+/u).filter(t => t.length > 1);
   const ranked = evidence.map((item, index) => ({ item, index,
-    score: (item.scope === "artwork" ? 2 : 0) + terms.filter(t => item.body.toLocaleLowerCase("ko").includes(t)).length,
-  })).sort((a, b) => b.score - a.score || a.index - b.index);
+    score: terms.filter(t => item.body.toLocaleLowerCase("ko").includes(t)).length,
+  })).sort((a, b) => b.score - a.score || Number(b.item.scope === "artwork") - Number(a.item.scope === "artwork") || a.index - b.index);
   const selected: Evidence[] = [];
   let size = 0;
   for (const { item } of ranked) {

@@ -6,6 +6,7 @@ import { createOpenAiSpeechProvider, createOpenAiTextProvider, createOpenAiTrans
 import { createLinerTextProvider } from "./providers/liner";
 import { createTypecastSpeechProvider } from "./providers/typecast";
 import type { AiSpeechProvider } from "./providers/types";
+import { createArtistKnowledgeHarness, type ArtistKnowledgeStore } from "./artist-knowledge";
 
 export function createConfiguredSpeechProvider(): AiSpeechProvider {
   const selection = process.env.AI_TTS_PROVIDER?.trim() || "typecast";
@@ -36,3 +37,10 @@ export const transcribeRecording: ReturnType<typeof createOpenAiTranscriptionPro
 // Liner draft port only. Owner/revision checks and candidate storage belong to the
 // pending authoring workflow. It must not be exposed as a generic prompt proxy.
 export const createNarrationDraftProvider = createLinerTextProvider;
+
+/** Caller binds verified artist auth and a private transactional store. */
+export function createArtistKnowledgeRuntime(actorId: string, store: ArtistKnowledgeStore) {
+  return createArtistKnowledgeHarness(actorId, { store,
+    text: { generate: input => createLinerTextProvider().generate(input) },
+  });
+}

@@ -1,5 +1,8 @@
 # 출처와 보존본
 
+- [제품 플러그인과 품질 요구](user-plugin-quality.md) — pstack과 같은 스킬·도구·지침 조합.
+- [병렬 답변·평가·문맥 복제 검토](user-candidate-selection.md) — 평가 하한·재생성·채택 세션 계승 아이디어.
+
 - [제품 AI API·하네스 준비 요청](user-ai-harness.md) — 실행 구조 범위와 Typecast 미준비·대체 경로 요청.
 
 - [검토 반영 작업의 적용 확인 요청](user-fix-review.md) — 수정 커밋을 실행해 확인하고 별도 결과 문서로 기록.
