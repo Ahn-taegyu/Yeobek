@@ -3,6 +3,10 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public,extensions;
 select no_plan();
 
+-- Isolate the fixture from voice configuration registered by earlier HTTP runs.
+select set_config('test.voice_version',(select (coalesce(max(version),0)+1)::text from voice_configs),true);
+update app_policies set value = current_setting('test.voice_version')::integer where key = 'voice_config_version';
+
 insert into auth.users(id,email) values
     ('00000000-0000-0000-0000-000000000001','audio-owner@example.invalid'),
     ('00000000-0000-0000-0000-000000000002','audio-other@example.invalid');
@@ -30,7 +34,7 @@ select ok(not has_function_privilege('authenticated','resume_with_audio_mode(uui
     'authenticated cannot override the server audio mode');
 
 set local role service_role;
-select is(sync_audio_config(repeat('a',64),true),1,'registers server voice fingerprint');
+select is(sync_audio_config(repeat('a',64),true),current_setting('test.voice_version')::integer,'registers server voice fingerprint');
 select throws_ok($$select sync_audio_config(repeat('b',64),true)$$,'P1003',
     'Voice configuration requires a new policy version','a different voice requires a version change');
 select throws_ok($$select reserve_audio_job('00000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000001',
