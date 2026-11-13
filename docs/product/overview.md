@@ -2,9 +2,9 @@
 type: Product
 id: P-001
 title: 제품 방향과 사업 가설
-description: 두 사업안을 유지하면서 공통 도슨트 가치를 정의한다.
+description: 확정한 1안과 비교 기록인 2안, 공통 도슨트 가치를 정의한다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags:
 - mawd
 rag_include: true
@@ -46,7 +46,7 @@ decision_status: proposed
 | 검증 | 셀프서비스·지불 의향·공급자 작업 시간 | 거래 업무 수요·문의 전환·운영 시간 |
 | 첫 MVP 제안 | 제작·배포 흐름 집중 | 거래 흐름 별도 검증 후 확장 |
 
-과거 대화는 1안을 추천했지만 최신 사용자 결정은 **사업안 유보·공통 기능 우선**이다. [추가 응답](../references/user-answers.md)을 우선한다. 작품 판매액·입장료는 고객 매출이며 SaaS 매출과 구분한다.
+11/12에는 사업안을 유보하고 공통 기능을 우선했다([추가 응답](../references/user-answers.md)). **11/13에 사용자가 1안을 확정했다**([D-014](../decisions/D-014-business-scope-supply.md)). 2안의 거래 흐름은 채택하지 않았고 위 표의 2안은 비교 기록으로 남긴다. 1안의 검증 항목은 아직 미검증이다. 작품 판매액·입장료는 고객 매출이며 SaaS 매출과 구분한다.
 
 # 사용자와 가치
 
