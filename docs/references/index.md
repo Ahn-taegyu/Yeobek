@@ -1,5 +1,6 @@
 # 출처와 보존본
 
+- [실제 코드 검토와 기획 대조 요청](user-code-plan-review.md) — 코드를 실행해 검토하고 기획 적용 여부를 검토서에 기록.
 - [검토서 재확인 요청](user-review-revision.md) — 코드·명세·검증 근거를 다시 대조해 검토서 수정.
 
 - [프로젝트 이름 정정](user-project-name.md) — 현재 이름은 Yeobek, 과거 요청 원문은 보존.

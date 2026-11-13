@@ -11,6 +11,21 @@ generated:
   by: codex/gpt-6
   at: '2026-11-13T14:29:32+09:00'
 sources:
+- id: code-plan-review-request
+  resource: /references/user-code-plan-review.md
+  title: 실제 코드 검토와 기획 대조 기록 요청
+- id: screens
+  resource: /specs/screen-spec.md
+  title: SC-A01·A02 화면 명세
+- id: scenarios
+  resource: /specs/user-scenarios.md
+  title: UC·AC·EX 시나리오와 예외 코드
+- id: knowledge-contract
+  resource: /specs/artist-knowledge.md
+  title: 내부 지식 저장·재사용 계약
+- id: stack
+  resource: /specs/technology-stack.md
+  title: 기술 스택과 저장 단위
 - id: revision-request
   resource: /references/user-review-revision.md
   title: 검토서 재확인과 수정 요청
@@ -235,3 +250,121 @@ node --input-type=module -e 'import { z } from "zod"; console.log(z.string().max
 | 오류 문구 | [artist-home.tsx 21행](https://github.com/Ahn-taegyu/Yeobek/blob/497b61b4baec776ffd9a9205fb0abc867efae207/src/components/artist-home.tsx#L21)은 응답이 JSON이 아니면 파싱 오류 원문을 표시 | 고정 안내 문구로 대체 |
 
 7절의 Tailwind·프로필 생성 시점 항목은 이번 대조 범위에 넣지 않았다.
+
+# 10. 실행으로 확인한 결과
+
+[SRC-021](../references/user-code-plan-review.md)에 따라 Claude Code가 2026-11-13에 `0e9675d`(앱·DB·테스트 소스는 `497b61b`와 동일)를 별도 worktree에서 직접 설치·빌드·실행했다. 제품 코드와 테스트는 수정하지 않았다. 9절은 코드를 읽어 판단한 기록이고, 이 절은 실행해서 관찰한 기록이다.
+
+## 10.1 실행한 검사
+
+| 검사 | 결과 | 방법 |
+| --- | --- | --- |
+| `npm ci`, lint, typecheck, build | 성공 | worktree에서 새로 설치 후 실행 |
+| 단위 검사 | 16개 통과 | `npm test` |
+| pgTAP | 53개 통과 | 이미 실행 중이던 로컬 `yeobek-mvp` 스택에 `npm run db:test` |
+| HTTP 통합 | 7개 통과(상위 1 + 하위 6) | 빌드한 앱을 3100번 포트에 띄우고 `TEST_APP_ORIGIN` 지정 |
+| SQL 직접 실행 | 아래 표 | 로컬 DB에서 한 트랜잭션으로 실행 후 rollback. 남은 행 0건 확인 |
+| HTTP 직접 요청 | 아래 표 | 로컬 테스트 계정 1개로 로그인해 Node fetch·쿠키 jar로 요청 |
+
+HTTP 통합 검사와 직접 요청은 프로젝트 통합 테스트와 같은 방식으로 가짜 계정 3개와 그 초안을 폐기 가능한 로컬 DB에 남겼다. 실제 브라우저·모바일·운영 HTTPS·클라우드 프로젝트는 여전히 미검증이다.
+
+## 10.2 새로 확인한 결함: 잘못된 입력이 500으로 응답
+
+| 입력 | 관찰한 응답 | 원인 | 기획 기준 |
+| --- | --- | --- | --- |
+| 전시 `startDate: "0000-01-01"`, `endDate: "0000-01-02"` | 500 `INTERNAL_ERROR` | Zod `z.iso.date()`는 통과, PostgreSQL이 `22008`로 거부. [오류 매핑](https://github.com/Ahn-taegyu/Yeobek/blob/497b61b4baec776ffd9a9205fb0abc867efae207/src/lib/api/errors.ts#L20)에 이 코드가 없음 | EX-01은 형식·기간 오류를 필드 옆 사유로 안내하는 입력 오류 |
+| 전시 제목에 NUL 문자(`\u0000`) | 500 `INTERNAL_ERROR` | PostgreSQL이 `22P05`로 거부, 매핑 없음 | 같음 |
+| section 본문에 NUL 문자 | 500 `INTERNAL_ERROR` | 같음 | 같음 |
+
+500은 서버 오류 로그에도 남는다. 스키마에서 거르거나 두 SQLSTATE를 400으로 매핑하면 된다. `startDate: "2026-02-30"`은 Zod가 400과 `startDate` 필드 오류로 정상 거부했다. 수정은 하지 않았다.
+
+## 10.3 실행으로 재현한 기존 항목
+
+| 항목 | 관찰 |
+| --- | --- |
+| 9.1 상위 문서 수정 후 409 | 작가 소개 문서를 수정한 뒤 작품 제목만 바꾸는 PATCH가 409 `REVISION_CONFLICT`. 작품을 다시 조회해 받은 revision·sections·sourceRefs를 그대로 보내도 409. 일반 revision 충돌 응답과 코드·문구가 동일함을 비교로 확인. 상위 문서 수정 전에는 같은 PATCH가 200이며 문서 revision은 유지 |
+| 9.1 같은 유형의 400 | 참조한 상위 section을 삭제한 뒤 최신 revision으로 고쳐 보내도 SQL `22023` |
+| 7절 작가명 | 이름 없이 소개만 보내는 프로필 PATCH는 400, `displayName` 필드 오류 |
+| 9.3 작품 번호 재사용 | 논리 삭제한 작품의 번호로 새 작품을 만들면 `23505`. 삭제된 작품 ID의 생성 재시도는 `P0002` |
+| 보이지 않는 제목 | 폭 없는 공백(`​`)만 있는 전시 제목이 201로 저장. 전각 공백(`　`)만 있는 제목은 400 |
+| 409 `CONFLICT` | 번호 중복과 같은 ID·다른 입력이 모두 409 `CONFLICT` |
+
+## 10.4 검사는 없지만 실행하면 동작하는 경로
+
+9.2는 검사가 없다는 기록이다. 아래는 직접 실행해 동작을 확인한 결과이며, 회귀 검사가 생겼다는 뜻은 아니다.
+
+| 경로 | 관찰 |
+| --- | --- |
+| `update_exhibition` 성공·날짜 저장 | SQL과 HTTP PATCH 모두 성공. 제목·장소 앞뒤 공백 제거, 날짜 저장, revision 증가. 날짜를 생략하면 null로 바뀜 |
+| 작품 PATCH의 HTTP 성공 | 200 |
+| 문서 출처의 HTTP 전달 | `sourceDocumentId` 등 camelCase 출처로 작품 생성 201, 저장된 `sourceRefs`가 같은 값으로 반환 |
+| 목록 GET 두 경로 | 200, 생성한 건수와 일치 |
+| 익명 JWT 차단 | `is_anonymous: true` claims에서 RPC는 `42501`, RLS로 보이는 행 0건 |
+| 로그아웃 후 이전 쿠키 재전송 | 401. 로그아웃 전 access token으로 Supabase API를 직접 호출하는 경우는 확인하지 않음 |
+
+# 11. 기획 내용과 구현 대조
+
+기능명세(SPEC-005)·화면 명세·시나리오·내부 지식 계약(SPEC-010)·기술 스택·D-011을 `0e9675d`의 코드와 항목별로 대조했다. 판정은 **적용**(기획대로 구현), **부분**(일부만 구현하거나 화면이 없음), **불일치**(구현이 기획과 다르게 동작), **후속**(아직 구현 범위가 아님)이다. 기획 문서의 proposed 값을 확정으로 올리지 않았고, 이 대조로 명세나 코드를 바꾸지 않았다.
+
+## 11.1 기획과 다르게 동작하는 항목
+
+| 기획 | 구현 | 판단 |
+| --- | --- | --- |
+| [기능명세 4.1](../specs/functional-spec.md#41-입력-필드와-검증): 작가 표시 이름은 프로필 초안에서 선택 | HTTP는 1자 이상 필수(10.3에서 400 재현), DB는 null 허용 | 불일치. 7절과 같은 항목이며 HTTP 스키마를 명세에 맞추면 해소 |
+| [EX-01~04·21 예외 코드](../specs/user-scenarios.md#예외-처리-목록): `VALIDATION_ERROR`, `AUTH_REQUIRED`/`INVALID_CREDENTIALS`, `RESOURCE_UNAVAILABLE`, `DUPLICATE_NUMBER`, `REQUEST_ID_CONFLICT` | `INVALID_INPUT`, `UNAUTHENTICATED`, `NOT_FOUND`, `CONFLICT`. 로그인 실패와 세션 없음이 같은 코드이고, 번호 중복과 요청 ID 충돌도 같은 코드. `REVISION_CONFLICT`만 일치 | 불일치. [API 계약](../specs/api-contract.md)은 구현 쪽 이름을 쓰며 EX 코드와의 대응을 적지 않았다. 화면 구현 전에 한쪽으로 통일하거나 대응표를 둘 것 |
+| [기능명세 8.1](../specs/functional-spec.md#81-공통-응답-요구): 오류에 `retryable`과 필요한 `retry_after` | 오류 본문은 `code`·`message`·선택 `fields`·`requestId`뿐 | 불일치. 429·503을 구별하지만 재시도 가능 여부와 대기 시간은 응답에 없음 |
+| EX-01: 입력 형식 오류는 입력 오류로 안내 | 10.2의 두 입력은 500 | 불일치. 결함 |
+| [SPEC-010 재사용·승인·철회 3항](../specs/artist-knowledge.md#재사용승인철회), UC-17 3단계, OP-22의 "변경 여부": 작가 원본을 고치면 하위는 이전 버전을 유지하고 수정이 필요하다는 표시를 본 뒤 필요한 전시에서 적용 | 초안 출처에 고정한 상위 revision이 낡으면 그 하위 리소스의 저장 자체를 거부(9.1, 10.3) | 불일치 소지. 기획 문장은 승인 근거를 대상으로 하지만, 초안 참조도 같은 고정 revision 구조를 쓴다. 기획의 흐름은 낡은 참조를 "표시할 상태"로 다루고 구현은 "저장 오류"로 다룬다. 9.1의 결정 때 이 기획 흐름을 기준으로 삼을 것 |
+| [기능명세 4.1](../specs/functional-spec.md#41-입력-필드와-검증): 앞뒤 공백 제거 후 길이 계산 | 제목·장소·메타데이터는 제거 후 계산, section 본문은 원문 그대로 계산 | 불일치. 7절의 본문 공백 항목과 같음 |
+| [SC-A01](../specs/screen-spec.md#sc-a01-작가-로그인): 비밀번호 표시/숨김 | 로그인 폼에 전환 버튼 없음 | 불일치. 작은 화면 누락 |
+| [SC-A02](../specs/screen-spec.md#sc-a02-작가-홈): 전시 기록에 기간·장소·작품 수, 최근 수정순 제안, 로그인 계정 표시, 작가 정보 미입력 안내 | 제목과 상태만 표시, 생성일 내림차순, 계정 표시 없음, 이름이 없으면 "나의 전시"로 대체. 목록 API는 기간·장소를 반환하지만 작품 수는 반환하지 않음 | 부분. 화면 골격 단계이나 작품 수는 API에도 없으므로 화면 작업 때 계약 추가 필요 |
+| 기술 스택·D-008: Tailwind | package에 없음 | 불일치. 7절과 같은 항목 |
+
+## 11.2 기획대로 적용된 항목
+
+| 기획 | 확인한 구현과 근거 |
+| --- | --- |
+| [기능명세 3절](../specs/functional-spec.md#3-역할과-접근-권한): 사전 계정 인증, 자기 소유만 조회·수정, 타인 리소스 존재를 드러내지 않음 | 서버 `getUser`, 소유자 RLS, RPC의 소유권 재검사. 타인 전시·작품·문서 ID는 404(통합 검사, pgTAP). 클라이언트가 보낸 `ownerId`·`state`는 400 |
+| 4.1 전시 제목·기간·장소 | 제목 1~100자 필수, 날짜는 한 쌍·시작≤종료·둘 다 미정 허용, 장소 200자. HTTP와 SQL 양쪽에서 검사 |
+| 4.1 연결 작가는 서버 지정 | 전시 생성 시 서버가 소유 프로필을 지정. 요청에 작가 ID를 넣을 필드가 없음 |
+| 4.1 작품 번호·제목·제작연도·재료·크기 | 번호 1~9999 정수, 전시 내 중복 409, 제목 1~100자, 50/200/100자 |
+| 4.1 작가 소개·작품 세계, 전시 소개·주제, 작가 메모 각 5,000자 | 주체별 section 2개(`bio`/`practice`, `introduction`/`theme`, `description`/`notes`), 본문 5,000자 |
+| 4.1 PDF 쪽수는 1부터, 끝≥시작 | 자료 출처의 쪽수 검사(pgTAP) |
+| 4.2 작가/전시/작품·내부 지식의 보존 정보 | 불변 ID, 계정과 구분한 작가 프로필, 전시의 artist ID, 작품의 exhibition ID, revision, 활성 묶음 참조, 문서 ID·subject·section·출처·revision |
+| BR-01 기준 revision 검사와 충돌 시 덮어쓰기 금지 | 정형 정보와 문서의 두 revision 검사, 한쪽이 낡으면 전체 취소 후 409. 응답에 revision과 `updatedAt` 포함 |
+| BR-14 같은 ID·내용 재전송은 기존 결과, 다른 내용은 거부 | 생성 ID와 정규화 입력 해시. 병렬 재시도에서 전시 1건만 생성(201 1회, 200 1회), 다른 입력은 409 |
+| BR-07 삭제 ID 재사용 금지 | 논리 삭제된 작품 ID의 생성 재시도는 404(10.3) |
+| BR-08 공개 접근 게이트 | 전시 상태·작품 상태·활성 publication·철회·논리 삭제를 공개 조회에 모두 적용. 초안은 404. 공개 응답에 파일 경로·내부 문서 없음, `no-store` |
+| BR-15·D-011: 작가·전시·작품을 연결된 내부 문서로 저장, DB 원본, 위키 화면 없음 | `knowledge_documents`가 주체당 하나, 정형 정보와 같은 트랜잭션으로 저장. 별도 Markdown 원본·위키 UI 없음 |
+| SPEC-010 5항: 타인 문서·다른 전시 작품을 링크로 연결해 접근 범위를 늘리지 않음 | 문서·자료 출처를 자기/상위 주체 범위로 제한. 다른 전시 문서·자료 참조 거부(pgTAP) |
+| 6절 전시 상태 `draft / published / paused` | 전시·작품 모두 같은 세 값의 check 제약 |
+| OP-01~04, OP-21과 UC-01의 AC-01(API 수준) | 로그인·로그아웃, 전시·작품 생성/조회/수정, 프로필 조회/수정. 전시 1건만 생성, 소유자·작가 서버 지정, 기간·장소 미정 저장, 재조회, 다른 계정에 보이지 않음 |
+| SC-A01의 중복 제출 방지·일반 인증 오류·성공 시 작가 홈 이동, 공개 가입·비밀번호 찾기 없음 | 제출 중 버튼·입력 비활성, 계정 존재를 구별하지 않는 문구, `/artist` 이동. 로컬 설정은 공개 가입을 끔 |
+| 기술 스택: Next.js 16.4·TypeScript·App Router, Supabase Auth·`@supabase/ssr`, Zod, 7개 저장 단위, 앱에 서버용 secret 없음 | `package.json`과 migration에서 확인. 앱은 공개 키만 사용 |
+| 4.1 파일 상한 3MB·6MB, 해설 2,000자 | 아직 쓰지 않는 `materials.byte_size`와 `narration_draft`·`publications.narration_text` 제약 값이 기획 값과 일치 |
+
+## 11.3 기획에 있으나 아직 구현 범위가 아닌 항목
+
+| 기획 | 현재 상태 |
+| --- | --- |
+| SC-A02의 작가 정보 편집·새 전시 시작, SC-A03 이후 작가 화면, 관람 화면 전체 | 화면 없음. D-011 사용자 확정 요구 중 작가 로그인만 화면으로 충족하고 작가 홈은 목록 조회 골격 |
+| 4.1 작품 이미지, 도록 PDF, 근거 본문·출처 라벨·근거 대상(OP-05~07) | `materials` 테이블과 제약만 있고 업로드·자료·근거 API 없음. 출처 라벨을 담을 필드는 현재 `source_refs`에 없음 |
+| 초안 해설·대표 이미지 연결 | `artworks.narration_draft`·`image_material_id` 열은 있으나 저장할 API가 없고 `narration_draft`는 응답에도 없음 |
+| BR-03~05, OP-08~13: 생성·검수·승인·음성·게시·중지·철회 | 없음. `publications`는 신뢰된 테스트 데이터로만 채움 |
+| BR-06 초안 번호와 공개 번호의 충돌 예약·게시 검사 | 없음. `publications.number`에 유일성 제약이 없어 게시 구현 때 검사 필요 |
+| BR-07 마지막 공개 작품 중지 시 전시 `paused` 전이, 공통 근거 철회의 영향 범위 | 상태 전이는 없음. 공개 조회가 적격 작품이 없으면 전시를 반환하지 않아 조회 결과는 같음 |
+| OP-09·11·20의 작가 쪽 생성·음성 작업 상태(논리 모델 GenerationJob) | 저장할 곳이 없음. `api_requests`는 세션 해시와 전시를 요구하고 종류가 관람 요청 3종뿐이어서 작가 쪽 작업에 그대로 쓸 수 없음. 해설 생성 구현 전에 설계 필요 |
+| OP-14~19, BR-09~13: 라벨·번호 해석·채팅·녹음·낭독·미디어 | 없음. 공개 전시·작품 조회(OP-15 일부)만 있음 |
+| BR-14·API 계약의 분당 6회·일일 상한 | 앱의 요청 횟수 제한 없음. 로그인은 Supabase Auth 정책에 의존 |
+| OP-22의 전시 단위 내부 지식 조회·근거 적용 | 문서 ID 단위 조회·수정만 있음 |
+| AC-15·AC-17의 검색·철회·관람 범위 | 소유자 격리와 문서 분리·출처 범위까지 확인. 승인·게시·철회·제품 RAG가 없어 전체 수용 기준은 미실행 |
+
+## 11.4 종합
+
+이번에 구현한 범위(인증, 소유자 격리, 초안 저장, revision·재시도, 공개 게이트, 내부 문서 구조)는 기획의 업무 규칙과 대부분 일치하고, 일치 여부를 실행 검사로 확인했다. 기획과 다르게 동작하는 것은 11.1의 항목이다. 그중 화면 작업 전에 먼저 정할 것은 다음 세 가지다.
+
+1. 낡은 상위 참조의 처리(9.1, 11.1). 기획 흐름은 저장을 막지 않고 변경 여부를 표시한다.
+2. 오류 코드 체계(11.1). 시나리오의 EX 코드와 API 계약·구현의 코드가 다르고 `retryable`이 없다.
+3. 작가명 선택 여부와 500 응답 두 건(7절, 10.2). 명세에 맞춰 바로 고칠 수 있다.
+
+AC-01~19 가운데 API 수준에서 확인한 것은 AC-01뿐이며 화면을 포함한 시나리오 실행은 아니다. 나머지는 [시나리오 문서](../specs/user-scenarios.md)의 표시대로 미실행이다.
