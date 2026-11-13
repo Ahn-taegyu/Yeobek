@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
+import { ApiError } from "@/lib/api/errors";
+import type { NarrationResult } from "@/lib/ai/narration";
 import { assertIndependentJudge, resolveAiRoute } from "@/lib/ai/routing";
 import { createConfiguredSpeechProvider, createConfiguredTextProvider, createConfiguredTranscriptionProvider,
   createArtistKnowledgeRuntime, createDocentRuntime, createNarrationRuntime } from "@/lib/ai/runtime";
@@ -82,13 +84,45 @@ describe("AI capability routes", () => {
     await expect(speech.synthesize({ text: "시험" })).rejects.toMatchObject({ code: "invalid_response" });
   });
 
-  it("rejects mock mode and direct mock construction in production", () => {
+  it("rejects mock mode and direct mock construction in production", async () => {
     vi.stubEnv("AI_PROVIDER_MODE", "mock");
     vi.stubEnv("NODE_ENV", "production");
     expect(() => resolveAiRoute("qa")).toThrow(notConfigured);
     expect(() => createMockSpeechProvider()).toThrow(notConfigured);
     expect(() => createConfiguredSpeechProvider(undefined, { AI_PROVIDER_MODE: "mock", NODE_ENV: "test" })).toThrow(notConfigured);
-    expect(() => createNarrationRuntime(ids.owner, { loadOwnedContext: async () => null })).toThrow(notConfigured);
+    const runtime = createNarrationRuntime(ids.owner, { loadOwnedContext: async () => null });
+    expect(await runtime.draft({ documentId: ids.other, expectedRevision: 1, strategy: "single" }))
+      .toMatchObject({ status: "abstained", failure: { code: "SERVER_CONFIGURATION_ERROR", routing: "operator" } });
+  });
+
+  it("replays before reading malformed provider or feature configuration", async () => {
+    vi.stubEnv("AI_PROVIDER_MODE", "unknown");
+    vi.stubEnv("FEATURE_FOLLOW_UP_QUESTIONS", "unknown");
+    const replay = new Error("stored job replay");
+    const reserve = vi.fn(async () => { throw replay; });
+    const complete = vi.fn();
+    const loadOwnedContext = vi.fn();
+    const runtime = createNarrationRuntime(ids.owner, { loadOwnedContext }, { reserve, complete });
+    await expect(runtime.draft({ documentId: ids.other, expectedRevision: 1, strategy: "single" })).rejects.toBe(replay);
+    expect(reserve).toHaveBeenCalledOnce();
+    expect(loadOwnedContext).not.toHaveBeenCalled();
+    expect(complete).not.toHaveBeenCalled();
+  });
+
+  it("preserves a transient post-reservation RPC failure in the job completion", async () => {
+    vi.stubEnv("AI_PROVIDER_MODE", "mock");
+    vi.stubEnv("NODE_ENV", "test");
+    const failure = new ApiError(503, "SERVICE_UNAVAILABLE", "transient store error");
+    const loadOwnedContext = vi.fn(async () => { throw failure; });
+    const reserve = vi.fn(async () => {});
+    const complete = vi.fn<(result: NarrationResult) => Promise<void>>(async () => {});
+    const runtime = createNarrationRuntime(ids.owner, { loadOwnedContext }, { reserve, complete });
+    expect(await runtime.draft({ documentId: ids.other, expectedRevision: 1, strategy: "single" }))
+      .toMatchObject({ status: "abstained", mock: true });
+    expect(complete).toHaveBeenCalledOnce();
+    expect(complete.mock.calls[0][0]).toMatchObject({
+      failure: { status: 503, code: "SERVICE_UNAVAILABLE", routing: "operator", retryable: true },
+    });
   });
 
   it("uses the injected mock environment consistently and validates recording input", async () => {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { generateNarrationSchema, jobResponse, retryJobSchema, saveNarrationSchema } from "./jobs";
 import {
   createArtworkSchema, createExhibitionSchema, emptySchema, loginSchema, profileSchema,
   updateArtworkSchema, updateExhibitionSchema, updateKnowledgeSchema, uuid,
@@ -22,6 +23,10 @@ const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  generateNarration: { method: "POST", path: "/api/admin/artworks/{id}/generations", params: byId, body: generateNarrationSchema, response: successEnvelope(jobResponse), statuses: [200, 201] },
+  getJob: { method: "GET", path: "/api/admin/jobs/{id}", params: byId, response: successEnvelope(jobResponse), statuses: [200] },
+  retryJob: { method: "POST", path: "/api/admin/jobs/{id}/retry", params: byId, body: retryJobSchema, response: successEnvelope(jobResponse), statuses: [200] },
+  saveNarration: { method: "PATCH", path: "/api/admin/artworks/{id}/narration", params: byId, body: saveNarrationSchema, response: successEnvelope(artworkResponse), statuses: [200] },
   health: { method: "GET", path: "/api/health", response: successEnvelope(z.object({ status: z.literal("ok") })), statuses: [200] },
   login: { method: "POST", path: "/api/auth/login", body: loginSchema, response: successEnvelope(z.object({ authenticated: z.literal(true) })), statuses: [200] },
   logout: { method: "POST", path: "/api/auth/logout", body: emptySchema, response: successEnvelope(z.object({ authenticated: z.literal(false) })), statuses: [200] },

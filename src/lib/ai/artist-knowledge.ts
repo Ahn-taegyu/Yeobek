@@ -1,4 +1,8 @@
 import "server-only";
+import type { JobLifecycle } from "./job-lifecycle";
+import { KnowledgeError } from "./errors";
+export { KnowledgeError } from "./errors";
+import { normalizeAiOutcome } from "./outcome";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { section, sourceRef } from "../api/schemas";
@@ -36,7 +40,7 @@ const proposalSchema = z.strictObject({ id: uuid, ownerId: uuid, documentId: uui
   sections: z.array(section).max(2), sourceRefs: z.array(sourceRef).max(24), appliedRevision: revision.nullable() });
 export type KnowledgeProposal = z.infer<typeof proposalSchema>;
 /** Execution records stay outside the immutable proposal and public HTTP body. */
-export type KnowledgeOrganizationResult = { proposal: KnowledgeProposal | null; steps: readonly PlaybookStepRecord[] };
+export type KnowledgeOrganizationResult = { proposal: KnowledgeProposal | null; failure?: ReturnType<typeof normalizeAiOutcome>; steps: readonly PlaybookStepRecord[] };
 export type KnowledgeApplicationResult = { documentRevision: number; steps: readonly PlaybookStepRecord[] };
 
 /** Production adapter pending. All reads must enforce authenticated owner and
@@ -52,11 +56,6 @@ export interface ArtistKnowledgeStore {
   storeProposal(proposal: KnowledgeProposal, signal?: AbortSignal): Promise<void>;
   loadOwnedProposal(actorId: string, proposalId: string, signal?: AbortSignal): Promise<unknown | null>;
   commitOwnedProposal(actorId: string, proposalId: string, signal?: AbortSignal): Promise<{ documentRevision: number }>;
-}
-export class KnowledgeError extends Error {
-  constructor(public readonly code: "invalid_input" | "unavailable" | "invalid_context" | "invalid_output" | "revision_conflict" | "proposal_expired") {
-    super(code); this.name = "KnowledgeError";
-  }
 }
 export function validateArtistKnowledgeContext(raw: unknown, actorId: string, documentId: string): ArtistKnowledgeContext {
   const parsed = contextSchema.safeParse(raw);
@@ -122,10 +121,10 @@ function planSelection(output: unknown, context: ArtistKnowledgeContext) {
 }
 
 /** actorId must come from verified server auth, never from the request body. */
-export function createArtistKnowledgeHarness(actorId: string, deps: { store: ArtistKnowledgeStore; text: AiTextProvider; now?: () => number }) {
+export function createArtistKnowledgeHarness(actorId: string, deps: { store: ArtistKnowledgeStore; text: AiTextProvider; now?: () => number; jobs?: JobLifecycle<KnowledgeOrganizationResult> }) {
   if (!uuid.safeParse(actorId).success) throw new KnowledgeError("invalid_input");
   const now = deps.now ?? Date.now;
-  const organize = capabilitiesFor("artist-organize", { author: deps.store, proposals: deps.store });
+  const organize = capabilitiesFor("artist-organize", { author: deps.store, proposals: deps.store, jobs: deps.jobs });
   const apply = capabilitiesFor("artist-apply", { author: deps.store, proposals: deps.store });
   const readProposal = async (id: string, signal?: AbortSignal) => {
     assertNotCancelled(signal);
@@ -138,6 +137,12 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
   return {
     async propose(input: { documentId: string; expectedRevision: number }, signal?: AbortSignal): Promise<KnowledgeOrganizationResult> {
       const flow = startPlaybook("artist-organize");
+      let reserved = false;
+      const settle = async (result: Omit<KnowledgeOrganizationResult, "steps">) => {
+        const complete = organize["job.complete"];
+        const steps = await flow.settleJob(complete ? snapshot => complete({ ...result, steps: snapshot }) : undefined);
+        return { ...result, steps };
+      };
       try {
         const request = await flow.step("request.validate", () => {
           const parsed = z.strictObject({ documentId: uuid, expectedRevision: revision }).safeParse(input);
@@ -145,6 +150,11 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
           assertNotCancelled(signal);
           return parsed.data;
         });
+        const reserve = organize["job.reserve"];
+        if (reserve) {
+          await flow.step("job.reserve", reserve);
+          reserved = true;
+        } else flow.skip("job.reserve", "job_unbound");
         const context = await flow.step("author.read", async () => {
           assertNotCancelled(signal);
           const raw = await organize["author.read"](actorId, request.documentId, signal);
@@ -156,7 +166,7 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
         });
         if (!context.sources.length) {
           for (const id of ["model.generate", "output.validate", "proposal.store"] as const) flow.skip(id, "no_sources");
-          return { proposal: null, steps: flow.finish() };
+          return settle({ proposal: null });
         }
         const generated = await flow.step("model.generate", async () => {
           assertNotCancelled(signal);
@@ -168,7 +178,7 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
         const plan = await flow.step("output.validate", () => planSelection(generated.output, context));
         if (!plan.selection.sections.length) {
           flow.skip("proposal.store", "empty_selection");
-          return { proposal: null, steps: flow.finish() };
+          return settle({ proposal: null });
         }
         const proposal = await flow.step("proposal.store", async () => {
           const proposal: KnowledgeProposal = { id: randomUUID(), ownerId: actorId, documentId: context.documentId,
@@ -178,9 +188,12 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
           await organize["proposal.store"](proposal, signal);
           return proposal;
         });
-        return { proposal, steps: flow.finish() };
+        return settle({ proposal });
       } catch (error) {
-        if (!(error instanceof PlaybookOrderError)) flow.fail(error);
+        if (!(error instanceof PlaybookOrderError)) {
+          if (reserved) await settle({ proposal: null, failure: normalizeAiOutcome(error) });
+          else flow.fail(error);
+        }
         throw error;
       }
     },

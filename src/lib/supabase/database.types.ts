@@ -5,7 +5,47 @@ export type Database = {
 
   "public": {
           Tables: {
-            "api_requests": {
+            "ai_job_attempts": {
+                  Row: {
+                    "attempt": number,"completed_at": string | null,"completion_fingerprint": string | null,"duration_ms": number | null,"job_id": string,"owner_id": string,"request_id": string,"reserved_at": string,"result_code": string | null,"steps": Json | null,"usage": Json | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attempt": number,"completed_at"?: string | null,"completion_fingerprint"?: string | null,"duration_ms"?: number | null,"job_id": string,"owner_id": string,"request_id": string,"reserved_at"?: string,"result_code"?: string | null,"steps"?: Json | null,"usage"?: Json | null
+                  }
+                  Update: {
+                    "attempt"?: number,"completed_at"?: string | null,"completion_fingerprint"?: string | null,"duration_ms"?: number | null,"job_id"?: string,"owner_id"?: string,"request_id"?: string,"reserved_at"?: string,"result_code"?: string | null,"steps"?: Json | null,"usage"?: Json | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_job_attempts_owner_id_job_id_fkey"
+      columns: ["owner_id","job_id"]
+isOneToOne: false
+      referencedRelation: "ai_jobs"
+      referencedColumns: ["owner_id","id"]
+    }
+                  ]
+                },"ai_jobs": {
+                  Row: {
+                    "artwork_id": string,"attempt": number,"created_at": string,"document_id": string,"expected_document_revision": number,"expected_revision": number,"expires_at": string,"id": string,"kind": string,"lease_until": string,"mock": boolean,"owner_id": string,"request_id": string,"result": Json | null,"result_code": string | null,"routing": string,"source_fingerprint": NonNullable<Json>,"source_ids": NonNullable<Json>,"status": string,"strategy": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "artwork_id": string,"attempt"?: number,"created_at"?: string,"document_id": string,"expected_document_revision": number,"expected_revision": number,"expires_at": string,"id"?: string,"kind"?: string,"lease_until": string,"mock"?: boolean,"owner_id": string,"request_id": string,"result"?: Json | null,"result_code"?: string | null,"routing"?: string,"source_fingerprint": NonNullable<Json>,"source_ids": NonNullable<Json>,"status"?: string,"strategy": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "artwork_id"?: string,"attempt"?: number,"created_at"?: string,"document_id"?: string,"expected_document_revision"?: number,"expected_revision"?: number,"expires_at"?: string,"id"?: string,"kind"?: string,"lease_until"?: string,"mock"?: boolean,"owner_id"?: string,"request_id"?: string,"result"?: Json | null,"result_code"?: string | null,"routing"?: string,"source_fingerprint"?: NonNullable<Json>,"source_ids"?: NonNullable<Json>,"status"?: string,"strategy"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ai_jobs_owner_id_artwork_id_fkey"
+      columns: ["owner_id","artwork_id"]
+isOneToOne: false
+      referencedRelation: "artworks"
+      referencedColumns: ["owner_id","id"]
+    }
+                  ]
+                },"api_requests": {
                   Row: {
                     "answer_text": string | null,"artwork_id": string | null,"created_at": string,"exhibition_id": string,"expires_at": string,"kind": string,"publication_id": string | null,"reply_audio_key": string | null,"request_id": string,"session_hash": string,"state": string,"updated_at": string,"usage": NonNullable<Json>
                   }
@@ -201,11 +241,17 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "create_artwork":
+            "complete_ai_job":
+{ Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
+                           },
+"create_artwork":
 { Args: { "p_creation_year": string,"p_dimensions": string,"p_exhibition_id": string,"p_id": string,"p_medium": string,"p_number": number,"p_sections": Json,"p_source_refs": Json,"p_title": string }; Returns: Json
                            },
 "create_exhibition":
 { Args: { "p_end_date": string,"p_id": string,"p_place": string,"p_sections": Json,"p_source_refs": Json,"p_start_date": string,"p_title": string }; Returns: Json
+                           },
+"get_ai_job":
+{ Args: { "p_job_id": string }; Returns: Json
                            },
 "get_artist_profile":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -219,6 +265,9 @@ isOneToOne: false
 "get_knowledge_document":
 { Args: { "p_subject_id": string,"p_subject_type": string }; Returns: Json
                            },
+"get_narration_context":
+{ Args: { "p_artwork_id": string }; Returns: Json
+                           },
 "get_public_artwork":
 { Args: { "p_exhibition_id": string,"p_id": string }; Returns: Json
                            },
@@ -230,6 +279,19 @@ isOneToOne: false
                            },
 "list_exhibitions":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"reserve_ai_job":
+{ Args: { "p_artwork_id": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_owner": string,"p_request_id": string,"p_strategy": string }; Returns: Json
+                           } |
+{ Args: { "p_artwork_id": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_mock": boolean,"p_owner": string,"p_request_id": string,"p_strategy": string }; Returns: Json
+                           },
+"retry_ai_job":
+{ Args: { "p_expected_attempt": number,"p_job_id": string,"p_owner": string,"p_request_id": string }; Returns: Json
+                           } |
+{ Args: { "p_expected_attempt": number,"p_job_id": string,"p_mock": boolean,"p_owner": string,"p_request_id": string }; Returns: Json
+                           },
+"save_narration_draft":
+{ Args: { "p_artwork_id": string,"p_expected_revision": number,"p_source_job_id"?: string,"p_text": string }; Returns: Json
                            },
 "update_artist_profile":
 { Args: { "p_display_name": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_sections": Json,"p_source_refs": Json }; Returns: Json
