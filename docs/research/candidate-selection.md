@@ -10,9 +10,15 @@ rag_include: true
 generated:
   by: codex/gpt-6
   at: '2026-11-13T19:05:00+09:00'
-decision_status: proposed
-work_status: not_started
+decision_status: partial
+work_status: in_progress
 sources:
+- id: narration-decision
+  resource: /decisions/D-013-narration-candidates.md
+  title: 작가 해설 후보 생성과 비교 평가
+- id: narration-spec
+  resource: /specs/narration-evaluation.md
+  title: 작가 해설 후보 실행과 비교 평가
 - id: user
   resource: /references/user-candidate-selection.md
   title: 병렬 후보·평가 하한·문맥 복제 검토 요청
@@ -31,9 +37,11 @@ sources:
 
 사용자의 제안은 가능하다. 여러 답 후보를 만들고 평가해 선택하는 방식과, 평가 피드백을 받아 다시 생성하는 방식은 알려진 설계 패턴이다. Anthropic의 원문은 병렬화와 evaluator-optimizer를 설명하지만 특정 작업에서 품질이 보장된다고 주장하지 않는다. 아래 후보 수·평가 하한·예산은 Yeobek용 제안이며 실험 결과가 아니다.
 
-현재 구현은 여전히 질문당 단일 생성이다. 다중 생성·모델 심사·문맥 저장·자동 재생성을 켜지 않았다. 평가가 답을 잘 구별하는지 확인하지 않고 호출 수부터 늘리면 더 비싸게 같은 오류를 선택할 수 있다. 같은 모델·프롬프트·근거의 반복은 오류가 상관될 수 있으므로 독립적인 성공 확률을 가정하지 않는다.
+작가 해설 초안에는 [후속 결정](../decisions/D-013-narration-candidates.md)과 [실행 명세](../specs/narration-evaluation.md)를 적용한다. 관람객 질문의 다중 생성·모델 심사·문맥 저장·문맥 복제는 후속이다. 평가가 답을 잘 구별하는지 확인하지 않고 호출 수부터 늘리면 더 비싸게 같은 오류를 선택할 수 있다. 같은 모델·프롬프트·근거의 반복은 오류가 상관될 수 있으므로 독립적인 성공 확률을 가정하지 않는다.
 
 # 제안 흐름
+
+아래 흐름은 관람객 대화까지 포괄하는 조사 제안이다. 현재 작가 초안의 구현 계약과 범위는 [SPEC-015](../specs/narration-evaluation.md)가 기준이다.
 
 ```mermaid
 flowchart TD
@@ -88,7 +96,7 @@ Yeobek에는 서버의 **공통 대화 상태**를 권고한다. 매 턴 채택�
 
 - 승인 해설 재생: 기존 그대로, 생성 경쟁을 하지 않는다.
 - 관람객 Q&A: 단일 생성, 단일 생성+검증, 다중 생성+평가를 같은 평가 세트로 비교한다. N=2가 단일 생성+검증보다 사람 평가 통과율을 높이고 p95 지연·비용 예산을 만족할 때 선택적으로 적용한다.
-- 작가 해설 후보: 공개 전 검수 단계라 대기 허용 폭이 커서 N=2~3 비교를 먼저 실험하기 좋다. 최종 승인은 여전히 작가가 한다.
+- 작가 해설 후보: N=2와 최대 1회 재생성을 단일 생성+검증과 비교한다. 최종 승인은 여전히 작가가 한다.
 - 작가 정보 저장: 여러 후보가 동시에 저장하면 안 된다. 전체 원문 보존과 후보 검수·CAS 계약을 유지한다.
 
 실험 기록에는 근거 충실도, 자연스러움, 잘못된 통과/거절, 후보 간 실질적 차이, p50/p95 지연, 토큰/요청 비용, 재생성/보류 비율을 남긴다. 수치와 모델 조합은 아직 미측정이다.

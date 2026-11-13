@@ -45,12 +45,13 @@ flowchart LR
   F --> G[관람 답변 또는 비공개 작가 후보]
 ```
 
-`ai/yeobek/plugin.json`과 `instructions.md`, `messages.json`, `skills/*/SKILL.md`가 지침·고정 문구 원본이다. `npm run ai:bundle`이 `src/lib/ai/plugin.generated.ts`를 생성한다. 줄바꿈을 통일하고 지침·고정 문구·스킬 순서·도구 매핑을 포함해 해시를 계산한다. `pretest`, `prebuild`, `preai:eval`, `preai:smoke`가 생성물 불일치를 차단한다. 응답의 promptVersion에는 패키지 버전·해시가 들어간다. 키·작가 원자료는 번들에 넣지 않는다. 런타임 파일 탐색이나 이용자 제공 스킬 로딩은 없다.
+`ai/yeobek/plugin.json`과 `instructions.md`, `messages.json`, `skills/*/SKILL.md`가 지침·고정 문구 원본이다. `npm run ai:bundle`이 `src/lib/ai/plugin.generated.ts`를 생성한다. 줄바꿈을 통일하고 지침·고정 문구·스킬 순서·도구 매핑을 포함해 해시를 계산한다. `pretest`, `prebuild`, `preai:eval`, `preai:smoke`, `preai:compare`가 생성물 불일치를 차단한다. 응답의 promptVersion에는 패키지 버전·해시가 들어간다. 키·작가 원자료는 번들에 넣지 않는다. 런타임 파일 탐색이나 이용자 제공 스킬 로딩은 없다. 현재 스킬은 다섯 개다.
 
 | 업무 절차 | 필요한 스킬 | 도구와 현재 실행 상태 |
 | --- | --- | --- |
 | visitor-answer | retrieve-wiki, speak-docent | publication.read/recheck; 기존 하네스에서 호출 전 허용 목록 확인. 실제 DB 어댑터는 후속 |
-| narration-draft | retrieve-wiki, speak-docent, draft-narration | author.read 권한만 선언. 프롬프트·제공사 시험 준비이며 작가 해설 전체 실행 경로는 후속 |
+| narration-draft | retrieve-wiki, speak-docent, draft-narration | author.read로 소유 작품 근거를 읽는 서버 후보 생성 경로. 실제 DB·HTTP·UI는 후속 |
+| narration-evaluate | evaluate-narration | author.read로 같은 근거와 후보를 평가하는 읽기 전용 서버 경로 |
 | artist-organize | organize-artist | author.read/proposal.store; 모델은 sourceIds만 선택하고 서버가 원문 전체를 복사 |
 | artist-apply | organize-artist | proposal.read/author.read/proposal.apply; 모델 없이 검토된 후보 적용. 원자적 DB 어댑터는 후속 |
 
@@ -89,4 +90,4 @@ clarify/insufficient_evidence 결과는 모델이 쓴 문장을 버리고 고정
 
 Sol의 독립 코드 검토에서 무변경 적용 재요청·동시 적용 결과 조회·상위 문서 출처 손실 문제를 찾아 수정했다. 원문 보존의 범위도 후보 생성·선택되지 않은 section·별도 원자료로 명확히 했다. Terra는 독립적으로 세 합성 사례에 스킬을 적용해 근거 답변·의도 부족·작가 블록 분류 결과를 만들었다. 혼합 주제 블록 분류에는 재량이 남는다고 확인했다. 이 결과는 실제 서비스 모델의 품질 통과율이 아니다.
 
-높은 일관성은 평가로 개선하는 목표다. "완벽"이라는 무측정 완료 기준을 쓰지 않는다. [다중 후보 평가·재생성·문맥 계승](../research/candidate-selection.md)은 별도 실험 설계이며 현재 자동 호출 수는 증가시키지 않았다.
+높은 일관성은 평가로 개선하는 목표다. "완벽"이라는 무측정 완료 기준을 쓰지 않는다. [작가 해설 후보 실행과 비교 평가](narration-evaluation.md)는 두 후보와 제한된 재생성의 별도 경로다. 관람객 문맥 계승은 여전히 제안이다.

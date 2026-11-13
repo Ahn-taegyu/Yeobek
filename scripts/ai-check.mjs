@@ -1,7 +1,7 @@
-import { loadAiEnv, requiredKeys } from "./ai-env.mjs";
+import { loadAiEnv, requiredKeys, narrationKeys } from "./ai-env.mjs";
 loadAiEnv();
 const selection = process.env.AI_TTS_PROVIDER?.trim() || "typecast";
-const capabilities = Object.fromEntries(Object.entries(requiredKeys).map(([name, keys]) => {
+const capabilities = Object.fromEntries(Object.entries({ ...requiredKeys, narration: narrationKeys }).map(([name, keys]) => {
   const missing = keys.filter(key => !process.env[key]?.trim());
   return [name, { configured: !missing.length, missing }];
 }));

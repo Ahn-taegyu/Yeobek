@@ -51,6 +51,10 @@ export function getLinerTextConfig(env: AiEnvironment = process.env): AiModelCon
   return { apiKey: required(env.LINER_API_KEY), model: identifier(env.LINER_DRAFT_MODEL, AI_MODELS.draft) };
 }
 
+export function getOpenAiJudgeConfig(env: AiEnvironment = process.env): AiModelConfig {
+  return { apiKey: required(env.OPENAI_API_KEY), model: identifier(env.OPENAI_JUDGE_MODEL, AI_MODELS.qa) };
+}
+
 export function getOpenAiTranscriptionConfig(env: AiEnvironment = process.env): AiModelConfig {
   return { apiKey: required(env.OPENAI_API_KEY), model: identifier(env.OPENAI_STT_MODEL, AI_MODELS.transcription) };
 }

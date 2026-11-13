@@ -3,7 +3,7 @@ import "server-only";
 import { getOpenAiSpeechConfig, getOpenAiTextConfig, getOpenAiTranscriptionConfig } from "../config";
 import { AiError } from "../errors";
 import {
-  jsonBody, objectValue, parseJson, providerTrace, requestJson, requestSpeech,
+  jsonBody, objectValue, outputTokenLimit, parseJson, providerTrace, requestJson, requestSpeech,
   SPEECH_CONTENT_TYPE, validateSpeechText,
 } from "./http";
 import type {
@@ -60,7 +60,7 @@ export function createOpenAiTextProvider(
   options: AiProviderOptions = {},
 ): AiTextProvider {
   return {
-    async generate({ system, input, schema, signal }) {
+    async generate({ system, input, schema, signal, maxOutputTokens }) {
       const response = await requestJson({
         url: OPENAI_RESPONSES_URL,
         headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" },
@@ -69,7 +69,7 @@ export function createOpenAiTextProvider(
           instructions: system,
           input,
           reasoning: { effort: "low" },
-          max_output_tokens: 1600,
+          max_output_tokens: outputTokenLimit(maxOutputTokens, 1600),
           store: false,
           text: { format: { type: "json_schema", name: schema.name, schema: schema.definition, strict: true } },
         }),

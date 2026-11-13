@@ -51,7 +51,7 @@ export class KnowledgeError extends Error {
     super(code); this.name = "KnowledgeError";
   }
 }
-function checkedContext(raw: unknown, actorId: string, documentId: string): ArtistKnowledgeContext {
+export function validateArtistKnowledgeContext(raw: unknown, actorId: string, documentId: string): ArtistKnowledgeContext {
   const parsed = contextSchema.safeParse(raw);
   if (!parsed.success) throw new KnowledgeError("invalid_context");
   const context = parsed.data;
@@ -133,7 +133,7 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
       const raw = await deps.store.loadOwnedContext(actorId, parsed.data.documentId, signal);
       assertNotCancelled(signal);
       if (!raw) throw new KnowledgeError("unavailable");
-      const context = checkedContext(raw, actorId, parsed.data.documentId);
+      const context = validateArtistKnowledgeContext(raw, actorId, parsed.data.documentId);
       if (context.revision !== parsed.data.expectedRevision) throw new KnowledgeError("revision_conflict");
       if (!context.sources.length) return null;
       const generated = await deps.text.generate({ system: playbookPrompt("artist-organize"), schema: organizationJsonSchema, signal,
@@ -160,7 +160,7 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
         if (proposal.expiresAt <= now()) throw new KnowledgeError("proposal_expired");
         if (proposal.pluginVersion !== PLUGIN_VERSION) throw new KnowledgeError("revision_conflict");
         assertPluginTool("artist-apply", "author.read");
-        const context = checkedContext(await deps.store.loadOwnedContext(actorId, proposal.documentId, signal), actorId, proposal.documentId);
+        const context = validateArtistKnowledgeContext(await deps.store.loadOwnedContext(actorId, proposal.documentId, signal), actorId, proposal.documentId);
         assertNotCancelled(signal);
         if (context.revision !== proposal.targetRevision) throw new KnowledgeError("revision_conflict");
         let rebuilt: ReturnType<typeof planSelection>;

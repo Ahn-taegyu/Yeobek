@@ -15,6 +15,7 @@ export interface AiTextRequest {
   input: string;
   schema: { name: string; definition: Record<string, unknown> };
   signal?: AbortSignal;
+  maxOutputTokens?: number;
 }
 
 export interface AiTextResponse {

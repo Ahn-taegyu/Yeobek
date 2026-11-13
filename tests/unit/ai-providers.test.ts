@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   getLinerTextConfig,
+  getOpenAiJudgeConfig,
   getOpenAiSpeechConfig,
   getOpenAiTextConfig,
   getOpenAiTranscriptionConfig,
@@ -60,6 +61,7 @@ describe("AI provider configuration", () => {
     expect(getOpenAiTextConfig({ OPENAI_API_KEY: " test ", OPENAI_QA_MODEL: "gpt-example" }))
       .toEqual({ apiKey: "test", model: "gpt-example" });
     expect(getLinerTextConfig({ LINER_API_KEY: "liner-test" }).model).toBe("openai/gpt-6.1-sol");
+    expect(getOpenAiJudgeConfig({ OPENAI_API_KEY: "test", OPENAI_JUDGE_MODEL: "judge-example", OPENAI_QA_MODEL: "qa-example" }).model).toBe("judge-example");
     expect(sttConfig.model).toBe("gpt-transcribe");
     expect(typecastConfig).toEqual({ apiKey: "test-typecast-key", model: "ssfm-v31", voiceId: "tc_example" });
     expect(openAiSpeechConfig).toEqual({ apiKey: "test-openai-key", model: "gpt-4o-mini-tts", voice: "coral" });
@@ -77,6 +79,21 @@ describe("AI provider configuration", () => {
 });
 
 describe("AI text providers", () => {
+  it("bounds per-call generation and judge output caps before sending requests", async () => {
+    for (const provider of ["openai", "liner"]) {
+      const fetch = mockFetch(Response.json(provider === "openai" ? openAiOutput() : {
+        choices: [{ finish_reason: "stop", message: { role: "assistant", content: JSON.stringify(answer) } }],
+      }));
+      const client = provider === "openai" ? createOpenAiTextProvider(openAiConfig, { fetch }) : createLinerTextProvider(linerConfig, { fetch });
+      for (const maxOutputTokens of [0, -1, 8193, 1.5, NaN]) {
+        await expect(client.generate({ ...textRequest, maxOutputTokens })).rejects.toMatchObject({ code: "invalid_input" });
+      }
+      expect(fetch).not.toHaveBeenCalled();
+      await client.generate({ ...textRequest, maxOutputTokens: 3000 });
+      const payload = JSON.parse(String(fetch.mock.calls[0][1]?.body));
+      expect(payload[provider === "openai" ? "max_output_tokens" : "max_completion_tokens"]).toBe(3000);
+    }
+  });
   it("calls OpenAI Responses with a strict schema, low reasoning, and no response storage", async () => {
     const fetch = mockFetch(Response.json({
       ...openAiOutput(),

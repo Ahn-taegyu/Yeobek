@@ -51,7 +51,7 @@ sources:
 
 첫 단계는 신뢰할 수 있는 서버의 `PublicationStore` 포트와 메모리 fixture를 사용한다. fixture는 합성 데이터로 명시하며 실제 승인 또는 공개 증거로 취급하지 않는다. 실제 DB 연결, 공개 HTTP 경로, 세션·호출량 제한·멱등성은 후속 통합이다. 브라우저가 보낸 근거, 소유권 또는 승인 상태는 신뢰하지 않는다.
 
-현재 준비된 코드는 `src/lib/ai/`의 제공사 어댑터, [버전 관리된 제품 플러그인](product-ai-plugin.md), 문맥·출력 검증과 서버 하네스다. Liner 해설 생성은 제공사·프롬프트 단계다. 별도로 작가 자료의 전체 원문 블록 분류, 비공개 후보와 검토 후 적용을 위한 서버 실행 모듈을 추가했다. 작가 소유 자료·후보의 실제 DB 로더/저장소와 검수 UI·승인/게시는 후속이다. 최근 대화 입력은 현재 하네스에서 지원하지 않는다.
+현재 준비된 코드는 `src/lib/ai/`의 제공사 어댑터, [버전 관리된 제품 플러그인](product-ai-plugin.md), 문맥·출력 검증과 서버 하네스다. 작가 해설은 Liner 생성과 OpenAI 평가를 조합하는 읽기 전용 서버 실행 경로가 있다. 별도로 작가 자료의 전체 원문 블록 분류, 비공개 후보와 검토 후 적용을 위한 서버 실행 모듈을 추가했다. 작가 소유 자료·후보의 실제 DB 로더/저장소와 검수 UI·승인/게시는 후속이다. 최근 대화 입력은 현재 하네스에서 지원하지 않는다.
 
 # 제공사와 환경 설정
 
@@ -59,11 +59,12 @@ sources:
 | --- | --- | --- |
 | 관람 Q&A | OpenAI Responses `gpt-6-luna`, reasoning `low` | 검증 후 전체 답 전달 |
 | 작가 해설 초안 | Liner Chat Completions `openai/gpt-6.1-sol` | 후보만 반환, 승인·게시 아님 |
+| 작가 해설 평가 | OpenAI Responses `gpt-6-luna` | Q&A와 별도 `OPENAI_JUDGE_MODEL` 설정; 사람 검토 필요 |
 | 음성 인식 | OpenAI `gpt-transcribe` | 녹음 입력과 질문 전송 분리 |
 | 음성 합성 | Typecast `ssfm-v31`, 설정된 한국어 voice ID | 확정된 글만 합성 |
 | 임시 음성 대안 | OpenAI `gpt-4o-mini-tts`, `coral` | 명시적으로 선택; 실제 한국어 음질 확인 필요 |
 
-서버 전용 환경 변수는 `OPENAI_API_KEY`, `OPENAI_QA_MODEL`, `OPENAI_STT_MODEL`, `LINER_API_KEY`, `LINER_DRAFT_MODEL`, `TYPECAST_API_KEY`, `TYPECAST_TTS_MODEL`, `TYPECAST_VOICE_ID`, `AI_TTS_PROVIDER` (`typecast` 또는 `openai`), `OPENAI_TTS_MODEL`, `OPENAI_TTS_VOICE`다. 키는 로컬 비공개 환경 파일이나 배포 환경의 서버 비밀 설정에 두고 클라이언트 변수·저장소·로그에 넣지 않는다. 사용자가 Typecast 계정에서 키와 한국어 음성 ID를 확보해 설정한 뒤 실제 요청과 음질을 확인한다. 없으면 `AI_TTS_PROVIDER=openai`를 명시하고 OpenAI 키와 대안 모델·음성을 설정해 임시 시험한다. 자동 장애 전환으로 비용이나 음색을 바꾸지 않는다. OpenAI의 안내에 따르면 `gpt-4o-mini-tts`는 2027-01-06 종료 예정이므로 행사 이후 대체 모델을 다시 확인한다. Realtime 모델을 동일한 TTS 대체품으로 취급하지 않는다.
+서버 전용 환경 변수는 `OPENAI_API_KEY`, `OPENAI_QA_MODEL`, `OPENAI_JUDGE_MODEL`, `OPENAI_STT_MODEL`, `LINER_API_KEY`, `LINER_DRAFT_MODEL`, `TYPECAST_API_KEY`, `TYPECAST_TTS_MODEL`, `TYPECAST_VOICE_ID`, `AI_TTS_PROVIDER` (`typecast` 또는 `openai`), `OPENAI_TTS_MODEL`, `OPENAI_TTS_VOICE`다. 키는 로컬 비공개 환경 파일이나 배포 환경의 서버 비밀 설정에 두고 클라이언트 변수·저장소·로그에 넣지 않는다. 사용자가 Typecast 계정에서 키와 한국어 음성 ID를 확보해 설정한 뒤 실제 요청과 음질을 확인한다. 없으면 `AI_TTS_PROVIDER=openai`를 명시하고 OpenAI 키와 대안 모델·음성을 설정해 임시 시험한다. 자동 장애 전환으로 비용이나 음색을 바꾸지 않는다. OpenAI의 안내에 따르면 `gpt-4o-mini-tts`는 2027-01-06 종료 예정이므로 행사 이후 대체 모델을 다시 확인한다. Realtime 모델을 동일한 TTS 대체품으로 취급하지 않는다.
 
 Liner는 `POST https://platform.liner.com/api/v1/chat/completions`에 서버 인증과 `model`, `messages`를 보내고 비스트리밍 응답의 `choices[0].message.content`를 읽는다. JSON Schema 응답 형식을 지원하더라도 서버 검증을 생략하지 않는다. 모델 목록 등재는 행사 키의 접근 권한 확인이 아니다. 제공사에 내장된 외부 검색·도구 호출을 허용하지 않는다.
 
@@ -81,7 +82,7 @@ Liner는 `POST https://platform.liner.com/api/v1/chat/completions`에 서버 인
 
 # 실패와 평가
 
-외부 호출당 응답 본문 읽기를 포함해 30초 제한과 단일 시도를 기본으로 한다. 자동 재시도나 모델을 이용한 자동 결과 수리는 하지 않는다. 실패는 키·원문·제공사 응답 전문을 노출하지 않는 오류로 반환한다. 타임아웃은 제공사 처리 여부가 불명확할 수 있으므로, HTTP 공개 전 DB에 작업 상태·멱등성·사용량 예산을 원자적으로 마련하고 수동 재실행 전에 상태를 조정하는 흐름을 설계한다. 아직 이 저장·조정 기능이 구현되었다고 가정하지 않는다.
+외부 호출당 응답 본문 읽기를 포함해 30초 제한과 단일 시도를 기본으로 한다. 전송 실패의 자동 재시도나 일반적인 자동 결과 수리는 하지 않는다. 작가 해설 후보는 [별도 계약](narration-evaluation.md)에 따라 수정 가능한 품질·형식 실패만 제한적으로 재생성한다. 실패는 키·원문·제공사 응답 전문을 노출하지 않는 오류로 반환한다. 타임아웃은 제공사 처리 여부가 불명확할 수 있으므로, HTTP 공개 전 DB에 작업 상태·멱등성·사용량 예산을 원자적으로 마련하고 수동 재실행 전에 상태를 조정하는 흐름을 설계한다. 아직 이 저장·조정 기능이 구현되었다고 가정하지 않는다.
 
 권고 상태는 `queued → running → succeeded | failed | unknown | cancelled`다. `unknown`은 타임아웃처럼 제공사 처리 여부를 확인해야 하는 상태이며 자동 재실행하지 않는다. 추적은 요청 ID, 제공사, 모델, 소요 시간, 상태·오류 코드와 허용된 사용량 등 메타데이터만 기록한다. 질문·근거·답변·음성·키·원본 응답을 로그에 넣지 않는다. 상태 저장과 추적 운영은 후속 설계다.
 
@@ -91,6 +92,8 @@ Liner는 `POST https://platform.liner.com/api/v1/chat/completions`에 서버 인
 | --- | --- |
 | `npm run ai:check` | 로컬 설정 존재 여부만 검사, 네트워크 호출 없음; 필수 설정 누락 시 종료 코드 1 |
 | `npm run ai:eval` | 하네스·제공사·제품 플러그인의 모의 제공사 오프라인 계약 검사. 실제 모델의 지시 주입 저항 검증 아님 |
+| `npm run ai:compare -- --mode=mock` | 합성 사례 오프라인 비교; 명시적 live 옵션의 호출 예산과 출력은 [비교 명세](narration-evaluation.md) 참고 |
+| `npm run ai:review -- .ai-eval/run-ID` | 사람이 작성한 라벨로 검토 요약 생성 |
 | `npm run ai:smoke -- qa` 또는 `draft`, `stt`, `typecast-tts`, `openai-tts` | 명시적으로 실행할 때 선택한 제공사에 단일 실호출. 로컬 키 필요, STT는 `--audio=path` 지정. 아직 실호출 미검증 |
 
 사람 검토용 예시는 모두 가상 자료이며 실제 모델의 통과 결과가 아니다.

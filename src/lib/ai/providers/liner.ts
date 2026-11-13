@@ -2,7 +2,7 @@ import "server-only";
 
 import { getLinerTextConfig } from "../config";
 import { AiError } from "../errors";
-import { jsonBody, objectValue, parseJson, providerTrace, requestJson } from "./http";
+import { jsonBody, objectValue, outputTokenLimit, parseJson, providerTrace, requestJson } from "./http";
 import type { AiProviderOptions, AiTextProvider } from "./types";
 
 const LINER_COMPLETIONS_URL = "https://platform.liner.com/api/v1/chat/completions";
@@ -12,14 +12,14 @@ export function createLinerTextProvider(
   options: AiProviderOptions = {},
 ): AiTextProvider {
   return {
-    async generate({ system, input, schema, signal }) {
+    async generate({ system, input, schema, signal, maxOutputTokens }) {
       const response = await requestJson({
         url: LINER_COMPLETIONS_URL,
         headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" },
         body: jsonBody({
           model: config.model,
           messages: [{ role: "system", content: system }, { role: "user", content: input }],
-          max_completion_tokens: 4096,
+          max_completion_tokens: outputTokenLimit(maxOutputTokens, 4096),
           store: false,
           response_format: {
             type: "json_schema",

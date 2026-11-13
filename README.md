@@ -46,7 +46,26 @@ npm run ai:smoke -- stt --audio=path/to/test.webm
 
 AI의 업무 절차와 말투는 [제품 플러그인](docs/specs/product-ai-plugin.md)으로 관리합니다. `ai/yeobek/plugin.json`, `instructions.md`, `messages.json`, `skills/*/SKILL.md`를 수정한 뒤 `npm run ai:bundle`을 실행합니다. 생성된 `src/lib/ai/plugin.generated.ts`는 직접 편집하지 않습니다. 테스트와 빌드가 원본/생성물 불일치를 차단하며, 필요한 스킬만 업무별로 조합하고 플러그인 해시를 답변에 기록합니다.
 
-작가 자료 정리는 원문 블록을 분류한 비공개 후보 → 작가 검토 → 버전 재검사 → 적용의 서버 실행 모듈을 제공합니다. 실제 DB 저장소·검수 UI는 아직 연결하지 않았습니다. Cursor/Codex 마켓플레이스용 플러그인을 설치한 것은 아닙니다. [병렬 후보 평가와 문맥 계승 검토](docs/research/candidate-selection.md)는 제안 단계로, 실제 호출 수는 늘리지 않았습니다.
+작가 자료 정리는 원문 블록을 분류한 비공개 후보 → 작가 검토 → 버전 재검사 → 적용의 서버 실행 모듈을 제공합니다. 실제 DB 저장소·검수 UI는 아직 연결하지 않았습니다. `createNarrationRuntime`에는 소유 자료로 해설 후보 2개를 병렬 생성하고 평가·최대 한 라운드 재생성하는 경로와 단일 생성 기준선을 연결했습니다. 최종 결과는 미승인 초안입니다. 관람 채팅과 대화 문맥 복제는 후속이며 [작가 해설 비교 계약](docs/specs/narration-evaluation.md)을 확인하세요.
+
+## 작가 해설 비교 실험
+
+기본 `npm run ai:compare`는 합성 사례 5개의 **오프라인 시뮬레이션**입니다. 실제 모델의 품질·비용·응답 시간을 측정한 결과가 아닙니다. `single`은 생성 1회+평가 1회, `best_of_two`는 병렬 생성 2회+평가 1회와 수정 가능한 실패의 추가 라운드 한 번(최대 6회 호출)을 사용합니다. 생성은 Liner, 평가는 OpenAI의 `OPENAI_JUDGE_MODEL`(기본 `gpt-6-luna`)이며 두 방식에 같은 모델·자료·평가 하한을 적용합니다.
+
+```sh
+npm run ai:compare -- --mode=mock
+# 아래는 합성 grounded 사례를 두 방식으로 비교하는 실제 유료 호출입니다.
+# LINER_API_KEY와 OPENAI_API_KEY가 필요합니다. 최악의 경우 8회 호출을 예약합니다.
+npm run ai:compare -- --mode=live --cases=grounded --repeats=1 --max-calls=8
+# 사람이 human-review.json을 보고 human-labels.json의 null 값을 채운 뒤 실행
+npm run ai:review -- .ai-eval/run-ID
+```
+
+실험 결과는 출력된 `.ai-eval/run-ID/`에 저장합니다. `report.json`은 모델 점수·사용량·실패를 포함한 전체 지연 p50/p95·비용 추정·재생성 기록이며 답변 본문을 제외합니다. `human-review.json`에는 자료 ID/본문과 최종 답 또는 보류 사유를 담고 생성 방식·모델 점수는 숨깁니다. `human-labels.json`의 `acceptable`은 적절한 답 또는 적절한 근거 부족 안내인지 평가하고, 본문이 없는 경우 네 세부 점수는 null로 둘 수 있습니다. 평가자에게 `key.json`과 `report.json`을 함께 주지 않습니다. `ai:review`는 라벨 수·항목별 평균/표본 수·양쪽 라벨이 있는 쌍의 승수를 `human-summary.json`에 만듭니다. 미작성 라벨은 통과로 계산하지 않습니다.
+
+사례는 `grounded`, `missing-intent`, `injection`, `conflict`, `insufficient`입니다. `--cases=grounded,injection --repeats=2 --max-calls=32`처럼 선택하며 실호출 상한은 사례 수×반복 수×8 이상, 최대 200입니다. 반복은 1~5회입니다. 순서는 사례·반복마다 교대하며 평가기에 주는 후보 순서는 무작위입니다. 5개 공개 합성 사례는 개발용 점검 세트이며 품질 인증이나 별도 평가 세트를 대체하지 않습니다.
+
+비용 계산은 선택적 `--pricing=path/to/pricing.json`을 사용합니다. `tests/evaluation/pricing.example.json`을 복사하고 `rates`에 `{ "provider": "liner", "model": "실제 응답의 모델 ID", "inputUsdPerMillion": 입력단가, "outputUsdPerMillion": 출력단가 }` 형태로 현재 계정 단가를 기입합니다. OpenAI 평가 모델도 별도 행으로 넣고 `asOf`를 갱신합니다. 정확한 모델 단가나 사용량이 없으면 총비용은 null이며, 확인된 일부 비용만 따로 표시합니다. 집계 토큰 단가의 추정이므로 캐시·계약별 요율·실제 청구액과 다를 수 있습니다. 재시도·평가를 모두 포함하며 무료라고 가정하지 않습니다.
 
 Tailwind CSS 4·PostCSS를 사용합니다. 현재 Windows에서 재현된 Turbopack PostCSS worker 종료를 피하도록 `dev`·`build`는 Next.js의 `--webpack` 옵션을 사용합니다. 기존 로컬 스택이 실행 중일 때 새 migration 적용은 `npx supabase migration up --local`로 수행하며 DB reset은 필요하지 않습니다.
 

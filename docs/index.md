@@ -44,3 +44,5 @@ okf_version: "0.2"
 - [출처](references/index.md) — 원문과 사용자 추가 응답.
 - [RAG 예시](rag/example-answer.md) — 실제 검색 결과를 이용한 답변.
 - [변경 이력](log.md) — 출처와 결정 변경 기록.
+
+- [작가 해설 후보와 비교 평가](specs/narration-evaluation.md) — 사용자 확정 범위와 잠정 실행·평가 계약.

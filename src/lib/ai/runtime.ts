@@ -7,6 +7,8 @@ import { createLinerTextProvider } from "./providers/liner";
 import { createTypecastSpeechProvider } from "./providers/typecast";
 import type { AiSpeechProvider } from "./providers/types";
 import { createArtistKnowledgeHarness, type ArtistKnowledgeStore } from "./artist-knowledge";
+import { createNarrationHarness } from "./narration";
+import { getOpenAiJudgeConfig } from "./config";
 
 export function createConfiguredSpeechProvider(): AiSpeechProvider {
   const selection = process.env.AI_TTS_PROVIDER?.trim() || "typecast";
@@ -34,13 +36,21 @@ export function createDocentRuntime(publications: PublicationStore, answers: Spe
 // Separate capabilities: transcribing never sends a chat or selects output mode.
 export const transcribeRecording: ReturnType<typeof createOpenAiTranscriptionProvider>["transcribe"] =
   input => createOpenAiTranscriptionProvider().transcribe(input);
-// Liner draft port only. Owner/revision checks and candidate storage belong to the
-// pending authoring workflow. It must not be exposed as a generic prompt proxy.
+// Raw single-call provider retained for smoke checks. Author workflows use
+// createNarrationRuntime with a trusted owner-scoped store, never a prompt proxy.
 export const createNarrationDraftProvider = createLinerTextProvider;
 
 /** Caller binds verified artist auth and a private transactional store. */
 export function createArtistKnowledgeRuntime(actorId: string, store: ArtistKnowledgeStore) {
   return createArtistKnowledgeHarness(actorId, { store,
     text: { generate: input => createLinerTextProvider().generate(input) },
+  });
+}
+
+/** Private authoring only. Returns a review candidate, never approval/publication. */
+export function createNarrationRuntime(actorId: string, store: Pick<ArtistKnowledgeStore, "loadOwnedContext">) {
+  return createNarrationHarness(actorId, { store,
+    generator: { generate: input => createLinerTextProvider().generate(input) },
+    judge: { generate: input => createOpenAiTextProvider(getOpenAiJudgeConfig()).generate(input) },
   });
 }

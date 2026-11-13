@@ -19,3 +19,5 @@
 - [제품 RAG](rag-design.md) — 승인된 전시 근거만 검색.
 - [파트너 통합](partner-integration.md) — 최소 한 개 필수 API 적용안.
 - [지식 구조](knowledge-contract.md) — OKF·Bases·로컬 RAG 규칙.
+
+- [작가 해설 후보 실행과 비교 평가](narration-evaluation.md) — SPEC-015 제안·구현 진행 중.

@@ -29,6 +29,12 @@ export function parseJson(text: string): unknown {
   }
 }
 
+export function outputTokenLimit(value: number | undefined, fallback: number): number {
+  const limit = value ?? fallback;
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 8192) throw new AiError("invalid_input");
+  return limit;
+}
+
 export function jsonBody(data: Record<string, unknown>): string {
   try {
     const body = JSON.stringify(data);

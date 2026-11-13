@@ -5,18 +5,18 @@ import { z } from "zod";
 
 const root = new URL("../ai/yeobek/", import.meta.url);
 const target = new URL("../src/lib/ai/plugin.generated.ts", import.meta.url);
-const names = ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist"];
+const names = ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration"];
 const tools = ["publication.read", "publication.recheck", "author.read", "proposal.store", "proposal.read", "proposal.apply"];
 const task = z.strictObject({ skills: z.array(z.enum(names)).min(1), tools: z.array(z.enum(tools)).min(1) });
 const schema = z.strictObject({ id: z.literal("yeobek"), version: z.string().regex(/^\d+\.\d+\.\d+$/),
-  instructions: z.literal("instructions.md"), messages: z.literal("messages.json"), skills: z.array(z.enum(names)).length(4),
-  playbooks: z.strictObject({ "visitor-answer": task, "narration-draft": task, "artist-organize": task, "artist-apply": task }) });
+  instructions: z.literal("instructions.md"), messages: z.literal("messages.json"), skills: z.array(z.enum(names)).length(names.length),
+  playbooks: z.strictObject({ "visitor-answer": task, "narration-draft": task, "narration-evaluate": task, "artist-organize": task, "artist-apply": task }) });
 const normalize = text => text.replace(/\r\n?/g, "\n").trimEnd() + "\n";
 const read = path => normalize(readFileSync(new URL(path, root), "utf8"));
 export function compilePlugin() {
   const manifest = schema.parse(JSON.parse(read("plugin.json")));
-  if (new Set(manifest.skills).size !== 4) throw new Error("Duplicate plugin skill");
-  const capabilities = { "visitor-answer": ["publication.read", "publication.recheck"], "narration-draft": ["author.read"],
+  if (new Set(manifest.skills).size !== names.length) throw new Error("Duplicate plugin skill");
+  const capabilities = { "visitor-answer": ["publication.read", "publication.recheck"], "narration-draft": ["author.read"], "narration-evaluate": ["author.read"],
     "artist-organize": ["author.read", "proposal.store"], "artist-apply": ["author.read", "proposal.read", "proposal.apply"] };
   for (const [name, playbook] of Object.entries(manifest.playbooks)) {
     if (new Set(playbook.skills).size !== playbook.skills.length || new Set(playbook.tools).size !== playbook.tools.length ||
