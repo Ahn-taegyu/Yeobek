@@ -20,9 +20,10 @@ export class ApiClientError extends Error {
 type RouteName = keyof typeof routes;
 type RequestOptions<Route extends RouteContract> = { signal?: AbortSignal }
   & (Route extends { params: infer Params extends z.ZodType } ? { params: z.input<Params> } : { params?: never })
+  & (Route extends { query: infer Query extends z.ZodType } ? { query: z.input<Query> } : { query?: never })
   & (Route extends { body: infer Body extends z.ZodType } ? { body: z.input<Body> } : { body?: never });
 
-type RequestArgs<Route extends RouteContract> = Route extends { params: z.ZodType } | { body: z.ZodType }
+type RequestArgs<Route extends RouteContract> = Route extends { params: z.ZodType } | { body: z.ZodType } | { query: z.ZodType }
   ? [options: RequestOptions<Route>]
   : [options?: RequestOptions<Route>];
 
@@ -32,6 +33,7 @@ export function requestApi<Name extends RouteName>(
 ): Promise<z.output<(typeof routes)[Name]["response"]>>;
 export async function requestApi(name: RouteName, options?: {
   params?: unknown;
+  query?: unknown;
   body?: unknown;
   signal?: AbortSignal;
 }): Promise<unknown> {
@@ -40,8 +42,13 @@ export async function requestApi(name: RouteName, options?: {
   if (parsedParams && !parsedParams.success) {
     throw new ApiClientError(null, "INVALID_INPUT", "요청 주소를 확인해 주세요.");
   }
+  const parsedQuery = route.query?.safeParse(options?.query);
+  if (parsedQuery && !parsedQuery.success) {
+    throw new ApiClientError(null, "INVALID_INPUT", "조회 조건을 확인해 주세요.");
+  }
   const path = route.path.replace(/\{(\w+)\}/g, (_, key: string) =>
-    encodeURIComponent(parsedParams?.data[key] ?? ""));
+    encodeURIComponent(parsedParams?.data[key] ?? "")) +
+    (parsedQuery?.success ? `?${new URLSearchParams(parsedQuery.data)}` : "");
   let response: Response;
   try {
     response = await fetch(path, {

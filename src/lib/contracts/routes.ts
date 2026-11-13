@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { requestUploadSchema, completeUploadSchema, deleteMaterialSchema, deleteArtworkSchema,
+  setArtworkImageSchema, materialResponse, materialListResponse, uploadResponse, listMaterialsQuery,
+  materialDownloadResponse, deletedArtworkResponse } from "./materials";
 import { visitorChatRequest, visitorReplyResponse, gapListResponse, gapResponse, checkVersionsRequest, checkVersionsResponse, purgeResponse } from "./visitor";
 import { generateNarrationSchema, jobResponse, retryJobSchema, saveNarrationSchema } from "./jobs";
 import { approvalSchema, approvalResponse, evidenceImpactSchema, evidenceResponse, labelsResponse,
@@ -18,6 +21,7 @@ export type RouteContract = {
   method: "GET" | "POST" | "PATCH" | "DELETE" | "PUT";
   path: `/api/${string}`;
   params?: z.ZodType<Record<string, string>>;
+  query?: z.ZodType<Record<string, string>>;
   body?: z.ZodType;
   response: z.ZodType;
   statuses: readonly number[];
@@ -27,6 +31,13 @@ const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  requestUpload: { method: "POST", path: "/api/admin/uploads", body: requestUploadSchema, response: successEnvelope(uploadResponse), statuses: [200, 201] },
+  completeUpload: { method: "POST", path: "/api/admin/uploads/{id}/complete", params: byId, body: completeUploadSchema, response: successEnvelope(materialResponse), statuses: [200] },
+  listMaterials: { method: "GET", path: "/api/admin/materials", query: listMaterialsQuery, response: successEnvelope(materialListResponse), statuses: [200] },
+  getMaterial: { method: "GET", path: "/api/admin/materials/{id}", params: byId, response: successEnvelope(materialDownloadResponse), statuses: [200] },
+  deleteMaterial: { method: "DELETE", path: "/api/admin/materials/{id}", params: byId, body: deleteMaterialSchema, response: successEnvelope(materialResponse), statuses: [200] },
+  setArtworkImage: { method: "POST", path: "/api/admin/artworks/{id}/image", params: byId, body: setArtworkImageSchema, response: successEnvelope(artworkResponse), statuses: [200] },
+  deleteArtwork: { method: "POST", path: "/api/admin/artworks/{id}/delete", params: byId, body: deleteArtworkSchema, response: successEnvelope(deletedArtworkResponse), statuses: [200] },
   purgeExpired: { method: "POST", path: "/api/cron/purge", response: successEnvelope(purgeResponse), statuses: [200] },
   chat: { method: "POST", path: "/api/chat", body: visitorChatRequest, response: successEnvelope(visitorReplyResponse), statuses: [200] },
   checkVersions: { method: "POST", path: "/api/public/exhibitions/{id}/versions/check", params: byId, body: checkVersionsRequest, response: successEnvelope(checkVersionsResponse), statuses: [200] },

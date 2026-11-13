@@ -1079,6 +1079,210 @@ exports[`HTTP route contracts > snapshots checkVersions 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots completeUpload 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "expectedVersion": {
+        "exclusiveMinimum": 0,
+        "maximum": 2147483647,
+        "type": "integer",
+      },
+    },
+    "required": [
+      "expectedVersion",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/uploads/{id}/complete",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "byteSize": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "cleanupPending": {
+            "type": "boolean",
+          },
+          "contentType": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "deletedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "filename": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "height": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "pdf",
+              "text",
+            ],
+            "type": "string",
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "state": {
+            "enum": [
+              "pending",
+              "ready",
+              "revoked",
+            ],
+            "type": "string",
+          },
+          "subjectId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "subjectType": {
+            "enum": [
+              "artist",
+              "exhibition",
+              "artwork",
+            ],
+            "type": "string",
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "version": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+          "width": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+        },
+        "required": [
+          "id",
+          "subjectType",
+          "subjectId",
+          "kind",
+          "state",
+          "filename",
+          "contentType",
+          "byteSize",
+          "version",
+          "pages",
+          "width",
+          "height",
+          "createdAt",
+          "updatedAt",
+          "deletedAt",
+          "cleanupPending",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots createArtwork 1`] = `
 {
   "body": {
@@ -2439,6 +2643,292 @@ exports[`HTTP route contracts > snapshots createExhibition 1`] = `
   "statuses": [
     200,
     201,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots deleteArtwork 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "expectedRevision": {
+        "exclusiveMinimum": 0,
+        "maximum": 2147483647,
+        "type": "integer",
+      },
+    },
+    "required": [
+      "expectedRevision",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/artworks/{id}/delete",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "deletedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "revision": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "id",
+          "revision",
+          "deletedAt",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots deleteMaterial 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "expectedVersion": {
+        "exclusiveMinimum": 0,
+        "maximum": 2147483647,
+        "type": "integer",
+      },
+    },
+    "required": [
+      "expectedVersion",
+    ],
+    "type": "object",
+  },
+  "method": "DELETE",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/materials/{id}",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "byteSize": {
+            "anyOf": [
+              {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "cleanupPending": {
+            "type": "boolean",
+          },
+          "contentType": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "deletedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "filename": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "height": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "pdf",
+              "text",
+            ],
+            "type": "string",
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "state": {
+            "enum": [
+              "pending",
+              "ready",
+              "revoked",
+            ],
+            "type": "string",
+          },
+          "subjectId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "subjectType": {
+            "enum": [
+              "artist",
+              "exhibition",
+              "artwork",
+            ],
+            "type": "string",
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "version": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+          "width": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+        },
+        "required": [
+          "id",
+          "subjectType",
+          "subjectId",
+          "kind",
+          "state",
+          "filename",
+          "contentType",
+          "byteSize",
+          "version",
+          "pages",
+          "width",
+          "height",
+          "createdAt",
+          "updatedAt",
+          "deletedAt",
+          "cleanupPending",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
   ],
 }
 `;
@@ -4473,6 +4963,225 @@ exports[`HTTP route contracts > snapshots getKnowledge 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots getMaterial 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/materials/{id}",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "download": {
+            "additionalProperties": false,
+            "properties": {
+              "expiresAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "url": {
+                "format": "uri",
+                "type": "string",
+              },
+            },
+            "required": [
+              "url",
+              "expiresAt",
+            ],
+            "type": "object",
+          },
+          "material": {
+            "additionalProperties": false,
+            "properties": {
+              "byteSize": {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "cleanupPending": {
+                "type": "boolean",
+              },
+              "contentType": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "createdAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "deletedAt": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "filename": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "height": {
+                "anyOf": [
+                  {
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "type": "integer",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "pdf",
+                  "text",
+                ],
+                "type": "string",
+              },
+              "pages": {
+                "anyOf": [
+                  {
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "type": "integer",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "state": {
+                "enum": [
+                  "pending",
+                  "ready",
+                  "revoked",
+                ],
+                "type": "string",
+              },
+              "subjectId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "subjectType": {
+                "enum": [
+                  "artist",
+                  "exhibition",
+                  "artwork",
+                ],
+                "type": "string",
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "version": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "width": {
+                "anyOf": [
+                  {
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "type": "integer",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+            },
+            "required": [
+              "id",
+              "subjectType",
+              "subjectId",
+              "kind",
+              "state",
+              "filename",
+              "contentType",
+              "byteSize",
+              "version",
+              "pages",
+              "width",
+              "height",
+              "createdAt",
+              "updatedAt",
+              "deletedAt",
+              "cleanupPending",
+            ],
+            "type": "object",
+          },
+        },
+        "required": [
+          "material",
+          "download",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots getProfile 1`] = `
 {
   "body": null,
@@ -6382,6 +7091,209 @@ exports[`HTTP route contracts > snapshots listLabels 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots listMaterials 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": null,
+  "path": "/api/admin/materials",
+  "query": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "subjectId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "subjectType": {
+        "enum": [
+          "artist",
+          "exhibition",
+          "artwork",
+        ],
+        "type": "string",
+      },
+    },
+    "required": [
+      "subjectType",
+      "subjectId",
+    ],
+    "type": "object",
+  },
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "byteSize": {
+              "anyOf": [
+                {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "cleanupPending": {
+              "type": "boolean",
+            },
+            "contentType": {
+              "type": [
+                "string",
+                "null",
+              ],
+            },
+            "createdAt": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+              "type": "string",
+            },
+            "deletedAt": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                  "type": "string",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "filename": {
+              "type": [
+                "string",
+                "null",
+              ],
+            },
+            "height": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "id": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "kind": {
+              "enum": [
+                "image",
+                "pdf",
+                "text",
+              ],
+              "type": "string",
+            },
+            "pages": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "state": {
+              "enum": [
+                "pending",
+                "ready",
+                "revoked",
+              ],
+              "type": "string",
+            },
+            "subjectId": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "subjectType": {
+              "enum": [
+                "artist",
+                "exhibition",
+                "artwork",
+              ],
+              "type": "string",
+            },
+            "updatedAt": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+              "type": "string",
+            },
+            "version": {
+              "exclusiveMinimum": 0,
+              "maximum": 2147483647,
+              "type": "integer",
+            },
+            "width": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+          },
+          "required": [
+            "id",
+            "subjectType",
+            "subjectId",
+            "kind",
+            "state",
+            "filename",
+            "contentType",
+            "byteSize",
+            "version",
+            "pages",
+            "width",
+            "height",
+            "createdAt",
+            "updatedAt",
+            "deletedAt",
+            "cleanupPending",
+          ],
+          "type": "object",
+        },
+        "type": "array",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots login 1`] = `
 {
   "body": {
@@ -6518,6 +7430,26 @@ exports[`HTTP route contracts > snapshots purgeExpired 1`] = `
             "minimum": 0,
             "type": "integer",
           },
+          "materials": {
+            "additionalProperties": false,
+            "properties": {
+              "attempted": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "completed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "attempted",
+              "completed",
+            ],
+            "type": "object",
+          },
         },
         "required": [
           "answers",
@@ -6540,6 +7472,290 @@ exports[`HTTP route contracts > snapshots purgeExpired 1`] = `
   },
   "statuses": [
     200,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots requestUpload 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "byteSize": {
+        "maximum": 52428800,
+        "minimum": 1,
+        "type": "integer",
+      },
+      "contentType": {
+        "enum": [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "application/pdf",
+        ],
+        "type": "string",
+      },
+      "filename": {
+        "minLength": 1,
+        "type": "string",
+      },
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "kind": {
+        "enum": [
+          "image",
+          "pdf",
+        ],
+        "type": "string",
+      },
+      "subjectId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "subjectType": {
+        "enum": [
+          "artist",
+          "exhibition",
+          "artwork",
+        ],
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+      "subjectType",
+      "subjectId",
+      "kind",
+      "filename",
+      "contentType",
+      "byteSize",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": null,
+  "path": "/api/admin/uploads",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "material": {
+            "additionalProperties": false,
+            "properties": {
+              "byteSize": {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "cleanupPending": {
+                "type": "boolean",
+              },
+              "contentType": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "createdAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "deletedAt": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "filename": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "height": {
+                "anyOf": [
+                  {
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "type": "integer",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "pdf",
+                  "text",
+                ],
+                "type": "string",
+              },
+              "pages": {
+                "anyOf": [
+                  {
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "type": "integer",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "state": {
+                "enum": [
+                  "pending",
+                  "ready",
+                  "revoked",
+                ],
+                "type": "string",
+              },
+              "subjectId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "subjectType": {
+                "enum": [
+                  "artist",
+                  "exhibition",
+                  "artwork",
+                ],
+                "type": "string",
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "version": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "width": {
+                "anyOf": [
+                  {
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "type": "integer",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+            },
+            "required": [
+              "id",
+              "subjectType",
+              "subjectId",
+              "kind",
+              "state",
+              "filename",
+              "contentType",
+              "byteSize",
+              "version",
+              "pages",
+              "width",
+              "height",
+              "createdAt",
+              "updatedAt",
+              "deletedAt",
+              "cleanupPending",
+            ],
+            "type": "object",
+          },
+          "upload": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bucket": {
+                    "const": "artist-material-staging",
+                    "type": "string",
+                  },
+                  "expiresAt": {
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                    "type": "string",
+                  },
+                  "path": {
+                    "type": "string",
+                  },
+                  "signedUrl": {
+                    "format": "uri",
+                    "type": "string",
+                  },
+                  "token": {
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "signedUrl",
+                  "token",
+                  "path",
+                  "bucket",
+                  "expiresAt",
+                ],
+                "type": "object",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+        },
+        "required": [
+          "material",
+          "upload",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+    201,
   ],
 }
 `;
@@ -7928,6 +9144,524 @@ exports[`HTTP route contracts > snapshots saveNarration 1`] = `
     "type": "object",
   },
   "path": "/api/admin/artworks/{id}/narration",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "creationYear": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "dimensions": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "document": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+                "type": "string",
+              },
+              "revision": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "sections": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "body": {
+                      "type": "string",
+                    },
+                    "id": {
+                      "enum": [
+                        "bio",
+                        "practice",
+                        "introduction",
+                        "theme",
+                        "description",
+                        "notes",
+                      ],
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "body",
+                  ],
+                  "type": "object",
+                },
+                "type": "array",
+              },
+              "sourceRefs": {
+                "items": {
+                  "oneOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "direct",
+                          "type": "string",
+                        },
+                        "sectionId": {
+                          "enum": [
+                            "bio",
+                            "practice",
+                            "introduction",
+                            "theme",
+                            "description",
+                            "notes",
+                          ],
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "sectionId",
+                        "kind",
+                      ],
+                      "type": "object",
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "material",
+                          "type": "string",
+                        },
+                        "materialId": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+                          "type": "string",
+                        },
+                        "pageEnd": {
+                          "maximum": 2147483647,
+                          "minimum": 1,
+                          "type": "integer",
+                        },
+                        "pageStart": {
+                          "maximum": 2147483647,
+                          "minimum": 1,
+                          "type": "integer",
+                        },
+                        "sectionId": {
+                          "enum": [
+                            "bio",
+                            "practice",
+                            "introduction",
+                            "theme",
+                            "description",
+                            "notes",
+                          ],
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "sectionId",
+                        "kind",
+                        "materialId",
+                      ],
+                      "type": "object",
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "document",
+                          "type": "string",
+                        },
+                        "sectionId": {
+                          "enum": [
+                            "bio",
+                            "practice",
+                            "introduction",
+                            "theme",
+                            "description",
+                            "notes",
+                          ],
+                          "type": "string",
+                        },
+                        "sourceDocumentId": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+                          "type": "string",
+                        },
+                        "sourceRevision": {
+                          "exclusiveMinimum": 0,
+                          "maximum": 2147483647,
+                          "type": "integer",
+                        },
+                        "sourceSectionId": {
+                          "enum": [
+                            "bio",
+                            "practice",
+                            "introduction",
+                            "theme",
+                            "description",
+                            "notes",
+                          ],
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "sectionId",
+                        "kind",
+                        "sourceDocumentId",
+                        "sourceSectionId",
+                        "sourceRevision",
+                      ],
+                      "type": "object",
+                    },
+                  ],
+                },
+                "type": "array",
+              },
+              "sourceWarnings": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "const": "source_unavailable",
+                          "type": "string",
+                        },
+                        "kind": {
+                          "const": "document",
+                          "type": "string",
+                        },
+                        "sectionId": {
+                          "enum": [
+                            "bio",
+                            "practice",
+                            "introduction",
+                            "theme",
+                            "description",
+                            "notes",
+                          ],
+                          "type": "string",
+                        },
+                        "sourceDocumentId": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+                          "type": "string",
+                        },
+                        "sourceRevision": {
+                          "exclusiveMinimum": 0,
+                          "maximum": 2147483647,
+                          "type": "integer",
+                        },
+                        "sourceSectionId": {
+                          "enum": [
+                            "bio",
+                            "practice",
+                            "introduction",
+                            "theme",
+                            "description",
+                            "notes",
+                          ],
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "kind",
+                        "sectionId",
+                        "sourceDocumentId",
+                        "sourceSectionId",
+                        "sourceRevision",
+                        "code",
+                      ],
+                      "type": "object",
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "const": "source_changed",
+                          "type": "string",
+                        },
+                        "currentRevision": {
+                          "exclusiveMinimum": 0,
+                          "maximum": 2147483647,
+                          "type": "integer",
+                        },
+                        "kind": {
+                          "const": "document",
+                          "type": "string",
+                        },
+                        "sectionId": {
+                          "enum": [
+                            "bio",
+                            "practice",
+                            "introduction",
+                            "theme",
+                            "description",
+                            "notes",
+                          ],
+                          "type": "string",
+                        },
+                        "sourceDocumentId": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+                          "type": "string",
+                        },
+                        "sourceRevision": {
+                          "exclusiveMinimum": 0,
+                          "maximum": 2147483647,
+                          "type": "integer",
+                        },
+                        "sourceSectionId": {
+                          "enum": [
+                            "bio",
+                            "practice",
+                            "introduction",
+                            "theme",
+                            "description",
+                            "notes",
+                          ],
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "kind",
+                        "sectionId",
+                        "sourceDocumentId",
+                        "sourceSectionId",
+                        "sourceRevision",
+                        "code",
+                        "currentRevision",
+                      ],
+                      "type": "object",
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "const": "source_unavailable",
+                          "type": "string",
+                        },
+                        "kind": {
+                          "const": "material",
+                          "type": "string",
+                        },
+                        "materialId": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+                          "type": "string",
+                        },
+                        "sectionId": {
+                          "enum": [
+                            "bio",
+                            "practice",
+                            "introduction",
+                            "theme",
+                            "description",
+                            "notes",
+                          ],
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "kind",
+                        "code",
+                        "sectionId",
+                        "materialId",
+                      ],
+                      "type": "object",
+                    },
+                  ],
+                },
+                "type": "array",
+              },
+              "subjectId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+                "type": "string",
+              },
+              "subjectType": {
+                "enum": [
+                  "artist",
+                  "exhibition",
+                  "artwork",
+                ],
+                "type": "string",
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "subjectType",
+              "subjectId",
+              "revision",
+              "sections",
+              "sourceRefs",
+              "sourceWarnings",
+              "updatedAt",
+            ],
+            "type": "object",
+          },
+          "exhibitionId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+            "type": "string",
+          },
+          "imageMaterialId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
+                "type": "string",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "medium": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "narrationDraft": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "number": {
+            "maximum": 9999,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "revision": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+          "state": {
+            "enum": [
+              "draft",
+              "published",
+              "paused",
+            ],
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "revision",
+          "createdAt",
+          "updatedAt",
+          "document",
+          "number",
+          "title",
+          "creationYear",
+          "medium",
+          "dimensions",
+          "exhibitionId",
+          "state",
+          "imageMaterialId",
+          "narrationDraft",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots setArtworkImage 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "expectedRevision": {
+        "exclusiveMinimum": 0,
+        "maximum": 2147483647,
+        "type": "integer",
+      },
+      "materialId": {
+        "anyOf": [
+          {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          {
+            "type": "null",
+          },
+        ],
+      },
+    },
+    "required": [
+      "expectedRevision",
+      "materialId",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/artworks/{id}/image",
   "response": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,

@@ -35,6 +35,7 @@ describe("HTTP route contracts", () => {
         statuses: route.statuses,
         // Input mode exports pre-transform JSON for trim, optional nullable fields and defaults.
         params: "params" in route ? z.toJSONSchema(route.params, { io: "input" }) : null,
+        ...("query" in route ? { query: z.toJSONSchema(route.query, { io: "input" }) } : {}),
         body: "body" in route ? z.toJSONSchema(route.body, { io: "input" }) : null,
         response: z.toJSONSchema(route.response, { io: "output" }),
       }).toMatchSnapshot();
@@ -53,6 +54,16 @@ describe("typed fetch client", () => {
     expect(fetch).toHaveBeenCalledWith("/api/auth/login", expect.objectContaining({
       method: "POST", credentials: "same-origin", body: JSON.stringify(body),
     }));
+  });
+
+  it("encodes validated query parameters and rejects invalid queries before fetch", async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ data: [], requestId }));
+    vi.stubGlobal("fetch", fetch);
+    await requestApi("listMaterials", { query: { subjectType: "artwork", subjectId: requestId } });
+    expect(fetch).toHaveBeenCalledWith(`/api/admin/materials?subjectType=artwork&subjectId=${requestId}`, expect.anything());
+    await expect(requestApi("listMaterials", { query: { subjectType: "artwork", subjectId: "../private" } }))
+      .rejects.toMatchObject({ code: "INVALID_INPUT" });
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it("preserves structured API errors and rejects invalid success data", async () => {

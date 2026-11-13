@@ -257,14 +257,14 @@ isOneToOne: false
                   ]
                 },"materials": {
                   Row: {
-                    "artist_id": string | null,"artwork_id": string | null,"byte_size": number | null,"created_at": string,"exhibition_id": string | null,"id": string,"kind": string,"owner_id": string,"state": string,"storage_key": string | null,"text_body": string | null,"updated_at": string,"version": number
+                    "artist_id": string | null,"artwork_id": string | null,"byte_size": number | null,"cleanup_after": string | null,"cleanup_pending": boolean,"content_hash": string | null,"content_type": string | null,"created_at": string,"deleted_at": string | null,"exhibition_id": string | null,"filename": string | null,"height": number | null,"id": string,"kind": string,"owner_id": string,"pages": number | null,"state": string,"storage_key": string | null,"text_body": string | null,"updated_at": string,"upload_expires_at": string | null,"upload_fingerprint": string | null,"version": number,"width": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "artist_id"?: string | null,"artwork_id"?: string | null,"byte_size"?: number | null,"created_at"?: string,"exhibition_id"?: string | null,"id"?: string,"kind": string,"owner_id": string,"state"?: string,"storage_key"?: string | null,"text_body"?: string | null,"updated_at"?: string,"version"?: number
+                    "artist_id"?: string | null,"artwork_id"?: string | null,"byte_size"?: number | null,"cleanup_after"?: string | null,"cleanup_pending"?: boolean,"content_hash"?: string | null,"content_type"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"exhibition_id"?: string | null,"filename"?: string | null,"height"?: number | null,"id"?: string,"kind": string,"owner_id": string,"pages"?: number | null,"state"?: string,"storage_key"?: string | null,"text_body"?: string | null,"updated_at"?: string,"upload_expires_at"?: string | null,"upload_fingerprint"?: string | null,"version"?: number,"width"?: number | null
                   }
                   Update: {
-                    "artist_id"?: string | null,"artwork_id"?: string | null,"byte_size"?: number | null,"created_at"?: string,"exhibition_id"?: string | null,"id"?: string,"kind"?: string,"owner_id"?: string,"state"?: string,"storage_key"?: string | null,"text_body"?: string | null,"updated_at"?: string,"version"?: number
+                    "artist_id"?: string | null,"artwork_id"?: string | null,"byte_size"?: number | null,"cleanup_after"?: string | null,"cleanup_pending"?: boolean,"content_hash"?: string | null,"content_type"?: string | null,"created_at"?: string,"deleted_at"?: string | null,"exhibition_id"?: string | null,"filename"?: string | null,"height"?: number | null,"id"?: string,"kind"?: string,"owner_id"?: string,"pages"?: number | null,"state"?: string,"storage_key"?: string | null,"text_body"?: string | null,"updated_at"?: string,"upload_expires_at"?: string | null,"upload_fingerprint"?: string | null,"version"?: number,"width"?: number | null
                   }
                   Relationships: [
                     {
@@ -465,6 +465,12 @@ isOneToOne: false
 "complete_ai_job":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
                            },
+"complete_material_cleanup":
+{ Args: { "p_expected_version": number,"p_id": string,"p_owner": string }; Returns: Json
+                           },
+"complete_upload":
+{ Args: { "p_byte_size": number,"p_content_hash": string,"p_content_type": string,"p_expected_version": number,"p_height": number,"p_id": string,"p_owner": string,"p_pages": number,"p_width": number }; Returns: Json
+                           },
 "complete_visitor_request":
 { Args: { "p_failure_code"?: string,"p_id": string,"p_result": Json,"p_session_hash": string,"p_steps"?: Json }; Returns: Json
                            },
@@ -473,6 +479,12 @@ isOneToOne: false
                            },
 "create_exhibition":
 { Args: { "p_end_date": string,"p_id": string,"p_place": string,"p_sections": Json,"p_source_refs": Json,"p_start_date": string,"p_title": string }; Returns: Json
+                           },
+"delete_artwork":
+{ Args: { "p_expected_revision": number,"p_id": string }; Returns: Json
+                           },
+"delete_material":
+{ Args: { "p_expected_version": number,"p_id": string }; Returns: Json
                            },
 "dismiss_gap":
 { Args: { "p_enabled": boolean,"p_id": string,"p_owner": string }; Returns: Json
@@ -507,6 +519,9 @@ isOneToOne: false
 "get_revoke_impact":
 { Args: { "p_evidence_id": string,"p_expected_version": number }; Returns: Json
                            },
+"get_upload":
+{ Args: { "p_allow_cleanup"?: boolean,"p_id": string,"p_owner": string }; Returns: Json
+                           },
 "is_publication_current":
 { Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_publication_id": string,"p_version": number }; Returns: boolean
                            },
@@ -521,6 +536,12 @@ isOneToOne: false
                            },
 "list_labels":
 { Args: { "p_exhibition_id": string }; Returns: Json
+                           },
+"list_material_cleanup":
+{ Args: { "p_limit"?: number }; Returns: Json
+                           },
+"list_materials":
+{ Args: { "p_subject_id": string,"p_subject_type": string }; Returns: Json
                            },
 "load_publication_context":
 { Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_number": number }; Returns: Json
@@ -543,6 +564,9 @@ isOneToOne: false
 "record_visitor_steps":
 { Args: { "p_id": string,"p_session_hash": string,"p_steps": Json }; Returns: undefined
                            },
+"request_upload":
+{ Args: { "p_byte_size": number,"p_content_type": string,"p_filename": string,"p_id": string,"p_kind": string,"p_owner": string,"p_subject_id": string,"p_subject_type": string }; Returns: Json
+                           },
 "reserve_ai_job":
 { Args: { "p_artwork_id": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_owner": string,"p_request_id": string,"p_strategy": string }; Returns: Json
                            } |
@@ -564,6 +588,9 @@ isOneToOne: false
                            },
 "save_narration_draft":
 { Args: { "p_artwork_id": string,"p_expected_revision": number,"p_source_job_id"?: string,"p_text": string }; Returns: Json
+                           },
+"set_artwork_image":
+{ Args: { "p_artwork_id": string,"p_expected_revision": number,"p_material_id": string }; Returns: Json
                            },
 "update_artist_profile":
 { Args: { "p_display_name": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_sections": Json,"p_source_refs": Json }; Returns: Json

@@ -20,16 +20,16 @@ sources:
 
 # 범위와 상태
 
-[사용자 요청](../references/user-backend-completion.md)의 목표는 화면과 키 입력만 남기도록 서버·DB·AI 연결을 완성하는 것이다. W0·W1과 W4 글 승인·게시가 병합됐고 W5 글 채팅·보완 요청을 로컬 검증 중이다. W4·W5 음성과 나머지 묶음은 남아 있다. 전체 백엔드나 실서비스 완성을 뜻하지 않는다.
+[사용자 요청](../references/user-backend-completion.md)의 목표는 화면과 키 입력만 남기도록 서버·DB·AI 연결을 완성하는 것이다. W0·W1과 W4 글 승인·게시가 병합됐고 W5 글 채팅·보완 요청이 PR #7으로 병합됐고 W3 파일 업로드를 구현 중이다. W4·W5 음성과 나머지 묶음은 남아 있다. 전체 백엔드나 실서비스 완성을 뜻하지 않는다.
 
 | 묶음 | 범위 | 상태 |
 | --- | --- | --- |
 | W0 | 계약·정책·플래그·라우팅·모의 제공사·타입 클라이언트 | done (PR #4 CI 통과·병합) |
 | W1 | 작업 원장·해설 초안·추가 질문 | done ([PR #5](https://github.com/Ahn-taegyu/Yeobek/pull/5), `54437476`) |
 | W2 | 자료 정리 후보·원문 이력 | not_started |
-| W3 | 비공개 업로드·파일 검증·삭제 | not_started |
+| W3 | 비공개 업로드·파일 검증·삭제 | in_progress (SQL·파일 검증 준비, 실제 Storage·HTTP 연결 전) |
 | W4 | 근거·승인·음성·게시와 철회 | in_progress (글 범위 PR #6 병합, 음성 작업 미구현) |
-| W5 | 관람 채팅·음성·보완 요청 | in_progress (글 채팅·보완 요청 로컬 검증, 음성·미디어 미구현) |
+| W5 | 관람 채팅·음성·보완 요청 | in_progress (글 범위 PR #7 병합, 음성·미디어 미구현) |
 | W6 | 운영 집계 API | not_started |
 | W7 | 통합 검증·시연 자료·프런트와 키 당일 인계 | not_started |
 | W8 | 운영 자동화 정책·이벤트·발송함·스티비/채널톡/Alt | not_started |
@@ -71,3 +71,13 @@ W4 게시·재개는 서버 전용 worker가 현재 음성 필수 설정을 전�
 글 채팅, 공개 버전 일괄 확인, 작가 보완 요청 조회·닫기, 비밀값으로 보호한 만료 정리 HTTP를 연결했다. 실제 공개본으로 승인 해설·질의응답을 제공하고 서버 세션 쿠키, DB 분당/일일 상한, 동일 요청 재사용, 자료 부족 질문만 30일 보관을 적용한다. 음성 인식·낭독·미디어는 W3 이후이며 현재 음성 모드는 선호 값만 보존한다. 자세한 호출 계약은 [API 계약](api-contract.md#w5-글-관람보완-요청-계약)을 따른다.
 
 Sol의 SQL·HTTP 테스트를 부모가 읽고 직접 실행했으며 별도 Sol이 서버 코드를 교차 검토했다. 전시 변경을 통한 분당 한도 우회, 비활성 보완 요청의 직접 DB 접근, UUID 대소문자, 취소·재시도 오류 매핑과 기록 장애의 정상 답변 차단을 발견·수정했다. 전진 migration·pgTAP 233개, 단위 383개(381개 전체와 추가 cron 인증 2개), typecheck·build, 관람 HTTP 5개와 기능 비활성 HTTP 2개를 확인했다. 실제 외부 AI 호출은 0회다. 정리 RPC/HTTP는 준비됐지만 운영 스케줄러는 배포 때 별도로 연결해야 한다.
+
+# W3 비공개 파일 업로드
+
+`feat/backend-materials`에서 3MiB 이미지·6MiB PDF의 비공개 업로드·완료·조회·삭제와 작품 이미지 지정·삭제를 연결했다. 원본의 크기·형식·실제 이미지 디코딩·PDF 페이지 수를 확인한 뒤 검증한 바이트를 별도 final 경로에 저장한다. 업로드 서명은 staging 경로에만 발급하며 final 충돌 시 실제 해시를 비교한다. `sharp` 0.35.5, `pdf-lib` 1.17.1을 고정했다. 자동 OCR·작품 매칭은 포함하지 않는다.
+
+Sol SQL 구현을 부모가 검토·실행하고 별도 Sol이 Storage를 교차 검토했다. 삭제된 작품의 문서 응답 오류, 새 번호 인덱스 오류 매핑, 구형 PDF 근거의 신규 게시 우회, 동시 완료·정리 시점·SDK 409 처리를 수정했다. 공유된 SQL은 새 `061000` migration으로 보완했다. 부모 직접 pgTAP 282개, 단위 397개, lint·typecheck·build와 프로덕션 HTTP 15개(실제 Storage 5개 포함)가 통과했다. PR CI의 새 DB·Linux 검증은 남아 있다.
+
+삭제는 즉시 논리 적용하고 물리 정리는 재시도한다. `cleanupPending`은 최종 파일 삭제뿐 아니라 준비된 자료의 임시 파일 정리도 뜻한다. `POST /api/cron/purge`가 만료 업로드와 정리 대상 최대 50개를 처리한다. 서명 URL은 완료 가능 시간과 별도로 약 2시간 유효할 수 있으므로 업로드 만료+2시간 3분 이후 다시 정리한다. 완료 자료는 임시 파일만 제거한다. 운영 스케줄러 연결은 배포 때 필요하며 실제 제공사 호출은 0회다.
+
+구현 참고: [Supabase signed upload](https://supabase.com/docs/reference/javascript/file-buckets-createsigneduploadurl), [signed upload의 upsert 설정](https://supabase.com/docs/reference/javascript/file-buckets-uploadtosignedurl), [sharp 입력 검증](https://sharp.pixelplumbing.com/api-constructor/), [PDF 페이지 수](https://pdf-lib.js.org/docs/api/classes/pdfdocument#getpagecount).
