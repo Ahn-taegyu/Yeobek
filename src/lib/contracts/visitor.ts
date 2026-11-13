@@ -34,4 +34,5 @@ export const gapListResponse = z.array(gapResponse);
 export const checkVersionsRequest = z.strictObject({ publications: z.array(publicationRefSchema.omit({ exhibitionId: true })).max(100) });
 export const checkVersionsResponse = z.strictObject({ publications: z.array(publicationRefSchema.extend({ current: z.boolean() })).max(100) });
 export const purgeResponse = z.strictObject({ answers: z.number().int().nonnegative(), gaps: z.number().int().nonnegative(), jobs: z.number().int().nonnegative(),
-  materials: z.strictObject({ attempted: z.number().int().nonnegative(), completed: z.number().int().nonnegative() }).optional() });
+  materials: z.strictObject({ attempted: z.number().int().nonnegative(), completed: z.number().int().nonnegative() }).optional(),
+  audio: z.strictObject({ attempted: z.number().int().nonnegative(), completed: z.number().int().nonnegative() }).optional() });

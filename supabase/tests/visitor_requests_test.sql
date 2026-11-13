@@ -175,8 +175,10 @@ select throws_ok($$select reserve_visitor_request(current_setting('test.sid'),'1
     '40000000-0000-0000-0000-000000000001',current_setting('test.input'),true)$$,'P1012','Visitor request expired',
     'expired reply cannot replay');
 select is(load_visitor_answer(current_setting('test.sid'),current_setting('test.id1')::uuid),null,'expired reply cannot be loaded');
-select is(purge_expired()->>'answers','1','purge removes expired visitor answers');
+select cmp_ok((purge_expired()->>'answers')::integer,'>=',1,'purge removes expired visitor answers');
 
 reset role;
+select ok(not exists(select 1 from api_requests where id=current_setting('test.id1')::uuid),
+    'the expired fixture is removed even when other expired HTTP records exist');
 select * from finish();
 rollback;

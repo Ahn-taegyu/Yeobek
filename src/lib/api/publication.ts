@@ -9,6 +9,9 @@ import { approvalSchema, evidenceResponse, narrationApprovalResponse, publicatio
   publishedResponse, publicationStateResponse, reviewResponse, upsertEvidenceSchema } from "../contracts/publication";
 import { getFeatures } from "../features";
 import { createWorkerSupabase } from "../supabase/worker";
+import { speechIdentity } from "../ai/voice";
+import { isMockMode } from "../ai/routing";
+import { normalizeAiOutcome } from "../ai/outcome";
 
 export function decodeDatabase<T>(schema: z.ZodType<T>, raw: unknown): T {
   const result = schema.safeParse(camelize(raw));
@@ -61,9 +64,24 @@ export async function changePublication(db: DbClient, actorId: string, exhibitio
   await rpc(db, "get_exhibition", { p_id: exhibitionId });
   if (input.action === "publish") {
     const worker = createWorkerSupabase();
+    const voiceRequired = getFeatures().voiceRequired;
+    let voice: ReturnType<typeof speechIdentity> | null = null;
+    try {
+      isMockMode(); // Reject a production mock configuration even for text-only publication.
+    } catch (error) {
+      const failure = normalizeAiOutcome(error);
+      throw new ApiError(failure.status, failure.code, "음성 제공 설정을 확인해 주세요.");
+    }
+    try { voice = speechIdentity(); }
+    catch (error) {
+      if (voiceRequired) {
+        const failure = normalizeAiOutcome(error);
+        throw new ApiError(failure.status, failure.code, "음성 제공 설정을 확인해 주세요.");
+      }
+    }
     const fields = { requestId: input.requestId, expectedRevision: input.expectedRevision, artworks: input.artworks, intro: input.intro };
-    const raw = await rpc(worker, "publish", { p_owner: actorId, p_exhibition_id: exhibitionId,
-      p_voice_required: getFeatures().voiceRequired, ...rpcArgs(fields) });
+    const raw = await rpc(worker, "publish_with_audio_config", { p_owner: actorId, p_exhibition_id: exhibitionId,
+      p_voice_required: voiceRequired, p_voice_fingerprint: voice?.fingerprint ?? null, p_mock: voice?.mock ?? false, ...rpcArgs(fields) });
     const envelope = decodeDatabase(z.object({ blocked: z.array(z.object({ artworkId: z.uuid(), reasons: z.array(z.string()) })),
       created: z.boolean() }), raw);
     if (envelope.blocked.length) throw new ApiError(409, "PUBLICATION_BLOCKED", "선택한 작품의 게시 준비를 확인해 주세요.",
@@ -72,6 +90,7 @@ export async function changePublication(db: DbClient, actorId: string, exhibitio
   }
   const args = { p_exhibition_id: exhibitionId, p_expected_revision: input.expectedRevision, p_artwork_id: input.artworkId ?? null };
   const raw = input.action === "pause" ? await rpc(db, "pause", args)
-    : await rpc(createWorkerSupabase(), "resume", { ...args, p_owner: actorId, p_voice_required: getFeatures().voiceRequired });
+    : await rpc(createWorkerSupabase(), "resume_with_audio_mode", { ...args, p_owner: actorId,
+      p_voice_required: getFeatures().voiceRequired, p_mock: isMockMode() });
   return decodeDatabase(publicationStateResponse, raw);
 }

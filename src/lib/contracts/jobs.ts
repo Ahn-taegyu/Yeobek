@@ -12,7 +12,7 @@ export const retryJobSchema = z.strictObject({ requestId: uuid, expectedAttempt:
 export const saveNarrationSchema = z.strictObject({
   expectedRevision: revision, text: narrationText.nullable(), sourceJobId: uuid.nullable().optional(),
 });
-export const jobResponse = z.object({
+export const narrationJobResponse = z.object({
   id: uuid, kind: z.literal("narration"), artworkId: uuid, documentId: uuid, requestId: uuid, mock: z.boolean(),
   expectedRevision: revision, expectedDocumentRevision: revision, attempt: revision,
   strategy: z.enum(["single", "best_of_two"]),
@@ -27,6 +27,13 @@ export const jobResponse = z.object({
   createdAt: z.iso.datetime({ offset: true }), updatedAt: z.iso.datetime({ offset: true }),
   expiresAt: z.iso.datetime({ offset: true }),
 });
-export type AiJob = z.infer<typeof jobResponse>;
+export const audioJobResult = z.strictObject({ assetId: uuid, approvalId: uuid,
+  textHash: z.string().regex(/^[a-f0-9]{64}$/), voiceConfigVersion: revision, mock: z.boolean() });
+export const audioJobResponse = narrationJobResponse.extend({ kind: z.literal("audio"), strategy: z.null(), result: audioJobResult.nullable() });
+export const jobResponse = z.discriminatedUnion("kind", [narrationJobResponse, audioJobResponse]);
+export const generateAudioSchema = z.strictObject({ requestId: uuid, approvalId: uuid, expectedRevision: revision });
+export type AiJob = z.infer<typeof narrationJobResponse>;
+export type AudioJob = z.infer<typeof audioJobResponse>;
+export type AnyAiJob = z.infer<typeof jobResponse>;
 export type GenerateNarration = z.infer<typeof generateNarrationSchema>;
 export type RetryJob = z.infer<typeof retryJobSchema>;

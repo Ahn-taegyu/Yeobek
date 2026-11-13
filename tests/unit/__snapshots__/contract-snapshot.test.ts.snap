@@ -3162,6 +3162,226 @@ exports[`HTTP route contracts > snapshots evidenceImpact 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots generateAudio 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "approvalId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "expectedRevision": {
+        "exclusiveMinimum": 0,
+        "maximum": 2147483647,
+        "type": "integer",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "requestId",
+      "approvalId",
+      "expectedRevision",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/artworks/{id}/audio",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "artworkId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "attempt": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "documentId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "expectedDocumentRevision": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+          "expectedRevision": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "kind": {
+            "const": "audio",
+            "type": "string",
+          },
+          "mock": {
+            "type": "boolean",
+          },
+          "requestId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "approvalId": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "assetId": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "mock": {
+                    "type": "boolean",
+                  },
+                  "textHash": {
+                    "pattern": "^[a-f0-9]{64}$",
+                    "type": "string",
+                  },
+                  "voiceConfigVersion": {
+                    "exclusiveMinimum": 0,
+                    "maximum": 2147483647,
+                    "type": "integer",
+                  },
+                },
+                "required": [
+                  "assetId",
+                  "approvalId",
+                  "textHash",
+                  "voiceConfigVersion",
+                  "mock",
+                ],
+                "type": "object",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "resultCode": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "routing": {
+            "enum": [
+              "author",
+              "operator",
+              "none",
+            ],
+            "type": "string",
+          },
+          "status": {
+            "enum": [
+              "running",
+              "succeeded",
+              "abstained",
+              "failed",
+              "cancelled",
+            ],
+            "type": "string",
+          },
+          "strategy": {
+            "type": "null",
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "kind",
+          "artworkId",
+          "documentId",
+          "requestId",
+          "mock",
+          "expectedRevision",
+          "expectedDocumentRevision",
+          "attempt",
+          "strategy",
+          "status",
+          "routing",
+          "resultCode",
+          "result",
+          "createdAt",
+          "updatedAt",
+          "expiresAt",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+    201,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots generateNarration 1`] = `
 {
   "body": {
@@ -4387,171 +4607,326 @@ exports[`HTTP route contracts > snapshots getJob 1`] = `
     "additionalProperties": false,
     "properties": {
       "data": {
-        "additionalProperties": false,
-        "properties": {
-          "artworkId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "attempt": {
-            "exclusiveMinimum": 0,
-            "maximum": 2147483647,
-            "type": "integer",
-          },
-          "createdAt": {
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
-            "type": "string",
-          },
-          "documentId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "expectedDocumentRevision": {
-            "exclusiveMinimum": 0,
-            "maximum": 2147483647,
-            "type": "integer",
-          },
-          "expectedRevision": {
-            "exclusiveMinimum": 0,
-            "maximum": 2147483647,
-            "type": "integer",
-          },
-          "expiresAt": {
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
-            "type": "string",
-          },
-          "id": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "kind": {
-            "const": "narration",
-            "type": "string",
-          },
-          "mock": {
-            "type": "boolean",
-          },
-          "requestId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "result": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "mock": {
-                    "type": "boolean",
-                  },
-                  "overTarget": {
-                    "type": "boolean",
-                  },
-                  "selected": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "artworkId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "attempt": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "createdAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "documentId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "expectedDocumentRevision": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "expectedRevision": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "expiresAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "kind": {
+                "const": "narration",
+                "type": "string",
+              },
+              "mock": {
+                "type": "boolean",
+              },
+              "requestId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "result": {
+                "anyOf": [
+                  {
                     "additionalProperties": false,
                     "properties": {
-                      "answer": {
-                        "type": "string",
+                      "mock": {
+                        "type": "boolean",
                       },
-                      "citations": {
-                        "items": {
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                          "type": "string",
-                        },
-                        "maxItems": 12,
-                        "minItems": 1,
-                        "type": "array",
+                      "overTarget": {
+                        "type": "boolean",
                       },
-                      "followUpQuestions": {
-                        "items": {
-                          "type": "string",
+                      "selected": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "answer": {
+                            "type": "string",
+                          },
+                          "citations": {
+                            "items": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "maxItems": 12,
+                            "minItems": 1,
+                            "type": "array",
+                          },
+                          "followUpQuestions": {
+                            "items": {
+                              "type": "string",
+                            },
+                            "maxItems": 3,
+                            "type": "array",
+                          },
                         },
-                        "maxItems": 3,
-                        "type": "array",
+                        "required": [
+                          "answer",
+                          "citations",
+                        ],
+                        "type": "object",
                       },
                     },
                     "required": [
-                      "answer",
-                      "citations",
+                      "selected",
+                      "overTarget",
+                      "mock",
                     ],
                     "type": "object",
                   },
-                },
-                "required": [
-                  "selected",
-                  "overTarget",
-                  "mock",
+                  {
+                    "type": "null",
+                  },
                 ],
-                "type": "object",
               },
-              {
+              "resultCode": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "routing": {
+                "enum": [
+                  "author",
+                  "operator",
+                  "none",
+                ],
+                "type": "string",
+              },
+              "status": {
+                "enum": [
+                  "running",
+                  "succeeded",
+                  "abstained",
+                  "failed",
+                  "cancelled",
+                ],
+                "type": "string",
+              },
+              "strategy": {
+                "enum": [
+                  "single",
+                  "best_of_two",
+                ],
+                "type": "string",
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "kind",
+              "artworkId",
+              "documentId",
+              "requestId",
+              "mock",
+              "expectedRevision",
+              "expectedDocumentRevision",
+              "attempt",
+              "strategy",
+              "status",
+              "routing",
+              "resultCode",
+              "result",
+              "createdAt",
+              "updatedAt",
+              "expiresAt",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "artworkId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "attempt": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "createdAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "documentId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "expectedDocumentRevision": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "expectedRevision": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "expiresAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "kind": {
+                "const": "audio",
+                "type": "string",
+              },
+              "mock": {
+                "type": "boolean",
+              },
+              "requestId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "result": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "approvalId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "assetId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "mock": {
+                        "type": "boolean",
+                      },
+                      "textHash": {
+                        "pattern": "^[a-f0-9]{64}$",
+                        "type": "string",
+                      },
+                      "voiceConfigVersion": {
+                        "exclusiveMinimum": 0,
+                        "maximum": 2147483647,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "assetId",
+                      "approvalId",
+                      "textHash",
+                      "voiceConfigVersion",
+                      "mock",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "resultCode": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "routing": {
+                "enum": [
+                  "author",
+                  "operator",
+                  "none",
+                ],
+                "type": "string",
+              },
+              "status": {
+                "enum": [
+                  "running",
+                  "succeeded",
+                  "abstained",
+                  "failed",
+                  "cancelled",
+                ],
+                "type": "string",
+              },
+              "strategy": {
                 "type": "null",
               },
+              "updatedAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "kind",
+              "artworkId",
+              "documentId",
+              "requestId",
+              "mock",
+              "expectedRevision",
+              "expectedDocumentRevision",
+              "attempt",
+              "strategy",
+              "status",
+              "routing",
+              "resultCode",
+              "result",
+              "createdAt",
+              "updatedAt",
+              "expiresAt",
             ],
+            "type": "object",
           },
-          "resultCode": {
-            "type": [
-              "string",
-              "null",
-            ],
-          },
-          "routing": {
-            "enum": [
-              "author",
-              "operator",
-              "none",
-            ],
-            "type": "string",
-          },
-          "status": {
-            "enum": [
-              "running",
-              "succeeded",
-              "abstained",
-              "failed",
-              "cancelled",
-            ],
-            "type": "string",
-          },
-          "strategy": {
-            "enum": [
-              "single",
-              "best_of_two",
-            ],
-            "type": "string",
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
-            "type": "string",
-          },
-        },
-        "required": [
-          "id",
-          "kind",
-          "artworkId",
-          "documentId",
-          "requestId",
-          "mock",
-          "expectedRevision",
-          "expectedDocumentRevision",
-          "attempt",
-          "strategy",
-          "status",
-          "routing",
-          "resultCode",
-          "result",
-          "createdAt",
-          "updatedAt",
-          "expiresAt",
         ],
-        "type": "object",
       },
       "requestId": {
         "format": "uuid",
@@ -7420,6 +7795,26 @@ exports[`HTTP route contracts > snapshots purgeExpired 1`] = `
             "minimum": 0,
             "type": "integer",
           },
+          "audio": {
+            "additionalProperties": false,
+            "properties": {
+              "attempted": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "completed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "attempted",
+              "completed",
+            ],
+            "type": "object",
+          },
           "gaps": {
             "maximum": 9007199254740991,
             "minimum": 0,
@@ -7805,171 +8200,326 @@ exports[`HTTP route contracts > snapshots retryJob 1`] = `
     "additionalProperties": false,
     "properties": {
       "data": {
-        "additionalProperties": false,
-        "properties": {
-          "artworkId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "attempt": {
-            "exclusiveMinimum": 0,
-            "maximum": 2147483647,
-            "type": "integer",
-          },
-          "createdAt": {
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
-            "type": "string",
-          },
-          "documentId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "expectedDocumentRevision": {
-            "exclusiveMinimum": 0,
-            "maximum": 2147483647,
-            "type": "integer",
-          },
-          "expectedRevision": {
-            "exclusiveMinimum": 0,
-            "maximum": 2147483647,
-            "type": "integer",
-          },
-          "expiresAt": {
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
-            "type": "string",
-          },
-          "id": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "kind": {
-            "const": "narration",
-            "type": "string",
-          },
-          "mock": {
-            "type": "boolean",
-          },
-          "requestId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "result": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "mock": {
-                    "type": "boolean",
-                  },
-                  "overTarget": {
-                    "type": "boolean",
-                  },
-                  "selected": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "artworkId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "attempt": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "createdAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "documentId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "expectedDocumentRevision": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "expectedRevision": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "expiresAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "kind": {
+                "const": "narration",
+                "type": "string",
+              },
+              "mock": {
+                "type": "boolean",
+              },
+              "requestId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "result": {
+                "anyOf": [
+                  {
                     "additionalProperties": false,
                     "properties": {
-                      "answer": {
-                        "type": "string",
+                      "mock": {
+                        "type": "boolean",
                       },
-                      "citations": {
-                        "items": {
-                          "format": "uuid",
-                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                          "type": "string",
-                        },
-                        "maxItems": 12,
-                        "minItems": 1,
-                        "type": "array",
+                      "overTarget": {
+                        "type": "boolean",
                       },
-                      "followUpQuestions": {
-                        "items": {
-                          "type": "string",
+                      "selected": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "answer": {
+                            "type": "string",
+                          },
+                          "citations": {
+                            "items": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "maxItems": 12,
+                            "minItems": 1,
+                            "type": "array",
+                          },
+                          "followUpQuestions": {
+                            "items": {
+                              "type": "string",
+                            },
+                            "maxItems": 3,
+                            "type": "array",
+                          },
                         },
-                        "maxItems": 3,
-                        "type": "array",
+                        "required": [
+                          "answer",
+                          "citations",
+                        ],
+                        "type": "object",
                       },
                     },
                     "required": [
-                      "answer",
-                      "citations",
+                      "selected",
+                      "overTarget",
+                      "mock",
                     ],
                     "type": "object",
                   },
-                },
-                "required": [
-                  "selected",
-                  "overTarget",
-                  "mock",
+                  {
+                    "type": "null",
+                  },
                 ],
-                "type": "object",
               },
-              {
+              "resultCode": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "routing": {
+                "enum": [
+                  "author",
+                  "operator",
+                  "none",
+                ],
+                "type": "string",
+              },
+              "status": {
+                "enum": [
+                  "running",
+                  "succeeded",
+                  "abstained",
+                  "failed",
+                  "cancelled",
+                ],
+                "type": "string",
+              },
+              "strategy": {
+                "enum": [
+                  "single",
+                  "best_of_two",
+                ],
+                "type": "string",
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "kind",
+              "artworkId",
+              "documentId",
+              "requestId",
+              "mock",
+              "expectedRevision",
+              "expectedDocumentRevision",
+              "attempt",
+              "strategy",
+              "status",
+              "routing",
+              "resultCode",
+              "result",
+              "createdAt",
+              "updatedAt",
+              "expiresAt",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "artworkId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "attempt": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "createdAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "documentId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "expectedDocumentRevision": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "expectedRevision": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "expiresAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "kind": {
+                "const": "audio",
+                "type": "string",
+              },
+              "mock": {
+                "type": "boolean",
+              },
+              "requestId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "result": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "approvalId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "assetId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "mock": {
+                        "type": "boolean",
+                      },
+                      "textHash": {
+                        "pattern": "^[a-f0-9]{64}$",
+                        "type": "string",
+                      },
+                      "voiceConfigVersion": {
+                        "exclusiveMinimum": 0,
+                        "maximum": 2147483647,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "assetId",
+                      "approvalId",
+                      "textHash",
+                      "voiceConfigVersion",
+                      "mock",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "resultCode": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "routing": {
+                "enum": [
+                  "author",
+                  "operator",
+                  "none",
+                ],
+                "type": "string",
+              },
+              "status": {
+                "enum": [
+                  "running",
+                  "succeeded",
+                  "abstained",
+                  "failed",
+                  "cancelled",
+                ],
+                "type": "string",
+              },
+              "strategy": {
                 "type": "null",
               },
+              "updatedAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "kind",
+              "artworkId",
+              "documentId",
+              "requestId",
+              "mock",
+              "expectedRevision",
+              "expectedDocumentRevision",
+              "attempt",
+              "strategy",
+              "status",
+              "routing",
+              "resultCode",
+              "result",
+              "createdAt",
+              "updatedAt",
+              "expiresAt",
             ],
+            "type": "object",
           },
-          "resultCode": {
-            "type": [
-              "string",
-              "null",
-            ],
-          },
-          "routing": {
-            "enum": [
-              "author",
-              "operator",
-              "none",
-            ],
-            "type": "string",
-          },
-          "status": {
-            "enum": [
-              "running",
-              "succeeded",
-              "abstained",
-              "failed",
-              "cancelled",
-            ],
-            "type": "string",
-          },
-          "strategy": {
-            "enum": [
-              "single",
-              "best_of_two",
-            ],
-            "type": "string",
-          },
-          "updatedAt": {
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
-            "type": "string",
-          },
-        },
-        "required": [
-          "id",
-          "kind",
-          "artworkId",
-          "documentId",
-          "requestId",
-          "mock",
-          "expectedRevision",
-          "expectedDocumentRevision",
-          "attempt",
-          "strategy",
-          "status",
-          "routing",
-          "resultCode",
-          "result",
-          "createdAt",
-          "updatedAt",
-          "expiresAt",
         ],
-        "type": "object",
       },
       "requestId": {
         "format": "uuid",
