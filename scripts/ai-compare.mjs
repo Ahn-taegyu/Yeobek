@@ -1,13 +1,12 @@
 import { spawnSync } from "node:child_process";
-import { loadAiEnv, projectRoot, narrationKeys } from "./ai-env.mjs";
+import { loadAiEnv, projectRoot } from "./ai-env.mjs";
 import { parseCompareOptions } from "./ai-compare-options.mjs";
 
 try {
   const options = parseCompareOptions(process.argv.slice(2));
   if (options.mode === "live") {
     loadAiEnv();
-    const missing = narrationKeys.filter(key => !process.env[key]?.trim());
-    if (missing.length) throw new Error(`Missing server variables: ${missing.join(", ")}`);
+    if ((process.env.AI_PROVIDER_MODE?.trim() || "live") !== "live") throw new Error("Live comparison requires AI_PROVIDER_MODE=live.");
   }
   console.log(`${options.mode === "live" ? "LIVE, provider charges possible" : "OFFLINE SIMULATION, no quality/cost/latency evidence"}: ${options.cases.length} cases x ${options.repeats} repeats; at most ${options.reservedCalls} provider calls.`);
   const child = spawnSync(process.execPath, ["node_modules/vitest/vitest.mjs", "run", "--config", "vitest.ai-compare.config.ts", "--reporter=default", "--silent=false"], {

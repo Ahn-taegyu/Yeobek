@@ -6,6 +6,8 @@
 
 - [AI 하네스 수정·발전 계획 요청 원문](user-harness-playbooks-plan.md) — 단계별 제안과 승인 범위.
 
+- [사업안 1번 확정](user-business-scope.md) — 도슨트 공급 회사의 1인 운영 채택. 운영 자동화 세부는 제안.
+
 - [AI 하네스 PR2 검토와 수정 요청](user-ai-pr2-review.md) — 검토 전달 내용 요약과 후속 계약.
 
 - [제품 플러그인과 품질 요구](user-plugin-quality.md) — pstack과 같은 스킬·도구·지침 조합.
@@ -45,3 +47,5 @@
 - [작가 지식·화면 요구](user-wiki-screens.md), [DB 원본 선택](user-wiki-storage.md), [내부 위키 목적·작가 열람 질문](user-wiki-purpose.md) — 11/13 후속 요구/응답.
 
 - [작가 해설 후보와 비교 평가 요청](user-narration-candidates.md) — SRC-027 사용자 원문.
+- [백엔드 완성 계획 요청](user-backend-completion.md) — SRC-033, W0~W8와 파트너·운영 자동화 범위.
+- [Git 작업 시점과 병합 판단 위임](user-git-lifecycle-delegation.md) — SRC-034, 작업 묶음과 중복 검증 절감.

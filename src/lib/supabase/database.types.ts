@@ -31,6 +31,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"app_policies": {
+                  Row: {
+                    "key": string,"updated_at": string,"value": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "key": string,"updated_at"?: string,"value": number
+                  }
+                  Update: {
+                    "key"?: string,"updated_at"?: string,"value"?: number
+                  }
+                  Relationships: [
+
+                  ]
                 },"artist_profiles": {
                   Row: {
                     "created_at": string,"display_name": string | null,"id": string,"owner_id": string,"revision": number,"updated_at": string

@@ -4,13 +4,16 @@ id: GUIDE-004
 title: 에이전트의 기획 검색·수정·검증 절차
 description: 새 clone에서 OKF·Bases·로컬 RAG를 이해하고 출처를 유지하며 자동으로 작업하는 공통 안내.
 status: stable
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags: [mawd, yeobek, agents]
 rag_include: false
 generated:
   by: codex/gpt-6
   at: '2026-11-13T02:07:34+09:00'
 sources:
+- id: lifecycle
+  resource: /references/user-git-lifecycle-delegation.md
+  title: Git 작업 생명주기와 병합 판단 위임
 - id: name
   resource: /references/user-project-name.md
   title: 프로젝트 이름을 Yeobek으로 정정
@@ -138,6 +141,8 @@ python scripts/knowledge.py verify
 - 임포트 원문 SRC-002/SRC-003의 원본 상대 링크는 검사 예외다. 새 문서에 같은 예외를 임의로 추가하지 않는다.
 
 # 7. 자동 검증과 GitHub 공유
+
+[사용자 위임](references/user-git-lifecycle-delegation.md)에 따라 검토 가능한 목적별 커밋, 묶음 완료·인계 시 push, 독립 수용 흐름의 Draft PR, 검증·교차 검토·최신 head CI 후 병합 판단을 [개발 협업 규칙](collaboration.md#4-pull-request)에 따라 수행한다. 검사 결과는 SHA·범위·환경이 같으면 재사용하고 변경 영향이 있을 때 다시 실행한다. 보호 정책과 요구된 사람 승인을 우회하지 않는다.
 
 `python scripts/knowledge.py verify`로 YAML/파일 링크/고유 ID/상태/의존성/Bases, 검색 출처·필터·변경/삭제에 따른 인덱스 갱신을 확인한다. GitHub의 `Knowledge checks`는 push(main)·PR·수동 실행에서 Windows와 Linux의 새 checkout에 같은 절차를 적용한다.
 

@@ -4,6 +4,7 @@ import { AiError } from "./errors";
 
 export const AI_MODELS = {
   qa: "gpt-6-luna",
+  exaone: "k-exaone_v2.5",
   draft: "openai/gpt-6.1-sol",
   transcription: "gpt-transcribe",
   typecastSpeech: "ssfm-v31",
@@ -29,13 +30,13 @@ export interface OpenAiSpeechConfig extends AiModelConfig {
   voice: string;
 }
 
-function required(value: string | undefined): string {
+export function providerKey(value: string | undefined): string {
   const trimmed = value?.trim();
   if (!trimmed || !/^[!-~]+$/.test(trimmed)) throw new AiError("not_configured");
   return trimmed;
 }
 
-function identifier(value: string | undefined, fallback?: string): string {
+export function modelIdentifier(value: string | undefined, fallback?: string): string {
   const selected = value?.trim() || fallback;
   if (!selected || !/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(selected)) {
     throw new AiError("not_configured");
@@ -44,33 +45,37 @@ function identifier(value: string | undefined, fallback?: string): string {
 }
 
 export function getOpenAiTextConfig(env: AiEnvironment = process.env): AiModelConfig {
-  return { apiKey: required(env.OPENAI_API_KEY), model: identifier(env.OPENAI_QA_MODEL, AI_MODELS.qa) };
+  return { apiKey: providerKey(env.OPENAI_API_KEY), model: modelIdentifier(env.OPENAI_QA_MODEL, AI_MODELS.qa) };
 }
 
 export function getLinerTextConfig(env: AiEnvironment = process.env): AiModelConfig {
-  return { apiKey: required(env.LINER_API_KEY), model: identifier(env.LINER_DRAFT_MODEL, AI_MODELS.draft) };
+  return { apiKey: providerKey(env.LINER_API_KEY), model: modelIdentifier(env.LINER_DRAFT_MODEL, AI_MODELS.draft) };
 }
 
 export function getOpenAiJudgeConfig(env: AiEnvironment = process.env): AiModelConfig {
-  return { apiKey: required(env.OPENAI_API_KEY), model: identifier(env.OPENAI_JUDGE_MODEL, AI_MODELS.qa) };
+  return { apiKey: providerKey(env.OPENAI_API_KEY), model: modelIdentifier(env.OPENAI_JUDGE_MODEL, AI_MODELS.qa) };
 }
 
 export function getOpenAiTranscriptionConfig(env: AiEnvironment = process.env): AiModelConfig {
-  return { apiKey: required(env.OPENAI_API_KEY), model: identifier(env.OPENAI_STT_MODEL, AI_MODELS.transcription) };
+  return { apiKey: providerKey(env.OPENAI_API_KEY), model: modelIdentifier(env.OPENAI_STT_MODEL, AI_MODELS.transcription) };
 }
 
 export function getTypecastSpeechConfig(env: AiEnvironment = process.env): TypecastSpeechConfig {
   return {
-    apiKey: required(env.TYPECAST_API_KEY),
-    model: identifier(env.TYPECAST_TTS_MODEL, AI_MODELS.typecastSpeech),
-    voiceId: identifier(env.TYPECAST_VOICE_ID),
+    apiKey: providerKey(env.TYPECAST_API_KEY),
+    model: modelIdentifier(env.TYPECAST_TTS_MODEL, AI_MODELS.typecastSpeech),
+    voiceId: modelIdentifier(env.TYPECAST_VOICE_ID),
   };
 }
 
 export function getOpenAiSpeechConfig(env: AiEnvironment = process.env): OpenAiSpeechConfig {
   return {
-    apiKey: required(env.OPENAI_API_KEY),
-    model: identifier(env.OPENAI_TTS_MODEL, AI_MODELS.openAiSpeech),
-    voice: identifier(env.OPENAI_TTS_VOICE, DEFAULT_OPENAI_TTS_VOICE),
+    apiKey: providerKey(env.OPENAI_API_KEY),
+    model: modelIdentifier(env.OPENAI_TTS_MODEL, AI_MODELS.openAiSpeech),
+    voice: modelIdentifier(env.OPENAI_TTS_VOICE, DEFAULT_OPENAI_TTS_VOICE),
   };
+}
+
+export function getLinerSpeechConfig(config: AiModelConfig, env: AiEnvironment = process.env): OpenAiSpeechConfig {
+  return { ...config, voice: modelIdentifier(env.LINER_TTS_VOICE) };
 }

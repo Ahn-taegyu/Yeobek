@@ -44,7 +44,7 @@ sources:
 
 **11/13 최신 추천:** [Render 제외 후 스택·모델·API](research/recommended-stack.md), [D-010](decisions/D-010-practical-stack.md). Vercel·Supabase, OpenAI Q&A/STT·Liner 초안·Typecast 낭독을 권고한다. Render 행사 후보 제외는 사용자 정보이며 유료 플랜·음성 ID·품질·실호출은 미확정/미검증이다. [기존 비교 조사](research/index.md)는 이력으로 함께 보존한다.
 
-**확정:** 사업안은 미정으로 두고 공통 도슨트부터, 인식은 QR·숫자, 제공 API 최소 한 개 필수.
+**확정:** 사업안은 1번(도슨트 공급 회사의 1인 운영), 개발은 공통 도슨트부터, 인식은 QR·숫자, 제공 API 최소 한 개 필수.
 **관람객 경험:** 해설·질문은 [하나의 채팅](specs/chat-interaction.md), 텍스트/음성 입력과 출력은 독립 선택이다. 음성→텍스트, 텍스트→음성도 MVP에 포함한다.
 **추가 확정:** 사전 개발 가능, OpenAI 키 보유, 이미지 부분 선택·카메라는 후속, Render 행사 제공 후보 제외. PDF는 보관·수동 발췌 연결부터 구현한다. [기술 스택](specs/technology-stack.md)의 최신 모델/플랜 권고는 제안과 실제 검증을 구분한다.
 **검증 대기:** 실제 API 접근·한국어 음성/답변 품질·계정 한도·정확한 공식 제출 시각. 실제 작가 자료/파일럿은 아직 없다. 장기 PDF 자동화 수준도 미결정이다.

@@ -3,8 +3,8 @@ type: Decision
 id: D-001
 title: 사업안은 유보하고 공통 도슨트부터
 description: 사업안 1/2는 미정이며 첫 개발은 공통 도슨트로 한정한다.
-status: stable
-updated: '2026-11-12'
+status: deprecated
+updated: '2026-11-13'
 tags:
 - mawd
 rag_include: true
@@ -25,6 +25,8 @@ decision_status: accepted
 ---
 
 # 결정 상태
+
+**2026-11-13에 [D-014](D-014-business-scope-supply.md)로 대체됐다.** 사용자가 사업안 1번을 확정했다. 공통 도슨트 우선과 거래 기능 제외는 D-014가 이어받는다. 아래는 11/12 시점의 결정 기록이다.
 
 **accepted** — accepted는 사용자 응답으로 결정됨, partial은 일부만 확인됨, proposed/open은 미확정이다.
 

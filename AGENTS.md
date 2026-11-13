@@ -34,7 +34,7 @@ python scripts/knowledge.py verify
 
 앱 변경은 루트 README와 `docs/collaboration.md`를 읽는다. 역할별 브랜치(`feat/`, `fix/`, `docs/` 등)를 사용하며 작성자/도구 이름을 접두사로 붙이지 않는다. Next.js 코드는 설치된 `node_modules/next/dist/docs/`의 버전별 문서를 확인한다. `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` 및 영향받는 DB/HTTP 검사를 실행한다. DB reset은 자기 소유의 폐기 가능한 로컬 스택에 한한다. 공유 migration은 신규 migration으로 수정한다.
 
-서브에이전트 결과는 실제 diff를 요구·기존 코드와 대조하고 교차 검토한다. 보고받은 성공을 그대로 완료로 삼지 않고 관련 검사를 직접 실행한다. 문제는 위치·기대 동작과 함께 피드백하고 수정 결과를 재검증한다. 상세 인계·리뷰·worktree 규칙은 `docs/collaboration.md`를 따른다.
+서브에이전트 결과는 실제 diff를 요구·기존 코드와 대조하고 교차 검토한다. 보고받은 성공을 그대로 완료로 삼지 않고 관련 검사를 직접 실행한다. 문제는 위치·기대 동작과 함께 피드백하고 수정 결과를 재검증한다. 검토 가능한 목적별 커밋, 묶음 완료·인계 시 push와 독립 수용 흐름의 Draft PR을 진행하고, 수용 기준·직접 검증·교차 검토·최신 head CI를 충족하면 별도 재승인 없이 병합을 판단·수행한다. 검사 결과는 SHA·범위·환경이 같으면 재사용하며 변경 영향이 있을 때 재실행한다. 차단 리뷰·보호 정책을 우회하지 않고 요구된 사람 승인은 AI 리뷰로 대체하지 않는다. 상세 인계·리뷰·worktree 규칙은 `docs/collaboration.md`를 따른다.
 
 ## 완료 조건
 

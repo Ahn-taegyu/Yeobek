@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { ApiClientError, requestApi } from "@/lib/client";
 
 export function LoginForm() {
   const [busy, setBusy] = useState(false);
@@ -12,20 +13,17 @@ export function LoginForm() {
     const data = new FormData(event.currentTarget);
     setBusy(true); setError("");
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: data.get("email"), password: data.get("password") }),
+      await requestApi("login", {
+        body: { email: String(data.get("email") ?? ""), password: String(data.get("password") ?? "") },
       });
-      if (!response.ok) {
-        setError(response.status === 429
-          ? "요청이 많습니다. 잠시 기다린 후 다시 시도해 주세요."
-          : response.status >= 500
-            ? "서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요."
-            : "이메일과 비밀번호를 확인하고 다시 시도해 주세요.");
-        return;
-      }
       window.location.replace("/artist");
-    } catch { setError("연결을 확인하고 다시 시도해 주세요."); }
+    } catch (error) {
+      const status = error instanceof ApiClientError ? error.status : null;
+      if (status === null || status < 400) setError("연결을 확인하고 다시 시도해 주세요.");
+      else if (status === 429) setError("요청이 많습니다. 잠시 기다린 후 다시 시도해 주세요.");
+      else if (status >= 500) setError("서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      else setError("이메일과 비밀번호를 확인하고 다시 시도해 주세요.");
+    }
     finally { setBusy(false); }
   }
   return <form method="post" onSubmit={submit} aria-busy={busy}>

@@ -2,9 +2,9 @@
 type: Specification
 id: SPEC-007
 title: MVP 기술 스택과 구현 경계
-description: Next.js·Supabase를 유지하고 OpenAI Q&A/STT·Liner 초안·Typecast TTS로 대기를 줄이는 최신 권고.
+description: Next.js·Supabase와 파트너 우선 제공사 경로 및 구현 경계.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 - architecture
@@ -13,6 +13,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: partner-priority
+  resource: /decisions/D-015-partner-priority.md
+  title: 성능을 유지하는 파트너 API 우선
 - id: harness
   resource: /specs/ai-harness.md
   title: 제품 AI 실행 하네스 준비 범위
@@ -31,11 +34,13 @@ sources:
 decision_status: proposed
 ---
 
-# 구현 기준과 최신 권고
+> **2026-11-14 후속 기준:** [D-015](../decisions/D-015-partner-priority.md)에 따라 해설·자료 정리·Q&A·평가·전사·합성은 Liner 경로를 우선 검토한다. 평가는 초안과 다른 모델 계열을 사용한다. EXAONE·OpenAI 직접 호출·Typecast는 비교 후보다. 구체 모델·권한·품질은 실측 전 미확정이며 아래 11/13 권고는 과거 기록이다. 운영 자동화의 스티비·채널톡·Alt는 이번 범위다.
 
-사용자 위임으로 정한 최초 기준은 [D-008](../decisions/D-008-technology-stack.md)이다. **11/13 최신 권고는 [D-010](../decisions/D-010-practical-stack.md)**이며 아래 모델·호스팅 표에 반영했다. Render 제외는 사용자 정보이고, 새 제공사/유료 플랜은 추천 단계다. 설치·결제·실호출·배포 완료 목록이 아니다.
+# 현재 구현 기준
 
-구체적인 모델 ID·API·비용·지연 목표·실패 시 대안은 [현재 추천 구성](../research/recommended-stack.md)에 모았다. 이 문서의 초기 모델/상한 변경도 proposed이며 실행 전 계정과 품질 검증을 거친다.
+[D-015](../decisions/D-015-partner-priority.md)의 파트너 우선 기준을 적용한다. Render 제외는 사용자 제약이다. 모델·유료 플랜은 실측 전 제안이며 설치·결제·실호출·배포 완료 목록이 아니다. 이전 권고는 [D-010](../decisions/D-010-practical-stack.md)에 기록한다.
+
+잠정 모델 ID와 API 근거는 [11/14 제공사 연결 조사](../research/backend-provider-routing.md)에 모았다. 이전 비용·지연 조사와 추천은 [11/13 기록](../research/recommended-stack.md)에 남긴다. 초기 모델/상한은 실측 전 구현 값이며 실행 전 계정과 품질을 검증한다.
 
 | 영역 | 선택 | 이번 작업에서 쓰는 범위 |
 | --- | --- | --- |
@@ -44,10 +49,10 @@ decision_status: proposed
 | UI | Tailwind, React `useReducer` | 채팅 상태·입출력 모드; 전역 상태 라이브러리 추가 없음 |
 | DB·인증 | Supabase Postgres + Auth, `@supabase/supabase-js`, `@supabase/ssr` | 미리 만든 작가 계정의 이메일/비밀번호 로그인, SQL migration·RLS |
 | 파일 | Supabase private Storage | 작품 사진·원본 PDF·승인 해설 음성 |
-| 해설 초안 | Liner Chat Completions, `openai/gpt-6.1-sol` 우선 | 작가 등록/검수 단계. 행사 키의 허용 모델 확인 |
-| 관람 Q&A | OpenAI Responses, `gpt-6-luna` | 공개 승인 근거로 짧은 답 생성. 행사 전에 보유 키로 시험 |
-| 음성 인식 | OpenAI `gpt-transcribe` | 완성된 녹음 파일을 텍스트로 변환 |
-| 음성 합성 | Typecast `ssfm-v31`, 한국어 음성 1종, MP3 | 승인 해설 사전 생성·저장, 새 답변은 확정 글의 TTS 스트리밍 |
+| 해설 초안·자료 정리 | Liner 우선 | 작가 검수 단계. 모델과 행사 키 권한 확인 |
+| 관람 Q&A·평가 | Liner 우선; EXAONE·OpenAI 비교 | 승인 근거 사용. 평가는 초안과 다른 모델 계열 |
+| 음성 인식 | Liner 우선; OpenAI 비교 | 녹음 파일 전사와 한국어 품질 확인 |
+| 음성 합성 | Liner 우선; Typecast·OpenAI 비교 | 승인 해설과 확정 답변의 음성; 품질·지연 확인 |
 | 브라우저 음성 | MediaRecorder, HTML audio | 버튼 녹음·인식문 확인·재생·정지 |
 | 검증·QR | Zod, `qrcode` | 서버 입력/모델 결과 검증, URL QR 출력 |
 | 배포 | Vercel, Node runtime; 상업/팀 주안은 Pro | DB와 가까운 리전. 무료 제약이 필수이면 Netlify 대안 비교 |
@@ -60,7 +65,7 @@ Next/React/Tailwind의 세부 패치 조합은 프로젝트를 생성할 때 안
 
 1. 글 입력 또는 녹음 파일을 받는다. 녹음은 STT 후 인식문을 확인·수정해서 전송한다.
 2. 하나의 채팅 요청에서 전시·작품 번호·현재 작품을 확인한다.
-3. 기본 설명 요청은 승인된 해설을 그대로 반환한다. 후속 질문은 공개 승인 근거를 조회해 OpenAI Q&A 모델로 답하도록 권고한다.
+3. 기본 설명 요청은 승인된 해설을 그대로 반환한다. 후속 질문은 공개 승인 근거를 조회해 Liner 우선 경로로 답하고 비교 후보와 실측한다.
 4. 답변·인용을 확정한 뒤 글로 표시하거나 **같은 답변**을 TTS로 읽는다.
 
 입력과 출력 기본값은 각각 `text`. 한쪽을 바꾸어 다른 쪽을 변경하지 않는다. 음성 출력에도 답변 글·출처를 펼쳐 볼 수 있다. `useReducer`의 상태는 메시지 목록, 활성 작품, 확인된 부위, 입력 모드, 출력 모드, 현재 녹음/재생으로 제한한다.
@@ -118,7 +123,7 @@ D-011의 DB 원본·AI용 내부 위키 요구로 기존 5개 저장 단위를 7
 | `/api/speech` | 서버가 생성한 답변 ID 또는 공개 해설 ID를 받아 낭독. 임의 텍스트를 무제한 읽는 공개 API로 만들지 않음 |
 | `/api/media/...` | 공개 버전을 확인한 뒤 private 이미지/음성 제공. 비공개 원본 PDF 제공 금지 |
 
-제공사 차이는 작은 서버 함수 `generateNarration`, `answerQuestion`, `transcribe`, `synthesizeSpeech`로 감싼다. 범용 다중 제공사 플랫폼은 만들지 않는다. 행사 전 초안은 보유 OpenAI 키로 동일 모델 접근을 시험하거나 mock을 표시한다. 행사 때 초안 생성만 Liner로 연결·재검증하며 Q&A를 기다리게 하지 않는다.
+제공사 차이는 작은 서버 함수 `generateNarration`, `answerQuestion`, `transcribe`, `synthesizeSpeech`로 감싼다. 범용 다중 제공사 플랫폼은 만들지 않는다. 행사 전 모의 응답은 명시하고 행사 키 수령 후 기능별 파트너 경로와 비교 후보를 실측한다.
 
 글/음성/파일은 모두 서버의 공개 상태 검사를 통과해야 한다. 공개 미디어 응답은 `no-store`로 제공하고 raw Storage URL은 공개하지 않는다. 중지 후 새 요청을 차단하되 이미 내려받은 파일·녹음까지 회수할 수 있다고 약속하지 않는다. 재방문·새 질문·재생 전 오래된 채팅의 공개 버전을 재확인한다.
 
@@ -145,13 +150,6 @@ D-011의 DB 원본·AI용 내부 위키 요구로 기존 5개 저장 단위를 7
 
 녹음 MIME은 `isTypeSupported()`로 WebM/Opus·MP4/AAC 지원을 확인해 고른다. 확장자를 바꿔 변환한 것처럼 처리하지 않는다. HTTPS에서 iPhone Safari와 Android Chrome을 확인하고 자동재생이 막히면 재생 버튼을 제공한다.
 
-# 음성 선택의 수명과 검증
+# 음성 선택과 검증
 
-사용자는 OpenAI 키가 있다고 확인했다. 11/13 첫 단계에서 한국어 숫자·작품명 전사, Q&A, Typecast 낭독의 실제 접근과 품질을 확인하도록 계획한다. `gpt-transcribe`는 현재 공식 파일 전사 시작 모델이다.[^stt]
-
-최신 TTS 우선 권고는 Typecast `ssfm-v31`이다. 키/음성/라이선스 준비나 품질 시험이 실패하면 기존 OpenAI `gpt-4o-mini-tts`/`coral`을 시연용 대안으로 시험한다. **이 OpenAI 모델은 2027-01-06 종료 예정**이며 장기 기본값으로 유지하지 않는다. 실제 한국어 비교 우위는 아직 검증하지 않았다.[^tts]
-
-오늘 선택 모델 접근이 안 되면 이를 즉시 개발 장애로 다룬다. 라이너 음성은 행사 키 검증 전까지 대체 완료로 간주하지 않는다. 음성 실패 때 텍스트로 복구할 수 있어야 하지만, 네 입출력 조합을 실제로 확인하지 못했다면 MVP 완료로 표시하지 않는다. 음성에는 AI 생성임을 안내한다.
-
-[^stt]: [OpenAI File transcription](https://developers.openai.com/api/docs/guides/speech-to-text).
-[^tts]: [OpenAI Text to speech와 종료 안내](https://developers.openai.com/api/docs/guides/text-to-speech).
+전사·합성은 Liner 우선 경로와 비교 후보의 한국어 품질, 키 권한과 지연을 실측해 선택한다. 미검증 대안을 완료로 표시하지 않는다. 음성 실패 때 텍스트로 복구하되 네 입출력 조합의 실제 확인 전에는 MVP 완료로 표시하지 않는다. 음성에는 AI 생성임을 안내한다.

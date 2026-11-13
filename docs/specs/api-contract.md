@@ -4,7 +4,7 @@ id: SPEC-011
 title: MVP API 계약
 description: OP-01~22의 초기 기반 및 후속 HTTP 계약과 접근·버전 경계.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags: [yeobek, api, mvp]
 rag_include: true
 generated:
@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: backend
+  resource: /references/user-backend-completion.md
+  title: 백엔드 완성 계획 요청 원문
 - id: playbooks-plan
   resource: /references/user-harness-playbooks-plan.md
   title: 하네스 후속 실패 대응과 실행 단계 계획
@@ -164,6 +167,8 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 입력·출력 모드는 각각 `text`/`voice`이고 서로 독립적이다. 정보 탐색만으로 선택 작품을 바꾸지 않으며 선택 해제 후 이전 대상을 암묵적으로 재사용하지 않는다. 답변·음성은 요청 당시 작품과 공개 버전에 연결하고 재생·새 질문 전 공개 상태를 재검사한다. 상세는 [통합 채팅 계약](chat-interaction.md)을 따른다.
 
 # 남은 설계 확인
+
+W0부터 실행 중인 17개 메서드·경로의 요청·응답 원천은 `src/lib/contracts/`이며 `routes.ts`가 각 스키마를 연결한다. 기존 `api/schemas.ts`와 `ai/contracts.ts`의 HTTP 관련 export는 호환 재수출한다. `src/lib/client`의 `requestApi`는 동일 출처 fetch·응답 봉투 검증·구조화 오류를 제공하며 로그인·로그아웃·프로필·전시 목록에서 사용한다. JSON Schema 스냅샷은 요청 변환 전 입력과 응답 출력을 구분하고 미등록 실행 경로를 검사한다. 신규 관람·작업 경로는 아직 등록/구현 전이다. [백엔드 작업 추적](backend-completion.md).
 
 후속 자료·근거·작업의 세부 스키마, 목록 페이지네이션, 생성 중복 요청 보존 기간과 공개 세션 식별 방식은 구현 전에 확정한다. 제한 값은 설계 제안이며 실제 제공사·환경 검증 결과가 아니다. 서버와 DB 오류 매핑, 동시 수정·타인 접근·공개 중지 후 접근을 실제 구현에서 검증해야 한다.
 

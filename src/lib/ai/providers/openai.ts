@@ -10,21 +10,13 @@ import type {
   AiProviderOptions, AiSpeechProvider, AiTextProvider, AiTranscriptionProvider,
 } from "./types";
 
+import { recordingExtension, RECORDING_CONTENT_TYPES } from "./recording";
+
+export { MAX_RECORDING_BYTES } from "./recording";
+
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const OPENAI_TRANSCRIPTIONS_URL = "https://api.openai.com/v1/audio/transcriptions";
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
-const RECORDING_CONTENT_TYPES: Record<string, string> = {
-  flac: "audio/flac",
-  mp3: "audio/mpeg",
-  mp4: "audio/mp4",
-  mpeg: "audio/mpeg",
-  mpga: "audio/mpeg",
-  m4a: "audio/mp4",
-  ogg: "audio/ogg",
-  wav: "audio/wav",
-  webm: "audio/webm",
-};
-export const MAX_RECORDING_BYTES = 3 * 1024 * 1024;
 
 function outputText(response: Record<string, unknown>): string {
   if (response.status === "incomplete" || response.incomplete_details != null) {
@@ -86,13 +78,7 @@ export function createOpenAiTranscriptionProvider(
 ): AiTranscriptionProvider {
   return {
     async transcribe({ audio, filename, language, signal }) {
-      const extension = typeof filename === "string" ? /\.([a-z0-9]{3,4})$/i.exec(filename)?.[1].toLowerCase() : undefined;
-      if (!(audio instanceof Blob) || audio.size === 0 || audio.size > MAX_RECORDING_BYTES ||
-          !extension || !Object.hasOwn(RECORDING_CONTENT_TYPES, extension) ||
-          (language !== undefined && !/^[a-z]{2}$/.test(language))) {
-        throw new AiError("invalid_input");
-      }
-
+      const extension = recordingExtension(audio, filename, language);
       const form = new FormData();
       form.append("file", audio.slice(0, audio.size, RECORDING_CONTENT_TYPES[extension]), `recording.${extension}`);
       form.append("model", config.model);
