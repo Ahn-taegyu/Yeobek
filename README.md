@@ -1,6 +1,6 @@
 # Yeobek
 
-작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**, 해설 생성·작업 저장 API, 서버 AI 어댑터·하네스와 기획 문서·검색 도구가 있습니다. 글 승인·게시 API는 PR #6으로 병합됐고 관람 글 채팅·보완 요청 API는 PR #7으로 병합됐습니다. 비공개 파일 업로드·삭제는 로컬 검증 중이며 음성·화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
+작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. Next.js·Supabase 인증과 초안, 해설 작업, 글 승인·게시, 관람 글 채팅 및 비공개 자료 업로드·삭제 API가 있습니다. W3 자료 작업은 PR #8로 병합됐고 W4 작가 음성 작업은 현재 개발·검증 중입니다. 관람 음성·공개 미디어와 화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
 
 ## 앱 실행
 
@@ -60,7 +60,7 @@ npm run test:publication
 
 CI에도 이 개발 모드 모의 작업 검사가 포함됩니다. 실제 외부 호출 검사는 아닙니다.
 
-W4는 근거·해설을 따로 승인하고 선택 작품과 승인된 소개 근거 버전을 게시하는 경로를 구현 중입니다. 음성 준비 스키마만 있으므로 현재 음성 없는 게시·재게시에는 `FEATURE_VOICE_REQUIRED=false`가 필요합니다. 글 승인·게시의 DB·HTTP 검증과 PR #6 CI는 통과했습니다. 음성 작업·Storage는 W3 이후 연결합니다.
+W4 글 승인·게시 경로는 PR #6으로 병합됐습니다. W4 음성 경로는 승인된 해설 원문으로 MP3를 생성해 비공개 `artist-audio`에 저장하고 공통 작업 조회·재시도를 사용합니다. 음성 설정을 구성하지 않은 상태의 글 전용 게시에는 `FEATURE_VOICE_REQUIRED=false`가 필요합니다. 음성 제공사·모델·목소리·형식·모의 여부를 바꿀 때는 DB 정책 `voice_config_version`도 올려야 합니다. 실환경 재개는 모의 음성을 거부합니다. 로컬 모의 음성 HTTP·실제 Storage 검증은 통과했으며 외부 AI 실호출과 음질 검증은 아직 없습니다. 공개 음성 전달 및 UI는 후속입니다.
 
 ## 앱 검사와 DB 변경
 

@@ -20,15 +20,15 @@ sources:
 
 # 범위와 상태
 
-[사용자 요청](../references/user-backend-completion.md)의 목표는 화면과 키 입력만 남기도록 서버·DB·AI 연결을 완성하는 것이다. W0·W1과 W4 글 승인·게시가 병합됐고 W5 글 채팅·보완 요청이 PR #7으로 병합됐고 W3 파일 업로드를 구현 중이다. W4·W5 음성과 나머지 묶음은 남아 있다. 전체 백엔드나 실서비스 완성을 뜻하지 않는다.
+[사용자 요청](../references/user-backend-completion.md)의 목표는 화면과 키 입력만 남기도록 서버·DB·AI 연결을 완성하는 것이다. W0·W1과 W4 글 승인·게시가 병합됐고 W5 글 채팅·보완 요청이 PR #7으로 병합됐고 W3 파일 업로드는 PR #8으로 병합됐고 W4 음성 준비를 구현 중이다. W4·W5 음성과 나머지 묶음은 남아 있다. 전체 백엔드나 실서비스 완성을 뜻하지 않는다.
 
 | 묶음 | 범위 | 상태 |
 | --- | --- | --- |
 | W0 | 계약·정책·플래그·라우팅·모의 제공사·타입 클라이언트 | done (PR #4 CI 통과·병합) |
 | W1 | 작업 원장·해설 초안·추가 질문 | done ([PR #5](https://github.com/Ahn-taegyu/Yeobek/pull/5), `54437476`) |
 | W2 | 자료 정리 후보·원문 이력 | not_started |
-| W3 | 비공개 업로드·파일 검증·삭제 | in_progress (SQL·파일 검증 준비, 실제 Storage·HTTP 연결 전) |
-| W4 | 근거·승인·음성·게시와 철회 | in_progress (글 범위 PR #6 병합, 음성 작업 미구현) |
+| W3 | 비공개 업로드·파일 검증·삭제 | done (PR #8 병합, 실제 Storage·HTTP·CI 검증) |
+| W4 | 근거·승인·음성·게시와 철회 | in_progress (글 범위 PR #6 병합, 음성 작업 로컬 검증 완료·CI 대기) |
 | W5 | 관람 채팅·음성·보완 요청 | in_progress (글 범위 PR #7 병합, 음성·미디어 미구현) |
 | W6 | 운영 집계 API | not_started |
 | W7 | 통합 검증·시연 자료·프런트와 키 당일 인계 | not_started |
@@ -76,8 +76,17 @@ Sol의 SQL·HTTP 테스트를 부모가 읽고 직접 실행했으며 별도 Sol
 
 `feat/backend-materials`에서 3MiB 이미지·6MiB PDF의 비공개 업로드·완료·조회·삭제와 작품 이미지 지정·삭제를 연결했다. 원본의 크기·형식·실제 이미지 디코딩·PDF 페이지 수를 확인한 뒤 검증한 바이트를 별도 final 경로에 저장한다. 업로드 서명은 staging 경로에만 발급하며 final 충돌 시 실제 해시를 비교한다. `sharp` 0.35.5, `pdf-lib` 1.17.1을 고정했다. 자동 OCR·작품 매칭은 포함하지 않는다.
 
-Sol SQL 구현을 부모가 검토·실행하고 별도 Sol이 Storage를 교차 검토했다. 삭제된 작품의 문서 응답 오류, 새 번호 인덱스 오류 매핑, 구형 PDF 근거의 신규 게시 우회, 동시 완료·정리 시점·SDK 409 처리를 수정했다. 공유된 SQL은 새 `061000` migration으로 보완했다. 부모 직접 pgTAP 282개, 단위 397개, lint·typecheck·build와 프로덕션 HTTP 15개(실제 Storage 5개 포함)가 통과했다. PR CI의 새 DB·Linux 검증은 남아 있다.
+Sol SQL 구현을 부모가 검토·실행하고 별도 Sol이 Storage를 교차 검토했다. 삭제된 작품의 문서 응답 오류, 새 번호 인덱스 오류 매핑, 구형 PDF 근거의 신규 게시 우회, 동시 완료·정리 시점·SDK 409 처리를 수정했다. 공유된 SQL은 새 `061000` migration으로 보완했다. 부모 직접 pgTAP 282개, 단위 397개, lint·typecheck·build와 프로덕션 HTTP 15개(실제 Storage 5개 포함)가 통과했다. PR #8 head 807a01b의 App checks 43490571029와 Knowledge checks 43490571232가 성공했고 aa20688로 병합했다.
 
 삭제는 즉시 논리 적용하고 물리 정리는 재시도한다. `cleanupPending`은 최종 파일 삭제뿐 아니라 준비된 자료의 임시 파일 정리도 뜻한다. `POST /api/cron/purge`가 만료 업로드와 정리 대상 최대 50개를 처리한다. 서명 URL은 완료 가능 시간과 별도로 약 2시간 유효할 수 있으므로 업로드 만료+2시간 3분 이후 다시 정리한다. 완료 자료는 임시 파일만 제거한다. 운영 스케줄러 연결은 배포 때 필요하며 실제 제공사 호출은 0회다.
 
 구현 참고: [Supabase signed upload](https://supabase.com/docs/reference/javascript/file-buckets-createsigneduploadurl), [signed upload의 upsert 설정](https://supabase.com/docs/reference/javascript/file-buckets-uploadtosignedurl), [sharp 입력 검증](https://sharp.pixelplumbing.com/api-constructor/), [PDF 페이지 수](https://pdf-lib.js.org/docs/api/classes/pdfdocument#getpagecount).
+
+
+# W4 음성 작업 로컬 검증
+
+`feat/backend-audio`에서 승인 해설의 비공개 음성 저장을 연결했다. 기존 작업 원장에 audio 종류와 전용 플레이북을 추가하고, 합성 직전·완료 시 승인·근거·글 해시·음성 설정을 대조한다. 제공사·모델·목소리·형식·모의 여부의 지문을 만들며 같은 설정 버전의 다른 지문은 거부하고 새 `voice_config_version`을 사용한다. 이미 게시된 스냅샷은 설정 변경으로 소급 수정하지 않는다. 실환경 재개는 모의 음성을 차단한다.
+
+부모가 Sol SQL·HTTP diff와 기존 게시 함수를 대조하고 별도 Sol 검토를 반영했다. SQL 완료 결과 변수·정리 CTE, 음성 작업을 해설 초안으로 적용하는 경로, 예약 오류 상세 유실, 취소 확인과 모의 음성 재개를 수정했다. 신규 migration 070000~073000의 전진 적용과 pgTAP 319개, 단위 408개(전체 407개 통과 후 플러그인 버전 기대값을 수정한 17개 재검사), lint·typecheck·build가 통과했다. 실제 Storage를 이용한 모의 음성 HTTP 1개, 기존 모의 작업·게시·관람 15개와 프로덕션 HTTP 15개도 통과했다. 음성 파일의 헤더·MIME·8MiB 상한과 충돌 해시를 검사하며 전체 MP3 디코딩이나 한국어 음질을 검증한 것은 아니다.
+
+공개 이미지·음성 전달과 관람 인식·낭독은 W5 후속이다. 이미 공개 중인 모의 게시본을 실환경 DB로 옮길 경우 재생 단계에서도 모의 출처를 차단해야 하며 W5에서 적용한다. CI·병합은 대기 중이고 실제 외부 AI 호출은 0회다.

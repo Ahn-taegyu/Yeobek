@@ -30,6 +30,7 @@
     "db:test": "supabase test db --network-id yeobek-local",
     "test:integration": "node --test tests/integration/*.test.mjs",
     "test:jobs": "node --test tests/integration/mock/jobs.test.mjs",
+    "test:audio": "node --test tests/integration/mock/audio.test.mjs",
     "test:publication": "node --test tests/integration/mock/publication.test.mjs",
     "test:visitor": "node --test tests/integration/mock/visitor.test.mjs",
     "db:env": "node scripts/local-env.mjs",

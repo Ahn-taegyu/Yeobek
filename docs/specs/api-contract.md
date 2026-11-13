@@ -173,7 +173,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 다음은 구현 예정 계약이다. 아직 제공하지 않는 기능에 성공을 가장하는 엔드포인트를 만들지 않는다. 관리자 경로는 모두 인증·소유권, 변경은 revision과 동일 출처 검사 대상이다. 비동기 요청의 `id`는 중복 실행 방지용 UUID다.
 
-[AI 하네스](ai-harness.md)의 서버 모듈·제공사 어댑터와 오프라인 검사는 준비되어 있다. 아래 표에서 W1·W4와 W5 글 채팅·공개 버전 확인은 구현했고 음성 등 나머지 경로는 제안이다. 내부 camelCase 타입은 아래 업무 필드와 HTTP 연결 시 매핑하며, 인증·현재 공개 DB gate·세션·작업 멱등성·예산을 통과한 서버에서만 호출한다. 범용 프롬프트/임의 텍스트 프록시로 노출하지 않는다.
+[AI 하네스](ai-harness.md)의 서버 모듈·제공사 어댑터와 오프라인 검사는 준비되어 있다. W1·W4 글 게시와 W5 글 채팅·공개 버전 확인은 구현했고 W4 작가 음성 작업은 개발·검증 중이다. 관람 음성·미디어 등 나머지 경로는 제안이다. 내부 camelCase 타입은 아래 업무 필드와 HTTP 연결 시 매핑하며, 인증·현재 공개 DB gate·세션·작업 멱등성·예산을 통과한 서버에서만 호출한다. 범용 프롬프트/임의 텍스트 프록시로 노출하지 않는다.
 
 | OP | 경로와 입력 | 결과·조건 |
 | --- | --- | --- |
@@ -183,7 +183,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | 08 | `GET /api/admin/artworks/{id}/review` | 초안·근거·승인·음성·공개 버전·차단 사유 |
 | 09 | `POST /api/admin/artworks/{id}/generations` | 위 W1 계약을 따름. 기존 편집본 자동 덮어쓰기 금지 |
 | 10 | `POST /api/admin/artworks/{id}/approvals` | 위 W4 근거·해설 분리 승인 계약 |
-| 11 | `POST /api/admin/artworks/{id}/audio` `{id,narration_version,revision}` | 작업 상태·글 해시·음성 설정 버전. 승인된 글만 합성 |
+| 11 | `POST /api/admin/artworks/{id}/audio` `{requestId,approvalId,expectedRevision}` | 개발 중: 승인 글만 합성; 공통 작업 조회·재시도와 글 해시·음성 설정 버전 반환 |
 | 12 | `POST /api/admin/exhibitions/{id}/publication` | 위 W4 선택 작품·소개 핀 및 게시/중지/재개 계약 |
 | 13 | `GET /api/admin/evidence/{id}/impact?version=...`; `POST /api/admin/evidence/{id}/revoke` `{version,revision,confirmed_impact}` | 소유 전시 전체 영향 조회 후 공개 차단·철회·정리 상태 |
 | 14 | `GET /api/admin/exhibitions/{id}/labels` | 현재 공개 전시·작품만 안정 URL·번호·제목 반환 |
@@ -221,7 +221,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 # 남은 설계 확인
 
-W0부터 실행 중인 17개 메서드·경로의 요청·응답 원천은 `src/lib/contracts/`이며 `routes.ts`가 각 스키마를 연결한다. 기존 `api/schemas.ts`와 `ai/contracts.ts`의 HTTP 관련 export는 호환 재수출한다. `src/lib/client`의 `requestApi`는 동일 출처 fetch·응답 봉투 검증·구조화 오류를 제공하며 로그인·로그아웃·프로필·전시 목록에서 사용한다. JSON Schema 스냅샷은 요청 변환 전 입력과 응답 출력을 구분하고 미등록 실행 경로를 검사한다. 현재 W3 일곱 경로를 더해 40개 메서드·경로가 등록되어 있다. 목록 조회의 query도 같은 계약에서 검증하고 클라이언트가 인코딩한다. 음성·미디어 경로는 미구현이다. [백엔드 작업 추적](backend-completion.md).
+실행 경로의 요청·응답 원천은 `src/lib/contracts/`이며 `routes.ts`가 각 스키마를 연결한다. 기존 `api/schemas.ts`와 `ai/contracts.ts`의 HTTP 관련 export는 호환 재수출한다. `src/lib/client`의 `requestApi`는 동일 출처 fetch·응답 봉투 검증·구조화 오류를 제공하며 로그인·로그아웃·프로필·전시 목록에서 사용한다. JSON Schema 스냅샷은 요청 변환 전 입력과 응답 출력을 구분하고 미등록 실행 경로를 검사한다. 목록 조회의 query도 같은 계약에서 검증하고 클라이언트가 인코딩한다. 작가 음성 작업 경로는 개발·검증 중이며 관람 음성·미디어 경로는 미구현이다. [백엔드 작업 추적](backend-completion.md).
 
 후속 자료·근거·작업의 세부 스키마, 목록 페이지네이션, 후속 생성 중복 정책은 구현 시 검토한다. 관람 세션과 보존 기간은 아래 W5 계약을 따른다. 제한 값은 설계 제안이며 실제 제공사·환경 검증 결과가 아니다. 서버와 DB 오류 매핑, 동시 수정·타인 접근·공개 중지 후 접근을 실제 구현에서 검증해야 한다.
 
@@ -250,4 +250,12 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 
 오류: 400 `INVALID_FILE`/`INVALID_INPUT`, 409 `UPLOAD_INCOMPLETE`/`UPLOAD_CONTENT_CONFLICT`/`MATERIAL_IN_USE`/`ACTIVE_PUBLICATION`, 410 `UPLOAD_EXPIRED`, 429 `AUTHOR_UPLOAD_LIMIT`, 503 `STORAGE_UNAVAILABLE`. 버전·요청 ID 충돌은 공통 오류를 따른다. 삭제 응답 손실 시 원래 expectedVersion/revision으로 재요청 가능하다. 개인 다운로드 URL은 짧은 시간 유효한 접근권이므로 로그·공개 채팅에 넣지 않는다. 공개 이미지·음성은 W5의 별도 현재 공개 검사 경로에서 제공할 예정이다.
 
-정리 cron은 기존 결과에 `materials:{attempted,completed}`를 추가한다. 작업 실패는 정리 표시를 유지하고 다음 실행에서 재시도한다. 기존 60초 다운로드 URL과 이미 전송된 바이트를 즉시 회수할 수는 없다. DB 전진 적용 후 서버를 배포하며, 이전 앱으로 되돌려도 새 비공개 버킷·논리 삭제·정리 표시는 유지한다. DB를 되돌리거나 공유 migration을 지우지 않는다.
+# W4 작가 음성 작업 (로컬 검증)
+
+인증·동일 출처를 확인한 `POST /api/admin/artworks/{id}/audio`는 `{requestId,approvalId,expectedRevision}`을 받아 승인된 정확한 해설을 사용한다. 공통 `GET /api/admin/jobs/{id}`와 `POST /api/admin/jobs/{id}/retry`의 `{requestId,expectedAttempt}`로 음성 작업을 조회·재시도한다. 응답은 `kind: audio`, 상태·attempt와 성공 시 `assetId`, `approvalId`, `textHash`, `voiceConfigVersion`, `mock`을 포함한다. Storage key나 음성 바이트를 반환하지 않는다.
+
+서버는 승인과 현재 근거·설정을 합성 전후 재확인하고 MP3 헤더·MIME·최대 8 MiB를 검사해 비공개 `artist-audio`에 저장한다. 제공사·모델·목소리·형식·모의 여부의 SHA-256 지문이 기존 설정 버전과 다르면 거부하므로 변경 시 DB 정책 `voice_config_version`을 올린다. 정리 cron은 실패·철회 등의 정리 대상 음성 객체도 처리한다. 음성이 선택 사항이고 설정이 없으면 글 전용 게시가 가능하다. 실환경 재개는 `resume_with_audio_mode`에서 모의 음성 사용을 차단한다.
+
+로컬 모의 합성 HTTP와 실제 Storage의 저장·권한·정리를 검증했다. 전체 MP3 디코딩·실제 AI 호출과 음질 검증은 수행하지 않았다. 관람객 음성 인식·낭독·공개 미디어와 프런트엔드는 W5 후속 범위다.
+
+정리 cron은 기존 결과에 `materials:{attempted,completed}`와 `audio:{attempted,completed}`를 추가한다. 작업 실패는 정리 표시를 유지하고 다음 실행에서 재시도한다. 기존 60초 다운로드 URL과 이미 전송된 바이트를 즉시 회수할 수는 없다. DB 전진 적용 후 서버를 배포하며, 이전 앱으로 되돌려도 새 비공개 버킷·논리 삭제·정리 표시는 유지한다. DB를 되돌리거나 공유 migration을 지우지 않는다.

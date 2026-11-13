@@ -53,6 +53,7 @@ export async function generateNarration(db: DbClient, actorId: string, artworkId
 }
 export async function retryNarration(db: DbClient, actorId: string, id: string, input: RetryJob, signal?: AbortSignal) {
   const job = await loadJob(db, id);
+  if (job.kind !== "narration") throw new ApiError(404, "NOT_FOUND", "작업을 찾을 수 없습니다.");
   return execute(db, actorId, job.artworkId, job.documentId, job.expectedDocumentRevision, job.strategy,
     store => store.retry(id, input, isLocalNarrationMock()), signal);
 }
