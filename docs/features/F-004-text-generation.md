@@ -15,11 +15,17 @@ generated:
 source_priority: P1
 proposed_phase: MVP
 decision_status: proposed
-work_status: not_started
+work_status: in_progress
 build_order: 3
 depends_on:
 - F-002
 sources:
+- id: candidates-request
+  resource: /references/user-narration-candidates.md
+  title: 작가 해설 후보와 비교 평가 요청
+- id: candidates-spec
+  resource: /specs/narration-evaluation.md
+  title: 작가 해설 후보 실행과 비교 평가
 - id: current-stack
   resource: /research/recommended-stack.md
   title: Render 제외 후 최신 스택·모델 권고
@@ -44,7 +50,7 @@ sources:
 
 - 사용자 원안: **P1**.
 - 현재 구현 제안: **MVP**. 사용자 원안과 상세 설계 제안을 구분한다.
-- 구현 상태: 미착수. 이 문서는 기능명세이며 앱 구현 완료 표시가 아니다.
+- 구현 상태: 진행 중. [후보 실행 모듈](../specs/narration-evaluation.md)은 구현됐으나 실제 DB·HTTP·검수 UI·승인 연결은 미구현이다. 앱 기능 전체 완료는 아니다.
 
 # 수용 기준
 

@@ -1,5 +1,9 @@
 # 설계 문서
 
+- [제품 AI 플러그인과 품질 기준](product-ai-plugin.md) — 업무별 스킬·도구·자료 정리 후보·검수 계약.
+
+- [제품 AI 실행 하네스](ai-harness.md) — 서버 어댑터·문맥/출력 검증·재시도/평가 준비와 통합 전 조건.
+
 - [개발 기반 현황](development-foundation.md) — 실제 코드·DB·검증 범위와 후속 작업.
 - [API 계약](api-contract.md) — 초기/후속 HTTP 경로와 입력·응답·오류.
 
@@ -15,3 +19,5 @@
 - [제품 RAG](rag-design.md) — 승인된 전시 근거만 검색.
 - [파트너 통합](partner-integration.md) — 최소 한 개 필수 API 적용안.
 - [지식 구조](knowledge-contract.md) — OKF·Bases·로컬 RAG 규칙.
+
+- [작가 해설 후보 실행과 비교 평가](narration-evaluation.md) — SPEC-015 제안·구현 진행 중.

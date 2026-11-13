@@ -18,6 +18,9 @@ build_order: 2
 depends_on:
 - F-001
 sources:
+- id: plugin
+  resource: /specs/product-ai-plugin.md
+  title: AI 정리 후보의 출처 보존·검토 후 적용
 - id: implementation
   resource: /specs/development-foundation.md
   title: 실제 내부 지식 저장 기반
@@ -39,6 +42,8 @@ sources:
 
 # 수용 기준
 
+AI 정리의 추가 계약은 [제품 플러그인](../specs/product-ai-plugin.md)을 따른다. 전체 원문 블록 분류, 검토 전 미변경, 같은 후보 재요청, 수정하지 않은 section 보존을 모의 저장소로 검사했다. 검토 후 적용은 선택한 section을 교체하므로 기존 내용과의 차이를 보여줘야 하며, 교체 전 본문의 이력 보존은 현재 모듈이 보장하지 않는다. 실제 후보 DB·검수 화면·원자적 저장은 아직 미완료다.
+
 1. 작가 정보와 전시 정보가 서로 다른 문서 ID로 저장되고 동일 소유자의 관계로 연결된다. 작품은 소속 전시와 연결된다.
 2. 작가 홈에서 공통 정보를 수정하고 여러 전시에서 재사용할 수 있다. 전시 기록은 이 서비스에 저장한 전시 목록이며 관람 분석을 뜻하지 않는다.
 3. 본문에 입력 출처와 파일·쪽수·문서 revision을 연결한다. 해설 생성 결과가 작가 입력 원본을 덮어쓰지 않는다.
@@ -48,4 +53,4 @@ sources:
 
 # 범위와 연결
 
-세부 저장 계약은 [SPEC-010](../specs/artist-knowledge.md), 화면은 SC-A02~A05, 업무는 OP-21~22와 OP-07~10, 수용 시나리오는 UC-17이다. Markdown 파일 동기화·Obsidian 연동·전체 그래프 편집·AI 자동 위키 작성은 이번 구현 범위에 추가하지 않는다.
+세부 저장 계약은 [SPEC-010](../specs/artist-knowledge.md), 화면은 SC-A02~A05, 업무는 OP-21~22와 OP-07~10, 수용 시나리오는 UC-17이다. Markdown 파일 동기화·Obsidian 연동·전체 그래프 편집·검토 없는 AI 자동 위키 저장은 이번 구현 범위에 추가하지 않는다.

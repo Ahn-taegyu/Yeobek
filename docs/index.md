@@ -11,6 +11,13 @@ okf_version: "0.2"
 
 # MVP부터 읽기
 
+- [AI 하네스 PR2 수정 검토](reviews/ai-harness-fix-review.md) — 재현 결함·검증 상태·후속 통합 조건.
+
+- [제품 AI 플러그인과 품질 기준](specs/product-ai-plugin.md) — 스킬·도구·지침 조합, 작가 정리 후보·검수, 실제 품질 검증 경계.
+- [다중 후보와 문맥 계승 검토](research/candidate-selection.md) — 병렬 생성·평가 하한·제한된 재생성·채택 대화 동기화 제안.
+
+- [제품 AI 실행 하네스](specs/ai-harness.md) — 제공사 연결 준비·공개 문맥·출력 검증·재시도·평가와 실제 통합 경계.
+
 - [검토 반영 확인서](reviews/mvp-foundation-fix-review-2026-11-13.md) — 수정 커밋을 직접 실행해 확인한 결과와 사용자 확인이 필요한 판단 3건.
 - [개발 기반 작업 검토서](reviews/mvp-foundation-2026-11-13.md) — 12절에 검토 반영 결과·재검증·후속 범위, 1~11절에 초기 구현 증거와 재검토 이력.
 
@@ -39,3 +46,5 @@ okf_version: "0.2"
 - [출처](references/index.md) — 원문과 사용자 추가 응답.
 - [RAG 예시](rag/example-answer.md) — 실제 검색 결과를 이용한 답변.
 - [변경 이력](log.md) — 출처와 결정 변경 기록.
+
+- [작가 해설 후보와 비교 평가](specs/narration-evaluation.md) — 사용자 확정 범위와 잠정 실행·평가 계약.

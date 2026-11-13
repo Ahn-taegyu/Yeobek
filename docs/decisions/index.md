@@ -1,5 +1,7 @@
 # 결정 목록
 
+- [D-012 제품 AI 플러그인](D-012-product-ai-plugin.md) — accepted; 지침·스킬·도구 조합 방향. 세부 평가 하한·다중 생성은 미결정.
+
 - [D-001 사업안은 유보하고 공통 도슨트부터](D-001-business-scope.md) — accepted.
 - [D-002 첫 MVP 인식은 QR·숫자](D-002-recognition.md) — accepted.
 - [D-003 팀·일정·파트너 제약](D-003-delivery-constraints.md) — partial.
@@ -11,3 +13,5 @@
 - [D-009 음성·저장소·호스팅 재검토](D-009-stack-review.md) — proposed; 공식 문서 조사에 따른 대안. 한국어 청취·실제 계정/배포 검증 전.
 - [D-010 Render 제외 후 현실적인 스택](D-010-practical-stack.md) — partial; Render 제외 반영, OpenAI Q&A/STT·Liner 초안·Typecast TTS와 호스팅은 최신 권고.
 - [D-011 AI용 내부 지식과 필수 화면](D-011-knowledge-and-screens.md) — accepted; DB 원본·작가/전시 분리·요청 화면. 세부 배치는 제안.
+
+- [D-013 작가 해설 후보와 비교 평가](D-013-narration-candidates.md) — accepted; 기술 수치는 제안.

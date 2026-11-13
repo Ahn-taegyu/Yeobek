@@ -1,6 +1,6 @@
 # Yeobek
 
-작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**과 기획 문서·로컬 지식 검색 도구가 있습니다. AI 해설·음성·게시·관람 화면은 후속 구현입니다. [실제 개발 범위](docs/specs/development-foundation.md)와 [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
+작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**, 서버 AI 어댑터·하네스와 기획 문서·검색 도구가 있습니다. AI의 실제 DB/HTTP 연결·게시·관람 화면은 후속 구현입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
 
 ## 앱 실행
 
@@ -16,9 +16,58 @@ npm run dev
 
 `db:start`는 `yeobek-mvp` 프로젝트를 localhost에 바인딩한 `yeobek-local` 네트워크에서 시작하고 migration을 적용합니다. `db:env`는 Git에서 제외한 `.env.local`을 생성하며 기존 파일은 덮어쓰지 않습니다. `db:artist`는 가짜 로컬 작가 계정을 만들고 로그인 정보를 `.env.artist.local`에 저장합니다. 터미널·Git에 키나 비밀번호를 출력하지 않습니다. [로그인](http://localhost:3000/login)에서 그 계정을 사용합니다. 로그인에서 비밀번호를 표시하거나 숨길 수 있습니다. 현재 작가 홈은 계정 이메일과 이름, 전시 기간·장소·작품 수를 포함한 목록 조회를 제공합니다. 입력/검수 화면은 다음 구현입니다.
 
-클라우드 연결 시에는 `.env.example`의 세 변수만 개발 환경의 비밀값 설정에 넣습니다. 앱은 service-role 키를 쓰지 않습니다. `APP_ORIGIN`은 실제 접속 주소와 정확히 맞춥니다. HTTPS에서는 인증 쿠키에 Secure가 적용됩니다. 클라우드에는 migration과 사전 발급 계정이 필요하며, 이 작업은 클라우드 생성·배포를 수행하지 않았습니다.
+클라우드의 기존 인증·초안 API에는 `.env.example`의 Supabase 변수 두 개와 `APP_ORIGIN`이 필요합니다. AI 변수는 아래 절차로 별도 설정합니다. 앱은 service-role 키를 쓰지 않습니다. `APP_ORIGIN`은 실제 접속 주소와 정확히 맞춥니다. HTTPS에서는 인증 쿠키에 Secure가 적용됩니다. 클라우드에는 migration과 사전 발급 계정이 필요하며, 이 작업은 클라우드 생성·배포를 수행하지 않았습니다.
+
+## AI 연결 준비
+
+`src/lib/ai/`는 OpenAI Q&A·STT, Liner 해설 후보, Typecast TTS와 명시적으로 선택하는 OpenAI TTS 대안의 서버 어댑터를 제공합니다. 공개 자료 범위·인용·출력 길이·취소·철회를 검사하는 하네스도 있으며, 합성 자료로 검사합니다. 실제 게시/승인 DB 어댑터·세션·영속 작업 제한은 연결 전입니다. 키를 넣어도 `/api/chat`이나 관람 화면이 활성화되지는 않습니다.
+
+1. `.env.example`의 AI 항목을 **기존 `.env.local`에 추가**합니다. 파일을 덮어써 Supabase 설정을 지우지 않습니다. 키에는 `NEXT_PUBLIC_`를 붙이지 않습니다.
+2. 보유한 OpenAI 키를 `OPENAI_API_KEY`에, 행사에서 받은 Liner 키를 `LINER_API_KEY`에 설정합니다. 계정별 모델 접근·잔액은 실제 단일 요청으로 확인해야 합니다.
+3. [Typecast API 콘솔](https://studio.typecast.ai/)에서 키를 발급하고 [TTS 문서](https://typecast.ai/docs/ko/api-reference/text-to-speech/text-to-speech)에 연결된 보이스 목록 `GET /v3/voices?model=ssfm-v31`에서 한국어 지원 보이스의 `voice_id`를 선택합니다. `TYPECAST_API_KEY`, `TYPECAST_VOICE_ID`를 서버에 설정하고 `AI_TTS_PROVIDER=typecast`로 둡니다. 실제 이용 조건과 음질을 확인합니다.
+4. Typecast 준비 전 임시 시험은 `AI_TTS_PROVIDER=openai`로 명시합니다. `gpt-4o-mini-tts`/`coral`을 사용하며 자동 장애 전환은 없습니다. 이 모델은 [2027-01-06 종료 예정](https://developers.openai.com/api/docs/guides/text-to-speech)이므로 행사 이후 교체 검토가 필요합니다. Realtime 모델을 `/audio/speech`의 모델 이름으로 대입할 수는 없습니다.
+
+```sh
+npm run ai:check
+npm run ai:eval
+# 아래 명령만 실제 요청 1회를 보내며 제공사 사용료가 발생할 수 있습니다.
+npm run ai:smoke -- qa
+npm run ai:smoke -- draft
+npm run ai:smoke -- typecast-tts
+# Typecast 대신 임시 OpenAI TTS 자체를 시험할 때
+npm run ai:smoke -- openai-tts
+# 권한이 있는 30초/3MiB 이내 시험 녹음으로만 실행
+npm run ai:smoke -- stt --audio=path/to/test.webm
+```
+
+`ai:check`는 변수 존재 여부만 검사하고 키를 출력하지 않습니다. 필수 변수가 없으면 종료 코드 1이며 실제 접속 성공을 뜻하지 않습니다. `ai:eval`과 기본 CI는 모의 제공사만 사용합니다. `ai:smoke`는 명시한 기능 하나만 실제 호출하고 응답 원문·녹음·음성 파일을 저장하지 않습니다. STT 파일 크기는 검사하며 30초 길이는 실행자가 확인해야 합니다. 이 검사는 응답 계약만 확인하므로 한국어 인식 정확도·청취 품질·근거 충실도는 별도로 확인해야 합니다. 앱에서 재생할 때 AI 생성 음성임을 표시합니다.
 
 ## 앱 검사와 DB 변경
+
+AI의 업무 절차와 말투는 [제품 플러그인](docs/specs/product-ai-plugin.md)으로 관리합니다. `ai/yeobek/plugin.json`, `instructions.md`, `messages.json`, `skills/*/SKILL.md`를 수정한 뒤 `npm run ai:bundle`을 실행합니다. 생성된 `src/lib/ai/plugin.generated.ts`는 직접 편집하지 않습니다. 테스트와 빌드가 원본/생성물 불일치를 차단하며, 필요한 스킬만 업무별로 조합하고 플러그인 해시를 답변에 기록합니다.
+
+작가 자료 정리는 원문 블록을 분류한 비공개 후보 → 작가 검토 → 버전 재검사 → 적용의 서버 실행 모듈을 제공합니다. 실제 DB 저장소·검수 UI는 아직 연결하지 않았습니다. `createNarrationRuntime`에는 소유 자료로 해설 후보 2개를 병렬 생성하고 평가·최대 한 라운드 재생성하는 경로와 단일 생성 기준선을 연결했습니다. 최종 결과는 미승인 초안입니다. 관람 채팅과 대화 문맥 복제는 후속이며 [작가 해설 비교 계약](docs/specs/narration-evaluation.md)을 확인하세요.
+
+관람 하네스 입력은 선택적인 `intent: "auto" | "narration" | "question"`와 `artworkNumber`를 받습니다. 해설 버튼은 `intent: "narration"`과 작품 ID를, 숫자 입력은 같은 의도와 작품 번호를 보내며 `question`도 함께 전달합니다. 생략 시 제한된 문장 판별을 사용합니다. 승인 해설은 최대 2,000 Unicode 코드 포인트를 그대로 반환·음성 전달하고, 생성 답변·해설 후보는 600자 상한을 유지합니다. 이 계약을 사용하는 실제 관람 HTTP·UI 연결은 후속입니다. [PR #2 수정 검토서](docs/reviews/ai-harness-fix-review.md)에 재현 근거와 게시 데이터·적용 이력의 후속 요구를 정리했습니다.
+
+## 작가 해설 비교 실험
+
+기본 `npm run ai:compare`는 합성 사례 5개의 **오프라인 시뮬레이션**입니다. 실제 모델의 품질·비용·응답 시간을 측정한 결과가 아닙니다. `single`은 생성 1회+평가 1회, `best_of_two`는 병렬 생성 2회+평가 1회와 수정 가능한 실패의 추가 라운드 한 번(최대 6회 호출)을 사용합니다. 생성은 Liner, 평가는 OpenAI의 `OPENAI_JUDGE_MODEL`(기본 `gpt-6-luna`)이며 두 방식에 같은 모델·자료·평가 하한을 적용합니다.
+
+```sh
+npm run ai:compare -- --mode=mock
+# 아래는 합성 grounded 사례를 두 방식으로 비교하는 실제 유료 호출입니다.
+# LINER_API_KEY와 OPENAI_API_KEY가 필요합니다. 최악의 경우 8회 호출을 예약합니다.
+npm run ai:compare -- --mode=live --cases=grounded --repeats=1 --max-calls=8
+# 사람이 human-review.json을 보고 human-labels.json의 null 값을 채운 뒤 실행
+npm run ai:review -- .ai-eval/run-ID
+```
+
+실험 결과는 출력된 `.ai-eval/run-ID/`에 저장합니다. `report.json`은 모델 점수·사용량·실패를 포함한 전체 지연 p50/p95·비용 추정·재생성 기록이며 답변 본문을 제외합니다. `human-review.json`에는 자료 ID/본문과 최종 답 또는 보류 사유를 담고 생성 방식·모델 점수는 숨깁니다. `human-labels.json`의 `acceptable`은 적절한 답 또는 적절한 근거 부족 안내인지 평가하고, 본문이 없는 경우 네 세부 점수는 null로 둘 수 있습니다. 평가자에게 `key.json`과 `report.json`을 함께 주지 않습니다. `ai:review`는 라벨 수·항목별 평균/표본 수·양쪽 라벨이 있는 쌍의 승수를 `human-summary.json`에 만듭니다. 미작성 라벨은 통과로 계산하지 않습니다.
+
+사례는 `grounded`, `missing-intent`, `injection`, `conflict`, `insufficient`입니다. `--cases=grounded,injection --repeats=2 --max-calls=32`처럼 선택하며 실호출 상한은 사례 수×반복 수×8 이상, 최대 200입니다. 반복은 1~5회입니다. 순서는 사례·반복마다 교대하며 평가기에 주는 후보 순서는 무작위입니다. 5개 공개 합성 사례는 개발용 점검 세트이며 품질 인증이나 별도 평가 세트를 대체하지 않습니다.
+
+비용 계산은 선택적 `--pricing=path/to/pricing.json`을 사용합니다. `tests/evaluation/pricing.example.json`을 복사하고 `rates`에 `{ "provider": "liner", "model": "실제 응답의 모델 ID", "inputUsdPerMillion": 입력단가, "outputUsdPerMillion": 출력단가 }` 형태로 현재 계정 단가를 기입합니다. OpenAI 평가 모델도 별도 행으로 넣고 `asOf`를 갱신합니다. 정확한 모델 단가나 사용량이 없으면 총비용은 null이며, 확인된 일부 비용만 따로 표시합니다. 집계 토큰 단가의 추정이므로 캐시·계약별 요율·실제 청구액과 다를 수 있습니다. 재시도·평가를 모두 포함하며 무료라고 가정하지 않습니다.
 
 Tailwind CSS 4·PostCSS를 사용합니다. 현재 Windows에서 재현된 Turbopack PostCSS worker 종료를 피하도록 `dev`·`build`는 Next.js의 `--webpack` 옵션을 사용합니다. 기존 로컬 스택이 실행 중일 때 새 migration 적용은 `npx supabase migration up --local`로 수행하며 DB reset은 필요하지 않습니다.
 

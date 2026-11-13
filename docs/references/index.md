@@ -1,5 +1,12 @@
 # 출처와 보존본
 
+- [AI 하네스 PR2 검토와 수정 요청](user-ai-pr2-review.md) — 검토 전달 내용 요약과 후속 계약.
+
+- [제품 플러그인과 품질 요구](user-plugin-quality.md) — pstack과 같은 스킬·도구·지침 조합.
+- [병렬 답변·평가·문맥 복제 검토](user-candidate-selection.md) — 평가 하한·재생성·채택 세션 계승 아이디어.
+
+- [제품 AI API·하네스 준비 요청](user-ai-harness.md) — 실행 구조 범위와 Typecast 미준비·대체 경로 요청.
+
 - [검토 반영 작업의 적용 확인 요청](user-fix-review.md) — 수정 커밋을 실행해 확인하고 별도 결과 문서로 기록.
 - [검토 내용의 구현 반영 요청](user-review-implementation.md) — 추가 검토의 실제 코드 반영과 재검증.
 
@@ -30,3 +37,5 @@
 
 기존 프로젝트의 MAWD_AI_docent_market_research.xlsx는 수정하지 않았고 이번 정리의 직접 검증 근거로 사용하지 않았다. Notion의 시장·요금·법률 관련 주장도 별도로 원출처 재검증한 사실로 승격하지 않았다.
 - [작가 지식·화면 요구](user-wiki-screens.md), [DB 원본 선택](user-wiki-storage.md), [내부 위키 목적·작가 열람 질문](user-wiki-purpose.md) — 11/13 후속 요구/응답.
+
+- [작가 해설 후보와 비교 평가 요청](user-narration-candidates.md) — SRC-027 사용자 원문.

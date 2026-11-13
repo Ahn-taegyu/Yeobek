@@ -32,3 +32,4 @@ coverage/
 supabase/.temp/
 supabase/.branches/
 test-results/
+.ai-eval/
