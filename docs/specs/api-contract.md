@@ -279,3 +279,11 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 음성 두 경로의 60초 처리 기한에는 요청 본문 수신도 포함한다. Next.js `maxDuration=120`은 취소 후 DB 실패 확정·정리 기록을 위한 플랫폼 여유이며 생성 허용 시간을 늘리지 않는다. 같은 세션의 만료 답변은 공개 상태가 유지될 때 410 `ANSWER_EXPIRED`, 타인 세션이나 비공개 전시는 404다. 준비된 승인 음성의 파일 오류·해시 불일치는 오류로 반환하고 새 유료 합성을 시작하지 않는다. 확인된 실패는 새 요청 ID로 재시도하고, 진행 중/응답 유실/캐시 다운로드 오류에는 같은 ID를 재사용한다.
 
 새 ID의 생성 음성 캐시 재사용은 생성 한도를 차감하지 않지만 원장 행이 무한히 늘지 않도록 세션당 분당 60개 초기 정책 `visitor_audio_cache_requests_per_minute`를 별도로 적용한다. 기존 요청 ID 조회는 이 한도에서도 재사용 가능하다. 60은 측정 전 구현 초기값이며 DB 정책에서 변경한다.
+
+# W8 자동화 내부 DB 계약 (HTTP 미연결)
+
+`090000` migration의 `get_contact_consents`·`set_contact_consent(category,granted,expectedRevision)`은 인증된 작가 본인만 다루며, 거래성·홍보성 동의는 각각 기본 false·revision 0이다. `list_outbox`·`decide_outbox(id,expectedRevision,approve)`는 등록된 운영자만 실행한다. 일반 로그인 계정은 404에 해당하는 DB 오류를 받는다. 본문 수정은 승인 API에 포함하지 않으며 승인할 때 정확한 revision을 검사한다.
+
+서비스 역할만 `enqueue_automation_event`·`claim_automation_events`·`complete_automation_event`와 발송 claim/check/complete RPC를 실행할 수 있다. 동일 종류·중복 키의 다른 입력과 다른 완료 결과는 충돌이다. `check_outbound_dispatch`는 현재 정책·동의·계정 연결·만료를 다시 확인하고 한 번만 수신 대상과 본문을 반환한다. `accepted`는 제공사 접수, `unknown`은 결과 불명이며 자동 재전송하지 않는다. 이벤트/발송 lease·최대 시도·만료는 `app_policies`에서 읽는다.
+
+이 계약은 실행기에 사용할 DB 기반이다. 예정된 `/api/ops/outbox`, 동의 변경, cron과 웹훅 경로는 아직 구현하지 않았으므로 프런트에서 호출할 수 없다. `ai_jobs` 연결과 문의의 실제 chat 대상 고정도 후속이며 서비스 역할이 임의 모델 출력을 수신 대상으로 사용해서는 안 된다.

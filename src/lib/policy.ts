@@ -23,6 +23,10 @@ export const DEFAULT_POLICIES = Object.freeze({
   pdf_max_bytes: 6 * 1024 * 1024,
   upload_ttl_seconds: 3600,
   author_uploads_per_day: 100,
+  automation_event_lease_seconds: 120,
+  automation_dispatch_lease_seconds: 60,
+  automation_event_max_attempts: 3,
+  automation_event_retention_days: 30,
 });
 export type PolicyKey = keyof typeof DEFAULT_POLICIES;
 export type AppPolicies = { readonly [Key in PolicyKey]: number };

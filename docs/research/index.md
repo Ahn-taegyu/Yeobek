@@ -1,5 +1,6 @@
 # 기술 선택 재검토
 
+- **W8 준비:** [업무 자동화 제공사 계약](automation-provider-contracts.md) — 스티비 발송 접수, 채널톡 인증 방식 구분, Alt 읽기·서명·삭제 통지. 구현·실호출 전 조사.
 - **11/14 후속:** [백엔드 제공사 연결](backend-provider-routing.md), [D-015](../decisions/D-015-partner-priority.md). 파트너 우선 원칙과 잠정 모델, 실제 호출 미검증.
 - [다중 후보 평가·재생성과 채택 문맥 계승](candidate-selection.md) — 적용 가능성·평가 하한·비용/지연·서버 대화 상태 설계. 미구현·미측정 제안.
 

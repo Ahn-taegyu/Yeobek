@@ -1,6 +1,6 @@
 # Yeobek
 
-작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. Next.js·Supabase 인증과 초안, 해설 작업, 글 승인·게시, 관람 글 채팅 및 비공개 자료 업로드·삭제 API가 있습니다. W3 자료는 PR #8, W4 작가 음성은 PR #9로 병합됐습니다. W5 관람 음성·공개 미디어는 로컬 구현·검증을 마치고 CI 대기 중이며 화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
+작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. Next.js·Supabase 인증과 초안, 해설 작업, 글 승인·게시, 관람 글 채팅 및 비공개 자료 업로드·삭제 API가 있습니다. W3 자료는 PR #8, W4 작가 음성은 PR #9로 병합됐습니다. W5 관람 음성·공개 미디어는 PR #10의 CI를 통과해 병합됐으며 화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
 
 ## 앱 실행
 
@@ -68,7 +68,7 @@ AI의 업무 절차와 말투는 [제품 플러그인](docs/specs/product-ai-plu
 
 작가 자료 정리는 원문 블록을 분류한 비공개 후보 → 작가 검토 → 버전 재검사 → 적용의 서버 실행 모듈을 제공합니다. 실제 DB 저장소·검수 UI는 아직 연결하지 않았습니다. `createNarrationRuntime`에는 소유 자료로 해설 후보 2개를 병렬 생성하고 평가·최대 한 라운드 재생성하는 경로와 단일 생성 기준선을 연결했습니다. 최종 결과는 미승인 초안입니다. 관람 글 채팅은 연결됐고 대화 문맥 복제는 후속이며 [작가 해설 비교 계약](docs/specs/narration-evaluation.md)을 확인하세요.
 
-관람 하네스 입력은 선택적인 `intent: "narration" | "question"`와 `artworkNumber`를 받습니다. 해설 버튼은 `intent: "narration"`과 작품 ID를, 숫자 입력은 같은 의도와 작품 번호를 보내며 `question`도 함께 전달합니다. 생략 시 제한된 문장 판별을 사용합니다. 승인 해설은 최대 2,000 Unicode 코드 포인트를 그대로 반환·음성 전달하고, 관람 생성 답변은 600자 상한을 유지합니다. 해설 초안은 별도 2,000자 계약을 쓰고 선택 결과의 `overTarget`으로 600자 초과 경고를 전달합니다. 관람 음성 HTTP는 로컬 검증을 마치고 CI 대기 중이며 UI는 후속입니다. [PR #2 수정 검토서](docs/reviews/ai-harness-fix-review.md)에 재현 근거와 게시 데이터·적용 이력의 후속 요구를 정리했습니다.
+관람 하네스 입력은 선택적인 `intent: "narration" | "question"`와 `artworkNumber`를 받습니다. 해설 버튼은 `intent: "narration"`과 작품 ID를, 숫자 입력은 같은 의도와 작품 번호를 보내며 `question`도 함께 전달합니다. 생략 시 제한된 문장 판별을 사용합니다. 승인 해설은 최대 2,000 Unicode 코드 포인트를 그대로 반환·음성 전달하고, 관람 생성 답변은 600자 상한을 유지합니다. 해설 초안은 별도 2,000자 계약을 쓰고 선택 결과의 `overTarget`으로 600자 초과 경고를 전달합니다. 관람 음성 HTTP는 PR #10으로 병합됐으며 UI는 후속입니다. [PR #2 수정 검토서](docs/reviews/ai-harness-fix-review.md)에 재현 근거와 게시 데이터·적용 이력의 후속 요구를 정리했습니다.
 
 ## 작가 해설 비교 실험
 
