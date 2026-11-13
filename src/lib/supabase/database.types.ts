@@ -71,6 +71,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"app_features": {
+                  Row: {
+                    "enabled": boolean,"key": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "enabled": boolean,"key": string
+                  }
+                  Update: {
+                    "enabled"?: boolean,"key"?: string
+                  }
+                  Relationships: [
+
+                  ]
                 },"app_policies": {
                   Row: {
                     "key": string,"updated_at": string,"value": number
@@ -131,16 +145,74 @@ isOneToOne: false
       referencedColumns: ["owner_id","id"]
     }
                   ]
-                },"exhibitions": {
+                },"audio_assets": {
                   Row: {
-                    "artist_id": string,"create_fingerprint": string,"created_at": string,"deleted_at": string | null,"end_date": string | null,"id": string,"owner_id": string,"place": string | null,"public_artist_bio": string | null,"public_artist_display_name": string | null,"public_end_date": string | null,"public_introduction": string | null,"public_place": string | null,"public_start_date": string | null,"public_theme": string | null,"public_title": string | null,"revision": number,"start_date": string | null,"state": string,"title": string,"updated_at": string
+                    "approval_id": string,"artwork_id": string,"created_at": string,"exhibition_id": string,"id": string,"owner_id": string,"state": string,"storage_key": string | null,"text_hash": string,"voice_config_version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "artist_id": string,"create_fingerprint": string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"id": string,"owner_id": string,"place"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_start_date"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"state"?: string,"title": string,"updated_at"?: string
+                    "approval_id": string,"artwork_id": string,"created_at"?: string,"exhibition_id": string,"id"?: string,"owner_id": string,"state"?: string,"storage_key"?: string | null,"text_hash": string,"voice_config_version": number
                   }
                   Update: {
-                    "artist_id"?: string,"create_fingerprint"?: string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"id"?: string,"owner_id"?: string,"place"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_start_date"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"state"?: string,"title"?: string,"updated_at"?: string
+                    "approval_id"?: string,"artwork_id"?: string,"created_at"?: string,"exhibition_id"?: string,"id"?: string,"owner_id"?: string,"state"?: string,"storage_key"?: string | null,"text_hash"?: string,"voice_config_version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "audio_assets_owner_id_exhibition_id_artwork_id_approval_id_fkey"
+      columns: ["owner_id","exhibition_id","artwork_id","approval_id"]
+isOneToOne: false
+      referencedRelation: "narration_approvals"
+      referencedColumns: ["owner_id","exhibition_id","artwork_id","id"]
+    }
+                  ]
+                },"evidence_items": {
+                  Row: {
+                    "approved_at": string | null,"artwork_id": string | null,"body": string,"content_hash": string,"created_at": string,"exhibition_id": string,"id": string,"material_id": string | null,"material_version": number | null,"owner_id": string,"page_end": number | null,"page_start": number | null,"scope": string,"source_document_id": string | null,"source_kind": string,"source_label": string,"source_revision": number | null,"source_section_id": string | null,"state": string,"version": number,"withdrawn_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "approved_at"?: string | null,"artwork_id"?: string | null,"body": string,"content_hash": string,"created_at"?: string,"exhibition_id": string,"id": string,"material_id"?: string | null,"material_version"?: number | null,"owner_id": string,"page_end"?: number | null,"page_start"?: number | null,"scope": string,"source_document_id"?: string | null,"source_kind": string,"source_label": string,"source_revision"?: number | null,"source_section_id"?: string | null,"state"?: string,"version": number,"withdrawn_at"?: string | null
+                  }
+                  Update: {
+                    "approved_at"?: string | null,"artwork_id"?: string | null,"body"?: string,"content_hash"?: string,"created_at"?: string,"exhibition_id"?: string,"id"?: string,"material_id"?: string | null,"material_version"?: number | null,"owner_id"?: string,"page_end"?: number | null,"page_start"?: number | null,"scope"?: string,"source_document_id"?: string | null,"source_kind"?: string,"source_label"?: string,"source_revision"?: number | null,"source_section_id"?: string | null,"state"?: string,"version"?: number,"withdrawn_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "evidence_items_material_id_fkey"
+      columns: ["material_id"]
+isOneToOne: false
+      referencedRelation: "materials"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "evidence_items_owner_id_exhibition_id_artwork_id_fkey"
+      columns: ["owner_id","exhibition_id","artwork_id"]
+isOneToOne: false
+      referencedRelation: "artworks"
+      referencedColumns: ["owner_id","exhibition_id","id"]
+    },{
+      foreignKeyName: "evidence_items_owner_id_exhibition_id_fkey"
+      columns: ["owner_id","exhibition_id"]
+isOneToOne: false
+      referencedRelation: "exhibitions"
+      referencedColumns: ["owner_id","id"]
+    },{
+      foreignKeyName: "evidence_items_source_document_id_fkey"
+      columns: ["source_document_id"]
+isOneToOne: false
+      referencedRelation: "knowledge_documents"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"exhibitions": {
+                  Row: {
+                    "artist_id": string,"create_fingerprint": string,"created_at": string,"deleted_at": string | null,"end_date": string | null,"id": string,"intro_evidence": NonNullable<Json>,"owner_id": string,"place": string | null,"public_artist_bio": string | null,"public_artist_display_name": string | null,"public_end_date": string | null,"public_introduction": string | null,"public_place": string | null,"public_start_date": string | null,"public_theme": string | null,"public_title": string | null,"revision": number,"start_date": string | null,"state": string,"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "artist_id": string,"create_fingerprint": string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"id": string,"intro_evidence"?: NonNullable<Json>,"owner_id": string,"place"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_start_date"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"state"?: string,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "artist_id"?: string,"create_fingerprint"?: string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"id"?: string,"intro_evidence"?: NonNullable<Json>,"owner_id"?: string,"place"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_start_date"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"state"?: string,"title"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -215,16 +287,102 @@ isOneToOne: false
       referencedColumns: ["owner_id","id"]
     }
                   ]
-                },"publications": {
+                },"narration_approval_evidence": {
                   Row: {
-                    "approved_at": string,"approved_by": string,"artwork_id": string,"audio_key": string,"audio_text_hash": string,"creation_year": string | null,"dimensions": string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id": string,"image_key": string,"medium": string | null,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at": string | null,"title": string,"version": number
+                    "approval_id": string,"evidence_id": string,"evidence_version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "approved_at"?: string,"approved_by": string,"artwork_id": string,"audio_key": string,"audio_text_hash": string,"creation_year"?: string | null,"dimensions"?: string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id"?: string,"image_key": string,"medium"?: string | null,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at"?: string | null,"title": string,"version": number
+                    "approval_id": string,"evidence_id": string,"evidence_version": number
                   }
                   Update: {
-                    "approved_at"?: string,"approved_by"?: string,"artwork_id"?: string,"audio_key"?: string,"audio_text_hash"?: string,"creation_year"?: string | null,"dimensions"?: string | null,"evidence"?: NonNullable<Json>,"exhibition_id"?: string,"id"?: string,"image_key"?: string,"medium"?: string | null,"narration_hash"?: string,"narration_text"?: string,"number"?: number,"owner_id"?: string,"revoked_at"?: string | null,"title"?: string,"version"?: number
+                    "approval_id"?: string,"evidence_id"?: string,"evidence_version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "narration_approval_evidence_approval_id_fkey"
+      columns: ["approval_id"]
+isOneToOne: false
+      referencedRelation: "narration_approvals"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "narration_approval_evidence_evidence_id_evidence_version_fkey"
+      columns: ["evidence_id","evidence_version"]
+isOneToOne: false
+      referencedRelation: "evidence_items"
+      referencedColumns: ["id","version"]
+    }
+                  ]
+                },"narration_approvals": {
+                  Row: {
+                    "approved_at": string,"approved_by": string,"artwork_id": string,"artwork_revision": number,"citations": NonNullable<Json>,"exhibition_id": string,"id": string,"narration_text": string,"owner_id": string,"text_hash": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "approved_at"?: string,"approved_by": string,"artwork_id": string,"artwork_revision": number,"citations": NonNullable<Json>,"exhibition_id": string,"id"?: string,"narration_text": string,"owner_id": string,"text_hash": string
+                  }
+                  Update: {
+                    "approved_at"?: string,"approved_by"?: string,"artwork_id"?: string,"artwork_revision"?: number,"citations"?: NonNullable<Json>,"exhibition_id"?: string,"id"?: string,"narration_text"?: string,"owner_id"?: string,"text_hash"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "narration_approvals_owner_id_exhibition_id_artwork_id_fkey"
+      columns: ["owner_id","exhibition_id","artwork_id"]
+isOneToOne: false
+      referencedRelation: "artworks"
+      referencedColumns: ["owner_id","exhibition_id","id"]
+    }
+                  ]
+                },"publication_evidence_refs": {
+                  Row: {
+                    "evidence_id": string,"evidence_version": number,"publication_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "evidence_id": string,"evidence_version": number,"publication_id": string
+                  }
+                  Update: {
+                    "evidence_id"?: string,"evidence_version"?: number,"publication_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "publication_evidence_refs_evidence_id_evidence_version_fkey"
+      columns: ["evidence_id","evidence_version"]
+isOneToOne: false
+      referencedRelation: "evidence_items"
+      referencedColumns: ["id","version"]
+    },{
+      foreignKeyName: "publication_evidence_refs_publication_id_fkey"
+      columns: ["publication_id"]
+isOneToOne: false
+      referencedRelation: "publications"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"publication_requests": {
+                  Row: {
+                    "fingerprint": string,"owner_id": string,"request_id": string,"result": NonNullable<Json>
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "fingerprint": string,"owner_id": string,"request_id": string,"result": NonNullable<Json>
+                  }
+                  Update: {
+                    "fingerprint"?: string,"owner_id"?: string,"request_id"?: string,"result"?: NonNullable<Json>
+                  }
+                  Relationships: [
+
+                  ]
+                },"publications": {
+                  Row: {
+                    "approved_at": string,"approved_by": string,"artwork_id": string,"audio_key": string | null,"audio_text_hash": string | null,"creation_year": string | null,"dimensions": string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id": string,"image_key": string,"medium": string | null,"narration_citations": NonNullable<Json>,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at": string | null,"title": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "approved_at"?: string,"approved_by": string,"artwork_id": string,"audio_key"?: string | null,"audio_text_hash"?: string | null,"creation_year"?: string | null,"dimensions"?: string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id"?: string,"image_key": string,"medium"?: string | null,"narration_citations"?: NonNullable<Json>,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at"?: string | null,"title": string,"version": number
+                  }
+                  Update: {
+                    "approved_at"?: string,"approved_by"?: string,"artwork_id"?: string,"audio_key"?: string | null,"audio_text_hash"?: string | null,"creation_year"?: string | null,"dimensions"?: string | null,"evidence"?: NonNullable<Json>,"exhibition_id"?: string,"id"?: string,"image_key"?: string,"medium"?: string | null,"narration_citations"?: NonNullable<Json>,"narration_hash"?: string,"narration_text"?: string,"number"?: number,"owner_id"?: string,"revoked_at"?: string | null,"title"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -235,13 +393,33 @@ isOneToOne: false
       referencedColumns: ["owner_id","exhibition_id","id"]
     }
                   ]
+                },"withdrawn_evidence_sources": {
+                  Row: {
+                    "owner_id": string,"source_key": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "owner_id": string,"source_key": string
+                  }
+                  Update: {
+                    "owner_id"?: string,"source_key"?: string
+                  }
+                  Relationships: [
+
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            "complete_ai_job":
+            "approve_evidence":
+{ Args: { "p_evidence_id": string,"p_version": number }; Returns: Json
+                           },
+"approve_narration":
+{ Args: { "p_artwork_id": string,"p_citations": Json,"p_expected_revision": number }; Returns: Json
+                           },
+"complete_ai_job":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
                            },
 "create_artwork":
@@ -274,21 +452,48 @@ isOneToOne: false
 "get_public_exhibition":
 { Args: { "p_id": string }; Returns: Json
                            },
+"get_review_bundle":
+{ Args: { "p_artwork_id": string }; Returns: Json
+                           },
+"get_revoke_impact":
+{ Args: { "p_evidence_id": string,"p_expected_version": number }; Returns: Json
+                           },
+"is_publication_current":
+{ Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_publication_id": string,"p_version": number }; Returns: boolean
+                           },
 "list_artworks":
 { Args: { "p_exhibition_id": string }; Returns: Json
                            },
 "list_exhibitions":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"list_labels":
+{ Args: { "p_exhibition_id": string }; Returns: Json
+                           },
+"load_publication_context":
+{ Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_number": number }; Returns: Json
+                           },
+"pause":
+{ Args: { "p_artwork_id"?: string,"p_exhibition_id": string,"p_expected_revision": number }; Returns: Json
+                           },
+"publish":
+{ Args: { "p_artworks": Json,"p_exhibition_id": string,"p_expected_revision": number,"p_intro": Json,"p_owner": string,"p_request_id": string,"p_voice_required": boolean }; Returns: Json
+                           },
 "reserve_ai_job":
 { Args: { "p_artwork_id": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_owner": string,"p_request_id": string,"p_strategy": string }; Returns: Json
                            } |
 { Args: { "p_artwork_id": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_mock": boolean,"p_owner": string,"p_request_id": string,"p_strategy": string }; Returns: Json
                            },
+"resume":
+{ Args: { "p_artwork_id"?: string,"p_exhibition_id": string,"p_expected_revision": number,"p_owner": string,"p_voice_required": boolean }; Returns: Json
+                           },
 "retry_ai_job":
 { Args: { "p_expected_attempt": number,"p_job_id": string,"p_owner": string,"p_request_id": string }; Returns: Json
                            } |
 { Args: { "p_expected_attempt": number,"p_job_id": string,"p_mock": boolean,"p_owner": string,"p_request_id": string }; Returns: Json
+                           },
+"revoke_evidence":
+{ Args: { "p_evidence_id": string,"p_expected_version": number,"p_impact_token": string }; Returns: Json
                            },
 "save_narration_draft":
 { Args: { "p_artwork_id": string,"p_expected_revision": number,"p_source_job_id"?: string,"p_text": string }; Returns: Json
@@ -304,6 +509,9 @@ isOneToOne: false
                            },
 "update_knowledge_document":
 { Args: { "p_expected_revision": number,"p_sections": Json,"p_source_refs": Json,"p_subject_id": string,"p_subject_type": string }; Returns: Json
+                           },
+"upsert_evidence":
+{ Args: { "p_artwork_id": string,"p_body": string,"p_evidence_id"?: string,"p_exhibition_id": string,"p_expected_version"?: number,"p_scope": string,"p_source": Json,"p_source_label": string }; Returns: Json
                            }
           }
           Enums: {

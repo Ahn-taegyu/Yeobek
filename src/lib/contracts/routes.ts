@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { generateNarrationSchema, jobResponse, retryJobSchema, saveNarrationSchema } from "./jobs";
+import { approvalSchema, approvalResponse, evidenceImpactSchema, evidenceResponse, labelsResponse,
+  publicationSchema, publicationResponse, reviewResponse, revokeEvidenceSchema, revokeImpactResponse,
+  upsertEvidenceSchema } from "./publication";
 import {
   createArtworkSchema, createExhibitionSchema, emptySchema, loginSchema, profileSchema,
   updateArtworkSchema, updateExhibitionSchema, updateKnowledgeSchema, uuid,
@@ -23,6 +26,13 @@ const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  reviewArtwork: { method: "GET", path: "/api/admin/artworks/{id}/review", params: byId, response: successEnvelope(reviewResponse), statuses: [200] },
+  upsertEvidence: { method: "POST", path: "/api/admin/artworks/{id}/evidence", params: byId, body: upsertEvidenceSchema, response: successEnvelope(evidenceResponse), statuses: [201] },
+  approveArtwork: { method: "POST", path: "/api/admin/artworks/{id}/approvals", params: byId, body: approvalSchema, response: successEnvelope(approvalResponse), statuses: [200] },
+  changePublication: { method: "POST", path: "/api/admin/exhibitions/{id}/publication", params: byId, body: publicationSchema, response: successEnvelope(publicationResponse), statuses: [200, 201] },
+  listLabels: { method: "GET", path: "/api/admin/exhibitions/{id}/labels", params: byId, response: successEnvelope(labelsResponse), statuses: [200] },
+  evidenceImpact: { method: "POST", path: "/api/admin/evidence/{id}/impact", params: byId, body: evidenceImpactSchema, response: successEnvelope(revokeImpactResponse), statuses: [200] },
+  revokeEvidence: { method: "POST", path: "/api/admin/evidence/{id}/revoke", params: byId, body: revokeEvidenceSchema, response: successEnvelope(revokeImpactResponse), statuses: [200] },
   generateNarration: { method: "POST", path: "/api/admin/artworks/{id}/generations", params: byId, body: generateNarrationSchema, response: successEnvelope(jobResponse), statuses: [200, 201] },
   getJob: { method: "GET", path: "/api/admin/jobs/{id}", params: byId, response: successEnvelope(jobResponse), statuses: [200] },
   retryJob: { method: "POST", path: "/api/admin/jobs/{id}/retry", params: byId, body: retryJobSchema, response: successEnvelope(jobResponse), statuses: [200] },

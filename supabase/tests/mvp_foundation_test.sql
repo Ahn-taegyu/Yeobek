@@ -232,16 +232,20 @@ select throws_ok($$select get_artist_profile()$$, '42501', 'permission denied fo
 select is(get_public_exhibition('10000000-0000-0000-0000-000000000001'), null, 'anon cannot discover the draft exhibition');
 reset role;
 
--- Seed an approved publication as the trusted database role. There is no artist-facing publishing workflow yet.
+-- Seed a structurally valid trusted snapshot for the original public gate tests.
 insert into publications (
     id, owner_id, exhibition_id, artwork_id, version, number, title, image_key, evidence, narration_text, narration_hash,
-    audio_key, audio_text_hash, approved_by
+    audio_key, audio_text_hash, approved_by, narration_citations
 ) values (
     '30000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
     '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001',
-    1, 1, 'Public artwork', 'private/approved-image.webp', '[{"excerpt":"Approved excerpt"}]', 'Approved narration',
+    1, 1, 'Public artwork', 'private/approved-image.webp', jsonb_build_object('schemaVersion',1,'items',jsonb_build_array(jsonb_build_object(
+        'id','40000000-0000-0000-0000-000000000001','version',1,
+        'ownerId','00000000-0000-0000-0000-000000000001','exhibitionId','10000000-0000-0000-0000-000000000001',
+        'publicationId','30000000-0000-0000-0000-000000000001','artworkId','20000000-0000-0000-0000-000000000001',
+        'scope','artwork','sourceLabel','Artist','body','Approved excerpt','contentHash',encode(sha256('Approved excerpt'::bytea),'hex')))), 'Approved narration',
     sha256('Approved narration'::bytea), 'private/approved-audio.mp3', sha256('Approved narration'::bytea),
-    '00000000-0000-0000-0000-000000000001'
+    '00000000-0000-0000-0000-000000000001','[{"id":"40000000-0000-0000-0000-000000000001","version":1}]'
 );
 update artworks set state = 'published', active_publication_id = '30000000-0000-0000-0000-000000000001'
 where id = '20000000-0000-0000-0000-000000000001';
