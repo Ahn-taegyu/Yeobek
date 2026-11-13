@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 import { createDocentHarness, speakVerifiedReply } from "../../src/lib/ai/harness";
+import { getPlaybookFailureSteps } from "../../src/lib/ai/playbook";
 import { mentionedNumbers, selectEvidence } from "../../src/lib/ai/context";
 import { ids, hash, syntheticPublication, syntheticRequest } from "../fixtures/ai";
 import { createConfiguredSpeechProvider, createDocentRuntime } from "../../src/lib/ai/runtime";
@@ -22,13 +23,21 @@ describe("docent harness offline evaluation (synthetic; no semantic quality clai
     expect(reply).toMatchObject({ outcome: "answered", requestId: ids.request, contextSequence: 2,
       publication: { artworkId: ids.artwork, publicationId: ids.publication }, source: "generated" });
     expect(s.publications.isCurrent).toHaveBeenCalledTimes(2);
+    expect(reply.steps.map(step => [step.id, step.status])).toEqual([
+      ["request.validate", "done"], ["intent.resolve", "done"], ["publication.read", "done"],
+      ["publication.recheck", "done"], ["evidence.select", "done"], ["model.generate", "done"],
+      ["output.validate", "done"], ["publication.recheck.final", "done"],
+    ]);
     const prompt = s.text.generate.mock.calls[0] as unknown as [{ input: string; system: string }];
     expect(prompt[0].input).not.toContain(ids.owner);
     expect(prompt[0].system).toContain("이미지/카메라 분석이 없으므로");
   });
   it.each(["18번 작품 설명해줘.", "18번 작품도 설명해줘.", "십팔 번 설명해 주세요!", "해설 보기"])("reuses approved narration without a model: %s", async question => {
     const s = setup();
-    expect((await s.harness.answer(syntheticRequest({ question }))).source).toBe("approved_narration");
+    const reply = await s.harness.answer(syntheticRequest({ question }));
+    expect(reply.source).toBe("approved_narration");
+    expect(reply.steps.find(step => step.id === "model.generate")).toMatchObject({ status: "skipped", reason: "approved_narration" });
+    expect(reply.steps.at(-1)).toMatchObject({ id: "publication.recheck.final", status: "done" });
     expect(s.text.generate).not.toHaveBeenCalled();
   });
   it("does not drop a follow-up why question into the narration fast path", async () => {
@@ -46,7 +55,9 @@ describe("docent harness offline evaluation (synthetic; no semantic quality clai
     expect(s.text.generate).not.toHaveBeenCalled();
   });
   it("does not reuse a cleared selection", async () => {
-    const s = setup(); expect((await s.harness.answer(syntheticRequest({ artworkId: null }))).outcome).toBe("clarify");
+    const s = setup(); const reply = await s.harness.answer(syntheticRequest({ artworkId: null }));
+    expect(reply.outcome).toBe("clarify");
+    expect(reply.steps.slice(2).every(step => step.status === "skipped" && step.reason === "selection_required")).toBe(true);
     expect(s.publications.load).not.toHaveBeenCalled();
   });
   it("does not read 이번 작품 as artwork number two", async () => {
@@ -118,6 +129,15 @@ describe("docent harness offline evaluation (synthetic; no semantic quality clai
     const before = setup(); before.publications.isCurrent.mockResolvedValue(false);
     await expect(before.harness.answer(syntheticRequest())).rejects.toMatchObject({ code: "publication_unavailable" });
     expect(before.text.generate).not.toHaveBeenCalled();
+  });
+  it("preserves a provider failure and records failure without fabricating final recheck success", async () => {
+    const s = setup(); const error = new Error("private provider error");
+    s.text.generate.mockRejectedValue(error);
+    await expect(s.harness.answer(syntheticRequest())).rejects.toBe(error);
+    const steps = getPlaybookFailureSteps(error);
+    expect(steps).toContainEqual(expect.objectContaining({ id: "model.generate", status: "failed" }));
+    expect(steps?.at(-1)).toMatchObject({ id: "publication.recheck.final", status: "skipped", reason: "previous_step_failed" });
+    expect(JSON.stringify(steps)).not.toContain("private provider error");
   });
   it.each([['text', 'text'], ['text', 'voice'], ['voice', 'text'], ['voice', 'voice']] as const)("keeps %s/%s independent", async (inputMode, outputMode) => {
     const s = setup(); expect(await s.harness.answer(syntheticRequest({ inputMode, outputMode }))).toMatchObject({ inputMode, outputMode });

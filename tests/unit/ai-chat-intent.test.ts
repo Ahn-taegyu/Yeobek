@@ -45,6 +45,7 @@ describe("visitor chat intent and artwork selection", () => {
     "2024년 작품 재료는 무엇인가요?",
     "붓질이 번졌나요?",
     "한 번 더 알려줘",
+    "제 3번 질문은",
   ])("keeps the current artwork for dates, counts and ordinary text: %s", async question => {
     const s = setup();
     const reply = await s.harness.answer(syntheticRequest({ question }));
@@ -108,11 +109,31 @@ describe("visitor chat intent and artwork selection", () => {
     expect(reply.source).toBe("generated");
   });
 
-  it("falls back to text interpretation in explicit auto mode", async () => {
+  it("falls back to text interpretation when intent is omitted", async () => {
     const s = setup();
-    const reply = await s.harness.answer(syntheticRequest({ question: "18", intent: "auto" }));
+    const reply = await s.harness.answer(syntheticRequest({ question: "18" }));
     expect(s.publications.load).toHaveBeenCalledWith({ exhibitionId: ids.exhibition, number: 18 }, undefined);
     expect(reply.source).toBe("approved_narration");
+  });
+
+  it("rejects the retired auto intent instead of treating it as an explicit question", async () => {
+    const s = setup();
+    await expect(s.harness.answer({ ...syntheticRequest(), intent: "auto" })).rejects.toMatchObject({ code: "invalid_request" });
+    expect(s.publications.load).not.toHaveBeenCalled();
+  });
+
+  it.each(["19", "19번 재료는?", "십구 번 작품 설명해줘"])("returns the same fixed clarification for an unavailable numbered work: %s", async question => {
+    const s = setup();
+    s.publications.load.mockResolvedValue(null as never);
+    const reply = await s.harness.answer(syntheticRequest({ question }));
+    expect(reply).toMatchObject({ source: "fixed", outcome: "clarify", publication: null });
+    expect(reply.answer).toContain("해당 번호의 공개 작품을 찾을 수 없습니다");
+    expect(s.text.generate).not.toHaveBeenCalled();
+  });
+
+  it("still rejects an unavailable selected ID without a number", async () => {
+    const s = setup(); s.publications.load.mockResolvedValue(null as never);
+    await expect(s.harness.answer(syntheticRequest())).rejects.toMatchObject({ code: "publication_unavailable" });
   });
 
   it.each(["19번 작품 해설", "18번과 19번", "18번보다 19번이 큰가요?", "18/19", "0", "10000"])(

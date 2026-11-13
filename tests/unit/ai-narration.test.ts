@@ -3,6 +3,7 @@ vi.mock("server-only", () => ({}));
 import type { ArtistKnowledgeContext } from "../../src/lib/ai/artist-knowledge";
 import { AiError } from "../../src/lib/ai/errors";
 import { createNarrationHarness, NARRATION_LIMITS, type JudgeEvaluation } from "../../src/lib/ai/narration";
+import * as playbook from "../../src/lib/ai/playbook";
 import type { AiTextRequest, AiTextResponse } from "../../src/lib/ai/providers/types";
 import { ids } from "../fixtures/ai";
 
@@ -16,6 +17,8 @@ const passing = (candidateId: string): JudgeEvaluation =>
 const readCandidates = (call: AiTextRequest): { candidateId: string; answer: string; citations: string[] }[] => JSON.parse(call.input).candidates;
 const assessment = (call: AiTextRequest, score: (candidateId: string) => JudgeEvaluation = passing) =>
   response({ evaluations: readCandidates(call).map(({ candidateId }) => score(candidateId)) }, "fake-judge");
+const draftSteps = ["request.validate", "author.read", "evidence.select", "candidate.rounds", "author.recheck.final", "output.validate"];
+const evaluationSteps = ["author.recheck", "model.evaluate", "output.validate", "candidate.rank"];
 
 function setup(actorId = ids.owner) {
   const context: ArtistKnowledgeContext = {
@@ -41,6 +44,27 @@ function setup(actorId = ids.owner) {
 afterEach(() => vi.useRealTimers());
 
 describe("artist narration candidate selection", () => {
+  it("does not dispatch the first store load when cancelled in the same turn", async () => {
+    const s = setup(); const controller = new AbortController();
+    const pending = s.harness.draft(request, controller.signal);
+    controller.abort();
+    expect(await pending).toMatchObject({ status: "abstained", reason: "cancelled",
+      steps: [{ id: "request.validate", status: "done" },
+        ...draftSteps.slice(1).map(id => ({ id, status: "skipped", reason: "cancelled" }))] });
+    expect(s.store.loadOwnedContext).not.toHaveBeenCalled();
+    expect(s.generator.generate).not.toHaveBeenCalled();
+  });
+  it.each([600, 601, 2000])("accepts a %i-codepoint draft and reports the target warning separately", async length => {
+    const s = setup();
+    const draft = { ...overview, answer: "🌙".repeat(length) };
+    s.generator.generate.mockResolvedValue(response(draft));
+    const result = await s.harness.draft({ ...request, strategy: "single" });
+    expect(result).toMatchObject({ status: "selected", selected: draft, overTarget: length > 600,
+      steps: draftSteps.map(id => ({ id, status: "done" })),
+      metrics: { evaluationSteps: [{ round: 1, steps: evaluationSteps.map(id => ({ id, status: "done" })) }] } });
+    expect(s.generator.generate.mock.calls[0][0].schema.name).toBe("yeobek_narration_draft");
+    expect(s.judge.generate).toHaveBeenCalledOnce();
+  });
   it("starts both calls before either resolves and verifies the only returned draft against the original sources", async () => {
     const s = setup();
     const pending: ((value: AiTextResponse) => void)[] = [];
@@ -71,7 +95,10 @@ describe("artist narration candidate selection", () => {
     s.judge.generate.mockImplementation(async call => assessment(call, id => ({ ...passing(id), grounding: 3, tone: 5 })));
     const result = await s.harness.draft({ ...request, strategy: "single" });
     expect(result).toMatchObject({ status: "abstained", reason: "below_threshold",
-      metrics: { rounds: 1, reservedCalls: 2, reservedOutputTokens: 4600 } });
+      steps: [...draftSteps.slice(0, 4).map(id => ({ id, status: "done" })),
+        ...draftSteps.slice(4).map(id => ({ id, status: "skipped", reason: "below_threshold" }))],
+      metrics: { rounds: 1, reservedCalls: 2, reservedOutputTokens: 4600,
+        evaluationSteps: [{ round: 1, steps: evaluationSteps.map(id => ({ id, status: "done" })) }] } });
     expect(s.generator.generate).toHaveBeenCalledOnce();
     expect(JSON.parse(s.generator.generate.mock.calls[0][0].input).strategy).toBe("overview");
     expect(s.judge.generate).toHaveBeenCalledOnce();
@@ -114,7 +141,9 @@ describe("artist narration candidate selection", () => {
     s.judge.generate.mockImplementationOnce(async call => assessment(call, id => ({ ...passing(id), tone: 2, unsupportedIntent: true })));
     const result = await s.harness.draft(request);
     expect(result).toMatchObject({ status: "selected", selectedCandidateId: "r2-c1",
-      metrics: { rounds: 2, reservedCalls: 6, reservedOutputTokens: 12400 } });
+      steps: draftSteps.map(id => ({ id, status: "done" })),
+      metrics: { rounds: 2, reservedCalls: 6, reservedOutputTokens: 12400,
+        evaluationSteps: [1, 2].map(round => ({ round, steps: evaluationSteps.map(id => ({ id, status: "done" })) })) } });
     expect(result.metrics.calls).toHaveLength(6);
     expect(result.metrics.evaluations).toHaveLength(4);
     expect(s.store.loadOwnedContext).toHaveBeenCalledTimes(5);
@@ -126,7 +155,7 @@ describe("artist narration candidate selection", () => {
 
   it("stops on round-two rejection and repairs local structural errors without paying for a judge over invalid candidates", async () => {
     const s = setup();
-    s.generator.generate.mockResolvedValue(response({ ...overview, answer: "원".repeat(601) }));
+    s.generator.generate.mockResolvedValue(response({ ...overview, answer: "원".repeat(2001) }));
     const result = await s.harness.draft(request);
     expect(result).toMatchObject({ status: "abstained", reason: "invalid_candidate", metrics: { rounds: 2 } });
     expect(s.generator.generate).toHaveBeenCalledTimes(4);
@@ -145,7 +174,11 @@ describe("artist narration candidate selection", () => {
       if (kind === "freeform") Object.assign(evaluations[1], { notes: "그대로 게시" });
       s.judge.generate.mockResolvedValue(response({ evaluations }));
       const result = await s.harness.draft(request);
-      expect(result).toMatchObject({ status: "abstained", reason: "judge_failed", metrics: { rounds: 1, evaluations: [] } });
+      expect(result).toMatchObject({ status: "abstained", reason: "judge_failed", metrics: { rounds: 1, evaluations: [],
+        evaluationSteps: [{ round: 1, steps: [
+          { id: "author.recheck", status: "done" }, { id: "model.evaluate", status: "done" },
+          { id: "output.validate", status: "failed" }, { id: "candidate.rank", status: "skipped", reason: "previous_step_failed" },
+        ] }] } });
       expect(result.metrics.calls[2]).toMatchObject({ status: "failed", errorCode: "invalid_evaluation" });
     },
   );
@@ -162,6 +195,25 @@ describe("artist narration candidate selection", () => {
     const s = setup();
     s.judge.generate.mockImplementation(async call => assessment(call, id => ({ ...passing(id), confidentialityLeak: true })));
     expect(await s.harness.draft(request)).toMatchObject({ status: "abstained", reason: "below_threshold", metrics: { rounds: 1 } });
+  });
+
+  it("records request validation and skips every downstream step for an invalid request", async () => {
+    const s = setup();
+    expect(await s.harness.draft({ ...request, expectedRevision: 0 })).toMatchObject({
+      status: "abstained", reason: "invalid_request",
+      steps: [{ id: "request.validate", status: "done" },
+        ...draftSteps.slice(1).map(id => ({ id, status: "skipped", reason: "invalid_request" }))],
+      metrics: { evaluationSteps: [] },
+    });
+    expect(s.store.loadOwnedContext).not.toHaveBeenCalled();
+  });
+
+  it("propagates a playbook ordering failure from a nested evaluation", async () => {
+    const s = setup();
+    const error = new playbook.PlaybookOrderError("step_out_of_order");
+    s.judge.generate.mockRejectedValue(error);
+    await expect(s.harness.draft(request)).rejects.toBe(error);
+    expect(s.store.loadOwnedContext).toHaveBeenCalledTimes(2);
   });
 
   it.each(["empty", "owner", "actor", "revision", "scope", "oversize", "wrong_subject"] as const)(
@@ -263,6 +315,28 @@ describe("artist narration candidate selection", () => {
     expect(JSON.stringify(result)).not.toContain("private caller message");
   });
 
+  it("prioritizes cancellation when a candidate round has finished with an abstention", async () => {
+    const s = setup();
+    const cancel = new AbortController();
+    s.generator.generate.mockResolvedValue(response({ outcome: "clarify", answer: "근거를 확인해 주세요.", citations: [] }));
+    const runner = playbook.startPlaybook("narration-draft");
+    const step = runner.step;
+    vi.spyOn(runner, "step").mockImplementation(async (id, callback) => {
+      const result = await step(id, callback);
+      if (id === "candidate.rounds") cancel.abort();
+      return result;
+    });
+    const startPlaybook = vi.spyOn(playbook, "startPlaybook").mockReturnValueOnce(runner);
+    try {
+      expect(await s.harness.draft(request, cancel.signal)).toMatchObject({ status: "abstained", reason: "cancelled",
+        steps: [...draftSteps.slice(0, 4).map(id => ({ id, status: "done" })),
+          ...draftSteps.slice(4).map(id => ({ id, status: "skipped", reason: "cancelled" }))] });
+      expect(s.store.loadOwnedContext).toHaveBeenCalledOnce();
+    } finally {
+      startPlaybook.mockRestore();
+    }
+  });
+
   it("cancels a pending final snapshot recheck even after selection was scored", async () => {
     const s = setup();
     const cancel = new AbortController();
@@ -273,7 +347,9 @@ describe("artist narration candidate selection", () => {
     const pending = s.harness.draft(request, cancel.signal);
     await vi.waitFor(() => expect(s.store.loadOwnedContext).toHaveBeenCalledTimes(3));
     cancel.abort();
-    expect(await pending).toMatchObject({ status: "abstained", reason: "cancelled", selected: null, metrics: { rounds: 1 } });
+    expect(await pending).toMatchObject({ status: "abstained", reason: "cancelled", selected: null, metrics: { rounds: 1 },
+      steps: [...draftSteps.slice(0, 4).map(id => ({ id, status: "done" })),
+        { id: "author.recheck.final", status: "failed" }, { id: "output.validate", status: "skipped", reason: "previous_step_failed" }] });
   });
 
   it("keeps a cancelled invocation isolated from a concurrent baseline", async () => {

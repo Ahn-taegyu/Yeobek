@@ -1,29 +1,67 @@
 {
   "id": "yeobek",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "instructions": "instructions.md",
   "messages": "messages.json",
   "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration"],
   "playbooks": {
     "visitor-answer": {
       "skills": ["retrieve-wiki", "speak-docent"],
-      "tools": ["publication.read", "publication.recheck"]
+      "tools": ["publication.read", "publication.recheck"],
+      "steps": [
+        { "id": "request.validate" },
+        { "id": "intent.resolve" },
+        { "id": "publication.read", "tool": "publication.read" },
+        { "id": "publication.recheck", "tool": "publication.recheck" },
+        { "id": "evidence.select" },
+        { "id": "model.generate" },
+        { "id": "output.validate" },
+        { "id": "publication.recheck.final", "tool": "publication.recheck" }
+      ]
     },
     "narration-draft": {
       "skills": ["retrieve-wiki", "speak-docent", "draft-narration"],
-      "tools": ["author.read"]
+      "tools": ["author.read"],
+      "steps": [
+        { "id": "request.validate" },
+        { "id": "author.read", "tool": "author.read" },
+        { "id": "evidence.select" },
+        { "id": "candidate.rounds" },
+        { "id": "author.recheck.final", "tool": "author.read" },
+        { "id": "output.validate" }
+      ]
     },
     "narration-evaluate": {
       "skills": ["evaluate-narration"],
-      "tools": ["author.read"]
+      "tools": ["author.read"],
+      "steps": [
+        { "id": "author.recheck", "tool": "author.read" },
+        { "id": "model.evaluate" },
+        { "id": "output.validate" },
+        { "id": "candidate.rank" }
+      ]
     },
     "artist-organize": {
       "skills": ["organize-artist"],
-      "tools": ["author.read", "proposal.store"]
+      "tools": ["author.read", "proposal.store"],
+      "steps": [
+        { "id": "request.validate" },
+        { "id": "author.read", "tool": "author.read" },
+        { "id": "model.generate" },
+        { "id": "output.validate" },
+        { "id": "proposal.store", "tool": "proposal.store" }
+      ]
     },
     "artist-apply": {
       "skills": ["organize-artist"],
-      "tools": ["proposal.read", "author.read", "proposal.apply"]
+      "tools": ["proposal.read", "author.read", "proposal.apply"],
+      "steps": [
+        { "id": "request.validate" },
+        { "id": "proposal.read", "tool": "proposal.read" },
+        { "id": "proposal.preflight", "tool": "author.read" },
+        { "id": "proposal.recheck", "tool": "proposal.read" },
+        { "id": "proposal.apply", "tool": "proposal.apply" }
+      ]
     }
   }
 }

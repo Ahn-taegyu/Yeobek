@@ -1,6 +1,7 @@
 import { z } from "zod";
+import type { PlaybookStepRecord } from "./playbook";
 
-export const AI_LIMITS = { question: 500, answer: 600, approvedNarration: 2000, evidenceCount: 12, evidenceChars: 8000 } as const;
+export const AI_LIMITS = { question: 500, answer: 600, narration: 2000, narrationTarget: 600, evidenceCount: 12, evidenceChars: 8000 } as const;
 export const codepoints = (value: string) => Array.from(value).length;
 const visible = (value: string) => /[^\s\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}]/u.test(value);
 const boundedText = (max: number) => z.string().min(1).refine(value =>
@@ -12,8 +13,8 @@ export const chatRequestSchema = z.strictObject({
   requestId: id,
   exhibitionId: id,
   artworkId: id.nullable(),
-  // Structured UI intent takes precedence; omitted fields retain legacy fallback.
-  intent: z.enum(["auto", "narration", "question"]).optional(),
+  // Resolve legacy text using the raw intent presence BEFORE this default.
+  intent: z.enum(["question", "narration"]).default("question"),
   artworkNumber: z.number().int().min(1).max(9999).optional(),
   question: boundedText(AI_LIMITS.question),
   contextSequence: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
@@ -21,12 +22,15 @@ export const chatRequestSchema = z.strictObject({
   outputMode: z.enum(["text", "voice"]),
 });
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
+export type ChatRequestInput = z.input<typeof chatRequestSchema>;
 export const answerSchema = z.strictObject({
   answer: boundedText(AI_LIMITS.answer),
   citations: z.array(id).max(AI_LIMITS.evidenceCount),
   outcome: z.enum(["answered", "clarify", "insufficient_evidence"]),
 });
 export type ModelAnswer = z.infer<typeof answerSchema>;
+export const narrationDraftSchema = answerSchema.extend({ answer: boundedText(AI_LIMITS.narration) });
+export type NarrationDraft = z.infer<typeof narrationDraftSchema>;
 
 // Provider schema is deliberately simple; local validation additionally checks
 // codepoint budgets, citation membership and outcome/citation relationships.
@@ -42,6 +46,7 @@ export const answerJsonSchema = {
     required: ["answer", "citations", "outcome"],
   },
 };
+export const narrationDraftJsonSchema = { ...answerJsonSchema, name: "yeobek_narration_draft" };
 
 export const evidenceSchema = z.strictObject({
   id, version, ownerId: id, exhibitionId: id, publicationId: id,
@@ -51,7 +56,7 @@ export const evidenceSchema = z.strictObject({
 });
 export type Evidence = z.infer<typeof evidenceSchema>;
 export const approvedNarrationSchema = z.strictObject({
-  text: boundedText(AI_LIMITS.approvedNarration), citations: z.array(id).min(1).max(AI_LIMITS.evidenceCount),
+  text: boundedText(AI_LIMITS.narration), citations: z.array(id).min(1).max(AI_LIMITS.evidenceCount),
 });
 export const publicationContextSchema = z.strictObject({
   ownerId: id, exhibitionId: id, artworkId: id, publicationId: id, version,
@@ -82,6 +87,8 @@ export type DocentReply = ModelAnswer & {
   publication: PublicationRef | null;
   source: "approved_narration" | "generated" | "fixed";
   promptVersion: string;
+  /** Internal execution metadata: omit from the future visitor HTTP response. */
+  steps: readonly PlaybookStepRecord[];
 };
 
 /** Session ownership/expiry and the saved validated reply (including trusted
@@ -89,5 +96,5 @@ export type DocentReply = ModelAnswer & {
  * speech endpoint must accept IDs, never arbitrary text/source assertions.
  */
 export interface SpeechSourceStore {
-  loadAnswer(sessionId: string, answerId: string, signal?: AbortSignal): Promise<DocentReply | null>;
+  loadAnswer(sessionId: string, answerId: string, signal?: AbortSignal): Promise<Omit<DocentReply, "steps"> | null>;
 }

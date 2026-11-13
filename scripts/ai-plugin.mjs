@@ -7,21 +7,40 @@ const root = new URL("../ai/yeobek/", import.meta.url);
 const target = new URL("../src/lib/ai/plugin.generated.ts", import.meta.url);
 const names = ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration"];
 const tools = ["publication.read", "publication.recheck", "author.read", "proposal.store", "proposal.read", "proposal.apply"];
-const task = z.strictObject({ skills: z.array(z.enum(names)).min(1), tools: z.array(z.enum(tools)).min(1) });
+const step = z.strictObject({
+  id: z.string().regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$/),
+  tool: z.enum(tools).optional(),
+});
+const task = z.strictObject({
+  skills: z.array(z.enum(names)).min(1),
+  tools: z.array(z.enum(tools)).min(1),
+  steps: z.array(step).min(1),
+});
 const schema = z.strictObject({ id: z.literal("yeobek"), version: z.string().regex(/^\d+\.\d+\.\d+$/),
   instructions: z.literal("instructions.md"), messages: z.literal("messages.json"), skills: z.array(z.enum(names)).length(names.length),
   playbooks: z.strictObject({ "visitor-answer": task, "narration-draft": task, "narration-evaluate": task, "artist-organize": task, "artist-apply": task }) });
 const normalize = text => text.replace(/\r\n?/g, "\n").trimEnd() + "\n";
 const read = path => normalize(readFileSync(new URL(path, root), "utf8"));
-export function compilePlugin() {
-  const manifest = schema.parse(JSON.parse(read("plugin.json")));
+export function validateManifest(input) {
+  const manifest = schema.parse(input);
   if (new Set(manifest.skills).size !== names.length) throw new Error("Duplicate plugin skill");
   const capabilities = { "visitor-answer": ["publication.read", "publication.recheck"], "narration-draft": ["author.read"], "narration-evaluate": ["author.read"],
     "artist-organize": ["author.read", "proposal.store"], "artist-apply": ["author.read", "proposal.read", "proposal.apply"] };
   for (const [name, playbook] of Object.entries(manifest.playbooks)) {
     if (new Set(playbook.skills).size !== playbook.skills.length || new Set(playbook.tools).size !== playbook.tools.length ||
       playbook.tools.some(tool => !capabilities[name].includes(tool))) throw new Error(`Invalid playbook capabilities: ${name}`);
+    if (new Set(playbook.steps.map(({ id }) => id)).size !== playbook.steps.length) {
+      throw new Error(`Duplicate playbook step: ${name}`);
+    }
+    if (playbook.steps.some(({ tool }) => tool && !playbook.tools.includes(tool))) {
+      throw new Error(`Playbook step references an undeclared tool: ${name}`);
+    }
   }
+  return manifest;
+}
+
+export function compilePlugin() {
+  const manifest = validateManifest(JSON.parse(read("plugin.json")));
   const skills = Object.fromEntries(manifest.skills.map(name => {
     const markdown = read(`skills/${name}/SKILL.md`);
     const match = /^---\nname: ([a-z-]+)\ndescription: ([^\n]+)\n---\n([\s\S]+)$/.exec(markdown);
@@ -29,7 +48,7 @@ export function compilePlugin() {
     return [name, { description: match[2], instructions: match[3].trim() }];
   }));
   const message = z.string().trim().min(1).max(600).refine(v => !v.includes("\u0000"));
-  const messages = z.strictObject({ chooseOne: message, chooseArtwork: message, noNarration: message,
+  const messages = z.strictObject({ chooseOne: message, chooseArtwork: message, artworkUnavailable: message, noNarration: message,
     clarify: message, point: message, insufficient: message }).parse(JSON.parse(read(manifest.messages)));
   const bundle = { ...manifest, instructions: read(manifest.instructions), messages, skills };
   const fingerprint = createHash("sha256").update(JSON.stringify(bundle)).digest("hex");

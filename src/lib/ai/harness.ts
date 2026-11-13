@@ -1,17 +1,18 @@
 import "server-only";
 import { z } from "zod";
-import { answerJsonSchema, answerSchema, chatRequestSchema, type DocentReply, type ModelAnswer, type PublicationContext,
-  type PublicationRef, type PublicationStore, type SpeechSourceStore } from "./contracts";
-import { assertNotCancelled, HarnessError, isNarrationRequest, mentionedNumbers, selectEvidence, textHash, validateContext } from "./context";
+import { answerJsonSchema, answerSchema, narrationDraftSchema, chatRequestSchema, type DocentReply, type ModelAnswer, type NarrationDraft, type PublicationContext,
+  type ArtworkSelector, type PublicationRef, type PublicationStore, type SpeechSourceStore } from "./contracts";
+import { assertNotCancelled, HarnessError, resolveIntent, mentionedNumbers, selectEvidence, textHash, validateContext } from "./context";
 import { DOCENT_SYSTEM_PROMPT, PROMPT_VERSION } from "./prompts";
 import type { AiSpeechProvider, AiTextProvider } from "./providers/types";
-import { assertPlaybookToolConfigured, DOCENT_COPY } from "./plugin";
+import { capabilitiesFor, DOCENT_COPY } from "./plugin";
+import { PlaybookOrderError, startPlaybook } from "./playbook";
 
 const reference = (context: PublicationContext): PublicationRef => ({ exhibitionId: context.exhibitionId,
   artworkId: context.artworkId, publicationId: context.publicationId, version: context.version });
 
-export function validateAnswer(output: unknown, allowedIds: string[]): ModelAnswer {
-  const parsed = answerSchema.safeParse(output);
+function validateCitedText(output: unknown, allowedIds: string[], schema: typeof answerSchema | typeof narrationDraftSchema) {
+  const parsed = schema.safeParse(output);
   if (!parsed.success) throw new HarnessError("invalid_output");
   const answer = parsed.data;
   if (/(?:https?:\/\/|www\.|data:|file:\/\/)/iu.test(answer.answer) ||
@@ -23,11 +24,16 @@ export function validateAnswer(output: unknown, allowedIds: string[]): ModelAnsw
   }
   return answer;
 }
+export function validateAnswer(output: unknown, allowedIds: string[]): ModelAnswer {
+  return validateCitedText(output, allowedIds, answerSchema);
+}
+export function validateNarrationDraft(output: unknown, allowedIds: string[]): NarrationDraft {
+  return validateCitedText(output, allowedIds, narrationDraftSchema);
+}
 
-async function assertCurrent(store: PublicationStore, ref: PublicationRef, signal?: AbortSignal) {
-  assertPlaybookToolConfigured("visitor-answer", "publication.recheck");
+async function assertCurrent(recheck: PublicationStore["isCurrent"], ref: PublicationRef, signal?: AbortSignal) {
   assertNotCancelled(signal);
-  if (!await store.isCurrent(ref, signal)) throw new HarnessError("publication_unavailable");
+  if (!await recheck(ref, signal)) throw new HarnessError("publication_unavailable");
   assertNotCancelled(signal);
 }
 
@@ -36,60 +42,96 @@ async function assertCurrent(store: PublicationStore, ref: PublicationRef, signa
  * No public route currently exposes this function.
  */
 export function createDocentHarness(deps: { publications: PublicationStore; text: AiTextProvider }) {
+  const caps = capabilitiesFor("visitor-answer", { publications: deps.publications });
   return {
     async answer(input: unknown, signal?: AbortSignal): Promise<DocentReply> {
-      const parsed = chatRequestSchema.safeParse(input);
-      if (!parsed.success) throw new HarnessError("invalid_request");
-      const request = parsed.data;
-      assertNotCancelled(signal);
-      const base = { requestId: request.requestId, contextSequence: request.contextSequence,
-        inputMode: request.inputMode, outputMode: request.outputMode, promptVersion: PROMPT_VERSION };
-      const fixed = (answer: string, outcome: "clarify" | "insufficient_evidence", publication: PublicationRef | null = null): DocentReply =>
-        ({ ...base, answer, outcome, citations: [], publication, source: "fixed" });
-      const { numbers, invalid } = mentionedNumbers(request.question);
-      if (invalid || numbers.length > 1 ||
-        (request.artworkNumber !== undefined && numbers.length === 1 && numbers[0] !== request.artworkNumber)) {
-        return fixed(DOCENT_COPY.chooseOne, "clarify");
+      const flow = startPlaybook("visitor-answer");
+      try {
+        const { request, explicitIntent } = await flow.step("request.validate", () => {
+          const parsed = chatRequestSchema.safeParse(input);
+          if (!parsed.success) throw new HarnessError("invalid_request");
+          assertNotCancelled(signal);
+          // Use the validated value, preserving raw presence before its default.
+          const explicitIntent = Object.hasOwn(input as object, "intent") && (input as { intent?: unknown }).intent !== undefined
+            ? parsed.data.intent : undefined;
+          return { request: parsed.data, explicitIntent };
+        });
+        const base = { requestId: request.requestId, contextSequence: request.contextSequence,
+          inputMode: request.inputMode, outputMode: request.outputMode, promptVersion: PROMPT_VERSION };
+        const fixed = (answer: string, outcome: "clarify" | "insufficient_evidence", publication: PublicationRef | null = null): Omit<DocentReply, "steps"> =>
+          ({ ...base, answer, outcome, citations: [], publication, source: "fixed" });
+        const resolved = await flow.step("intent.resolve", () => {
+          assertNotCancelled(signal);
+          const intent = resolveIntent({ question: request.question, intent: explicitIntent });
+          const { numbers, invalid } = mentionedNumbers(request.question);
+          const ambiguous = invalid || numbers.length > 1 ||
+            (request.artworkNumber !== undefined && numbers.length === 1 && numbers[0] !== request.artworkNumber);
+          const number = request.artworkNumber ?? numbers[0];
+          const selector: ArtworkSelector | null = ambiguous ? null : number !== undefined ? { exhibitionId: request.exhibitionId, number }
+            : request.artworkId ? { exhibitionId: request.exhibitionId, artworkId: request.artworkId } : null;
+          return { intent, selector, message: ambiguous ? DOCENT_COPY.chooseOne : DOCENT_COPY.chooseArtwork };
+        });
+        if (!resolved.selector) {
+          for (const id of ["publication.read", "publication.recheck", "evidence.select", "model.generate", "output.validate", "publication.recheck.final"] as const) flow.skip(id, "selection_required");
+          return { ...fixed(resolved.message, "clarify"), steps: flow.finish() };
+        }
+        const selector = resolved.selector;
+        const context = await flow.step("publication.read", async () => {
+          assertNotCancelled(signal);
+          const loaded = await caps["publication.read"](selector, signal);
+          assertNotCancelled(signal);
+          if (!loaded) {
+            if ("number" in selector) return null;
+            throw new HarnessError("publication_unavailable");
+          }
+          return validateContext(loaded, selector);
+        });
+        if (!context) {
+          for (const id of ["publication.recheck", "evidence.select", "model.generate", "output.validate", "publication.recheck.final"] as const) flow.skip(id, "number_unavailable");
+          return { ...fixed(DOCENT_COPY.artworkUnavailable, "clarify"), steps: flow.finish() };
+        }
+        const ref = reference(context);
+        await flow.step("publication.recheck", () => assertCurrent(caps["publication.recheck"], ref, signal));
+        const finish = async (result: Omit<DocentReply, "steps">): Promise<DocentReply> => {
+          await flow.step("publication.recheck.final", () => assertCurrent(caps["publication.recheck"], ref, signal));
+          return { ...result, steps: flow.finish() };
+        };
+        if (resolved.intent === "narration") {
+          for (const id of ["evidence.select", "model.generate", "output.validate"] as const) flow.skip(id, "approved_narration");
+          if (!context.narration) return await finish(fixed(DOCENT_COPY.noNarration, "insufficient_evidence", ref));
+          return await finish({ ...base, publication: ref, source: "approved_narration", outcome: "answered",
+            answer: context.narration.text, citations: [...context.narration.citations] });
+        }
+        // No image/pointing capability. With no verbal location, do not invent what
+        // the visitor is pointing to. Rich prior conversation resolution is deferred.
+        if (/^(?:이\s*작품(?:의)?\s*)?이\s*부분(?:에|은|이|에서)?\s*(?:그려진\s*(?:건|것은)\s*)?(?:뭐야|무엇인가요|뭔가요|설명해\s*줘)[.!?。]*$/u.test(request.question.trim())) {
+          for (const id of ["evidence.select", "model.generate", "output.validate"] as const) flow.skip(id, "verbal_location_required");
+          return await finish(fixed(DOCENT_COPY.point, "clarify", ref));
+        }
+        const evidence = await flow.step("evidence.select", () => selectEvidence(context.evidence, request.question));
+        if (!evidence.length) {
+          flow.skip("model.generate", "no_evidence"); flow.skip("output.validate", "no_evidence");
+          return await finish(fixed(DOCENT_COPY.insufficient, "insufficient_evidence", ref));
+        }
+        const generated = await flow.step("model.generate", async () => {
+          assertNotCancelled(signal);
+          const result = await deps.text.generate({ system: DOCENT_SYSTEM_PROMPT, schema: answerJsonSchema, signal,
+            input: JSON.stringify({ question: request.question, artwork: { number: context.number, title: context.title },
+              evidence: evidence.map(item => ({ id: item.id, version: item.version, sourceLabel: item.sourceLabel, body: item.body })) }),
+          });
+          assertNotCancelled(signal);
+          return result;
+        });
+        const answer = await flow.step("output.validate", () => validateAnswer(generated.output, evidence.map(item => item.id)));
+        if (answer.outcome !== "answered") return await finish(fixed(
+          answer.outcome === "clarify" ? DOCENT_COPY.clarify : DOCENT_COPY.insufficient, answer.outcome, ref));
+        // Returning only validated fields keeps provider responses, prompts and keys
+        // out of the public answer. Provider usage is available at the adapter port.
+        return await finish({ ...base, ...answer, publication: ref, source: "generated" });
+      } catch (error) {
+        if (!(error instanceof PlaybookOrderError)) flow.fail(error);
+        throw error;
       }
-      const number = request.artworkNumber ?? numbers[0];
-      const selector = number !== undefined ? { exhibitionId: request.exhibitionId, number }
-        : request.artworkId ? { exhibitionId: request.exhibitionId, artworkId: request.artworkId } : null;
-      if (!selector) return fixed(DOCENT_COPY.chooseArtwork, "clarify");
-      assertPlaybookToolConfigured("visitor-answer", "publication.read");
-      const loaded = await deps.publications.load(selector, signal);
-      assertNotCancelled(signal);
-      if (!loaded) throw new HarnessError("publication_unavailable");
-      const context = validateContext(loaded, selector);
-      const ref = reference(context);
-      await assertCurrent(deps.publications, ref, signal);
-      const finish = async (result: DocentReply) => {
-        await assertCurrent(deps.publications, ref, signal);
-        return result;
-      };
-      if (request.intent === "narration" ||
-        (request.intent !== "question" && isNarrationRequest(request.question))) {
-        if (!context.narration) return finish(fixed(DOCENT_COPY.noNarration, "insufficient_evidence", ref));
-        return finish({ ...base, publication: ref, source: "approved_narration", outcome: "answered",
-          answer: context.narration.text, citations: [...context.narration.citations] });
-      }
-      // No image/pointing capability. With no verbal location, do not invent what
-      // the visitor is pointing to. Rich prior conversation resolution is deferred.
-      if (/^(?:이\s*작품(?:의)?\s*)?이\s*부분(?:에|은|이|에서)?\s*(?:그려진\s*(?:건|것은)\s*)?(?:뭐야|무엇인가요|뭔가요|설명해\s*줘)[.!?。]*$/u.test(request.question.trim())) {
-        return finish(fixed(DOCENT_COPY.point, "clarify", ref));
-      }
-      const evidence = selectEvidence(context.evidence, request.question);
-      if (!evidence.length) return finish(fixed(DOCENT_COPY.insufficient, "insufficient_evidence", ref));
-      const generated = await deps.text.generate({ system: DOCENT_SYSTEM_PROMPT, schema: answerJsonSchema, signal,
-        input: JSON.stringify({ question: request.question, artwork: { number: context.number, title: context.title },
-          evidence: evidence.map(item => ({ id: item.id, version: item.version, sourceLabel: item.sourceLabel, body: item.body })) }),
-      });
-      assertNotCancelled(signal);
-      const answer = validateAnswer(generated.output, evidence.map(item => item.id));
-      if (answer.outcome !== "answered") return finish(fixed(
-        answer.outcome === "clarify" ? DOCENT_COPY.clarify : DOCENT_COPY.insufficient, answer.outcome, ref));
-      // Returning only validated fields keeps provider responses, prompts and keys
-      // out of the public answer. Provider usage is available at the adapter port.
-      return finish({ ...base, ...answer, publication: ref, source: "generated" });
     },
   };
 }
@@ -101,6 +143,7 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
 export async function speakVerifiedReply(input: { sessionId: string; answerId: string }, deps: {
   answers: SpeechSourceStore; publications: PublicationStore; speech: AiSpeechProvider;
 }, signal?: AbortSignal) {
+  const caps = capabilitiesFor("visitor-answer", { publications: deps.publications });
   const parsed = z.strictObject({ sessionId: z.uuid(), answerId: z.uuid() }).safeParse(input);
   if (!parsed.success) throw new HarnessError("invalid_request");
   assertNotCancelled(signal);
@@ -108,11 +151,10 @@ export async function speakVerifiedReply(input: { sessionId: string; answerId: s
   assertNotCancelled(signal);
   if (!reply?.publication) throw new HarnessError("answer_unavailable");
   // Provenance comes from the trusted saved record, not from request parameters.
-  await assertCurrent(deps.publications, reply.publication, signal);
+  await assertCurrent(caps["publication.recheck"], reply.publication, signal);
   if (reply.source === "approved_narration") {
-    assertPlaybookToolConfigured("visitor-answer", "publication.read");
     const selector = { exhibitionId: reply.publication.exhibitionId, artworkId: reply.publication.artworkId };
-    const loaded = await deps.publications.load(selector, signal);
+    const loaded = await caps["publication.read"](selector, signal);
     assertNotCancelled(signal);
     if (!loaded) throw new HarnessError("publication_unavailable");
     const context = validateContext(loaded, selector);
@@ -129,6 +171,6 @@ export async function speakVerifiedReply(input: { sessionId: string; answerId: s
     throw new HarnessError("invalid_output");
   }
   const audio = await deps.speech.synthesize({ text: reply.answer, signal });
-  await assertCurrent(deps.publications, reply.publication, signal);
+  await assertCurrent(caps["publication.recheck"], reply.publication, signal);
   return { ...audio, textHash: textHash(reply.answer), publication: reply.publication };
 }

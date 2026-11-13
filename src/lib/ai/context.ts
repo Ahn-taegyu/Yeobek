@@ -85,6 +85,15 @@ const narrationAfterNumber = /^\s*[은는을를의도]?\s*(?:기본\s*)?(?:(?:�
 const listComparison = /^\s*[을를의]?\s*(?:비교|차이)/u;
 const occurrenceAfterNumber = /^(?:째|이나|씩|에\s*(?:본|봤|봐))|^[을를은는도]?\s*(?:(?:더|다시|왜)\s+)*(?:봐|봤|보았|본|보면|보는|보기|볼|덧칠|반복|전시했|전시됐|관람했)/u;
 const possibleReferenceAfterNumber = /^(?:[은는의을를이](?=$|[\s.,!?。])|에서(?=\s)|[\s.,!?。])/u;
+const numberedNonArtwork = /^\s*(?:질문|항목|문항|예시|순서)(?=$|[\s.,!?。은는이를을의])/u;
+
+export const isNumberOnly = (question: string): boolean => standaloneNumber.test(requestText(question));
+
+export function resolveIntent(request: { question: string; intent?: "question" | "narration" }): "question" | "narration" {
+  if (request.intent !== undefined) return request.intent;
+  if (isNumberOnly(request.question)) return "narration";
+  return isNarrationRequest(request.question) ? "narration" : "question";
+}
 
 export function mentionedNumbers(question: string): { numbers: number[]; invalid: boolean } {
   const text = requestText(question);
@@ -96,6 +105,7 @@ export function mentionedNumbers(question: string): { numbers: number[]; invalid
     const after = text.slice(match.index + candidate.length);
     const numerals = candidate.match(candidateNumerals) ?? [];
     if (artworkBeforeNumber.test(before)) return numerals;
+    if (numberedNonArtwork.test(after)) return [];
     if (occurrenceAfterNumber.test(after)) return [];
     const clearReference = (!before && /^\s*왜/u.test(after)) ||
       artworkTopicAfterNumber.test(after) || artworkQuestionAfterNumber.test(after) || narrationAfterNumber.test(after) ||

@@ -2,6 +2,7 @@ import "server-only";
 
 import { AI_REQUEST_TIMEOUT_MS } from "../config";
 import { AI_LIMITS, codepoints } from "../contracts";
+import { abortable, createDeadline } from "../deadline";
 import { AiError } from "../errors";
 import type { AiProviderOptions, AiProviderTrace, AiUsage } from "./types";
 
@@ -123,22 +124,12 @@ async function request(
   maxBytes: number,
 ): Promise<Uint8Array> {
   if (input.signal?.aborted) throw new AiError("cancelled");
-  const timeout = new AbortController();
   const timeoutMs = options.timeoutMs ?? AI_REQUEST_TIMEOUT_MS;
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > AI_REQUEST_TIMEOUT_MS) {
     throw new AiError("invalid_input");
   }
-  const signal = input.signal ? AbortSignal.any([input.signal, timeout.signal]) : timeout.signal;
-  const abortError = () => new AiError(input.signal?.aborted ? "cancelled" : "timeout");
-
-  let onAbort: () => void = () => {};
-  const aborted = new Promise<never>((_, reject) => {
-    onAbort = () => reject(abortError());
-    signal.addEventListener("abort", onAbort, { once: true });
-  });
-
-  const timer = setTimeout(() => timeout.abort(), timeoutMs);
-  async function run() {
+  const deadline = createDeadline(timeoutMs, input.signal);
+  async function run(signal: AbortSignal) {
     const response = await (options.fetch ?? fetch)(input.url, {
       method: "POST",
       headers: input.headers,
@@ -163,15 +154,14 @@ async function request(
   }
 
   try {
-    return await Promise.race([run(), aborted]);
+    return await abortable(deadline.signal, run);
   } catch (error) {
-    if (signal.aborted) throw abortError();
+    if (deadline.signal.aborted) throw new AiError(input.signal?.aborted ? "cancelled" : "timeout");
     if (error instanceof AiError) throw error;
     // Transport exceptions can include request details or the caller's abort reason.
     throw new AiError("network_error");
   } finally {
-    clearTimeout(timer);
-    signal.removeEventListener("abort", onAbort);
+    deadline.dispose();
   }
 }
 
@@ -207,7 +197,7 @@ export async function requestSpeech(
 
 export function validateSpeechText(text: string): void {
   // Match the publication contract: Unicode code points, not UTF-16 units.
-  if (typeof text !== "string" || !text.trim() || codepoints(text) > AI_LIMITS.approvedNarration || text.includes("\u0000")) {
+  if (typeof text !== "string" || !text.trim() || codepoints(text) > AI_LIMITS.narration || text.includes("\u0000")) {
     throw new AiError("invalid_input");
   }
 }

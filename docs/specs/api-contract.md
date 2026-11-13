@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: playbooks-plan
+  resource: /references/user-harness-playbooks-plan.md
+  title: 하네스 후속 실패 대응과 실행 단계 계획
 - id: pr2-review
   resource: /references/user-ai-pr2-review.md
   title: AI 하네스 PR2 검토와 수정 요청
@@ -109,6 +112,29 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 운영 환경에서 `APP_ORIGIN`이 없거나 설정된 URL이 잘못되면 변경 요청은 503 `SERVER_CONFIGURATION_ERROR`, `retryable: false`다. 개발 환경에서 값이 없으면 요청 URL을 기준으로 한다.
 
+## AI 실패 결과 대응 (후속 HTTP 제안)
+
+서버의 `normalizeAiOutcome`은 하네스·작가 자료·제공사 오류와 해설 생성의 `status: "abstained"` 결과에 아래 대응을 적용한다. 표의 `retryable`은 작업 상태를 확인한 후 사용자가 다시 시도할 수 있는지 나타낸다. 공통 HTTP 정책에 따라 429와 5xx는 `true`이며 서버 설정 오류는 `false`다. 이 값으로 자동 재호출하지 않는다. 제공사 어댑터의 `AiError.retryable`은 `rate_limited`와 `provider_unavailable`에만 `true`다.
+
+| 내부 실패 | 후속 HTTP 대응 | 근거 |
+| --- | --- | --- |
+| `invalid_request`, `invalid_input` | 400 `INVALID_INPUT` | EX-01 |
+| 자료·해설 `unavailable`, `publication_unavailable`, `answer_unavailable` | 404 `NOT_FOUND` | EX-04의 존재 비노출 정책. 내부 결과만으로 공개 교체·철회·답변 만료를 구분할 수 없다. |
+| `revision_conflict`, `stale_context` | 409 `REVISION_CONFLICT` | EX-07 |
+| `proposal_expired` | 410 `PROPOSAL_EXPIRED` | 임시 대응 |
+| 해설 `insufficient_evidence` | 422 `EVIDENCE_REQUIRED` | EX-08 |
+| 해설 `clarify` | 422 `CONTEXT_AMBIGUOUS` | EX-25. 관람의 고정 확인 응답은 성공 응답으로 처리한다. |
+| `cancelled` | 499 `REQUEST_CANCELLED` | 임시 대응. 이미 연결이 종료된 경우 응답을 전달할 수 없다. |
+| `invalid_context`, 알 수 없는 결과 | 500 `INTERNAL_ERROR` | 공통 오류 계약 |
+| `invalid_output`, `invalid_response`, `response_too_large`, `invalid_candidate`, `below_threshold` | 502 `AI_INVALID_OUTPUT` | 임시 대응. 내부 코드는 인용 오류(EX-09) 외에도 형식·안전·품질 위반을 포함한다. |
+| `provider_rejected`, `refused`, `incomplete`, `generation_failed`, `judge_failed` | 502 `AI_GENERATION_FAILED` | 임시 대응 |
+| `not_configured` | 503 `SERVER_CONFIGURATION_ERROR` | 공통 설정 오류 정책 |
+| `provider_unavailable`, `network_error` | 503 `PROVIDER_UNAVAILABLE` | EX-16 |
+| `timeout` | 504 `REQUEST_TIMEOUT` | EX-16 |
+| `rate_limited` | 429 `RATE_LIMITED` | EX-17 |
+
+선택된 해설은 성공 응답 경로에서 처리한다. HTTP 연결 단계에서 이 결과를 `ApiError`와 안전한 안내 문구로 연결하며 원본 오류·보류 객체를 응답에 싣지 않는다. 임시 대응과 STT·TTS의 업무별 EX-15·18 변환은 해당 경로의 HTTP 통합에서 확인한다. [시나리오의 업무 예외](user-scenarios.md#예외-처리-목록)
+
 # 후속 경로
 
 다음은 구현 예정 계약이다. 아직 제공하지 않는 기능에 성공을 가장하는 엔드포인트를 만들지 않는다. 관리자 경로는 모두 인증·소유권, 변경은 revision과 동일 출처 검사 대상이다. 비동기 요청의 `id`는 중복 실행 방지용 UUID다.
@@ -129,7 +155,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | 14 | `GET /api/admin/exhibitions/{id}/labels` | 현재 공개 전시·작품만 안정 URL·번호·제목 반환 |
 | 15 | `POST /api/public/exhibitions/{id}/versions/check` `{publication_ids}` | 현재 이용 가능한 공개 버전만 확인; 번호 조회도 해당 전시 공개 범위로 제한 |
 | 16 | `POST /api/transcribe` multipart `exhibition_id,session_id,id,file` | 인식문·상태 반환; 사용자가 수정 후 별도 전송, 원음 장기 저장 없음 |
-| 17 | `POST /api/chat` `{id,exhibition_id,session_id,conversation_id,question,artwork_id?,number?,intent?,context_sequence,input_mode,output_mode,recent_context}` | `message_id,reply_to,resolved_artwork_id,publication_id,answer,citations,outcome`; 공개 재검사 후 승인 근거만 사용; 선택적 `intent`는 `auto`·`narration`·`question`, `number`는 1~9999 정수 |
+| 17 | `POST /api/chat` `{id,exhibition_id,session_id,conversation_id,question,artwork_id?,number?,intent?,context_sequence,input_mode,output_mode,recent_context}` | `message_id,reply_to,resolved_artwork_id,publication_id,answer,citations,outcome`; 공개 재검사 후 승인 근거만 사용; 선택적 `intent`는 `narration`·`question`, `number`는 1~9999 정수 |
 | 18 | `POST /api/speech` `{id,session_id,answer_id? ,narration_id?}` | 둘 중 하나만 허용; 같은 세션의 서버 답변 또는 활성 공개 해설의 글 해시·음성 상태·미디어 참조. 임의 텍스트 불허 |
 | 19 | `GET /api/media/{id}` | 현재 공개 버전과 필요한 세션 검사 후 이미지/음성 바이트, `no-store`; 원본 PDF 제외 |
 | 20 | `GET /api/jobs/{id}`; `POST /api/jobs/{id}/retry` `{id,revision}` | 소유자 또는 소유 세션 확인 후 상태·재시도 가능 여부·대기 시간; 중복 실행 방지 |
@@ -143,6 +169,6 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 # AI HTTP 통합 전 추가 조건
 
-[PR2 검토](../reviews/ai-harness-fix-review.md)의 구조화 `intent` (`auto`·`narration`·`question`)와 `artworkNumber` (1~9999)는 내부 모듈에 구현되며 공개 HTTP는 미구현이다. 계획된 OP-17 HTTP의 `number`를 내부 `artworkNumber`로, `artwork_id`를 `artworkId`로 매핑한다. 질문은 필수다. 해설 버튼은 `narration`과 `artworkId`, 숫자 입력은 `narration`과 번호를 보낸다. 명시적 question은 Q&A이며 구조화 번호와 명백한 텍스트 번호가 충돌하면 확인한다.
+[PR2 검토](../reviews/ai-harness-fix-review.md)의 구조화 `intent` (`narration`·`question`)와 `artworkNumber` (1~9999)는 내부 모듈에 구현되며 공개 HTTP는 미구현이다. 계획된 OP-17 HTTP의 `number`를 내부 `artworkNumber`로, `artwork_id`를 `artworkId`로 매핑한다. 질문은 필수다. 해설 버튼은 `narration`과 `artworkId`, 숫자 입력은 `narration`과 번호를 보낸다. 명시적 question은 Q&A이며 구조화 번호와 명백한 텍스트 번호가 충돌하면 확인한다.
 
-승인 해설은 2,000 Unicode 코드 포인트까지 원문 그대로, 생성 답·작가 후보는 600까지 다룬다. 낭독은 신뢰할 수 있게 저장한 답변의 출처·outcome·인용과 현재 공개 문맥을 검사하고 승인 해설이면 글·인용·publication 버전까지 비교해야 한다. 현재 `api_requests`에는 해당 필드가 없어 영속 저장 구현이 선행된다. 음성 전송 상한은 2,000 코드 포인트다. 게시자의 근거 검증과 신규 migration은 [데이터 모델](data-model.md)에 정의하며 아직 미구현이다.
+승인 해설은 2,000 Unicode 코드 포인트까지 원문 그대로, 관람 생성 답은 600, 작가 해설 후보는 2,000까지 다루며 `overTarget`이 600자 초과 여부를 나타낸다. 낭독은 신뢰할 수 있게 저장한 답변의 출처·outcome·인용과 현재 공개 문맥을 검사하고 승인 해설이면 글·인용·publication 버전까지 비교해야 한다. 현재 `api_requests`에는 해당 필드가 없어 영속 저장 구현이 선행된다. 음성 전송 상한은 2,000 코드 포인트다. 게시자의 근거 검증과 신규 migration은 [데이터 모델](data-model.md)에 정의하며 아직 미구현이다.

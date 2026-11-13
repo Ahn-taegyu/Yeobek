@@ -20,7 +20,7 @@ npm run dev
 
 ## AI 연결 준비
 
-`src/lib/ai/`는 OpenAI Q&A·STT, Liner 해설 후보, Typecast TTS와 명시적으로 선택하는 OpenAI TTS 대안의 서버 어댑터를 제공합니다. 공개 자료 범위·인용·출력 길이·취소·철회를 검사하는 하네스도 있으며, 합성 자료로 검사합니다. 실제 게시/승인 DB 어댑터·세션·영속 작업 제한은 연결 전입니다. 키를 넣어도 `/api/chat`이나 관람 화면이 활성화되지는 않습니다.
+`src/lib/ai/`는 OpenAI Q&A·STT, Liner 해설 후보, Typecast TTS와 명시적으로 선택하는 OpenAI TTS 대안의 서버 어댑터를 제공합니다. 공개 자료 범위·인용·출력 길이·취소·철회를 검사하는 하네스와 다섯 업무의 순서 있는 플레이북이 있으며, 합성 자료로 검사합니다. 플레이북 capability는 허용된 저장소 함수만 제공하고 실제 소유권·공개 접근 인가는 저장소 포트가 담당합니다. 실제 게시/승인 DB 어댑터·세션·영속 작업 제한은 연결 전입니다. 키를 넣어도 `/api/chat`이나 관람 화면이 활성화되지는 않습니다.
 
 1. `.env.example`의 AI 항목을 **기존 `.env.local`에 추가**합니다. 파일을 덮어써 Supabase 설정을 지우지 않습니다. 키에는 `NEXT_PUBLIC_`를 붙이지 않습니다.
 2. 보유한 OpenAI 키를 `OPENAI_API_KEY`에, 행사에서 받은 Liner 키를 `LINER_API_KEY`에 설정합니다. 계정별 모델 접근·잔액은 실제 단일 요청으로 확인해야 합니다.
@@ -48,7 +48,7 @@ AI의 업무 절차와 말투는 [제품 플러그인](docs/specs/product-ai-plu
 
 작가 자료 정리는 원문 블록을 분류한 비공개 후보 → 작가 검토 → 버전 재검사 → 적용의 서버 실행 모듈을 제공합니다. 실제 DB 저장소·검수 UI는 아직 연결하지 않았습니다. `createNarrationRuntime`에는 소유 자료로 해설 후보 2개를 병렬 생성하고 평가·최대 한 라운드 재생성하는 경로와 단일 생성 기준선을 연결했습니다. 최종 결과는 미승인 초안입니다. 관람 채팅과 대화 문맥 복제는 후속이며 [작가 해설 비교 계약](docs/specs/narration-evaluation.md)을 확인하세요.
 
-관람 하네스 입력은 선택적인 `intent: "auto" | "narration" | "question"`와 `artworkNumber`를 받습니다. 해설 버튼은 `intent: "narration"`과 작품 ID를, 숫자 입력은 같은 의도와 작품 번호를 보내며 `question`도 함께 전달합니다. 생략 시 제한된 문장 판별을 사용합니다. 승인 해설은 최대 2,000 Unicode 코드 포인트를 그대로 반환·음성 전달하고, 생성 답변·해설 후보는 600자 상한을 유지합니다. 이 계약을 사용하는 실제 관람 HTTP·UI 연결은 후속입니다. [PR #2 수정 검토서](docs/reviews/ai-harness-fix-review.md)에 재현 근거와 게시 데이터·적용 이력의 후속 요구를 정리했습니다.
+관람 하네스 입력은 선택적인 `intent: "narration" | "question"`와 `artworkNumber`를 받습니다. 해설 버튼은 `intent: "narration"`과 작품 ID를, 숫자 입력은 같은 의도와 작품 번호를 보내며 `question`도 함께 전달합니다. 생략 시 제한된 문장 판별을 사용합니다. 승인 해설은 최대 2,000 Unicode 코드 포인트를 그대로 반환·음성 전달하고, 관람 생성 답변은 600자 상한을 유지합니다. 해설 초안은 별도 2,000자 계약을 쓰고 선택 결과의 `overTarget`으로 600자 초과 경고를 전달합니다. 이 계약을 사용하는 실제 관람 HTTP·UI 연결은 후속입니다. [PR #2 수정 검토서](docs/reviews/ai-harness-fix-review.md)에 재현 근거와 게시 데이터·적용 이력의 후속 요구를 정리했습니다.
 
 ## 작가 해설 비교 실험
 
