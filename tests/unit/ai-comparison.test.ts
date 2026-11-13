@@ -5,7 +5,8 @@ import type { NarrationResult } from "../../src/lib/ai/narration";
 const uuid = (n: number) => `30000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 function result(): NarrationResult {
   return { status: "abstained", reason: "timeout", selected: null, selectedCandidateId: null, contextHash: null, promptVersion: "test",
-    metrics: { strategy: "single", rounds: 1, elapsedMs: 30_000, reservedCalls: 2, reservedOutputTokens: 4600, evaluations: [],
+    steps: [], metrics: { strategy: "single", rounds: 1, elapsedMs: 30_000, reservedCalls: 2, reservedOutputTokens: 4600,
+      evaluations: [], evaluationSteps: [],
       calls: [{ role: "generation", round: 1, elapsedMs: 30_000, status: "failed", maxOutputTokens: 1600, errorCode: "timeout" }] } };
 }
 describe("comparison accounting", () => {

@@ -8,8 +8,8 @@ updated: '2026-11-13'
 tags: [yeobek, ai, evaluation]
 rag_include: true
 generated:
-  by: codex/gpt-6.1-terra
-  at: '2026-11-13T19:36:20+09:00'
+  by: codex/gpt-6
+  at: '2026-11-13T20:54:00+09:00'
 decision_status: proposed
 work_status: in_progress
 sources:
@@ -38,6 +38,16 @@ sources:
 유효한 source ID와 스키마가 필요하다. 평가는 각 후보의 근거 충실도·적합성·말투·간결성을 1~5점으로 산정하며 앞 세 항목은 4 이상, 간결성은 3 이상이어야 한다. 근거 없는 의도 및 비공개 노출은 모두 false여야 한다. 일부 후보만 성공해도 같은 절대 하한을 적용한다. 유효하지 않거나 잘못된 평가, 전송 실패는 무작정 재시도하지 않는다. 근거가 없으면 재생성하지 않으며 수정 가능한 품질·형식 실패에만 최대 한 번 재생성한다. 인용 ID 존재와 모델 평가 통과는 사실성 보증이 아니다.
 
 # 비교와 사람 검토
+
+## 내부 실행 기록
+
+플러그인 0.4.0의 `narration-draft`는 요청 검사 → 소유 자료 읽기 → 근거 선택 → 후보 라운드 → 최종 원본 재검사 → 출력 검증을 선언한다. 후보 병렬 생성과 최대 한 번의 재생성은 `candidate.rounds` 안에서 기존 예산을 유지한다. 유효한 후보가 있는 라운드에서만 별도 `narration-evaluate` 실행으로 원본 재검사 → 평가 호출 → 평가 형식 검증 → 후보 순위를 기록한다. 평가를 호출하지 않은 라운드에는 평가 실행 기록도 없다.
+
+`NarrationResult.steps`는 부모 실행, `metrics.evaluationSteps`는 라운드별 평가 실행의 내부 기록이다. 성공·보류에 선언된 단계의 완료 또는 명시적 생략 이유가 남으며, 단계 실패도 기록한다. 호출 실패와 평가 형식 실패는 서로 다른 단계로 구분한다. 순서·누락 오류는 운영상 보류로 숨기지 않고 `PlaybookOrderError`로 전달한다. 최종 후보 반환 전에 취소·시간 초과를 다시 확인한다.
+
+이 기록은 선언된 절차를 확인하는 수단이며 답변의 의미적 품질이나 DB 인가의 증명이 아니다. 이후 HTTP 연결에서는 부모 `steps`와 중첩 `evaluationSteps`를 포함한 내부 실행 메타데이터를 응답에서 제외해야 한다. 현재 실제 HTTP·원장·영속 기록은 없다. 상세 실행기·capability 계약은 [제품 플러그인](product-ai-plugin.md)을 따른다.
+
+## 비교 실행과 산출물
 
 비교 도구의 진입점은 `npm run ai:compare -- --mode=mock` (기본 오프라인) 또는 `npm run ai:compare -- --mode=live --cases=grounded --repeats=1 --max-calls=8 [--pricing=path]`이다. 실호출은 명시적이며 선언된 호출 수로 엄격히 제한한다. `.ai-eval/run-ID`는 Git에서 제외되는 출력 위치다. `report.json`은 답변 본문을 제외한다. `human-review.json`에는 `sources`의 ID·본문과 최종 답 또는 보류 사유만 담고 방식·모델 점수를 숨긴다. `human-labels.json`을 사람이 작성한 뒤 `npm run ai:review -- .ai-eval/run-ID`를 실행하면 `human-summary.json`이 모드·버전·해시·라벨 수·세부 항목 평균과 표본 수·완전한 쌍의 승수를 기록한다. `key.json`은 라벨과 원래 결과의 대응표이므로 블라인드 평가자에게 보여주지 않는다. 모의 결과와 평가기 통과만으로 실제 품질을 주장하지 않는다.
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { PlaybookStepRecord } from "./playbook";
 
 export const AI_LIMITS = { question: 500, answer: 600, narration: 2000, narrationTarget: 600, evidenceCount: 12, evidenceChars: 8000 } as const;
 export const codepoints = (value: string) => Array.from(value).length;
@@ -86,6 +87,8 @@ export type DocentReply = ModelAnswer & {
   publication: PublicationRef | null;
   source: "approved_narration" | "generated" | "fixed";
   promptVersion: string;
+  /** Internal execution metadata: omit from the future visitor HTTP response. */
+  steps: readonly PlaybookStepRecord[];
 };
 
 /** Session ownership/expiry and the saved validated reply (including trusted
@@ -93,5 +96,5 @@ export type DocentReply = ModelAnswer & {
  * speech endpoint must accept IDs, never arbitrary text/source assertions.
  */
 export interface SpeechSourceStore {
-  loadAnswer(sessionId: string, answerId: string, signal?: AbortSignal): Promise<DocentReply | null>;
+  loadAnswer(sessionId: string, answerId: string, signal?: AbortSignal): Promise<Omit<DocentReply, "steps"> | null>;
 }

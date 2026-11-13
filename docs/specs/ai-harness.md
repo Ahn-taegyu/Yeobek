@@ -8,8 +8,8 @@ updated: '2026-11-13'
 tags: [yeobek, ai, harness, rag]
 rag_include: true
 generated:
-  by: codex/gpt-6.1-terra
-  at: '2026-11-13T17:46:55+09:00'
+  by: codex/gpt-6
+  at: '2026-11-13T20:52:41+09:00'
 decision_status: proposed
 work_status: in_progress
 sources:
@@ -124,9 +124,15 @@ Liner는 `POST https://platform.liner.com/api/v1/chat/completions`에 서버 인
 
 낭독 전 저장된 승인 해설의 글·인용·publication 버전을 현재 공개 문맥과 비교한다. 생성 답변은 600, 음성 전송 상한은 2,000 Unicode 코드 포인트다. 음성 HTTP 전 신뢰 가능한 답변 source/outcome/citations 영속 저장이 필요하다. DB publisher의 권위 있는 인용 검증과 승인 전 정규화/해시 계약은 [데이터 모델](data-model.md)을 따른다. 실제 제공사 포맷은 실호출 0회로 미검증이다. smoke 및 제공 API 최소 1개의 실제 사용과 사람 평가가 필요하다. 모델 심사 4/4/4/3은 잠정이며 사람 라벨 보정 전 품질 주장에 사용하지 않는다.
 
-# 하네스 발전 계획 (proposed)
+# 실제 구현 상태: 0~2단계
 
-[요청 원문](../references/user-harness-playbooks-plan.md)과 [검토](../reviews/ai-harness-review-2026-11-13.md)에 따른 제안이며 완료 또는 확정 결정이 아니다. 기존 `e20bd2f`의 네 결함 수정과 안전 검사를 보존한다.
+기존 결함 수정과 1단계 해설 길이·명시 의도·오류 처리를 유지한다. 2단계에서는 manifest v0.4.0의 다섯 플레이북에 순서 있는 단계를 선언하고 지문에 포함했다. 실행기는 `step`·이유 있는 `skip`·완료 검증 `finish`를 제공하며, 운영 오류의 `fail(error)`는 실패와 잔여 생략을 기록하고 원래 오류를 보존한다. 기록은 동결된 내부 메타데이터다. `capabilitiesFor`는 manifest가 허용한 바인딩 함수만 플레이북에 제공한다. 이는 단계별 보안이 아니며 저장소 포트가 소유권과 공개 접근을 강제해야 한다.
+
+관람 응답의 `DocentReply.steps`, 해설 결과의 `NarrationResult.steps` 및 라운드별 `metrics.evaluationSteps`에 실행 기록이 포함된다. 작가 후보 생성은 `{ proposal, steps }`, 적용은 `{ documentRevision, steps }`를 반환하고 기록을 후보에 저장하지 않는다. 음성은 관람 publication capability를 재사용하되 새 관람 플레이북을 실행하지 않는다. 세션 소유 답변 조회 경계는 유지하며 영속 답변에 실행 기록을 요구하지 않는다. 실제 DB·HTTP와 실호출은 연결하지 않았다.
+
+# 하네스 발전 계획 (과거 제안)
+
+[요청 원문](../references/user-harness-playbooks-plan.md)과 [검토](../reviews/ai-harness-review-2026-11-13.md)에 따른 당시 제안이다. 1~4의 현재 구현 여부는 위 실제 구현 상태를 따르며 새 확정 결정이 아니다. 기존 `e20bd2f`의 네 결함 수정과 안전 검사를 보존한다.
 
 1. 승인 해설은 최대 2,000자, 관람 생성 답은 600자를 유지하며 해설 초안 전용 최대 2,000자 계약과 600자 초과 경고를 제안한다. 오류 대응표와 공통 시간 제한을 정리하고 없는 번호는 고정 안내를 제안한다. 의도는 호출자가 명시한 값 여부를 기본값 적용 전 보존하여 명시 `question`/`narration`을 우선하고, 생략 시 번호만 입력, 기존 해설 정규식 순으로 판별한다. 새 enum은 `question`/`narration`이며 내부 `auto`는 제거한다.
 2. 순서 있는 플레이북 단계의 실행·생략·실패 기록과 누락 검증을 제안한다. capability는 선언된 저장소 함수만 제공하며 단계 기록은 내부 메타데이터다. 조기 반환도 남은 단계를 이유와 함께 생략한다.

@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import { assertPlaybookToolConfigured, DOCENT_COPY, PLUGIN_VERSION, playbookPrompt } from "../../src/lib/ai/plugin";
+import { DOCENT_COPY, PLUGIN_VERSION, playbookPrompt } from "../../src/lib/ai/plugin";
 import { createDocentHarness } from "../../src/lib/ai/harness";
+import { getPlaybookFailureSteps } from "../../src/lib/ai/playbook";
 import { selectEvidence } from "../../src/lib/ai/context";
 import { createArtistKnowledgeHarness, type ArtistKnowledgeContext, type KnowledgeProposal } from "../../src/lib/ai/artist-knowledge";
 import { ids, syntheticPublication, syntheticRequest } from "../fixtures/ai";
@@ -30,13 +31,11 @@ function artistSetup() {
   return { context, store, text, harness, proposal: () => saved! };
 }
 describe("product plugin boundaries", () => {
-  it("selects task skills and detects unconfigured playbook tools (not authorization)", () => {
-    expect(PLUGIN_VERSION).toMatch(/^yeobek@0\.3\.0:[a-f0-9]{12}$/);
+  it("selects only skills for the declared server task", () => {
+    expect(PLUGIN_VERSION).toMatch(/^yeobek@0\.4\.0:[a-f0-9]{12}$/);
     expect(playbookPrompt("visitor-answer")).toContain("차분한 존댓말");
     expect(playbookPrompt("visitor-answer")).not.toContain("출력은 sections 배열");
     expect(playbookPrompt("artist-organize")).not.toContain("기본 말투는 차분한 존댓말");
-    expect(() => assertPlaybookToolConfigured("visitor-answer", "proposal.apply")).toThrow("playbook_tool_not_configured");
-    expect(() => assertPlaybookToolConfigured("artist-organize", "proposal.apply")).toThrow("playbook_tool_not_configured");
   });
   it("replaces prose in an ungrounded model outcome with reviewed formal copy", async () => {
     const publications = { load: async () => syntheticPublication(), isCurrent: async () => true };
@@ -56,15 +55,46 @@ describe("product plugin boundaries", () => {
 });
 
 describe("artist organization proposals", () => {
+  it("records proposal assembly failure without replacing the original exception", async () => {
+    const s = artistSetup(); const error = new Error("clock unavailable");
+    const harness = createArtistKnowledgeHarness(ids.owner, { store: s.store, text: s.text, now: () => { throw error; } });
+    await expect(harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).rejects.toBe(error);
+    expect(getPlaybookFailureSteps(error)?.at(-1)).toMatchObject({ id: "proposal.store", status: "failed" });
+    expect(s.store.storeProposal).not.toHaveBeenCalled();
+  });
+  it("checks cancellation immediately before storing a newly assembled proposal", async () => {
+    const s = artistSetup(); const controller = new AbortController();
+    const harness = createArtistKnowledgeHarness(ids.owner, { store: s.store, text: s.text, now: () => { controller.abort(); return 1000000; } });
+    await expect(harness.propose({ documentId: ids.artwork, expectedRevision: 2 }, controller.signal)).rejects.toMatchObject({ code: "cancelled" });
+    expect(s.store.storeProposal).not.toHaveBeenCalled();
+  });
+  it("keeps an atomic apply success even if the caller cancels during commit", async () => {
+    const s = artistSetup(); const controller = new AbortController();
+    const { proposal } = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
+    s.store.commitOwnedProposal.mockImplementation(async () => { controller.abort(); s.proposal().appliedRevision = 3; return { documentRevision: 3 }; });
+    const result = await s.harness.apply({ proposalId: proposal!.id, reviewed: true }, controller.signal);
+    expect(result).toMatchObject({ documentRevision: 3 });
+    expect(result.steps.at(-1)).toMatchObject({ id: "proposal.apply", status: "done" });
+    expect(s.store.commitOwnedProposal).toHaveBeenCalledOnce();
+  });
   it("copies whole sources with negation intact, preserves untouched fields, and needs review before applying", async () => {
-    const s = artistSetup(); const proposal = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
+    const s = artistSetup(); const { proposal, steps } = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
+    expect(steps.map(step => [step.id, step.status])).toEqual([
+      ["request.validate", "done"], ["author.read", "done"], ["model.generate", "done"],
+      ["output.validate", "done"], ["proposal.store", "done"],
+    ]);
+    expect(s.proposal()).not.toHaveProperty("steps");
     expect(proposal?.sections).toEqual([{ id: "bio", body: "기존 소개입니다." }, { id: "practice", body: s.context.sources[0].text }]);
     expect(proposal?.sourceRefs).toContainEqual({ kind: "direct", sectionId: "bio" });
     expect(s.store.commitOwnedProposal).not.toHaveBeenCalled();
     expect(s.context.sections[1].body).toBe("수정 전 원문입니다.");
-    await expect(s.harness.apply({ proposalId: proposal!.id, reviewed: true })).resolves.toEqual({ documentRevision: 3 });
+    const applied = await s.harness.apply({ proposalId: proposal!.id, reviewed: true });
+    expect(applied.documentRevision).toBe(3);
+    expect(applied.steps.at(-1)).toMatchObject({ id: "proposal.apply", status: "done" });
     // Replay returns the recorded result rather than applying twice.
-    await expect(s.harness.apply({ proposalId: proposal!.id, reviewed: true })).resolves.toEqual({ documentRevision: 3 });
+    const replay = await s.harness.apply({ proposalId: proposal!.id, reviewed: true });
+    expect(replay).toMatchObject({ documentRevision: 3 });
+    expect(replay.steps.at(-1)).toMatchObject({ id: "proposal.apply", status: "skipped", reason: "already_applied" });
     expect(s.store.commitOwnedProposal).toHaveBeenCalledOnce();
   });
   it("fails closed on wrong owner, artist or cross-exhibition sources before AI", async () => {
@@ -97,7 +127,7 @@ describe("artist organization proposals", () => {
   });
   it("rejects unreviewed, tampered, stale-target, stale-source, removed-source and foreign proposals", async () => {
     for (const kind of ["unreviewed", "tampered", "target", "source", "removed", "owner", "expired"]) {
-      const s = artistSetup(); const proposal = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
+      const s = artistSetup(); const { proposal } = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
       if (kind === "tampered") s.proposal().sections[1].body = "작가는 유명합니다.";
       if (kind === "target") s.context.revision++;
       if (kind === "source") s.context.sources[0].revision++;
@@ -110,16 +140,16 @@ describe("artist organization proposals", () => {
     }
   });
   it("propagates an atomic store conflict and never reports a successful write", async () => {
-    const s = artistSetup(); const proposal = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
+    const s = artistSetup(); const { proposal } = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
     s.store.commitOwnedProposal.mockRejectedValue(new Error("revision_conflict"));
     await expect(s.harness.apply({ proposalId: proposal!.id, reviewed: true })).rejects.toThrow("revision_conflict");
   });
   it("replays a confirmed no-op whose database revision correctly stayed unchanged", async () => {
     const s = artistSetup(); s.context.sections[1].body = s.context.sources[0].text;
-    const proposal = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
+    const { proposal } = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
     s.store.commitOwnedProposal.mockImplementation(async () => { s.proposal().appliedRevision = 2; return { documentRevision: 2 }; });
-    await expect(s.harness.apply({ proposalId: proposal!.id, reviewed: true })).resolves.toEqual({ documentRevision: 2 });
-    await expect(s.harness.apply({ proposalId: proposal!.id, reviewed: true })).resolves.toEqual({ documentRevision: 2 });
+    await expect(s.harness.apply({ proposalId: proposal!.id, reviewed: true })).resolves.toMatchObject({ documentRevision: 2 });
+    await expect(s.harness.apply({ proposalId: proposal!.id, reviewed: true })).resolves.toMatchObject({ documentRevision: 2 });
     expect(s.store.commitOwnedProposal).toHaveBeenCalledOnce();
   });
   it("keeps ancestor provenance as a document reference instead of target-direct input", async () => {
@@ -130,27 +160,29 @@ describe("artist organization proposals", () => {
     await expect(s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).rejects.toMatchObject({ code: "invalid_context" });
     expect(s.text.generate).not.toHaveBeenCalled();
     s.context.sources[0].ref = { kind: "document", sectionId: "description", sourceDocumentId: ids.other, sourceSectionId: "practice", sourceRevision: 1 };
-    const proposal = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
+    const { proposal } = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
     expect(proposal?.sourceRefs).toContainEqual(s.context.sources[0].ref);
     s.context.sources[0].ref.sourceSectionId = "theme";
     await expect(s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).rejects.toMatchObject({ code: "invalid_context" });
   });
   it("returns no proposal for empty sources or an empty classification", async () => {
     const s = artistSetup(); s.context.sources = [];
-    expect(await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).toBeNull();
+    const result = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
+    expect(result.proposal).toBeNull();
+    expect(result.steps.slice(2).every(step => step.status === "skipped" && step.reason === "no_sources")).toBe(true);
     expect(s.text.generate).not.toHaveBeenCalled();
     const empty = artistSetup(); empty.text.generate.mockResolvedValue({ output: { sections: [] }, trace: { provider: "liner", model: "fake" } });
-    expect(await empty.harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).toBeNull();
+    expect(await empty.harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).toMatchObject({ proposal: null });
     expect(empty.store.storeProposal).not.toHaveBeenCalled();
   });
   it("returns the committed result when a parallel apply completes between proposal and context reads", async () => {
-    const s = artistSetup(); const proposal = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
+    const s = artistSetup(); const { proposal } = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
     s.store.loadOwnedContext.mockImplementation(async () => {
       // Simulate the other request's atomic document update and proposal receipt.
       s.context.revision = 3; s.proposal().appliedRevision = 3;
       return structuredClone(s.context);
     });
-    await expect(s.harness.apply({ proposalId: proposal!.id, reviewed: true })).resolves.toEqual({ documentRevision: 3 });
+    await expect(s.harness.apply({ proposalId: proposal!.id, reviewed: true })).resolves.toMatchObject({ documentRevision: 3 });
     expect(s.store.loadOwnedProposal).toHaveBeenCalledTimes(2);
     expect(s.store.commitOwnedProposal).not.toHaveBeenCalled();
   });

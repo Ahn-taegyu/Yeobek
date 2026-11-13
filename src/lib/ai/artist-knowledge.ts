@@ -4,7 +4,8 @@ import { z } from "zod";
 import { section, sourceRef } from "../api/schemas";
 import { assertNotCancelled, textHash } from "./context";
 import { codepoints } from "./contracts";
-import { assertPlaybookToolConfigured, PLUGIN_VERSION, playbookPrompt } from "./plugin";
+import { capabilitiesFor, PLUGIN_VERSION, playbookPrompt } from "./plugin";
+import { PlaybookOrderError, startPlaybook, type PlaybookStepRecord } from "./playbook";
 import type { AiTextProvider } from "./providers/types";
 
 const uuid = z.uuid();
@@ -34,6 +35,9 @@ const proposalSchema = z.strictObject({ id: uuid, ownerId: uuid, documentId: uui
   selection: selectionSchema, sourcePins: z.array(pinSchema).max(12),
   sections: z.array(section).max(2), sourceRefs: z.array(sourceRef).max(24), appliedRevision: revision.nullable() });
 export type KnowledgeProposal = z.infer<typeof proposalSchema>;
+/** Execution records stay outside the immutable proposal and public HTTP body. */
+export type KnowledgeOrganizationResult = { proposal: KnowledgeProposal | null; steps: readonly PlaybookStepRecord[] };
+export type KnowledgeApplicationResult = { documentRevision: number; steps: readonly PlaybookStepRecord[] };
 
 /** Production adapter pending. All reads must enforce authenticated owner and
  * ancestry. Proposals are private/immutable. commitOwnedProposal must atomically
@@ -121,68 +125,119 @@ function planSelection(output: unknown, context: ArtistKnowledgeContext) {
 export function createArtistKnowledgeHarness(actorId: string, deps: { store: ArtistKnowledgeStore; text: AiTextProvider; now?: () => number }) {
   if (!uuid.safeParse(actorId).success) throw new KnowledgeError("invalid_input");
   const now = deps.now ?? Date.now;
+  const organize = capabilitiesFor("artist-organize", { author: deps.store, proposals: deps.store });
+  const apply = capabilitiesFor("artist-apply", { author: deps.store, proposals: deps.store });
   const readProposal = async (id: string, signal?: AbortSignal) => {
-    const saved = proposalSchema.safeParse(await deps.store.loadOwnedProposal(actorId, id, signal));
+    assertNotCancelled(signal);
+    const saved = proposalSchema.safeParse(await apply["proposal.read"](actorId, id, signal));
     assertNotCancelled(signal);
     if (!saved.success || saved.data.ownerId !== actorId || saved.data.id !== id) throw new KnowledgeError("unavailable");
     if (saved.data.appliedRevision !== null && saved.data.appliedRevision < saved.data.targetRevision) throw new KnowledgeError("invalid_context");
     return saved.data;
   };
   return {
-    async propose(input: { documentId: string; expectedRevision: number }, signal?: AbortSignal): Promise<KnowledgeProposal | null> {
-      const parsed = z.strictObject({ documentId: uuid, expectedRevision: revision }).safeParse(input);
-      if (!parsed.success) throw new KnowledgeError("invalid_input");
-      assertNotCancelled(signal); assertPlaybookToolConfigured("artist-organize", "author.read");
-      const raw = await deps.store.loadOwnedContext(actorId, parsed.data.documentId, signal);
-      assertNotCancelled(signal);
-      if (!raw) throw new KnowledgeError("unavailable");
-      const context = validateArtistKnowledgeContext(raw, actorId, parsed.data.documentId);
-      if (context.revision !== parsed.data.expectedRevision) throw new KnowledgeError("revision_conflict");
-      if (!context.sources.length) return null;
-      const generated = await deps.text.generate({ system: playbookPrompt("artist-organize"), schema: organizationJsonSchema, signal,
-        input: JSON.stringify({ subjectType: context.subjectType, sources: context.sources.map(({ id, text }) => ({ id, text })) }) });
-      assertNotCancelled(signal);
-      const plan = planSelection(generated.output, context);
-      if (!plan.selection.sections.length) return null;
-      const proposal: KnowledgeProposal = { id: randomUUID(), ownerId: actorId, documentId: context.documentId,
-        targetRevision: context.revision, pluginVersion: PLUGIN_VERSION, expiresAt: now() + 15 * 60 * 1000,
-        ...plan, appliedRevision: null };
-      assertPlaybookToolConfigured("artist-organize", "proposal.store");
-      await deps.store.storeProposal(proposal, signal);
-      return proposal;
-    },
-    async apply(input: { proposalId: string; reviewed: true }, signal?: AbortSignal): Promise<{ documentRevision: number }> {
-      const parsed = z.strictObject({ proposalId: uuid, reviewed: z.literal(true) }).safeParse(input);
-      if (!parsed.success) throw new KnowledgeError("invalid_input");
-      assertNotCancelled(signal); assertPlaybookToolConfigured("artist-apply", "proposal.read");
-      const proposal = await readProposal(parsed.data.proposalId, signal);
-      if (proposal.appliedRevision !== null) {
-        return { documentRevision: proposal.appliedRevision };
-      }
+    async propose(input: { documentId: string; expectedRevision: number }, signal?: AbortSignal): Promise<KnowledgeOrganizationResult> {
+      const flow = startPlaybook("artist-organize");
       try {
-        if (proposal.expiresAt <= now()) throw new KnowledgeError("proposal_expired");
-        if (proposal.pluginVersion !== PLUGIN_VERSION) throw new KnowledgeError("revision_conflict");
-        assertPlaybookToolConfigured("artist-apply", "author.read");
-        const context = validateArtistKnowledgeContext(await deps.store.loadOwnedContext(actorId, proposal.documentId, signal), actorId, proposal.documentId);
-        assertNotCancelled(signal);
-        if (context.revision !== proposal.targetRevision) throw new KnowledgeError("revision_conflict");
-        let rebuilt: ReturnType<typeof planSelection>;
-        try { rebuilt = planSelection(proposal.selection, context); }
-        catch { throw new KnowledgeError("revision_conflict"); }
-        if (JSON.stringify(rebuilt.sections) !== JSON.stringify(proposal.sections) || JSON.stringify(rebuilt.sourceRefs) !== JSON.stringify(proposal.sourceRefs) ||
-          JSON.stringify(rebuilt.sourcePins) !== JSON.stringify(proposal.sourcePins)) throw new KnowledgeError("revision_conflict");
+        const request = await flow.step("request.validate", () => {
+          const parsed = z.strictObject({ documentId: uuid, expectedRevision: revision }).safeParse(input);
+          if (!parsed.success) throw new KnowledgeError("invalid_input");
+          assertNotCancelled(signal);
+          return parsed.data;
+        });
+        const context = await flow.step("author.read", async () => {
+          assertNotCancelled(signal);
+          const raw = await organize["author.read"](actorId, request.documentId, signal);
+          assertNotCancelled(signal);
+          if (!raw) throw new KnowledgeError("unavailable");
+          const context = validateArtistKnowledgeContext(raw, actorId, request.documentId);
+          if (context.revision !== request.expectedRevision) throw new KnowledgeError("revision_conflict");
+          return context;
+        });
+        if (!context.sources.length) {
+          for (const id of ["model.generate", "output.validate", "proposal.store"] as const) flow.skip(id, "no_sources");
+          return { proposal: null, steps: flow.finish() };
+        }
+        const generated = await flow.step("model.generate", async () => {
+          assertNotCancelled(signal);
+          const result = await deps.text.generate({ system: playbookPrompt("artist-organize"), schema: organizationJsonSchema, signal,
+            input: JSON.stringify({ subjectType: context.subjectType, sources: context.sources.map(({ id, text }) => ({ id, text })) }) });
+          assertNotCancelled(signal);
+          return result;
+        });
+        const plan = await flow.step("output.validate", () => planSelection(generated.output, context));
+        if (!plan.selection.sections.length) {
+          flow.skip("proposal.store", "empty_selection");
+          return { proposal: null, steps: flow.finish() };
+        }
+        const proposal = await flow.step("proposal.store", async () => {
+          const proposal: KnowledgeProposal = { id: randomUUID(), ownerId: actorId, documentId: context.documentId,
+            targetRevision: context.revision, pluginVersion: PLUGIN_VERSION, expiresAt: now() + 15 * 60 * 1000,
+            ...plan, appliedRevision: null };
+          assertNotCancelled(signal);
+          await organize["proposal.store"](proposal, signal);
+          return proposal;
+        });
+        return { proposal, steps: flow.finish() };
       } catch (error) {
-        if (!(error instanceof KnowledgeError)) throw error;
-        // Another request may have atomically committed this proposal between
-        // our reads. Return that result instead of a stale preflight conflict.
-        const latest = await readProposal(proposal.id, signal);
-        if (latest.appliedRevision !== null) return { documentRevision: latest.appliedRevision };
+        if (!(error instanceof PlaybookOrderError)) flow.fail(error);
         throw error;
       }
-      assertPlaybookToolConfigured("artist-apply", "proposal.apply");
-      // Atomic adapter is the final authority for races after these prechecks.
-      // Don't report cancellation after the store has committed successfully.
-      return deps.store.commitOwnedProposal(actorId, proposal.id, signal);
+    },
+    async apply(input: { proposalId: string; reviewed: true }, signal?: AbortSignal): Promise<KnowledgeApplicationResult> {
+      const flow = startPlaybook("artist-apply");
+      try {
+        const request = await flow.step("request.validate", () => {
+          const parsed = z.strictObject({ proposalId: uuid, reviewed: z.literal(true) }).safeParse(input);
+          if (!parsed.success) throw new KnowledgeError("invalid_input");
+          assertNotCancelled(signal);
+          return parsed.data;
+        });
+        const proposal = await flow.step("proposal.read", () => readProposal(request.proposalId, signal));
+        if (proposal.appliedRevision !== null) {
+          for (const id of ["proposal.preflight", "proposal.recheck", "proposal.apply"] as const) flow.skip(id, "already_applied");
+          return { documentRevision: proposal.appliedRevision, steps: flow.finish() };
+        }
+        const conflict = await flow.step("proposal.preflight", async () => {
+          try {
+            assertNotCancelled(signal);
+            if (proposal.expiresAt <= now()) throw new KnowledgeError("proposal_expired");
+            if (proposal.pluginVersion !== PLUGIN_VERSION) throw new KnowledgeError("revision_conflict");
+            const context = validateArtistKnowledgeContext(await apply["author.read"](actorId, proposal.documentId, signal), actorId, proposal.documentId);
+            assertNotCancelled(signal);
+            if (context.revision !== proposal.targetRevision) throw new KnowledgeError("revision_conflict");
+            let rebuilt: ReturnType<typeof planSelection>;
+            try { rebuilt = planSelection(proposal.selection, context); }
+            catch { throw new KnowledgeError("revision_conflict"); }
+            if (JSON.stringify(rebuilt.sections) !== JSON.stringify(proposal.sections) || JSON.stringify(rebuilt.sourceRefs) !== JSON.stringify(proposal.sourceRefs) ||
+              JSON.stringify(rebuilt.sourcePins) !== JSON.stringify(proposal.sourcePins)) throw new KnowledgeError("revision_conflict");
+            return null;
+          } catch (error) {
+            if (!(error instanceof KnowledgeError)) throw error;
+            return error;
+          }
+        });
+        if (conflict) {
+          // An atomic concurrent application may have completed during preflight.
+          const documentRevision = await flow.step("proposal.recheck", async () => {
+            const latest = await readProposal(proposal.id, signal);
+            if (latest.appliedRevision !== null) return latest.appliedRevision;
+            throw conflict;
+          });
+          flow.skip("proposal.apply", "concurrently_applied");
+          return { documentRevision, steps: flow.finish() };
+        }
+        flow.skip("proposal.recheck", "preflight_passed");
+        const committed = await flow.step("proposal.apply", () => {
+          assertNotCancelled(signal);
+          return apply["proposal.apply"](actorId, proposal.id, signal);
+        });
+        // Do not report cancellation after the atomic store has committed.
+        return { ...committed, steps: flow.finish() };
+      } catch (error) {
+        if (!(error instanceof PlaybookOrderError)) flow.fail(error);
+        throw error;
+      }
     },
   };
 }

@@ -9,7 +9,7 @@ tags: [yeobek, ai, plugin, quality]
 rag_include: true
 generated:
   by: codex/gpt-6
-  at: '2026-11-13T19:05:00+09:00'
+  at: '2026-11-13T20:52:41+09:00'
 decision_status: proposed
 work_status: in_progress
 sources:
@@ -51,21 +51,21 @@ flowchart LR
   F --> G[관람 답변 또는 비공개 작가 후보]
 ```
 
-`ai/yeobek/plugin.json`과 `instructions.md`, `messages.json`, `skills/*/SKILL.md`가 지침·고정 문구 원본이다. `npm run ai:bundle`이 `src/lib/ai/plugin.generated.ts`를 생성한다. 줄바꿈을 통일하고 지침·고정 문구·스킬 순서·도구 매핑을 포함해 해시를 계산한다. `pretest`, `prebuild`, `preai:eval`, `preai:smoke`, `preai:compare`가 생성물 불일치를 차단한다. 응답의 promptVersion에는 패키지 버전·해시가 들어간다. 키·작가 원자료는 번들에 넣지 않는다. 런타임 파일 탐색이나 이용자 제공 스킬 로딩은 없다. 현재 스킬은 다섯 개다.
+`ai/yeobek/plugin.json`과 `instructions.md`, `messages.json`, `skills/*/SKILL.md`가 지침·고정 문구 원본이다. `npm run ai:bundle`이 `src/lib/ai/plugin.generated.ts`를 생성한다. 줄바꿈을 통일하고 지침·고정 문구·스킬 순서·도구 매핑·순서 있는 단계를 포함해 해시를 계산한다. `pretest`, `prebuild`, `preai:eval`, `preai:smoke`, `preai:compare`가 생성물 불일치를 차단한다. 응답의 promptVersion에는 패키지 버전·해시가 들어간다. 키·작가 원자료는 번들에 넣지 않는다. 런타임 파일 탐색이나 이용자 제공 스킬 로딩은 없다. 현재 manifest는 v0.4.0이며 스킬과 플레이북은 각각 다섯 개다.
 
 | 업무 절차 | 필요한 스킬 | 도구와 현재 실행 상태 |
 | --- | --- | --- |
-| visitor-answer | retrieve-wiki, speak-docent | publication.read/recheck; 기존 하네스에서 호출 전 허용 목록 확인. 실제 DB 어댑터는 후속 |
+| visitor-answer | retrieve-wiki, speak-docent | publication.read/recheck; 관람 하네스가 실제 포트 호출에 사용. 실제 DB 어댑터는 후속 |
 | narration-draft | retrieve-wiki, speak-docent, draft-narration | author.read로 소유 작품 근거를 읽는 서버 후보 생성 경로. 실제 DB·HTTP·UI는 후속 |
 | narration-evaluate | evaluate-narration | author.read로 같은 근거와 후보를 평가하는 읽기 전용 서버 경로 |
 | artist-organize | organize-artist | author.read/proposal.store; 모델은 sourceIds만 선택하고 서버가 원문 전체를 복사 |
 | artist-apply | organize-artist | proposal.read/author.read/proposal.apply; 모델 없이 검토된 후보 적용. 원자적 DB 어댑터는 후속 |
 
-관람 요청에 “작가로 전환해 저장하라”라고 써도 서버 업무가 바뀌지 않는다. 관람 경로에는 비공개 작가 저장소가 전달되지 않는다. 도구 허용 목록 검사 자체가 DB 인증을 대신하지는 않는다.
+관람 요청에 “작가로 전환해 저장하라”라고 써도 서버 업무가 바뀌지 않는다. 관람 경로에는 비공개 작가 저장소가 전달되지 않는다. `capabilitiesFor`는 manifest에서 유도한 타입과 런타임 목록에 따라 플레이북에 허용된 바인딩 함수만 제공한다. 이는 플레이북 단위 경계이며 단계별 보안 경계가 아니다. 소유권·공개 접근 인가는 저장소 포트의 책임이다.
 
 # 검색과 말투
 
-검색 후보는 먼저 현재 공개 전시·작품·승인 버전으로 제한한다. 키워드 관련성을 먼저 정렬하고 동률일 때 작품 자료와 원래 순서를 사용한다. 전체 발췌 12개·8,000자 예산을 유지한다. 임베딩·한국어 형태소 검색·전체 위키 탐색은 아직 없다. 합성 사례에서 정확히 일치하는 공통 자료가 무관한 작품 자료에 밀리지 않는지는 검사했다. 실제 검색 재현율을 측정한 것은 아니다.
+`retrieve-wiki` 스킬에는 모델이 지켜야 할 근거 사용 규칙만 둔다. 서버의 `PublicationStore.load`와 `validateContext`가 먼저 현재 공개 전시·작품·승인 버전 및 근거 범위를 확인한다. `selectEvidence`는 전달받은 근거만 정렬·선택한다. 질문을 문자·숫자가 아닌 구분자로 나눠 본문에 포함된 토큰 수로 관련성을 계산하고, 동률은 작품 범위·원래 순서로 처리한다. 전체 발췌는 12개·본문 합계 8,000 Unicode 코드 포인트 이내다. 모델이 검색 순서나 DB 공개 범위를 실행하지 않는다. 임베딩·한국어 형태소 검색·전체 위키 탐색은 아직 없다. 합성 사례에서 정확히 일치하는 공통 자료가 무관한 작품 자료에 밀리지 않는지는 검사했으나 실제 검색 재현율은 측정하지 않았다. 한국어 조사에 대한 검색 품질 개선은 후속이다.
 
 말투는 차분한 존댓말을 기본으로 설명에 자연스러운 하십시오체, 요청에 부드러운 “알려 주세요”를 사용한다. 칭찬·인사 반복, 과장된 감탄·평가·추측을 줄이고 질문의 답부터 말한다. 작가 원문에는 이 말투를 적용하지 않는다. 승인 해설은 그대로 재사용하며 말투 개선 때문에 재생성하지 않는다.
 
@@ -100,11 +100,17 @@ Sol의 독립 코드 검토에서 무변경 적용 재요청·동시 적용 결�
 
 # PR2 후속 계약
 
-`assertPlaybookToolConfigured`는 절차 설정의 일관성만 확인하며 인증·인가가 아니다. 실제 적용 어댑터는 이전 section·sourceRefs·revision 이력을 동일 CAS 트랜잭션에서 append-only로 보존하고 소유권·만료·고정 출처·멱등성을 검증해야 한다. 무변경·재실행에 중복 이력을 남기지 않는다. 이 DB 어댑터는 아직 없다. 합친 section이 5,000자를 초과하면 저장 전 거부되며 재선택·분할 UX가 필요하고 조용히 자르지 않는다. 정확한 공백 토큰 검색은 한국어 조사에 취약하다. 생성 URL 문자 패턴 차단은 공개 작가 URL도 거부할 수 있어 공개 링크 정책이 필요하다. [검토](../reviews/ai-harness-fix-review.md)
+당시 검토에서 지적한 도구 설정 검사와 인증·인가의 구별을 유지한다. 현재는 기존 `assertPluginTool`과 `assertPlaybookToolConfigured` 대신 플레이북 capability를 사용한다. 실제 적용 어댑터는 이전 section·sourceRefs·revision 이력을 동일 CAS 트랜잭션에서 append-only로 보존하고 소유권·만료·고정 출처·멱등성을 검증해야 한다. 무변경·재실행에 중복 이력을 남기지 않는다. 이 DB 어댑터는 아직 없다. 합친 section이 5,000자를 초과하면 저장 전 거부되며 재선택·분할 UX가 필요하고 조용히 자르지 않는다. 단순 토큰 포함 검색은 한국어 조사에 취약하다. 생성 URL 문자 패턴 차단은 공개 작가 URL도 거부할 수 있어 공개 링크 정책이 필요하다. [검토](../reviews/ai-harness-fix-review.md)
 
-# 플레이북 발전 계획 (proposed)
+# 실제 구현 상태: 0~2단계
 
-[요청 원문](../references/user-harness-playbooks-plan.md)과 [검토](../reviews/ai-harness-review-2026-11-13.md)의 후속 제안이다. 기존 `e20bd2f` 수정은 보존한다. 이 절은 구현 완료나 새 확정 결정이 아니다.
+0~1단계의 기존 결함 수정과 해설 전용 길이·의도·오류 계약을 유지하고, 2단계에서 다섯 플레이북의 순서 있는 단계를 manifest와 번들 지문에 포함했다. `playbook.ts`는 순서에 맞는 `step`, 이유 코드가 있는 `skip`, 전체 완료를 확인하는 `finish`를 제공한다. 실행 중 오류는 `fail(error)`로 실패와 나머지 생략을 기록하며 원래 오류를 보존한다. 기록과 스냅샷은 동결된 내부 메타데이터다. 조기 반환에도 남은 단계의 생략 이유를 기록한다.
+
+관람·해설·작가 정리/적용 경로에서 실제 포트 호출과 단계를 연결했다. `DocentReply.steps`, `NarrationResult.steps`와 라운드별 `metrics.evaluationSteps`가 기록을 담는다. 작가 후보 생성은 `{ proposal, steps }`, 적용은 `{ documentRevision, steps }`를 반환하며 기록을 후보에 영속 저장하지 않는다. 음성 경로는 관람 publication capability를 재사용하지만 별도 관람 플레이북을 실행하지 않으며, 세션 소유 답변 조회 경계는 유지하며 영속 답변에 실행 기록을 요구하지 않는다. 실제 DB·HTTP 연결이나 실호출은 없다.
+
+# 플레이북 발전 계획 (과거 제안)
+
+[요청 원문](../references/user-harness-playbooks-plan.md)과 [검토](../reviews/ai-harness-review-2026-11-13.md)의 후속 제안이다. 기존 `e20bd2f` 수정은 보존한다. 아래 1~4는 당시 제안을 보존한 기록이며, 현재 구현 여부는 위 절을 따른다. 새 확정 결정은 아니다.
 
 1. 해설 전용 스키마와 오류 대응표·공통 시간 제한, 명시적 의도와 없는 작품 안내를 기존 회귀와 대조해 정리한다.
 2. 각 업무 manifest에 순서 있는 단계와 도구를 선언하고 지문에 포함한다. 실행기는 순서·완료·이유 있는 생략을 검증하고 내부 기록을 남긴다. 도구별 capability 객체로 실제 접근을 제한하고 서버 검색 절차는 스킬 본문과 구분한다.
