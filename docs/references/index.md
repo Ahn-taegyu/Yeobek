@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [제품 AI API·하네스 준비 요청](user-ai-harness.md) — 실행 구조 범위와 Typecast 미준비·대체 경로 요청.
+
 - [검토 반영 작업의 적용 확인 요청](user-fix-review.md) — 수정 커밋을 실행해 확인하고 별도 결과 문서로 기록.
 - [검토 내용의 구현 반영 요청](user-review-implementation.md) — 추가 검토의 실제 코드 반영과 재검증.
 

@@ -1,6 +1,6 @@
 # Yeobek
 
-작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**과 기획 문서·로컬 지식 검색 도구가 있습니다. AI 해설·음성·게시·관람 화면은 후속 구현입니다. [실제 개발 범위](docs/specs/development-foundation.md)와 [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
+작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**, 서버 AI 어댑터·하네스와 기획 문서·검색 도구가 있습니다. AI의 실제 DB/HTTP 연결·게시·관람 화면은 후속 구현입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
 
 ## 앱 실행
 
@@ -16,7 +16,31 @@ npm run dev
 
 `db:start`는 `yeobek-mvp` 프로젝트를 localhost에 바인딩한 `yeobek-local` 네트워크에서 시작하고 migration을 적용합니다. `db:env`는 Git에서 제외한 `.env.local`을 생성하며 기존 파일은 덮어쓰지 않습니다. `db:artist`는 가짜 로컬 작가 계정을 만들고 로그인 정보를 `.env.artist.local`에 저장합니다. 터미널·Git에 키나 비밀번호를 출력하지 않습니다. [로그인](http://localhost:3000/login)에서 그 계정을 사용합니다. 로그인에서 비밀번호를 표시하거나 숨길 수 있습니다. 현재 작가 홈은 계정 이메일과 이름, 전시 기간·장소·작품 수를 포함한 목록 조회를 제공합니다. 입력/검수 화면은 다음 구현입니다.
 
-클라우드 연결 시에는 `.env.example`의 세 변수만 개발 환경의 비밀값 설정에 넣습니다. 앱은 service-role 키를 쓰지 않습니다. `APP_ORIGIN`은 실제 접속 주소와 정확히 맞춥니다. HTTPS에서는 인증 쿠키에 Secure가 적용됩니다. 클라우드에는 migration과 사전 발급 계정이 필요하며, 이 작업은 클라우드 생성·배포를 수행하지 않았습니다.
+클라우드의 기존 인증·초안 API에는 `.env.example`의 Supabase 변수 두 개와 `APP_ORIGIN`이 필요합니다. AI 변수는 아래 절차로 별도 설정합니다. 앱은 service-role 키를 쓰지 않습니다. `APP_ORIGIN`은 실제 접속 주소와 정확히 맞춥니다. HTTPS에서는 인증 쿠키에 Secure가 적용됩니다. 클라우드에는 migration과 사전 발급 계정이 필요하며, 이 작업은 클라우드 생성·배포를 수행하지 않았습니다.
+
+## AI 연결 준비
+
+`src/lib/ai/`는 OpenAI Q&A·STT, Liner 해설 후보, Typecast TTS와 명시적으로 선택하는 OpenAI TTS 대안의 서버 어댑터를 제공합니다. 공개 자료 범위·인용·출력 길이·취소·철회를 검사하는 하네스도 있으며, 합성 자료로 검사합니다. 실제 게시/승인 DB 어댑터·세션·영속 작업 제한은 연결 전입니다. 키를 넣어도 `/api/chat`이나 관람 화면이 활성화되지는 않습니다.
+
+1. `.env.example`의 AI 항목을 **기존 `.env.local`에 추가**합니다. 파일을 덮어써 Supabase 설정을 지우지 않습니다. 키에는 `NEXT_PUBLIC_`를 붙이지 않습니다.
+2. 보유한 OpenAI 키를 `OPENAI_API_KEY`에, 행사에서 받은 Liner 키를 `LINER_API_KEY`에 설정합니다. 계정별 모델 접근·잔액은 실제 단일 요청으로 확인해야 합니다.
+3. [Typecast API 콘솔](https://studio.typecast.ai/)에서 키를 발급하고 [TTS 문서](https://typecast.ai/docs/ko/api-reference/text-to-speech/text-to-speech)에 연결된 보이스 목록 `GET /v3/voices?model=ssfm-v31`에서 한국어 지원 보이스의 `voice_id`를 선택합니다. `TYPECAST_API_KEY`, `TYPECAST_VOICE_ID`를 서버에 설정하고 `AI_TTS_PROVIDER=typecast`로 둡니다. 실제 이용 조건과 음질을 확인합니다.
+4. Typecast 준비 전 임시 시험은 `AI_TTS_PROVIDER=openai`로 명시합니다. `gpt-4o-mini-tts`/`coral`을 사용하며 자동 장애 전환은 없습니다. 이 모델은 [2027-01-06 종료 예정](https://developers.openai.com/api/docs/guides/text-to-speech)이므로 행사 이후 교체 검토가 필요합니다. Realtime 모델을 `/audio/speech`의 모델 이름으로 대입할 수는 없습니다.
+
+```sh
+npm run ai:check
+npm run ai:eval
+# 아래 명령만 실제 요청 1회를 보내며 제공사 사용료가 발생할 수 있습니다.
+npm run ai:smoke -- qa
+npm run ai:smoke -- draft
+npm run ai:smoke -- typecast-tts
+# Typecast 대신 임시 OpenAI TTS 자체를 시험할 때
+npm run ai:smoke -- openai-tts
+# 권한이 있는 30초/3MiB 이내 시험 녹음으로만 실행
+npm run ai:smoke -- stt --audio=path/to/test.webm
+```
+
+`ai:check`는 변수 존재 여부만 검사하고 키를 출력하지 않습니다. 필수 변수가 없으면 종료 코드 1이며 실제 접속 성공을 뜻하지 않습니다. `ai:eval`과 기본 CI는 모의 제공사만 사용합니다. `ai:smoke`는 명시한 기능 하나만 실제 호출하고 응답 원문·녹음·음성 파일을 저장하지 않습니다. STT 파일 크기는 검사하며 30초 길이는 실행자가 확인해야 합니다. 이 검사는 응답 계약만 확인하므로 한국어 인식 정확도·청취 품질·근거 충실도는 별도로 확인해야 합니다. 앱에서 재생할 때 AI 생성 음성임을 표시합니다.
 
 ## 앱 검사와 DB 변경
 

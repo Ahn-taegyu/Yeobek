@@ -13,6 +13,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: harness
+  resource: /specs/ai-harness.md
+  title: 제품 AI 실행 하네스 준비 범위
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -120,6 +123,8 @@ D-011의 DB 원본·AI용 내부 위키 요구로 기존 5개 저장 단위를 7
 글/음성/파일은 모두 서버의 공개 상태 검사를 통과해야 한다. 공개 미디어 응답은 `no-store`로 제공하고 raw Storage URL은 공개하지 않는다. 중지 후 새 요청을 차단하되 이미 내려받은 파일·녹음까지 회수할 수 있다고 약속하지 않는다. 재방문·새 질문·재생 전 오래된 채팅의 공개 버전을 재확인한다.
 
 # 초기 상한과 실패 처리
+
+서버 어댑터와 오프라인 검증의 현재 구현·실연결 경계는 [제품 AI 하네스](ai-harness.md)에 기록한다. 외부 제공사 연결 준비가 완료되어도 아래 세션·예산·공개 상태 DB 통합이 자동으로 구현되는 것은 아니다.
 
 아래 값은 마감에 맞춘 **팀 설계값**이며 실측 성능이나 벤더 최대치가 아니다.
 

@@ -1,5 +1,7 @@
 # 설계 문서
 
+- [제품 AI 실행 하네스](ai-harness.md) — 서버 어댑터·문맥/출력 검증·재시도/평가 준비와 통합 전 조건.
+
 - [개발 기반 현황](development-foundation.md) — 실제 코드·DB·검증 범위와 후속 작업.
 - [API 계약](api-contract.md) — 초기/후속 HTTP 경로와 입력·응답·오류.
 

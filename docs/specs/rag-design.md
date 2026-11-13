@@ -13,6 +13,9 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: harness
+  resource: /specs/ai-harness.md
+  title: 제품 AI 실행 하네스 준비 범위
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -35,7 +38,7 @@ sources:
 
 # 두 RAG의 구분
 
-이 문서는 **제품 Q&A의 설계**다. 아직 앱·벡터 DB·LLM 서비스는 구현되지 않았다. 현재 저장소에 실행 가능한 것은 [기획 검색 RAG](knowledge-contract.md)이며 기획·미결정 문서를 검색해 개발자의 답변 작성을 돕는다. 둘은 인덱스를 공유하지 않는다.
+이 문서는 **제품 Q&A의 설계**다. 현재 Next.js·Supabase 기반과 [제품 AI 하네스](ai-harness.md)의 서버 모듈·합성 자료 평가가 있다. 실제 승인 근거 DB 조회, 관람객 HTTP 경로와 LLM 계정 연결은 아직 검증하지 않았다. [기획 검색 RAG](knowledge-contract.md)는 별도로 기획·미결정 문서를 검색해 개발자의 답변 작성을 돕는다. 둘은 인덱스를 공유하지 않는다.
 
 # 제품 검색 흐름
 

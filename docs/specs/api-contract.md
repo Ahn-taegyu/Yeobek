@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: harness
+  resource: /specs/ai-harness.md
+  title: 제품 AI 실행 하네스 준비 범위
 - id: review-implementation
   resource: /references/user-review-implementation.md
   title: MVP 기반 리뷰 반영 요청
@@ -106,6 +109,8 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 # 후속 경로
 
 다음은 구현 예정 계약이다. 아직 제공하지 않는 기능에 성공을 가장하는 엔드포인트를 만들지 않는다. 관리자 경로는 모두 인증·소유권, 변경은 revision과 동일 출처 검사 대상이다. 비동기 요청의 `id`는 중복 실행 방지용 UUID다.
+
+[AI 하네스](ai-harness.md)의 서버 모듈·제공사 어댑터와 오프라인 검사는 준비되어 있다. 아래 AI HTTP 경로는 여전히 미구현이다. 내부 camelCase 타입은 아래 업무 필드와 HTTP 연결 시 매핑하며, 인증·현재 공개 DB gate·세션·작업 멱등성·예산을 통과한 서버에서만 호출한다. 범용 프롬프트/임의 텍스트 프록시로 노출하지 않는다.
 
 | OP | 경로와 입력 | 결과·조건 |
 | --- | --- | --- |
