@@ -1,11 +1,11 @@
 ---
 type: Guide
 id: GUIDE-005
-title: yeoback 개발 협업 규칙
+title: Yeobek 개발 협업 규칙
 description: MVP 팀의 작업 배정, 커밋, 브랜치, PR, worktree와 병합 기준을 설명한다.
 status: stable
 updated: '2026-11-13'
-tags: [yeoback, collaboration, git]
+tags: [yeobek, collaboration, git]
 rag_include: false
 generated:
   by: codex/gpt-6
@@ -25,7 +25,7 @@ sources:
   title: Supabase 로컬 프로젝트 설정
 ---
 
-# yeoback 개발 협업 규칙
+# Yeobek 개발 협업 규칙
 
 이 가이드는 일요일 오전 MVP 통합을 기준으로 한다. 작업을 나눌 때 담당자, 기준 브랜치, 수정할 경로, 검증할 사용자 흐름, 선행 PR을 공유한다. 작업 중 범위가 겹치면 파일을 수정하기 전에 담당자끼리 순서나 경계를 조정한다. 기획 문서의 검색, 출처, 상태 관리에는 [에이전트 작업 절차](agent-workflow.md)를 적용한다.
 
@@ -150,8 +150,8 @@ git switch -c feat/visitor-qr-entry origin/main
 git status --short
 git worktree list
 git fetch origin
-git worktree add -b feat/visitor-qr-entry "../yeoback-visitor-qr" origin/main
-git -C "../yeoback-visitor-qr" status --short --branch
+git worktree add -b feat/visitor-qr-entry "../yeobek-visitor-qr" origin/main
+git -C "../yeobek-visitor-qr" status --short --branch
 ```
 
 | 영역 | worktree 간 분리 방법 |
@@ -169,8 +169,8 @@ git -C "../yeoback-visitor-qr" status --short --branch
 
 ```sh
 git worktree list
-git -C "../yeoback-visitor-qr" status --short --branch
-git worktree remove "../yeoback-visitor-qr"
+git -C "../yeobek-visitor-qr" status --short --branch
+git worktree remove "../yeobek-visitor-qr"
 ```
 
 4. worktree 정리와 브랜치 정리는 별도 작업이다. 병합된 PR, 해당 커밋을 쓰는 작업, 남은 변경을 확인한 후 브랜치를 정리한다. squash 병합 뒤 `git branch -d`가 거절되면 GitHub의 PR 병합 결과와 독립 커밋 보존 여부부터 확인한다.

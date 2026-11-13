@@ -5,7 +5,7 @@ title: MVP 개발 기반 작업 검토서
 description: 497b61b까지의 요구 근거·구현 판단·실제 변경·검증 증거와 미해결 차이를 검토한다.
 status: stable
 updated: '2026-11-13'
-tags: [yeoback, review, foundation]
+tags: [yeobek, review, foundation]
 rag_include: false
 generated:
   by: codex/gpt-6

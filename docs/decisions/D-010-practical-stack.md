@@ -5,7 +5,7 @@ title: Render 제외와 사용자 경험을 위한 MVP 스택 권고
 description: Render 제외는 반영하고 Vercel·Supabase·OpenAI Q&A/STT·Liner 초안·Typecast TTS를 조건부 권고한다.
 status: draft
 updated: '2026-11-13'
-tags: [yeoback, architecture, voice]
+tags: [yeobek, architecture, voice]
 rag_include: true
 generated:
   by: codex/gpt-6

@@ -5,7 +5,7 @@ title: MVP 개발 기반과 검증 범위
 description: 실제 Next.js·Supabase 코드의 구성, 현재 구현 범위와 후속 개발 경계.
 status: draft
 updated: '2026-11-13'
-tags: [yeoback, development, database, api]
+tags: [yeobek, development, database, api]
 rag_include: true
 generated:
   by: codex/gpt-6

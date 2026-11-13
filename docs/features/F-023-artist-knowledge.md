@@ -5,7 +5,7 @@ title: AI용 작가·전시·작품 연결 지식 저장
 description: 작가 입력을 DB 원본의 내부 위키 문서로 나누고 관계·출처·승인 범위를 보존한다.
 status: draft
 updated: '2026-11-13'
-tags: [yeoback, feature, knowledge]
+tags: [yeobek, feature, knowledge]
 rag_include: true
 generated:
   by: codex/gpt-6

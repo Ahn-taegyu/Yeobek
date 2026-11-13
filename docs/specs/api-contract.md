@@ -5,7 +5,7 @@ title: MVP API 계약
 description: OP-01~22의 초기 기반 및 후속 HTTP 계약과 접근·버전 경계.
 status: draft
 updated: '2026-11-13'
-tags: [yeoback, api, mvp]
+tags: [yeobek, api, mvp]
 rag_include: true
 generated:
   by: codex/gpt-6

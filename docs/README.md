@@ -1,7 +1,7 @@
 ---
 type: Guide
 id: GUIDE-001
-title: yeoback 기획 저장소 사용법
+title: Yeobek 기획 저장소 사용법
 description: Obsidian으로 여는 방법과 기획 RAG 명령을 안내한다.
 status: stable
 updated: '2026-11-13'
@@ -31,7 +31,7 @@ sources:
 
 # 먼저 볼 문서
 
-에이전트는 [작업 지침](AGENTS.md)과 [검색·수정·검증 절차](agent-workflow.md)를 먼저 읽는다. 저장소 이름은 yeoback이며 기존 MAWD 문서는 기획 이력으로 유지한다.
+에이전트는 [작업 지침](AGENTS.md)과 [검색·수정·검증 절차](agent-workflow.md)를 먼저 읽는다. 저장소 이름은 [Yeobek](references/user-project-name.md)이며 기존 MAWD 문서는 기획 이력으로 유지한다.
 
 1. [MVP 우선순위](product/mvp-priorities.md) — 원래 우선순위와 현재 범위.
 2. [기능명세 v1.0](specs/functional-spec.md) — 범위·권한·입력·상태·API 업무 계약. [화면 상세](specs/screen-spec.md), [시나리오·예외](specs/user-scenarios.md)를 함께 읽는다.

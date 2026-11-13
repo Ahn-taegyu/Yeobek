@@ -1,12 +1,14 @@
 # 출처와 보존본
 
+- [프로젝트 이름 정정](user-project-name.md) — 현재 이름은 Yeobek, 과거 요청 원문은 보존.
+
 - [작업 근거 검토 요청](user-review-request.md) — 직전 개발 결과를 근거와 함께 검토할 자료 요청.
 
 - [MVP 개발 시작·협업 규칙 요청](user-development-start.md) — 역할별 브랜치, Sol/Terra 위임 선호와 교차 검증.
 
 - [Render 제외와 스택 추천 요청](user-render-excluded.md) — 11/13 사용자 최신 행사 정보·부드러운 경험 요구.
 
-- [GitHub 공유·에이전트 협업 요청](user-repository-handoff.md) — yeoback 비공개 저장소와 자동 검색/수정 준비.
+- [GitHub 공유·에이전트 협업 요청](user-repository-handoff.md) — 당시 요청명 yeoback(현재 Yeobek)의 비공개 저장소와 자동 검색/수정 준비.
 
 - [최신 MVP 원안](user-mvp.md) — 원래 강조 우선순위.
 - [기능 명세 작성 요청](user-functional-spec.md) — 화면·시나리오·예외를 와이어프레임과 API 명세의 기준으로 구체화.

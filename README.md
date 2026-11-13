@@ -1,4 +1,4 @@
-# yeoback
+# Yeobek
 
 작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**과 기획 문서·로컬 지식 검색 도구가 있습니다. AI 해설·음성·게시·관람 화면은 후속 구현입니다. [실제 개발 범위](docs/specs/development-foundation.md)와 [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
 
@@ -42,8 +42,8 @@ npm run start
 Python 3.12 이상을 설치한 뒤 다음 명령을 실행합니다. Windows·macOS·Linux에서 같은 명령을 쓰며 `python`이 없는 환경은 `python3`로 바꿉니다.
 
 ```sh
-git clone https://github.com/Ahn-taegyu/yeoback.git
-cd yeoback
+git clone https://github.com/Ahn-taegyu/Yeobek.git
+cd Yeobek
 python scripts/knowledge.py setup
 python scripts/knowledge.py search "관람객 음성 입력 출력" --json
 python scripts/knowledge.py search "사업안 선택" --accepted-only

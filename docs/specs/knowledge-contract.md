@@ -12,6 +12,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: name
+  resource: /references/user-project-name.md
+  title: 프로젝트 이름을 Yeobek으로 정정
 - id: format
   resource: /references/format-references.md
   title: 공식 형식 근거
@@ -22,7 +25,7 @@ sources:
 
 # 저장소 구조
 
-공유 저장소 이름은 yeoback이다. 에이전트 진입점은 저장소 루트 AGENTS.md와 [docs 지침](../AGENTS.md), 구체적인 실행/수정 절차는 [에이전트 작업 절차](../agent-workflow.md)다. docs 안의 지침 문서도 Guide 메타데이터로 검사하지만 rag_include=false로 제품 기획 검색에서 제외한다.
+공유 저장소 이름은 [Yeobek](../references/user-project-name.md)이다. 에이전트 진입점은 저장소 루트 AGENTS.md와 [docs 지침](../AGENTS.md), 구체적인 실행/수정 절차는 [에이전트 작업 절차](../agent-workflow.md)다. docs 안의 지침 문서도 Guide 메타데이터로 검사하지만 rag_include=false로 제품 기획 검색에서 제외한다.
 
 docs 전체를 OKF 0.2 번들과 Obsidian 보관함으로 쓴다. 개념 문서는 한 주제/기능당 하나이며 YAML과 표준 Markdown 상대 링크를 사용한다. Obsidian 전용 표 임베드는 dashboard.md에만 둔다. 공식 근거는 [형식 문서](../references/format-references.md).
 

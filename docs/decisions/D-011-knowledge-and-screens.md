@@ -5,7 +5,7 @@ title: AI용 작가 지식 위키와 작가·관람객 필수 화면
 description: DB 원본의 내부 지식 연결과 작가 홈·전시 온보딩·작품 정보·채팅 대상 표시 요구를 반영한다.
 status: draft
 updated: '2026-11-13'
-tags: [yeoback, knowledge, screens]
+tags: [yeobek, knowledge, screens]
 rag_include: true
 generated:
   by: codex/gpt-6

@@ -5,7 +5,7 @@ title: AI용 작가·전시·작품 내부 지식 계약
 description: 일반 입력 폼을 DB 원본의 연결 문서로 저장하고 승인 범위에서만 AI가 검색하는 설계.
 status: draft
 updated: '2026-11-13'
-tags: [yeoback, knowledge, rag]
+tags: [yeobek, knowledge, rag]
 rag_include: true
 generated:
   by: codex/gpt-6

@@ -5,7 +5,7 @@ title: Render 제외 후 현실적인 도슨트 MVP 추천 스택
 description: 기본 해설 재사용과 짧은 Q&A·TTS 재생으로 사용자 대기를 줄이는 구성과 AI별 API 선택.
 status: draft
 updated: '2026-11-13'
-tags: [yeoback, architecture, voice, latency]
+tags: [yeobek, architecture, voice, latency]
 rag_include: true
 generated:
   by: codex/gpt-6
