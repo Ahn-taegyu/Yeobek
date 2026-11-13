@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { visitorChatRequest, visitorReplyResponse, gapListResponse, gapResponse, checkVersionsRequest, checkVersionsResponse, purgeResponse } from "./visitor";
 import { generateNarrationSchema, jobResponse, retryJobSchema, saveNarrationSchema } from "./jobs";
 import { approvalSchema, approvalResponse, evidenceImpactSchema, evidenceResponse, labelsResponse,
   publicationSchema, publicationResponse, reviewResponse, revokeEvidenceSchema, revokeImpactResponse,
@@ -26,6 +27,11 @@ const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  purgeExpired: { method: "POST", path: "/api/cron/purge", response: successEnvelope(purgeResponse), statuses: [200] },
+  chat: { method: "POST", path: "/api/chat", body: visitorChatRequest, response: successEnvelope(visitorReplyResponse), statuses: [200] },
+  checkVersions: { method: "POST", path: "/api/public/exhibitions/{id}/versions/check", params: byId, body: checkVersionsRequest, response: successEnvelope(checkVersionsResponse), statuses: [200] },
+  listGaps: { method: "GET", path: "/api/admin/exhibitions/{id}/gaps", params: byId, response: successEnvelope(gapListResponse), statuses: [200] },
+  dismissGap: { method: "POST", path: "/api/admin/gaps/{id}/dismiss", params: byId, body: emptySchema, response: successEnvelope(gapResponse), statuses: [200] },
   reviewArtwork: { method: "GET", path: "/api/admin/artworks/{id}/review", params: byId, response: successEnvelope(reviewResponse), statuses: [200] },
   upsertEvidence: { method: "POST", path: "/api/admin/artworks/{id}/evidence", params: byId, body: upsertEvidenceSchema, response: successEnvelope(evidenceResponse), statuses: [201] },
   approveArtwork: { method: "POST", path: "/api/admin/artworks/{id}/approvals", params: byId, body: approvalSchema, response: successEnvelope(approvalResponse), statuses: [200] },

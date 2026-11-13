@@ -31,6 +31,7 @@
     "test:integration": "node --test tests/integration/*.test.mjs",
     "test:jobs": "node --test tests/integration/mock/jobs.test.mjs",
     "test:publication": "node --test tests/integration/mock/publication.test.mjs",
+    "test:visitor": "node --test tests/integration/mock/visitor.test.mjs",
     "db:env": "node scripts/local-env.mjs",
     "db:artist": "node scripts/local-artist.mjs",
     "db:types": "node scripts/database-types.mjs"

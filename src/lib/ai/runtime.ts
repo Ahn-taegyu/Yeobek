@@ -1,6 +1,7 @@
 import "server-only";
 import { getFeatures } from "../features";
 import type { JobLifecycle } from "./job-lifecycle";
+import type { VisitorLifecycle } from "./visitor-lifecycle";
 import type { PublicationStore, SpeechSourceStore } from "./contracts";
 import { createDocentHarness, speakVerifiedReply } from "./harness";
 import { createOpenAiSpeechProvider, createOpenAiTextProvider, createOpenAiTranscriptionProvider } from "./providers/openai";
@@ -40,9 +41,9 @@ export function createConfiguredTranscriptionProvider(options?: AiProviderOption
 }
 
 /** Keys are checked only when a model capability runs; fixed narration remains available offline. */
-export function createDocentRuntime(publications: PublicationStore, answers: SpeechSourceStore) {
+export function createDocentRuntime(publications: PublicationStore, answers: SpeechSourceStore, visitor?: VisitorLifecycle) {
   const mock = isMockMode();
-  const harness = createDocentHarness({ publications,
+  const harness = createDocentHarness({ publications, visitor,
     text: { generate: input => createConfiguredTextProvider("qa").generate(input) },
   });
   return {

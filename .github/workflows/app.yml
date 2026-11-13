@@ -57,10 +57,14 @@ jobs:
         env:
           AI_PROVIDER_MODE: mock
           FEATURE_VOICE_REQUIRED: "false"
+          FEATURE_GAPS: "true"
+          CRON_SECRET: local-integration-only-0123456789abcdef
           APP_ORIGIN: http://localhost:3001
           TEST_APP_ORIGIN: http://localhost:3001
         run: |
           node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-mock.log 2>&1 &
+          mock_pid=$!
+          trap 'kill "$mock_pid" 2>/dev/null || true' EXIT
           for attempt in {1..60}; do
             if curl --silent --fail http://localhost:3001/api/health > /dev/null; then
               break
@@ -74,6 +78,22 @@ jobs:
           done
           npm run test:jobs
           npm run test:publication
+          npm run test:visitor
+          kill "$mock_pid"
+          wait "$mock_pid" || true
+          FEATURE_GAPS=false node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-gaps-off.log 2>&1 &
+          mock_pid=$!
+          for attempt in {1..60}; do
+            if curl --silent --fail http://localhost:3001/api/health > /dev/null; then
+              break
+            fi
+            if (( attempt == 60 )); then
+              tail -n 100 /tmp/yeobek-gaps-off.log
+              exit 1
+            fi
+            sleep 1
+          done
+          TEST_GAPS_DISABLED_ONLY=true npm run test:visitor
       - name: Stop the disposable stack
         if: always()
         run: npm run db:stop

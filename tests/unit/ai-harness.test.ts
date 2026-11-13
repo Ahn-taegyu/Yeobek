@@ -24,9 +24,10 @@ describe("docent harness offline evaluation (synthetic; no semantic quality clai
       publication: { artworkId: ids.artwork, publicationId: ids.publication }, source: "generated" });
     expect(s.publications.isCurrent).toHaveBeenCalledTimes(2);
     expect(reply.steps.map(step => [step.id, step.status])).toEqual([
-      ["request.validate", "done"], ["intent.resolve", "done"], ["publication.read", "done"],
+      ["request.validate", "done"], ["request.reserve", "skipped"], ["intent.resolve", "done"], ["publication.read", "done"],
       ["publication.recheck", "done"], ["evidence.select", "done"], ["model.generate", "done"],
       ["output.validate", "done"], ["publication.recheck.final", "done"],
+      ["answer.store", "skipped"], ["gap.record", "skipped"],
     ]);
     const prompt = s.text.generate.mock.calls[0] as unknown as [{ input: string; system: string }];
     expect(prompt[0].input).not.toContain(ids.owner);
@@ -37,7 +38,7 @@ describe("docent harness offline evaluation (synthetic; no semantic quality clai
     const reply = await s.harness.answer(syntheticRequest({ question }));
     expect(reply.source).toBe("approved_narration");
     expect(reply.steps.find(step => step.id === "model.generate")).toMatchObject({ status: "skipped", reason: "approved_narration" });
-    expect(reply.steps.at(-1)).toMatchObject({ id: "publication.recheck.final", status: "done" });
+    expect(reply.steps.find(step => step.id === "publication.recheck.final")).toMatchObject({ status: "done" });
     expect(s.text.generate).not.toHaveBeenCalled();
   });
   it("does not drop a follow-up why question into the narration fast path", async () => {
@@ -57,7 +58,7 @@ describe("docent harness offline evaluation (synthetic; no semantic quality clai
   it("does not reuse a cleared selection", async () => {
     const s = setup(); const reply = await s.harness.answer(syntheticRequest({ artworkId: null }));
     expect(reply.outcome).toBe("clarify");
-    expect(reply.steps.slice(2).every(step => step.status === "skipped" && step.reason === "selection_required")).toBe(true);
+    expect(reply.steps.slice(3, -2).every(step => step.status === "skipped" && step.reason === "selection_required")).toBe(true);
     expect(s.publications.load).not.toHaveBeenCalled();
   });
   it("does not read 이번 작품 as artwork number two", async () => {
@@ -136,7 +137,7 @@ describe("docent harness offline evaluation (synthetic; no semantic quality clai
     await expect(s.harness.answer(syntheticRequest())).rejects.toBe(error);
     const steps = getPlaybookFailureSteps(error);
     expect(steps).toContainEqual(expect.objectContaining({ id: "model.generate", status: "failed" }));
-    expect(steps?.at(-1)).toMatchObject({ id: "publication.recheck.final", status: "skipped", reason: "previous_step_failed" });
+    expect(steps?.find(step => step.id === "publication.recheck.final")).toMatchObject({ status: "skipped", reason: "previous_step_failed" });
     expect(JSON.stringify(steps)).not.toContain("private provider error");
   });
   it.each([['text', 'text'], ['text', 'voice'], ['voice', 'text'], ['voice', 'voice']] as const)("keeps %s/%s independent", async (inputMode, outputMode) => {
