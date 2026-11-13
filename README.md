@@ -20,27 +20,29 @@ npm run dev
 
 ## AI 연결 준비
 
-`src/lib/ai/`는 OpenAI Q&A·STT, Liner 해설 후보, Typecast TTS와 명시적으로 선택하는 OpenAI TTS 대안의 서버 어댑터를 제공합니다. 공개 자료 범위·인용·출력 길이·취소·철회를 검사하는 하네스와 다섯 업무의 순서 있는 플레이북이 있으며, 합성 자료로 검사합니다. 플레이북 capability는 허용된 저장소 함수만 제공하고 실제 소유권·공개 접근 인가는 저장소 포트가 담당합니다. 실제 게시/승인 DB 어댑터·세션·영속 작업 제한은 연결 전입니다. 키를 넣어도 `/api/chat`이나 관람 화면이 활성화되지는 않습니다.
+`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 실제 외부 모델 호출은 아직 0회입니다. 게시·승인 DB 어댑터, 작업 원장과 신규 관람 채팅 HTTP는 연결 전이며 키를 넣어도 관람 화면이 활성화되지는 않습니다.
 
-1. `.env.example`의 AI 항목을 **기존 `.env.local`에 추가**합니다. 파일을 덮어써 Supabase 설정을 지우지 않습니다. 키에는 `NEXT_PUBLIC_`를 붙이지 않습니다.
-2. 보유한 OpenAI 키를 `OPENAI_API_KEY`에, 행사에서 받은 Liner 키를 `LINER_API_KEY`에 설정합니다. 계정별 모델 접근·잔액은 실제 단일 요청으로 확인해야 합니다.
-3. [Typecast API 콘솔](https://studio.typecast.ai/)에서 키를 발급하고 [TTS 문서](https://typecast.ai/docs/ko/api-reference/text-to-speech/text-to-speech)에 연결된 보이스 목록 `GET /v3/voices?model=ssfm-v31`에서 한국어 지원 보이스의 `voice_id`를 선택합니다. `TYPECAST_API_KEY`, `TYPECAST_VOICE_ID`를 서버에 설정하고 `AI_TTS_PROVIDER=typecast`로 둡니다. 실제 이용 조건과 음질을 확인합니다.
-4. Typecast 준비 전 임시 시험은 `AI_TTS_PROVIDER=openai`로 명시합니다. `gpt-4o-mini-tts`/`coral`을 사용하며 자동 장애 전환은 없습니다. 이 모델은 [2027-01-06 종료 예정](https://developers.openai.com/api/docs/guides/text-to-speech)이므로 행사 이후 교체 검토가 필요합니다. Realtime 모델을 `/audio/speech`의 모델 이름으로 대입할 수는 없습니다.
+1. `.env.example`의 AI 항목을 기존 `.env.local`에 추가하고 `LINER_API_KEY`를 서버에 설정합니다. 키에 `NEXT_PUBLIC_`를 붙이지 않습니다.
+2. `AI_ROUTE_DRAFT`, `AI_ROUTE_ORGANIZE`, `AI_ROUTE_JUDGE`, `AI_ROUTE_QA`, `AI_ROUTE_STT`, `AI_ROUTE_TTS`는 `제공사:모델` 형식으로 선택합니다. Liner TTS는 계정에서 확인한 고정 모델을 `AI_ROUTE_TTS` 또는 `LINER_TTS_MODEL`에, 음성을 `LINER_TTS_VOICE`에 지정해야 합니다. 평가 모델은 초안과 다른 인식 가능한 계열이어야 합니다.
+3. OpenAI·Typecast·EXAONE은 비교 후보입니다. 해당 `AI_ROUTE_*`와 제공사 키, 필요한 음성 설정을 명시해 선택합니다. 자동 장애 전환은 없습니다. `.env.example`에 예시가 있습니다.
+4. 키 없는 개발·시험에는 `AI_PROVIDER_MODE=mock`을 사용합니다. `NODE_ENV=development` 또는 `test`에서만 허용되며 production에서는 거부합니다. 모의 결과에는 `mock: true`가 표시됩니다.
 
 ```sh
 npm run ai:check
 npm run ai:eval
-# 아래 명령만 실제 요청 1회를 보내며 제공사 사용료가 발생할 수 있습니다.
+# 아래 smoke는 live 설정에서 기능 하나당 최대 한 번 실제 호출하며 비용이 발생할 수 있습니다.
 npm run ai:smoke -- qa
 npm run ai:smoke -- draft
-npm run ai:smoke -- typecast-tts
-# Typecast 대신 임시 OpenAI TTS 자체를 시험할 때
-npm run ai:smoke -- openai-tts
-# 권한이 있는 30초/3MiB 이내 시험 녹음으로만 실행
+npm run ai:smoke -- judge
+npm run ai:smoke -- organize
+npm run ai:smoke -- tts
+# 권한 있는 30초/3MiB 이내 시험 녹음
 npm run ai:smoke -- stt --audio=path/to/test.webm
 ```
 
-`ai:check`는 변수 존재 여부만 검사하고 키를 출력하지 않습니다. 필수 변수가 없으면 종료 코드 1이며 실제 접속 성공을 뜻하지 않습니다. `ai:eval`과 기본 CI는 모의 제공사만 사용합니다. `ai:smoke`는 명시한 기능 하나만 실제 호출하고 응답 원문·녹음·음성 파일을 저장하지 않습니다. STT 파일 크기는 검사하며 30초 길이는 실행자가 확인해야 합니다. 이 검사는 응답 계약만 확인하므로 한국어 인식 정확도·청취 품질·근거 충실도는 별도로 확인해야 합니다. 앱에서 재생할 때 AI 생성 음성임을 표시합니다.
+`ai:check`는 설정을 검사하며 키를 출력하거나 접속하지 않습니다. `ai:smoke`는 `AI_PROVIDER_MODE=live`가 필요하며 `typecast-tts`, `openai-tts`, `exaone`도 선택할 수 있습니다. 시험은 응답 계약을 확인하며 한국어 품질·근거 충실도와 행사 키 권한은 별도 실측이 필요합니다.
+
+기존 인증·작가 CRUD와 공개 조회의 17개 경로는 `src/lib/contracts/`에 계약을 두고 프런트에서 `requestApi`를 `@/lib/client`로 가져와 사용합니다. 신규 작업·게시·채팅 HTTP가 구현됐다는 뜻은 아닙니다.
 
 ## 앱 검사와 DB 변경
 
@@ -52,12 +54,12 @@ AI의 업무 절차와 말투는 [제품 플러그인](docs/specs/product-ai-plu
 
 ## 작가 해설 비교 실험
 
-기본 `npm run ai:compare`는 합성 사례 5개의 **오프라인 시뮬레이션**입니다. 실제 모델의 품질·비용·응답 시간을 측정한 결과가 아닙니다. `single`은 생성 1회+평가 1회, `best_of_two`는 병렬 생성 2회+평가 1회와 수정 가능한 실패의 추가 라운드 한 번(최대 6회 호출)을 사용합니다. 생성은 Liner, 평가는 OpenAI의 `OPENAI_JUDGE_MODEL`(기본 `gpt-6-luna`)이며 두 방식에 같은 모델·자료·평가 하한을 적용합니다.
+기본 `npm run ai:compare`는 합성 사례 5개의 **오프라인 시뮬레이션**입니다. 실제 모델의 품질·비용·응답 시간을 측정한 결과가 아닙니다. `single`은 생성 1회+평가 1회, `best_of_two`는 병렬 생성 2회+평가 1회와 수정 가능한 실패의 추가 라운드 한 번(최대 6회 호출)을 사용합니다. 기본 생성과 평가는 Liner 경유이며 평가는 다른 Google 계열 모델을 사용하고 두 방식에 같은 모델·자료·평가 하한을 적용합니다.
 
 ```sh
 npm run ai:compare -- --mode=mock
 # 아래는 합성 grounded 사례를 두 방식으로 비교하는 실제 유료 호출입니다.
-# LINER_API_KEY와 OPENAI_API_KEY가 필요합니다. 최악의 경우 8회 호출을 예약합니다.
+# 기본 경로는 LINER_API_KEY가 필요합니다. 최악의 경우 8회 호출을 예약합니다.
 npm run ai:compare -- --mode=live --cases=grounded --repeats=1 --max-calls=8
 # 사람이 human-review.json을 보고 human-labels.json의 null 값을 채운 뒤 실행
 npm run ai:review -- .ai-eval/run-ID
@@ -67,7 +69,7 @@ npm run ai:review -- .ai-eval/run-ID
 
 사례는 `grounded`, `missing-intent`, `injection`, `conflict`, `insufficient`입니다. `--cases=grounded,injection --repeats=2 --max-calls=32`처럼 선택하며 실호출 상한은 사례 수×반복 수×8 이상, 최대 200입니다. 반복은 1~5회입니다. 순서는 사례·반복마다 교대하며 평가기에 주는 후보 순서는 무작위입니다. 5개 공개 합성 사례는 개발용 점검 세트이며 품질 인증이나 별도 평가 세트를 대체하지 않습니다.
 
-비용 계산은 선택적 `--pricing=path/to/pricing.json`을 사용합니다. `tests/evaluation/pricing.example.json`을 복사하고 `rates`에 `{ "provider": "liner", "model": "실제 응답의 모델 ID", "inputUsdPerMillion": 입력단가, "outputUsdPerMillion": 출력단가 }` 형태로 현재 계정 단가를 기입합니다. OpenAI 평가 모델도 별도 행으로 넣고 `asOf`를 갱신합니다. 정확한 모델 단가나 사용량이 없으면 총비용은 null이며, 확인된 일부 비용만 따로 표시합니다. 집계 토큰 단가의 추정이므로 캐시·계약별 요율·실제 청구액과 다를 수 있습니다. 재시도·평가를 모두 포함하며 무료라고 가정하지 않습니다.
+비용 계산은 선택적 `--pricing=path/to/pricing.json`을 사용합니다. `tests/evaluation/pricing.example.json`을 복사하고 `rates`에 `{ "provider": "liner", "model": "실제 응답의 모델 ID", "inputUsdPerMillion": 입력단가, "outputUsdPerMillion": 출력단가 }` 형태로 현재 계정 단가를 기입합니다. 실제 평가 모델도 별도 행으로 넣고 `asOf`를 갱신합니다. 정확한 모델 단가나 사용량이 없으면 총비용은 null이며, 확인된 일부 비용만 따로 표시합니다. 집계 토큰 단가의 추정이므로 캐시·계약별 요율·실제 청구액과 다를 수 있습니다. 재시도·평가를 모두 포함하며 무료라고 가정하지 않습니다.
 
 Tailwind CSS 4·PostCSS를 사용합니다. 현재 Windows에서 재현된 Turbopack PostCSS worker 종료를 피하도록 `dev`·`build`는 Next.js의 `--webpack` 옵션을 사용합니다. 기존 로컬 스택이 실행 중일 때 새 migration 적용은 `npx supabase migration up --local`로 수행하며 DB reset은 필요하지 않습니다.
 

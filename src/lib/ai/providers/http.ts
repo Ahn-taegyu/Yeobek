@@ -65,8 +65,8 @@ export function providerTrace(
   const trace: AiProviderTrace = { provider, model };
   const tokens = objectValue(response?.usage);
   const usage: AiUsage = {};
-  const input = tokenCount(provider === "liner" ? tokens?.prompt_tokens : tokens?.input_tokens);
-  const output = tokenCount(provider === "liner" ? tokens?.completion_tokens : tokens?.output_tokens);
+  const input = tokenCount((provider === "liner" || provider === "exaone") ? tokens?.prompt_tokens : tokens?.input_tokens);
+  const output = tokenCount((provider === "liner" || provider === "exaone") ? tokens?.completion_tokens : tokens?.output_tokens);
   const total = tokenCount(tokens?.total_tokens);
   if (input !== undefined) usage.inputTokens = input;
   if (output !== undefined) usage.outputTokens = output;

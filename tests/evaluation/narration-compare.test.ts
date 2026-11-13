@@ -5,9 +5,8 @@ import { resolve } from "node:path";
 vi.mock("server-only", () => ({}));
 import { createNarrationHarness, type NarrationStrategy } from "../../src/lib/ai/narration";
 import { pricingSchema, summarizeComparison, type ComparisonRun, type ReviewKey } from "../../src/lib/ai/narration-report";
-import { createLinerTextProvider } from "../../src/lib/ai/providers/liner";
-import { createOpenAiTextProvider } from "../../src/lib/ai/providers/openai";
-import { getLinerTextConfig, getOpenAiJudgeConfig } from "../../src/lib/ai/config";
+import { createConfiguredTextProvider } from "../../src/lib/ai/runtime";
+import { isMockMode, resolveAiRoute } from "../../src/lib/ai/routing";
 import { PLUGIN_VERSION } from "../../src/lib/ai/plugin";
 import type { AiTextProvider } from "../../src/lib/ai/providers/types";
 import { actorId, narrationCases, type NarrationCase } from "./narration-cases";
@@ -45,8 +44,9 @@ it("runs the explicitly requested paired comparison", async () => {
   const runs: ComparisonRun[] = []; const key: ReviewKey[] = [];
   const review: { sampleId: string; sources: { id: string; text: string }[]; rubric: string; expected: string; expectedReasons: string[];
     answer: string | null; citations: string[]; status: string; terminationReason: string }[] = [];
-  const liveGenerator = options.mode === "live" ? createLinerTextProvider() : null;
-  const liveJudge = options.mode === "live" ? createOpenAiTextProvider(getOpenAiJudgeConfig()) : null;
+  if (options.mode === "live" && isMockMode()) throw new Error("Live comparison requires AI_PROVIDER_MODE=live.");
+  const liveGenerator = options.mode === "live" ? createConfiguredTextProvider("draft") : null;
+  const liveJudge = options.mode === "live" ? createConfiguredTextProvider("judge") : null;
   let callsStarted = 0;
   const limit = (provider: AiTextProvider): AiTextProvider => ({ generate: request => {
     if (callsStarted >= options.maxCalls) throw new Error("comparison_call_budget");
@@ -74,7 +74,7 @@ it("runs the explicitly requested paired comparison", async () => {
   const report = { formatVersion: 1, createdAt: new Date().toISOString(), mode: options.mode,
     disclaimer: options.mode === "mock" ? "Scripted simulation. Not measured model quality, billing or provider latency." : "Small synthetic benchmark. Judge acceptance is not human-confirmed factual quality; token-rate costs are estimates.",
     pluginVersion: PLUGIN_VERSION, fixtureHash: createHash("sha256").update(JSON.stringify(fixtures)).digest("hex"),
-    configuredModels: options.mode === "live" ? { generator: getLinerTextConfig().model, judge: getOpenAiJudgeConfig().model } : { generator: "simulation-generator", judge: "simulation-judge" },
+    configuredModels: options.mode === "live" ? { generator: resolveAiRoute("draft").model, judge: resolveAiRoute("judge").model } : { generator: "simulation-generator", judge: "simulation-judge" },
     design: { baseline: "1 generation + same judge, no regeneration", treatment: "2 candidates + same judge, at most 1 regeneration round", ordering: "counterbalanced across pairs; judge candidate order randomized", percentile: "nearest rank, all attempts" },
     limits: { reservedCalls: options.reservedCalls, maxCalls: options.maxCalls, callsStarted }, pricing,
     summary: summarizeComparison(runs, pricing), runs: runs.map(run => {

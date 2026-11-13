@@ -1,0 +1,85 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
+import { requestApi } from "../../src/lib/client";
+import { apiErrorEnvelope } from "../../src/lib/contracts/responses";
+import { routes } from "../../src/lib/contracts/routes";
+
+const routeRoot = "src/app/api";
+const requestId = "550e8400-e29b-41d4-a716-446655440000";
+
+describe("HTTP route contracts", () => {
+  it("covers every implemented method and path", () => {
+    const methods = /export (?:async )?function (GET|POST|PATCH|DELETE|PUT|HEAD|OPTIONS)\(/g;
+    const actual = readdirSync(routeRoot, { recursive: true, encoding: "utf8" })
+      .filter(file => /[/\\]?route\.ts$/.test(file))
+      .flatMap(file => {
+        const fullPath = join(routeRoot, file);
+        const path = relative("src/app", fullPath).replaceAll("\\", "/").replace(/\/route\.ts$/, "")
+          .replace(/\[(\w+)\]/g, "{$1}");
+        return Array.from(readFileSync(fullPath, "utf8").matchAll(methods), ([, method]) => `${method} /${path}`);
+      });
+    expect(Object.values(routes).map(({ method, path }) => `${method} ${path}`).sort()).toEqual(actual.sort());
+  });
+
+  it("snapshots the shared HTTP error envelope", () => {
+    expect(z.toJSONSchema(apiErrorEnvelope)).toMatchSnapshot();
+  });
+
+  for (const [name, route] of Object.entries(routes)) {
+    it(`snapshots ${name}`, () => {
+      expect({
+        method: route.method,
+        path: route.path,
+        statuses: route.statuses,
+        // Input mode exports pre-transform JSON for trim, optional nullable fields and defaults.
+        params: "params" in route ? z.toJSONSchema(route.params, { io: "input" }) : null,
+        body: "body" in route ? z.toJSONSchema(route.body, { io: "input" }) : null,
+        response: z.toJSONSchema(route.response, { io: "output" }),
+      }).toMatchSnapshot();
+    });
+  }
+});
+
+describe("typed fetch client", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("sends original wire values and returns a validated envelope", async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ data: { authenticated: true }, requestId }));
+    vi.stubGlobal("fetch", fetch);
+    const body = { email: "artist@example.test", password: " original " };
+    await expect(requestApi("login", { body })).resolves.toEqual({ data: { authenticated: true }, requestId });
+    expect(fetch).toHaveBeenCalledWith("/api/auth/login", expect.objectContaining({
+      method: "POST", credentials: "same-origin", body: JSON.stringify(body),
+    }));
+  });
+
+  it("preserves structured API errors and rejects invalid success data", async () => {
+    const error = { code: "NOT_FOUND", message: "자료를 찾을 수 없습니다.", retryable: false };
+    const fetch = vi.fn().mockResolvedValueOnce(Response.json({ error, requestId }, { status: 404 }))
+      .mockResolvedValueOnce(Response.json({ data: { status: "other" }, requestId }));
+    vi.stubGlobal("fetch", fetch);
+    await expect(requestApi("getArtwork", { params: { id: requestId } })).rejects.toMatchObject({
+      ...error, status: 404, requestId,
+    });
+    expect(fetch).toHaveBeenCalledWith(`/api/admin/artworks/${requestId}`, expect.anything());
+    await expect(requestApi("health")).rejects.toMatchObject({ code: "INVALID_RESPONSE" });
+  });
+  it("rejects non-JSON errors without exposing raw response text", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("private upstream content", { status: 502 })));
+    await expect(requestApi("health")).rejects.toMatchObject({
+      status: 502, code: "INVALID_RESPONSE", message: "서버 응답을 확인하지 못했습니다.",
+    });
+  });
+
+  it("propagates cancellation without converting it to a retryable network error", async () => {
+    const controller = new AbortController();
+    const reason = new DOMException("Request cancelled", "AbortError");
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((_url, { signal }) => {
+      controller.abort(reason);
+      signal.throwIfAborted();
+    }));
+    await expect(requestApi("health", { signal: controller.signal })).rejects.toBe(reason);
+  });
+});

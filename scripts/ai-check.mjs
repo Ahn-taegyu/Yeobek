@@ -1,13 +1,8 @@
-import { loadAiEnv, requiredKeys, narrationKeys } from "./ai-env.mjs";
+import { spawnSync } from "node:child_process";
+import { loadAiEnv, projectRoot } from "./ai-env.mjs";
 loadAiEnv();
-const selection = process.env.AI_TTS_PROVIDER?.trim() || "typecast";
-const capabilities = Object.fromEntries(Object.entries({ ...requiredKeys, narration: narrationKeys }).map(([name, keys]) => {
-  const missing = keys.filter(key => !process.env[key]?.trim());
-  return [name, { configured: !missing.length, missing }];
-}));
-const selectionValid = ["typecast", "openai"].includes(selection);
-console.log(JSON.stringify({ check: "local-variable-presence-only", networkCalls: 0, accountAccessVerified: false,
-  ttsSelectionValid: selectionValid, capabilities,
-  integration: "blocked: publication/answer stores, sessions and durable request budgets pending" }, null, 2));
-if (!selectionValid || !capabilities.qa.configured || !capabilities.draft.configured || !capabilities.stt.configured ||
-    !capabilities[selection === "openai" ? "openai-tts" : "typecast-tts"].configured) process.exitCode = 1;
+const result = spawnSync(process.execPath, ["node_modules/vitest/vitest.mjs", "run", "--config", "vitest.ai-live.config.ts"], {
+  cwd: projectRoot, stdio: "inherit", shell: false,
+  env: { ...process.env, AI_SMOKE_TASK: "check", AI_SMOKE_AUDIO: "" },
+});
+process.exitCode = result.status ?? 1;

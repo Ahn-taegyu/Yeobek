@@ -4,7 +4,7 @@ id: SPEC-012
 title: MVP 개발 기반과 검증 범위
 description: 실제 Next.js·Supabase 코드의 구성, 현재 구현 범위와 후속 개발 경계.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags: [yeobek, development, database, api]
 rag_include: true
 generated:
@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: backend
+  resource: /references/user-backend-completion.md
+  title: 백엔드 완성 계획 요청 원문
 - id: harness
   resource: /specs/ai-harness.md
   title: 제품 AI 실행 하네스 준비 범위
@@ -103,6 +106,8 @@ sources:
 과거 초기 검사로서 구현 497b61b에서 로컬 lint·typecheck·프로덕션 build, 단위 테스트 16개, Supabase pgTAP 53개, HTTP 통합 테스트 7개(상위 1 + 하위 6)가 통과했다. HTTP는 Node fetch와 쿠키 jar로 확인했고 실제 브라우저는 로그인 렌더링·기본 POST 폼만 확인했다. 해당 커밋의 App checks CI도 성공했으며 [재검토서](../reviews/mvp-foundation-2026-11-13.md)에 링크·범위·확인 시점을 기록한다. 최신 재검증은 재검토서 12절을 확인한다. 배포·음성·실제 작가 자료·관람 시연은 미검증이다.
 
 # 다음 구현 순서
+
+11/14 후속 요청의 순서와 완료 기준은 [W0~W8 작업 추적](backend-completion.md)이 우선한다. W0에서 기존 HTTP 17개 계약·타입 클라이언트, 서버 기능 플래그, 서비스 역할만 쓰는 `app_policies`와 비공개 RPC 읽기 함수를 추가했다. 정책 테이블은 한도 집행기가 아니며 작업·관람 RPC 연결은 후속이다. 제공사 경로와 모의 모드는 [조사 기록](../research/backend-provider-routing.md)을 따른다. 아래는 초기 화면 연결 순서의 기록이다.
 
 1. 이 API 위에 작가 정보·전시·작품 입력 폼과 충돌 재조회 UX를 연결한다.
 2. 비공개 이미지/PDF 업로드와 수동 발췌·출처 확인을 붙인다.

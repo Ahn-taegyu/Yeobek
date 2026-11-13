@@ -14,8 +14,3 @@ export function loadAiEnv() {
     }
   }
 }
-export const requiredKeys = {
-  qa: ["OPENAI_API_KEY"], draft: ["LINER_API_KEY"], stt: ["OPENAI_API_KEY"],
-  "typecast-tts": ["TYPECAST_API_KEY", "TYPECAST_VOICE_ID"], "openai-tts": ["OPENAI_API_KEY"],
-};
-export const narrationKeys = ["LINER_API_KEY", "OPENAI_API_KEY"];

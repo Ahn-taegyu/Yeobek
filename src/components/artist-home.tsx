@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-type Profile = { displayName: string | null; accountEmail: string | null };
-type Exhibition = { id: string; title: string; state: string; startDate: string | null; endDate: string | null; place: string | null; artworkCount: number };
-type Home = { profile: Profile; exhibitions: Exhibition[] };
+import { ApiClientError, requestApi } from "@/lib/client";
+
+type Home = {
+  profile: Awaited<ReturnType<typeof requestApi<"getProfile">>>["data"];
+  exhibitions: Awaited<ReturnType<typeof requestApi<"listExhibitions">>>["data"]["items"];
+};
 export function ArtistHome() {
   const [home, setHome] = useState<Home | null>(null);
   const [error, setError] = useState("");
@@ -13,14 +16,19 @@ export function ArtistHome() {
     const controller = new AbortController();
     async function load() {
       try {
-        const responses = await Promise.all([
-          fetch("/api/admin/profile", { signal: controller.signal, cache: "no-store" }),
-          fetch("/api/admin/exhibitions", { signal: controller.signal, cache: "no-store" }),
+        const [profile, exhibitions] = await Promise.allSettled([
+          requestApi("getProfile", { signal: controller.signal }),
+          requestApi("listExhibitions", { signal: controller.signal }),
         ]);
-        if (responses.some(response => response.status === 401)) { window.location.replace("/login"); return; }
-        if (responses.some(response => !response.ok)) throw new Error();
-        const [profile, exhibitions] = await Promise.all(responses.map(response => response.json()));
-        if (!controller.signal.aborted) setHome({ profile: profile.data, exhibitions: exhibitions.data.items });
+        if (controller.signal.aborted) return;
+        if ([profile, exhibitions].some(result =>
+          result.status === "rejected" && result.reason instanceof ApiClientError && result.reason.status === 401
+        )) {
+          window.location.replace("/login");
+          return;
+        }
+        if (profile.status === "rejected" || exhibitions.status === "rejected") throw new Error();
+        setHome({ profile: profile.value.data, exhibitions: exhibitions.value.data.items });
       } catch {
         if (!controller.signal.aborted) setError("자료를 불러오지 못했습니다. 다시 시도해 주세요.");
       }
@@ -31,10 +39,7 @@ export function ArtistHome() {
   async function logout() {
     setLeaving(true); setError("");
     try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: "{}",
-      });
-      if (!response.ok) throw new Error();
+      await requestApi("logout", { body: {} });
       window.location.replace("/login");
     } catch { setError("로그아웃하지 못했습니다. 다시 시도해 주세요."); }
     finally { setLeaving(false); }
