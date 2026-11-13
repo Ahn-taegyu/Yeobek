@@ -414,3 +414,9 @@ AC-01~19 가운데 API 수준에서 확인한 것은 AC-01뿐이며 화면을 �
 | 승인·게시·파일·관람(11.3) | 편집 폼 → 업로드·발췌 → 생성·검수·음성·게시 → QR/번호/통합 채팅 순서로 구현. 변경 출처의 승인 근거 재확인도 그 단계에서 검증. |
 
 F-001·F-002·F-023과 전체 MVP는 완료로 올리지 않는다. AI 호출·클라우드 배포·실제 작가/관람객 검증·원격 권한 설정은 이번 수정 범위가 아니다.
+
+## 12.4 최종 기록
+
+구현 커밋은 [03459bf](https://github.com/Ahn-taegyu/Yeobek/commit/03459bf6e9ea121f20d41110dff740edac964957)이며 `feat/mvp-foundation`에 push했다. 문서 검사는 87개 문서·23개 기능·3개 Bases에서 오류 0개, 검색 회귀 9개 통과, 373개 청크를 재생성했다. 생성 인덱스는 커밋하지 않았다.
+
+[Draft PR #1](https://github.com/Ahn-taegyu/Yeobek/pull/1)에 main 대비 전체 기반 구현과 근거·검증 범위를 정리했다. 새 DB·잠금 설치를 포함하는 원격 App checks와 Windows/Linux Knowledge checks의 최신 결과는 PR의 Checks에서 해당 head를 확인한다. 문서의 이전 CI 성공 링크는 초기 커밋의 증거이며 현재 head 성공을 대신하지 않는다.
