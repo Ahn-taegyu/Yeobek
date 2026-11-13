@@ -14,6 +14,7 @@ import { createDocentRuntime } from "./runtime";
 import { isMockMode } from "./routing";
 import { createPublicationStore } from "./stores/publications";
 import { createSpeechSourceStore, createVisitorStore, VisitorReplay, type VisitorReservation } from "./stores/visitor";
+import type { AiProviderTrace } from "./providers/types";
 
 function persistedFailure(reservation: VisitorReservation): never {
   const code = reservation.failureCode;
@@ -39,6 +40,9 @@ export async function answerVisitor(input: z.infer<typeof visitorChatRequest>, s
   const store = createVisitorStore(worker, sessionHash);
   const publications = createPublicationStore(worker);
   const deadline = createDeadline(120_000, signal);
+  const startedAt = performance.now();
+  const usage: AiProviderTrace[] = [];
+  const elapsedMs = () => Math.min(300_000, Math.round(performance.now() - startedAt));
   let reservation: VisitorReservation | undefined;
   let stored = false;
   const interrupted = () => deadline.timedOut() ? new AiError("timeout") : new AiError("cancelled");
@@ -79,10 +83,10 @@ export async function answerVisitor(input: z.infer<typeof visitorChatRequest>, s
         stored = true;
       },
       ...(features.gaps ? { async recordGap() { await recordGap(); return true; } } : {}),
-    });
+    }, trace => { usage.push(trace); });
     const result = await abortable(deadline.signal, current => runtime.answer(input, current));
     if (!reservation || !stored) throw new ApiError(500, "INTERNAL_ERROR", DOCENT_COPY.systemError);
-    try { await store.recordSteps(reservation.id, result.steps); }
+    try { await store.recordExecution(reservation.id, result.steps, usage, elapsedMs()); }
     catch { console.error("visitor_metadata_failure", { requestId: input.requestId }); }
     return await loadPublic();
   } catch (error) {
@@ -105,7 +109,7 @@ export async function answerVisitor(input: z.infer<typeof visitorChatRequest>, s
     if (reservation) {
       const steps = getPlaybookFailureSteps(error);
       if (steps) {
-        try { await store.recordSteps(reservation.id, steps); }
+        try { await store.recordExecution(reservation.id, steps, usage, elapsedMs()); }
         catch { console.error("visitor_metadata_failure", { requestId: input.requestId }); }
       }
     }

@@ -5,6 +5,7 @@ import type { ArtistKnowledgeStore, KnowledgeOrganizationResult } from "./artist
 import type { PublicationStore } from "./contracts";
 import type { VisitorLifecycle } from "./visitor-lifecycle";
 import type { AudioRunResult, AuthorAudioStore } from "./audio-types";
+import type { VisitorVoiceStore } from "./visitor-voice-types";
 import { yeobekPlugin } from "./plugin.generated";
 
 type Playbooks = typeof yeobekPlugin.playbooks;
@@ -19,6 +20,10 @@ export function playbookPrompt(id: PlaybookId): string {
 }
 type JobResult<Id> = Id extends "narration-draft" ? NarrationResult : Id extends "narration-audio" ? AudioRunResult : KnowledgeOrganizationResult;
 type CapabilityMap<Id> = {
+  "voice.reserve": VisitorVoiceStore["reserve"];
+  "voice.complete": VisitorVoiceStore["complete"];
+  "voice.read": VisitorVoiceStore["read"];
+  "voice.store": VisitorVoiceStore["store"];
   "audio.read": AuthorAudioStore["read"];
   "audio.store": AuthorAudioStore["store"];
   "request.reserve": VisitorLifecycle["reserve"] | undefined;
@@ -39,6 +44,7 @@ type PlaybookCapabilities = {
 };
 
 type CapabilityStores<Id> = {
+  voice?: VisitorVoiceStore;
   audio?: AuthorAudioStore;
   visitor?: VisitorLifecycle;
   jobs?: JobLifecycle<JobResult<Id>>;
@@ -53,6 +59,10 @@ function requireStore<Store>(store: Store | undefined): Store {
 }
 
 const bindCapability = {
+  "voice.reserve": ({ voice }) => requireStore(voice).reserve.bind(voice),
+  "voice.complete": ({ voice }) => requireStore(voice).complete.bind(voice),
+  "voice.read": ({ voice }) => requireStore(voice).read.bind(voice),
+  "voice.store": ({ voice }) => requireStore(voice).store.bind(voice),
   "audio.read": ({ audio }) => requireStore(audio).read.bind(audio),
   "audio.store": ({ audio }) => requireStore(audio).store.bind(audio),
   "request.reserve": ({ visitor }) => visitor?.reserve.bind(visitor),

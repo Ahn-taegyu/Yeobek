@@ -8,6 +8,7 @@ export const AI_LIMITS = Object.freeze({
 /** Seed values are provisional deployment settings, not measured capacity. */
 export const DEFAULT_POLICIES = Object.freeze({
   visitor_requests_per_minute: 6,
+  visitor_audio_cache_requests_per_minute: 60,
   exhibition_requests_per_day: 1000,
   author_jobs_per_day: 100,
   gap_retention_days: 30,

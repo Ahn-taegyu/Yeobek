@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-const state = vi.hoisted(() => ({ reserve: vi.fn(), complete: vi.fn(), load: vi.fn(), recordGap: vi.fn(), recordSteps: vi.fn(), generate: vi.fn() }));
+const state = vi.hoisted(() => ({ reserve: vi.fn(), complete: vi.fn(), load: vi.fn(), recordGap: vi.fn(), recordExecution: vi.fn(), generate: vi.fn() }));
 vi.mock("../../src/lib/supabase/worker", () => ({ createWorkerSupabase: () => ({}) }));
 vi.mock("../../src/lib/ai/stores/visitor", async original => ({
   ...await original<typeof import("../../src/lib/ai/stores/visitor")>(),
@@ -27,14 +27,14 @@ beforeEach(() => {
   state.reserve.mockResolvedValue(reservation());
   state.complete.mockImplementation(async (_id, result, failureCode) => ({ ...reservation(), claimed: false,
     status: failureCode ? "failed" : "succeeded", result, failureCode }));
-  state.recordSteps.mockResolvedValue(undefined); state.recordGap.mockResolvedValue(true);
+  state.recordExecution.mockResolvedValue(undefined); state.recordGap.mockResolvedValue(true);
   state.generate.mockResolvedValue({ output: { answer: "수채 물감입니다.", citations: [ids.evidence], outcome: "answered" } });
   state.load.mockImplementation(async () => state.complete.mock.calls.at(-1)?.[1]);
 });
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 describe("visitor persisted outcomes", () => {
   it("a telemetry outage does not hide a committed answer", async () => {
-    state.recordSteps.mockRejectedValue(new Error("DB unavailable"));
+    state.recordExecution.mockRejectedValue(new Error("DB unavailable"));
     expect((await answerVisitor(syntheticRequest(), session)).answer).toBe("수채 물감입니다.");
     expect(state.complete).toHaveBeenCalledTimes(1);
   });
@@ -43,7 +43,7 @@ describe("visitor persisted outcomes", () => {
     state.recordGap.mockRejectedValue(new Error("DB unavailable"));
     const reply = await answerVisitor(syntheticRequest(), session);
     expect(reply.outcome).toBe("insufficient_evidence"); expect(reply.gapRecorded).toBe(false); expect(reply).not.toHaveProperty("notice");
-    expect(state.recordSteps.mock.calls[0][1]).toContainEqual(expect.objectContaining({ id: "gap.record", status: "failed" }));
+    expect(state.recordExecution.mock.calls[0][1]).toContainEqual(expect.objectContaining({ id: "gap.record", status: "failed" }));
   });
   it.each([["RATE_LIMITED", 429], ["REQUEST_CANCELLED", 499], ["PROVIDER_UNAVAILABLE", 503], ["AI_INVALID_OUTPUT", 502]])("replays %s without another call", async (code, status) => {
     state.reserve.mockResolvedValue({ ...reservation(), claimed: false, status: "failed", failureCode: code });
@@ -75,7 +75,7 @@ describe("visitor persisted outcomes", () => {
     const reply = await answerVisitor(syntheticRequest(), session);
     expect(reply).not.toHaveProperty("gapRecorded"); expect(reply).not.toHaveProperty("notice");
     expect(state.recordGap).not.toHaveBeenCalled();
-    expect(state.recordSteps.mock.calls[0][1]).toContainEqual(expect.objectContaining({ id: "gap.record", status: "skipped" }));
+    expect(state.recordExecution.mock.calls[0][1]).toContainEqual(expect.objectContaining({ id: "gap.record", status: "skipped" }));
   });
   it("preserves a provider failure if settlement is temporarily unavailable", async () => {
     state.generate.mockRejectedValue(new AiError("rate_limited"));

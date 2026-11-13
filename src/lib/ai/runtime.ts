@@ -9,7 +9,7 @@ import { createLinerSpeechProvider, createLinerTextProvider, createLinerTranscri
 import { createTypecastSpeechProvider } from "./providers/typecast";
 import { createExaoneTextProvider } from "./providers/exaone";
 import { createMockSpeechProvider, createMockTextProvider, createMockTranscriptionProvider } from "./providers/mock";
-import type { AiProviderOptions, AiSpeechProvider, AiTextProvider, AiTranscriptionProvider } from "./providers/types";
+import type { AiProviderOptions, AiProviderTrace, AiSpeechProvider, AiTextProvider, AiTranscriptionProvider } from "./providers/types";
 import { createArtistKnowledgeHarness, type ArtistKnowledgeStore, type KnowledgeOrganizationResult } from "./artist-knowledge";
 import { createNarrationHarness, type NarrationResult } from "./narration";
 import { getLinerSpeechConfig, getOpenAiSpeechConfig, getTypecastSpeechConfig, type AiEnvironment } from "./config";
@@ -41,10 +41,15 @@ export function createConfiguredTranscriptionProvider(options?: AiProviderOption
 }
 
 /** Keys are checked only when a model capability runs; fixed narration remains available offline. */
-export function createDocentRuntime(publications: PublicationStore, answers: SpeechSourceStore, visitor?: VisitorLifecycle) {
+export function createDocentRuntime(publications: PublicationStore, answers: SpeechSourceStore, visitor?: VisitorLifecycle,
+  onUsage?: (trace: AiProviderTrace) => void) {
   const mock = isMockMode();
   const harness = createDocentHarness({ publications, visitor,
-    text: { generate: input => createConfiguredTextProvider("qa").generate(input) },
+    text: { generate: async input => {
+      const result = await createConfiguredTextProvider("qa").generate(input);
+      onUsage?.(result.trace); // Record a charged response even if later validation fails.
+      return result;
+    } },
   });
   return {
     answer: async (...args: Parameters<typeof harness.answer>) => ({

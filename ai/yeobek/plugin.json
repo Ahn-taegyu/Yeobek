@@ -1,10 +1,36 @@
 {
   "id": "yeobek",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "instructions": "instructions.md",
   "messages": "messages.json",
   "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration"],
   "playbooks": {
+    "visitor-transcribe": {
+      "skills": ["speak-docent"],
+      "tools": ["voice.reserve", "voice.complete"],
+      "steps": [
+        { "id": "request.validate" },
+        { "id": "voice.reserve", "tool": "voice.reserve" },
+        { "id": "model.transcribe" },
+        { "id": "output.validate" },
+        { "id": "voice.complete", "tool": "voice.complete" }
+      ]
+    },
+    "visitor-speech": {
+      "skills": ["speak-docent"],
+      "tools": ["voice.read", "voice.reserve", "voice.store", "voice.complete"],
+      "steps": [
+        { "id": "request.validate" },
+        { "id": "answer.read", "tool": "voice.read" },
+        { "id": "audio.reuse" },
+        { "id": "voice.reserve", "tool": "voice.reserve" },
+        { "id": "model.synthesize" },
+        { "id": "output.validate" },
+        { "id": "answer.recheck", "tool": "voice.read" },
+        { "id": "audio.store", "tool": "voice.store" },
+        { "id": "voice.complete", "tool": "voice.complete" }
+      ]
+    },
     "narration-audio": {
       "skills": ["speak-docent"],
       "tools": ["job.reserve", "audio.read", "audio.store", "job.complete"],

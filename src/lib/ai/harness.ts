@@ -158,7 +158,22 @@ export async function speakVerifiedReply(input: { sessionId: string; answerId: s
   assertNotCancelled(signal);
   const reply = await deps.answers.loadAnswer(parsed.data.sessionId, parsed.data.answerId, signal);
   assertNotCancelled(signal);
-  if (!reply?.publication) throw new HarnessError("answer_unavailable");
+  if (!reply) throw new HarnessError("answer_unavailable");
+  if (!reply.publication) {
+    // Before selecting a work, only these server-owned navigation messages may
+    // be spoken. The store rechecks session TTL and the exhibition public gate.
+    const navigation: readonly string[] = [DOCENT_COPY.chooseOne, DOCENT_COPY.chooseArtwork, DOCENT_COPY.artworkUnavailable];
+    if (reply.source !== "fixed" || reply.outcome !== "clarify" || reply.citations.length || !navigation.includes(reply.answer)) {
+      throw new HarnessError("invalid_output");
+    }
+    const audio = await deps.speech.synthesize({ text: reply.answer, signal });
+    assertNotCancelled(signal);
+    const current = await deps.answers.loadAnswer(parsed.data.sessionId, parsed.data.answerId, signal);
+    assertNotCancelled(signal);
+    if (!current || current.publication || current.source !== "fixed" || current.outcome !== "clarify" ||
+      current.citations.length || current.answer !== reply.answer) throw new HarnessError("answer_unavailable");
+    return { ...audio, textHash: textHash(reply.answer), publication: null };
+  }
   // Provenance comes from the trusted saved record, not from request parameters.
   await assertCurrent(caps["publication.recheck"], reply.publication, signal);
   if (reply.source === "approved_narration") {

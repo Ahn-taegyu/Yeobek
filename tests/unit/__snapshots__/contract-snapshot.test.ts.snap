@@ -5557,6 +5557,60 @@ exports[`HTTP route contracts > snapshots getMaterial 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots getMedia 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/media/{id}",
+  "query": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "kind": {
+        "enum": [
+          "image",
+          "audio",
+        ],
+        "type": "string",
+      },
+    },
+    "required": [
+      "kind",
+    ],
+    "type": "object",
+  },
+  "response": {
+    "binary": {
+      "maxBytes": 52428800,
+      "mimeTypes": [
+        "image/png",
+        "image/jpeg",
+        "image/webp",
+        "audio/mpeg",
+      ],
+    },
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots getProfile 1`] = `
 {
   "body": null,
@@ -6015,6 +6069,32 @@ exports[`HTTP route contracts > snapshots getPublicArtwork 1`] = `
       "data": {
         "additionalProperties": false,
         "properties": {
+          "audio": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "kind": {
+                    "const": "audio",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "id",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
           "creationYear": {
             "type": [
               "string",
@@ -6031,6 +6111,32 @@ exports[`HTTP route contracts > snapshots getPublicArtwork 1`] = `
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
             "type": "string",
+          },
+          "image": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "kind": {
+                    "const": "image",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "id",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              {
+                "type": "null",
+              },
+            ],
           },
           "medium": {
             "type": [
@@ -6125,6 +6231,32 @@ exports[`HTTP route contracts > snapshots getPublicExhibition 1`] = `
             "items": {
               "additionalProperties": false,
               "properties": {
+                "audio": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                        "kind": {
+                          "const": "audio",
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                      ],
+                      "type": "object",
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
+                },
                 "creationYear": {
                   "type": [
                     "string",
@@ -6141,6 +6273,32 @@ exports[`HTTP route contracts > snapshots getPublicExhibition 1`] = `
                   "format": "uuid",
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
                   "type": "string",
+                },
+                "image": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                        "kind": {
+                          "const": "image",
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "id",
+                        "kind",
+                      ],
+                      "type": "object",
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
                 },
                 "medium": {
                   "type": [
@@ -7826,6 +7984,26 @@ exports[`HTTP route contracts > snapshots purgeExpired 1`] = `
             "type": "integer",
           },
           "materials": {
+            "additionalProperties": false,
+            "properties": {
+              "attempted": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "completed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "attempted",
+              "completed",
+            ],
+            "type": "object",
+          },
+          "visitorAudio": {
             "additionalProperties": false,
             "properties": {
               "attempted": {
@@ -10683,6 +10861,46 @@ exports[`HTTP route contracts > snapshots setArtworkImage 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots speech 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "answerId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "requestId",
+      "answerId",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": null,
+  "path": "/api/speech",
+  "response": {
+    "binary": {
+      "maxBytes": 8388608,
+      "mimeTypes": [
+        "audio/mpeg",
+      ],
+    },
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots the shared HTTP error envelope 1`] = `
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -10736,6 +10954,90 @@ exports[`HTTP route contracts > snapshots the shared HTTP error envelope 1`] = `
     "requestId",
   ],
   "type": "object",
+}
+`;
+
+exports[`HTTP route contracts > snapshots transcribe 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "exhibitionId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "file": {
+        "contentEncoding": "binary",
+        "format": "binary",
+        "maxLength": 3145728,
+        "minLength": 1,
+        "type": "string",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "requestId",
+      "exhibitionId",
+      "file",
+    ],
+    "type": "object",
+  },
+  "bodyEncoding": "multipart",
+  "method": "POST",
+  "params": null,
+  "path": "/api/transcribe",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "mock": {
+            "type": "boolean",
+          },
+          "overLimit": {
+            "type": "boolean",
+          },
+          "requestId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "transcript": {
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "requestId",
+          "transcript",
+          "mock",
+          "overLimit",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
 }
 `;
 

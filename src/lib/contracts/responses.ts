@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { publicMediaReferences } from "./media";
 import { revision, section, sourceRefSchema } from "./requests";
 import { narrationText } from "./jobs";
 
@@ -58,7 +59,8 @@ export const artworkResponse = z.object({
 });
 export const artworkListResponse = z.object({ items: z.array(artworkResponse) });
 
-const publicArtworkSummary = z.object({ ...artwork, publicationId: id });
+const publicArtworkSummary = z.object({ ...artwork, publicationId: id,
+  image: publicMediaReferences.shape.image.optional(), audio: publicMediaReferences.shape.audio.optional() });
 export const publicArtworkResponse = publicArtworkSummary.extend({ narrationText: z.string() });
 export const publicExhibitionResponse = z.object({
   id, ...dateRange, title: z.string(), artistDisplayName: z.string(),

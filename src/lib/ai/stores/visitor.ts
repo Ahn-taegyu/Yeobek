@@ -7,6 +7,7 @@ import { savedVisitorReply, visitorReservation, type SavedVisitorReply } from ".
 import type { DocentReply, SpeechSourceStore } from "../contracts";
 import { assertNotCancelled } from "../context";
 import type { PlaybookStepRecord } from "../playbook";
+import type { AiProviderTrace } from "../providers/types";
 
 export type VisitorReservation = z.infer<typeof visitorReservation>;
 export class VisitorReplay extends Error {
@@ -32,8 +33,9 @@ export function createVisitorStore(worker: DbClient, sessionHash: string) {
       if (!raw) throw new ApiError(404, "NOT_FOUND", "답변을 사용할 수 없습니다.");
       return decodeDatabase(savedVisitorReply, raw);
     },
-    async recordSteps(id: string, steps: readonly PlaybookStepRecord[]) {
-      await rpc(worker, "record_visitor_steps", { p_session_hash: sessionHash, p_id: id, p_steps: steps });
+    async recordExecution(id: string, steps: readonly PlaybookStepRecord[], usage: readonly AiProviderTrace[], elapsedMs: number) {
+      await rpc(worker, "record_visitor_execution", { p_session_hash: sessionHash, p_id: id,
+        p_steps: steps, p_usage: usage, p_elapsed_ms: elapsedMs });
     },
   };
 }
