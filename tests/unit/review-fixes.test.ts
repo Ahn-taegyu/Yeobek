@@ -37,6 +37,8 @@ describe("actionable failures", () => {
   });
   it("distinguishes number, creation and source conflicts", () => {
     expect(databaseError({ code: "23505", message: 'duplicate key violates unique constraint "artworks_exhibition_id_number_key"' })).toMatchObject({ code: "DUPLICATE_NUMBER", fields: { number: expect.any(Array) } });
+    expect(databaseError({ code: "23505", message: 'duplicate key violates unique constraint "artworks_active_number_key"' })).toMatchObject({ code: "DUPLICATE_NUMBER", fields: { number: expect.any(Array) } });
+    expect(databaseError({ code: "23505", message: "Public artwork number is reserved" }).code).toBe("DUPLICATE_NUMBER");
     expect(databaseError({ code: "23505", message: "Artwork creation ID already used with different input" }).code).toBe("REQUEST_ID_CONFLICT");
     expect(databaseError({ code: "P1001" }).code).toBe("SOURCE_REVISION_CONFLICT");
     expect(databaseError({ code: "P1002" }).code).toBe("SOURCE_UNAVAILABLE");

@@ -1,6 +1,6 @@
 # Yeobek
 
-작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**, 해설 생성·작업 저장 API, 서버 AI 어댑터·하네스와 기획 문서·검색 도구가 있습니다. 글 승인·게시 API는 PR #6으로 병합됐고 관람 글 채팅·보완 요청 API는 로컬 검증 중입니다. 업로드·음성·화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
+작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**, 해설 생성·작업 저장 API, 서버 AI 어댑터·하네스와 기획 문서·검색 도구가 있습니다. 글 승인·게시 API는 PR #6으로 병합됐고 관람 글 채팅·보완 요청 API는 PR #7으로 병합됐습니다. 비공개 파일 업로드·삭제는 로컬 검증 중이며 음성·화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
 
 ## 앱 실행
 
@@ -60,15 +60,15 @@ npm run test:publication
 
 CI에도 이 개발 모드 모의 작업 검사가 포함됩니다. 실제 외부 호출 검사는 아닙니다.
 
-W4는 근거·해설을 따로 승인하고 선택 작품과 승인된 소개 근거 버전을 게시하는 경로를 구현 중입니다. 음성 준비 스키마만 있으므로 현재 음성 없는 게시·재게시에는 `FEATURE_VOICE_REQUIRED=false`가 필요합니다. 음성 작업·Storage는 W3 업로드 이후 연결하며, 로컬 DB 검사 187개와 typecheck는 통과했고 HTTP 검증은 아직입니다.
+W4는 근거·해설을 따로 승인하고 선택 작품과 승인된 소개 근거 버전을 게시하는 경로를 구현 중입니다. 음성 준비 스키마만 있으므로 현재 음성 없는 게시·재게시에는 `FEATURE_VOICE_REQUIRED=false`가 필요합니다. 글 승인·게시의 DB·HTTP 검증과 PR #6 CI는 통과했습니다. 음성 작업·Storage는 W3 이후 연결합니다.
 
 ## 앱 검사와 DB 변경
 
 AI의 업무 절차와 말투는 [제품 플러그인](docs/specs/product-ai-plugin.md)으로 관리합니다. `ai/yeobek/plugin.json`, `instructions.md`, `messages.json`, `skills/*/SKILL.md`를 수정한 뒤 `npm run ai:bundle`을 실행합니다. 생성된 `src/lib/ai/plugin.generated.ts`는 직접 편집하지 않습니다. 테스트와 빌드가 원본/생성물 불일치를 차단하며, 필요한 스킬만 업무별로 조합하고 플러그인 해시를 답변에 기록합니다.
 
-작가 자료 정리는 원문 블록을 분류한 비공개 후보 → 작가 검토 → 버전 재검사 → 적용의 서버 실행 모듈을 제공합니다. 실제 DB 저장소·검수 UI는 아직 연결하지 않았습니다. `createNarrationRuntime`에는 소유 자료로 해설 후보 2개를 병렬 생성하고 평가·최대 한 라운드 재생성하는 경로와 단일 생성 기준선을 연결했습니다. 최종 결과는 미승인 초안입니다. 관람 채팅과 대화 문맥 복제는 후속이며 [작가 해설 비교 계약](docs/specs/narration-evaluation.md)을 확인하세요.
+작가 자료 정리는 원문 블록을 분류한 비공개 후보 → 작가 검토 → 버전 재검사 → 적용의 서버 실행 모듈을 제공합니다. 실제 DB 저장소·검수 UI는 아직 연결하지 않았습니다. `createNarrationRuntime`에는 소유 자료로 해설 후보 2개를 병렬 생성하고 평가·최대 한 라운드 재생성하는 경로와 단일 생성 기준선을 연결했습니다. 최종 결과는 미승인 초안입니다. 관람 글 채팅은 연결됐고 대화 문맥 복제는 후속이며 [작가 해설 비교 계약](docs/specs/narration-evaluation.md)을 확인하세요.
 
-관람 하네스 입력은 선택적인 `intent: "narration" | "question"`와 `artworkNumber`를 받습니다. 해설 버튼은 `intent: "narration"`과 작품 ID를, 숫자 입력은 같은 의도와 작품 번호를 보내며 `question`도 함께 전달합니다. 생략 시 제한된 문장 판별을 사용합니다. 승인 해설은 최대 2,000 Unicode 코드 포인트를 그대로 반환·음성 전달하고, 관람 생성 답변은 600자 상한을 유지합니다. 해설 초안은 별도 2,000자 계약을 쓰고 선택 결과의 `overTarget`으로 600자 초과 경고를 전달합니다. 이 계약을 사용하는 실제 관람 HTTP·UI 연결은 후속입니다. [PR #2 수정 검토서](docs/reviews/ai-harness-fix-review.md)에 재현 근거와 게시 데이터·적용 이력의 후속 요구를 정리했습니다.
+관람 하네스 입력은 선택적인 `intent: "narration" | "question"`와 `artworkNumber`를 받습니다. 해설 버튼은 `intent: "narration"`과 작품 ID를, 숫자 입력은 같은 의도와 작품 번호를 보내며 `question`도 함께 전달합니다. 생략 시 제한된 문장 판별을 사용합니다. 승인 해설은 최대 2,000 Unicode 코드 포인트를 그대로 반환·음성 전달하고, 관람 생성 답변은 600자 상한을 유지합니다. 해설 초안은 별도 2,000자 계약을 쓰고 선택 결과의 `overTarget`으로 600자 초과 경고를 전달합니다. 관람 글 HTTP는 연결됐고 음성 HTTP·UI는 후속입니다. [PR #2 수정 검토서](docs/reviews/ai-harness-fix-review.md)에 재현 근거와 게시 데이터·적용 이력의 후속 요구를 정리했습니다.
 
 ## 작가 해설 비교 실험
 
@@ -140,6 +140,13 @@ python scripts/knowledge.py verify
 
 ## 관람 글 API 검사와 만료 정리
 
-모의 서버에 `FEATURE_VOICE_REQUIRED=false`, `FEATURE_GAPS=true`와 테스트용 `CRON_SECRET`(32자 이상)을 설정한 뒤 `npm run test:visitor`를 실행합니다. 서버를 `FEATURE_GAPS=false`로 다시 시작하고 검사 쪽에 `TEST_GAPS_DISABLED_ONLY=true`를 설정하면 보완 요청 경로 404·필드 생략·채팅 유지도 확인합니다. 실제 이미지 업로드는 아직 없으므로 HTTP 검사에서는 준비된 이미지 메타데이터 fixture를 사용합니다.
+모의 서버에 `FEATURE_VOICE_REQUIRED=false`, `FEATURE_GAPS=true`와 테스트용 `CRON_SECRET`(32자 이상)을 설정한 뒤 `npm run test:visitor`를 실행합니다. 서버를 `FEATURE_GAPS=false`로 다시 시작하고 검사 쪽에 `TEST_GAPS_DISABLED_ONLY=true`를 설정하면 보완 요청 경로 404·필드 생략·채팅 유지도 확인합니다. 이 관람 검사는 이미지 메타데이터 fixture를 사용하며 실제 파일 전송은 별도 materials 통합 검사에서 확인합니다.
 
 운영 배포 시 스케줄러가 매시간 `POST /api/cron/purge`를 `Authorization: Bearer <CRON_SECRET>` 헤더로 호출하도록 설정해야 합니다. DB 접근 만료는 즉시 적용되며 물리 삭제는 이 호출로 실행됩니다. 서버 비밀값을 프런트나 URL에 넣지 않습니다. 현재 스케줄러를 배포하거나 실제 외부 AI를 호출하지 않았습니다.
+
+
+## 파일 업로드 검사
+
+`npm run test:integration`은 인증/초안과 실제 로컬 Storage의 PNG·JPEG·PDF 전송·검증·삭제를 검사합니다. 실행 서버에 32자 이상 `CRON_SECRET`, 검사 프로세스에 같은 `TEST_CRON_SECRET`을 설정하세요. 비밀값은 명령 이력 대신 로컬 환경에 두고 실제 운영 키를 테스트에 쓰지 않습니다. `TEST_APP_ORIGIN` 기본값은 `http://localhost:3000`입니다. 파일만 확인하려면 `node --test tests/integration/materials.test.mjs`를 실행합니다. 외부 AI 호출은 없습니다.
+
+정리 스케줄러는 `/api/cron/purge`를 호출합니다. 한 번에 최대 50개 자료를 정리하므로 물량이 늘면 실행 간격을 줄여야 합니다. 준비된 자료의 임시 파일은 업로드 서명 만료 뒤 재정리하며 final 원본은 유지합니다. 소유자 다운로드 URL은 60초 유효하고 공개 방문자에게 PDF를 제공하지 않습니다.

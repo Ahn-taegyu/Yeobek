@@ -24,12 +24,17 @@ export function databaseError(error: { code?: string; message?: string }): ApiEr
     case "P1010": return new ApiError(429, "VISITOR_REQUEST_LIMIT", "요청이 많습니다. 잠시 후 다시 시도해 주세요.", undefined, 60);
     case "P1011": return new ApiError(409, "REQUEST_IN_PROGRESS", "답변을 준비하고 있습니다. 잠시 후 확인해 주세요.", undefined, 2);
     case "P1012": return new ApiError(410, "ANSWER_EXPIRED", "답변 보관 시간이 지났습니다. 새 요청으로 질문해 주세요.");
+    case "P1020": return new ApiError(410, "UPLOAD_EXPIRED", "업로드 시간이 지났습니다. 새 파일 업로드를 시작해 주세요.");
+    case "P1021": return new ApiError(409, "MATERIAL_IN_USE", "연결된 문서와 승인 근거·공개본에서 사용하는 자료입니다.");
+    case "P1022": return new ApiError(409, "ACTIVE_PUBLICATION", "공개본을 철회한 뒤 작품을 삭제해 주세요.");
+    case "P1023": return new ApiError(429, "AUTHOR_UPLOAD_LIMIT", "오늘 사용할 수 있는 업로드 횟수를 모두 사용했습니다.");
     case "42501": return new ApiError(403, "FORBIDDEN", "허용되지 않은 요청입니다.");
     case "40001": return new ApiError(409, "REVISION_CONFLICT", "다른 변경이 저장되었습니다. 새로 불러온 뒤 다시 수정해 주세요.");
     case "P1001": return new ApiError(409, "SOURCE_REVISION_CONFLICT", "새로 연결한 출처가 변경되었습니다. 출처를 확인해 주세요.", { sourceRefs: ["최신 출처를 확인한 뒤 다시 연결해 주세요."] });
     case "P1002": return new ApiError(400, "SOURCE_UNAVAILABLE", "새로 연결한 출처를 사용할 수 없습니다.", { sourceRefs: ["출처와 공개 가능 범위를 확인해 주세요."] });
     case "23505": {
-      if (error.message?.includes('"artworks_exhibition_id_number_key"')) {
+      if (error.message?.includes('"artworks_exhibition_id_number_key"') ||
+        error.message?.includes('"artworks_active_number_key"') || error.message === "Public artwork number is reserved") {
         return new ApiError(409, "DUPLICATE_NUMBER", "같은 전시에 사용 중인 작품 번호입니다.", { number: ["다른 번호를 입력해 주세요."] });
       }
       if (error.message === "Exhibition creation ID already used with different input" || error.message === "Artwork creation ID already used with different input") {

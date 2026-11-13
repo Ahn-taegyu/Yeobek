@@ -18,6 +18,10 @@ export const DEFAULT_POLICIES = Object.freeze({
   voice_config_version: 1,
   evidence_body_chars: 2000,
   evidence_label_chars: 100,
+  image_max_bytes: 3 * 1024 * 1024,
+  pdf_max_bytes: 6 * 1024 * 1024,
+  upload_ttl_seconds: 3600,
+  author_uploads_per_day: 100,
 });
 export type PolicyKey = keyof typeof DEFAULT_POLICIES;
 export type AppPolicies = { readonly [Key in PolicyKey]: number };

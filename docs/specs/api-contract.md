@@ -93,13 +93,15 @@ sources:
 
 # 초기 기반 경로
 
+W3의 자료 업로드·삭제 구현 계약은 이 문서의 [W3 자료 경로](#w3-자료-경로)를 따른다. 아래 후속 표의 과거 업로드 제안보다 우선한다.
+
 JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출처는 최대 24개, section은 주체별 최대 2개다. 변경 요청에는 동일 출처의 Origin과 application/json이 필요하다. 403 `FORBIDDEN`, 415 `UNSUPPORTED_MEDIA_TYPE`, 503 `SERVICE_UNAVAILABLE`도 반환한다. 인증 서비스 장애를 로그인 실패 401과 구분한다. 관람 요청은 W5 DB 한도를 적용하며 로그인 요청 제한은 Supabase Auth 정책을 적용한다. 프로필은 첫 `GET /api/admin/profile` 또는 첫 전시 생성에서 빈 문서와 함께 지연 생성한다. 계정 생성·로그인·전시 목록 조회만으로 생성하지 않으며, 프로필이 없는 상태의 프로필 PATCH는 404다.
 
 **현재 정형 정보 PATCH는 전체 편집 값 저장이다.** 프로필은 선택 값 displayName을 받고, 전시는 title, 작품은 number/title을 요구한다. 모두 sections·sourceRefs·expectedRevision·expectedDocumentRevision이 필요하다. displayName, 날짜·장소·작품 메타데이터 같은 선택 필드를 생략하면 null로 바뀐다. 생략한 필드를 기존 값으로 유지하는 부분 수정 계약이 아니다. 문서 단독 PATCH는 sections·sourceRefs·expectedRevision을 요구한다.
 
 문서 sections/sourceRefs가 정규화 후 기존 JSONB와 같으면 문서 revision은 유지하고, 달라지면 증가한다. 정형 정보 revision은 성공 저장마다 증가한다. 본문은 JavaScript `trim()`과 같은 앞뒤 공백을 제거한 뒤 유니코드 코드포인트 5,000개 이하를 검사해 저장한다. 기존 본문과 공백 제거 후 같으면 과거 저장 원문을 유지한다.
 
-기존 초안에 정확히 같은 출처 참조는 개별적으로 보존해 저장을 막지 않는다. 문서 응답의 `sourceWarnings`는 변경된 문서 출처에 `source_changed`와 현재 revision을, 사용할 수 없는 문서·자료 출처에 `source_unavailable`을 표시한다. 문서 경고에는 대상 `sectionId`, `sourceDocumentId`, `sourceSectionId`, `sourceRevision`이 포함된다. 새로 추가하거나 변경한 출처는 소유권·상위 범위·section·현재 revision 또는 자료의 ready 상태를 검증한다. DB P1001은 409 `SOURCE_REVISION_CONFLICT`, P1002는 400 `SOURCE_UNAVAILABLE`이다. material version과 실제 PDF 페이지 수를 고정·확인하는 기능은 아직 없다.
+기존 초안에 정확히 같은 출처 참조는 개별적으로 보존해 저장을 막지 않는다. 문서 응답의 `sourceWarnings`는 변경된 문서 출처에 `source_changed`와 현재 revision을, 사용할 수 없는 문서·자료 출처에 `source_unavailable`을 표시한다. 문서 경고에는 대상 `sectionId`, `sourceDocumentId`, `sourceSectionId`, `sourceRevision`이 포함된다. 새로 추가하거나 변경한 출처는 소유권·상위 범위·section·현재 revision 또는 자료의 ready 상태를 검증한다. DB P1001은 409 `SOURCE_REVISION_CONFLICT`, P1002는 400 `SOURCE_UNAVAILABLE`이다. W3부터 새 PDF 참조는 검증된 총 페이지 범위를 검사한다. 승인 근거는 material version을 고정한다. 기존 초안의 정확히 같은 참조와 기존 공개 스냅샷은 보존하며, 페이지 수가 확인되지 않은 PDF 근거는 새 승인·게시에서 거부한다.
 
 아래 필드는 현재 초기 API 계약이며 `?`는 생략 가능, `document`는 `{id, subjectType, subjectId, revision, sections, sourceRefs, sourceWarnings, updatedAt}`이다. HTTP 필드는 camelCase이고 DB의 snake_case와 서버에서 변환한다. `sections`는 `{id,body}` 배열이며 ID는 문서 내 안정적이다: 작가 `bio`/`practice`, 전시 `introduction`/`theme`, 작품 `description`/`notes`. `sourceRefs`는 빈 배열도 허용하며 직접 입력·자료·문서 출처를 해당 소유 범위에서 검증한다. 생성·수정의 `sections`, `sourceRefs`는 내부 문서 원본이며 정형 필드와 트랜잭션으로 저장한다. 프로필은 사전 생성된 계정당 하나다.
 
@@ -219,7 +221,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 # 남은 설계 확인
 
-W0부터 실행 중인 17개 메서드·경로의 요청·응답 원천은 `src/lib/contracts/`이며 `routes.ts`가 각 스키마를 연결한다. 기존 `api/schemas.ts`와 `ai/contracts.ts`의 HTTP 관련 export는 호환 재수출한다. `src/lib/client`의 `requestApi`는 동일 출처 fetch·응답 봉투 검증·구조화 오류를 제공하며 로그인·로그아웃·프로필·전시 목록에서 사용한다. JSON Schema 스냅샷은 요청 변환 전 입력과 응답 출력을 구분하고 미등록 실행 경로를 검사한다. 현재 W5 다섯 경로를 더해 33개 메서드·경로가 등록되어 있다. 음성·미디어 경로는 미구현이다. [백엔드 작업 추적](backend-completion.md).
+W0부터 실행 중인 17개 메서드·경로의 요청·응답 원천은 `src/lib/contracts/`이며 `routes.ts`가 각 스키마를 연결한다. 기존 `api/schemas.ts`와 `ai/contracts.ts`의 HTTP 관련 export는 호환 재수출한다. `src/lib/client`의 `requestApi`는 동일 출처 fetch·응답 봉투 검증·구조화 오류를 제공하며 로그인·로그아웃·프로필·전시 목록에서 사용한다. JSON Schema 스냅샷은 요청 변환 전 입력과 응답 출력을 구분하고 미등록 실행 경로를 검사한다. 현재 W3 일곱 경로를 더해 40개 메서드·경로가 등록되어 있다. 목록 조회의 query도 같은 계약에서 검증하고 클라이언트가 인코딩한다. 음성·미디어 경로는 미구현이다. [백엔드 작업 추적](backend-completion.md).
 
 후속 자료·근거·작업의 세부 스키마, 목록 페이지네이션, 후속 생성 중복 정책은 구현 시 검토한다. 관람 세션과 보존 기간은 아래 W5 계약을 따른다. 제한 값은 설계 제안이며 실제 제공사·환경 검증 결과가 아니다. 서버와 DB 오류 매핑, 동시 수정·타인 접근·공개 중지 후 접근을 실제 구현에서 검증해야 한다.
 
@@ -228,3 +230,24 @@ W0부터 실행 중인 17개 메서드·경로의 요청·응답 원천은 `src/
 [PR2 검토](../reviews/ai-harness-fix-review.md)의 구조화 `intent` (`narration`·`question`)와 `artworkNumber` (1~9999)는 공개 HTTP에도 같은 camelCase 이름으로 구현했다. 질문은 필수다. 해설 버튼은 `narration`과 `artworkId`, 숫자 입력은 `narration`과 번호를 보낸다. 명시적 question은 Q&A이며 구조화 번호와 명백한 텍스트 번호가 충돌하면 확인한다.
 
 승인 해설은 2,000 Unicode 코드 포인트까지 원문 그대로, 관람 생성 답은 600, 작가 해설 후보는 2,000까지 다루며 `overTarget`이 600자 초과 여부를 나타낸다. 낭독은 신뢰할 수 있게 저장한 답변의 출처·outcome·인용과 현재 공개 문맥을 검사하고 승인 해설이면 글·인용·publication 버전까지 비교해야 한다. W5 `api_requests.result`는 검증된 답변·인용·출처·공개 버전을 저장하며 낭독용 저장소 포트도 이를 읽는다. 실제 음성 HTTP는 후속이다. 음성 전송 상한은 2,000 코드 포인트다. 게시 근거 검증은 위 W4 계약으로 구현·검증 중이다.
+
+
+# W3 자료 경로
+
+| 경로 | 요청·응답 |
+| --- | --- |
+| `POST /api/admin/uploads` | `{id,subjectType,subjectId,kind,filename,contentType,byteSize}` → `{material,upload}`. 최초 201, 같은 입력 재요청 200. subjectType은 artist/exhibition/artwork |
+| `POST /api/admin/uploads/{id}/complete` | `{expectedVersion}` → 검증 후 material. 동일 완료 재요청 200 |
+| `GET /api/admin/materials?subjectType=…&subjectId=…` | 소유 범위의 삭제되지 않은 material 배열. 원시 파일 키 제외 |
+| `GET /api/admin/materials/{id}` | ready 자료의 `{material,download:{url,expiresAt}}`. 소유자만 60초 다운로드 URL 발급 |
+| `DELETE /api/admin/materials/{id}` | `{expectedVersion}` → revoked material. 활성 공개본·승인 근거·살아 있는 문서 참조가 있으면 거부 |
+| `POST /api/admin/artworks/{id}/image` | `{expectedRevision,materialId:UUID 또는 null}` → 작품. 같은 작품의 ready 이미지만 지정 |
+| `POST /api/admin/artworks/{id}/delete` | `{expectedRevision}` → `{id,revision,deletedAt}`. 활성 공개본은 중지 중이어도 삭제 차단. 삭제 번호는 재사용 가능 |
+
+`upload`는 `{signedUrl,token,path,bucket,expiresAt}`이며 ready 재요청은 null이다. 프런트는 해당 staging 경로에 서명 업로드한 뒤 complete를 호출한다. `expiresAt`는 앱에서 완료 가능한 시각(초기 1시간)이며 Storage 토큰의 만료와 같지 않다. JPEG·PNG·WebP(3MiB), 비암호화 PDF(6MiB)를 지원하며 MIME·확장자·실제 바이트를 검사한다. 상한과 일일 예약 100회는 app_policies로 바꾼다. 재요청은 기존 예약 입력을 유지하며 한도를 중복 소비하지 않는다.
+
+material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이지 수·이미지 치수·생성/수정/삭제 시각·cleanupPending을 포함한다. `cleanupPending=true`는 ready 자료의 임시 파일 또는 삭제 자료의 실제 파일 정리가 남았다는 뜻이다. ready는 게시 승인을 뜻하지 않는다. 파일의 신규 버전은 새 업로드 ID로 만들며 기존 final 객체를 덮어쓰지 않는다.
+
+오류: 400 `INVALID_FILE`/`INVALID_INPUT`, 409 `UPLOAD_INCOMPLETE`/`UPLOAD_CONTENT_CONFLICT`/`MATERIAL_IN_USE`/`ACTIVE_PUBLICATION`, 410 `UPLOAD_EXPIRED`, 429 `AUTHOR_UPLOAD_LIMIT`, 503 `STORAGE_UNAVAILABLE`. 버전·요청 ID 충돌은 공통 오류를 따른다. 삭제 응답 손실 시 원래 expectedVersion/revision으로 재요청 가능하다. 개인 다운로드 URL은 짧은 시간 유효한 접근권이므로 로그·공개 채팅에 넣지 않는다. 공개 이미지·음성은 W5의 별도 현재 공개 검사 경로에서 제공할 예정이다.
+
+정리 cron은 기존 결과에 `materials:{attempted,completed}`를 추가한다. 작업 실패는 정리 표시를 유지하고 다음 실행에서 재시도한다. 기존 60초 다운로드 URL과 이미 전송된 바이트를 즉시 회수할 수는 없다. DB 전진 적용 후 서버를 배포하며, 이전 앱으로 되돌려도 새 비공개 버킷·논리 삭제·정리 표시는 유지한다. DB를 되돌리거나 공유 migration을 지우지 않는다.

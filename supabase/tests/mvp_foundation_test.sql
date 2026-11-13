@@ -149,11 +149,11 @@ select throws_ok($$select update_knowledge_document('artwork', '20000000-0000-00
     'P1002', 'Source section is unavailable', 'a revised link to a removed section fails even with the latest revision');
 
 reset role;
-insert into materials (id, owner_id, exhibition_id, kind, state, storage_key, byte_size) values
+insert into materials (id, owner_id, exhibition_id, kind, state, storage_key, byte_size, pages) values
     ('40000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-        '10000000-0000-0000-0000-000000000001', 'pdf', 'ready', '00000000-0000-0000-0000-000000000001/catalog.pdf', 123),
+        '10000000-0000-0000-0000-000000000001', 'pdf', 'ready', '00000000-0000-0000-0000-000000000001/catalog.pdf', 123, 2),
     ('40000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001',
-        '10000000-0000-0000-0000-000000000002', 'pdf', 'ready', '00000000-0000-0000-0000-000000000001/other.pdf', 456);
+        '10000000-0000-0000-0000-000000000002', 'pdf', 'ready', '00000000-0000-0000-0000-000000000001/other.pdf', 456, 2);
 
 set local role authenticated;
 select throws_ok($$select update_knowledge_document('artwork', '20000000-0000-0000-0000-000000000001', 2,
@@ -197,7 +197,10 @@ set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000002';
 select is(get_artist_profile()->>'display_name', null, 'second artist starts with a blank profile');
 select is((select count(*) from exhibitions), 0::bigint, 'owner RLS hides other exhibitions');
 select is((select count(*) from knowledge_documents), 1::bigint, 'owner RLS hides other documents');
-select is((select count(*) from materials), 0::bigint, 'owner RLS hides other private storage metadata');
+select throws_ok($$select count(*) from materials$$,'42501','permission denied for table materials',
+    'authenticated users cannot read raw storage metadata');
+select throws_ok($$select list_materials('exhibition','10000000-0000-0000-0000-000000000001')$$,
+    'P0002','Subject not found','material list hides foreign exhibition');
 select is(list_exhibitions(), '[]'::jsonb, 'artist RPC list is scoped to the owner');
 select throws_ok($$select get_artwork('20000000-0000-0000-0000-000000000001')$$, 'P0002', 'Subject not found',
     'artist RPC hides a foreign artwork');

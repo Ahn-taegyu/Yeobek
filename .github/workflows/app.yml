@@ -39,6 +39,9 @@ jobs:
       - run: npm run db:env
       - run: npm run build
       - name: Verify the running API
+        env:
+          CRON_SECRET: local-integration-only-0123456789abcdef
+          TEST_CRON_SECRET: local-integration-only-0123456789abcdef
         run: |
           npm run start -- --hostname 127.0.0.1 > /tmp/yeobek-app.log 2>&1 &
           for attempt in {1..60}; do
