@@ -4,7 +4,7 @@ id: P-002
 title: MVP 우선순위와 확정 범위
 description: 사용자 원안·추가 결정·상세 설계 제안을 분리한 구현 기준.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags:
 - mawd
 rag_include: true
@@ -13,6 +13,12 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: knowledge-screens
+  resource: /decisions/D-011-knowledge-and-screens.md
+  title: AI용 내부 지식·DB 원본과 필수 화면 요구
+- id: current-stack
+  resource: /research/recommended-stack.md
+  title: Render 제외 후 최신 스택·모델 권고
 - id: user
   resource: /references/user-mvp.md
   title: 최신 사용자 MVP 우선순위
@@ -38,6 +44,8 @@ sources:
 
 마감은 2026-11-15 일요일 아침이다. 기획·프런트 보조·디자인 각 1명, 프런트·백엔드·AI를 맡는 사용자 1명이다. 제공 API 최소 하나가 필수이고 키는 행사 당일 받는다. 사전 개발이 가능하고 OpenAI 키가 있다. [선정 스택](../specs/technology-stack.md)으로 진행하며 일요일의 PDF 처리는 보관·수동 발췌 연결로 정한다. 장기 자동화 수준은 후속 결정이다.
 
+**11/13 추가 확정:** 작가 입력을 AI용 내부 지식으로 나누고 DB 원본으로 저장한다. 작가 홈·전시 입력, 관람객 온보딩·목록 배경 채팅·작품 정보·선택 표시를 반영한다. 사용자용 전체 위키 화면은 확정하지 않았으며 기존 입력·검수에서 참고 정보를 확인하는 안이다. [D-011](../decisions/D-011-knowledge-and-screens.md).
+
 # 우선순위 표
 
 '원안'은 최초 강조 표시이며 '이번 단계'는 추가 결정 및 구현 제안을 반영한다. **MVP=우선 구현 제안**, P2=2순위, Later=후속, Hold=정의/현장 검증 전 보류. 모든 기능의 구현 상태는 미착수다.
@@ -45,7 +53,7 @@ sources:
 | ID | 기능 | 사용자 원안 | 이번 단계 | 선행 기능 |
 | --- | --- | --- | --- | --- |
 | [F-001](../features/F-001-exhibition.md) | 전시 개설·작가 접근 | prerequisite | MVP | — |
-| [F-002](../features/F-002-material-input.md) | 작가 자료·이미지·도록 입력 | P1 | MVP | F-001 |
+| [F-002](../features/F-002-material-input.md) | 작가 자료·이미지·도록 입력 | P1 | MVP | F-001, F-023 |
 | [F-003](../features/F-003-artist-review.md) | 공개 근거·해설 작가 검수 | P1 | MVP | F-002, F-004 |
 | [F-004](../features/F-004-text-generation.md) | 작품별 글 해설 생성 | P1 | MVP | F-002 |
 | [F-005](../features/F-005-audio.md) | 해설·채팅 답변 음성 출력 | P1 | MVP | F-003 |
@@ -54,7 +62,7 @@ sources:
 | [F-008](../features/F-008-qr.md) | 전시·작품 QR 배포 | P1 | MVP | F-022 |
 | [F-009](../features/F-009-nfc.md) | NFC 태그로 작품 선택 | P1 | Later | F-008 |
 | [F-010](../features/F-010-location.md) | 위치 기반 작품 선택 | P1 | Hold | F-011, F-017 |
-| [F-011](../features/F-011-artwork-list.md) | 관람객 작품 리스트 | P1 | MVP | F-022 |
+| [F-011](../features/F-011-artwork-list.md) | 관람객 작품 목록·정보 | P1 | MVP | F-022 |
 | [F-012](../features/F-012-interview.md) | AI 작가 인터뷰 | P2 | P2 | F-002, F-003 |
 | [F-013](../features/F-013-group.md) | 그룹 관람 | P2 | P2 | F-005, F-011 |
 | [F-014](../features/F-014-analytics.md) | 관람 데이터 수집·집계 | P2 | P2 | F-006, F-018, F-020 |
@@ -66,12 +74,13 @@ sources:
 | [F-020](../features/F-020-reviews.md) | 관람 후 전시 후기 | unspecified | Later | F-001 |
 | [F-021](../features/F-021-publication.md) | 승인 버전 게시·공개 중지 | prerequisite | MVP | F-003, F-005 |
 | [F-022](../features/F-022-chat-modes.md) | 통합 채팅·독립 입력/출력 모드 | prerequisite | MVP | F-021 |
+| [F-023](../features/F-023-artist-knowledge.md) | AI용 작가·전시·작품 연결 지식 저장 | prerequisite | MVP | F-001 |
 
 prerequisite는 최초 목록에 독립 이름이 없지만 필요한 전시/권한·게시·채팅 구성이다. F-022는 사용자 추가 요구를 구현하는 필수 기능이다. unspecified는 최초 우선순위 미지정이며 자동으로 '3순위 확정'을 뜻하지 않는다.
 
 # 첫 MVP의 완료 경로
 
-자료·작품 입력 → 글 해설 생성 → 공개 근거/해설 작가 검수 → 기본 음성 준비·게시 → QR로 채팅 진입 → 번호 발화/입력 또는 리스트로 작품 선택 → 같은 채팅에서 해설·후속 질문. 관람 중 네 입력×출력 조합을 자유롭게 전환한다.
+작가 홈·작가 정보 → 전시 정보 → 작품·자료 입력과 내부 지식 연결 → 글 해설 생성 → 공개 근거/해설 작가 검수 → 기본 음성 준비·게시 → QR→전시 온보딩→목록 배경 채팅 → 작품 정보 확인·번호/목록 선택·대상 표시 → 같은 채팅에서 해설·후속 질문. 관람 중 네 입력×출력 조합을 자유롭게 전환한다.
 
 음성 입력을 제외하거나 음성 입력을 항상 음성 출력으로 묶은 구현은 이번 요구를 충족하지 못한다. 실제 구현 순서는 [개발 계획](delivery-plan.md), 화면/상태/실패 조건은 [기능명세](../specs/functional-spec.md)와 [통합 채팅](../specs/chat-interaction.md)을 따른다.
 
@@ -88,7 +97,8 @@ prerequisite는 최초 목록에 독립 이름이 없지만 필요한 전시/권
 
 1. **도록 자동화:** 이번 마감은 PDF 보관·직접 발췌 연결. 자동 추출·OCR·이미지 매칭은 실제 파일 확인 후 후속 범위를 결정.
 2. **입력 자료:** 아직 확보하지 못했다. 가상 시연과 실제 검증을 분리하고 자료 확보를 첫 작업으로 둔다.
-3. **실행 검증:** 스택·STT/TTS·초기 파일 상한은 [D-008](../decisions/D-008-technology-stack.md)에서 선정. 실제 API 접근·한국어 품질·한도·비용과 정확한 공식 제출 시각은 확인 필요.
-4. **시각 질문:** 말·글 지칭과 승인된 부위 설명을 사용한다. 이미지 부분 선택·카메라는 사용자 확정 후순위이고, 이미지 AI 분석도 일요일 일정 밖이다.
+3. **실행 검증:** 최초 스택은 [D-008](../decisions/D-008-technology-stack.md), Render 제외 후 최신 추천은 [D-010](../decisions/D-010-practical-stack.md). Q&A/STT·초안·TTS의 제공사 분리와 무료/유료 조건은 권고 단계이며 기능 우선순위는 그대로다. 실제 API 접근·한국어 품질·한도·비용과 공식 제출 시각은 확인 필요.
+4. **화면 세부안:** 그리드/리스트, 상단/mention 중 배치는 아직 미확정이다. 그리드+상단 칩과 기존 검수에서 AI 참고 정보를 확인하는 구성을 제안한다. 전체 위키 탐색은 후속 후보다.
+5. **시각 질문:** 말·글 지칭과 승인된 부위 설명을 사용한다. 이미지 부분 선택·카메라는 사용자 확정 후순위이고, 이미지 AI 분석도 일요일 일정 밖이다.
 
 [^answers]: [사용자 추가 응답](../references/user-answers.md).

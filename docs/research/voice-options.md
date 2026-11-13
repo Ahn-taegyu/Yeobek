@@ -4,13 +4,16 @@ id: RES-001
 title: 도슨트 Live 음성과 한국어 TTS 비교
 description: GPT-Live·Gemini Live와 전용 TTS를 승인 해설·독립 입출력·일요일 마감 기준으로 비교한다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags: [mawd, voice, research]
 rag_include: true
 generated:
   by: codex/gpt-6
   at: '2026-11-12T06:02:54+00:00'
 sources:
+- id: current-stack
+  resource: /research/recommended-stack.md
+  title: Render 제외 후 최신 스택·모델 권고
 - id: request
   resource: /references/user-stack-review.md
   title: 사용자 재검토 요청
@@ -33,6 +36,8 @@ decision_status: proposed
 ---
 
 # 판단
+
+**11/13 현재 권고:** [RES-004](recommended-stack.md)에서 Typecast `ssfm-v31`과 MP3 스트리밍을 첫 시험 대상으로 구체화했다. 아래는 후보 비교 이력이며 한국어 우열의 실측 결과가 아니다.
 
 **이번 MVP는 음성 인식 → 승인 근거로 글 확정 → 전용 TTS를 우선 권고한다.** 자연스러운 끼어들기와 연속 대화가 핵심 경험이 되면 Live를 평가한다. Live를 쓸 수 없어서가 아니라, 현재 필수인 네 입출력 조합과 승인된 글·음성의 일치를 가장 빨리 검증할 경로를 고르는 판단이다.
 

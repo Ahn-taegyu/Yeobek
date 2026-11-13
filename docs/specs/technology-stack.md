@@ -2,9 +2,9 @@
 type: Specification
 id: SPEC-007
 title: MVP 기술 스택과 구현 경계
-description: 단일 Next.js 앱·Supabase·Liner·OpenAI 음성으로 일요일 시연까지 구현하는 기준.
+description: Next.js·Supabase를 유지하고 OpenAI Q&A/STT·Liner 초안·Typecast TTS로 대기를 줄이는 최신 권고.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags:
 - mawd
 - architecture
@@ -13,6 +13,12 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: knowledge-screens
+  resource: /decisions/D-011-knowledge-and-screens.md
+  title: AI용 내부 지식·DB 원본과 필수 화면 요구
+- id: current-stack
+  resource: /research/recommended-stack.md
+  title: Render 제외 후 최신 스택·모델 권고
 - id: direction
   resource: /references/user-build-direction.md
   title: 사용자 개발 조건과 기술 선택 위임
@@ -22,11 +28,11 @@ sources:
 decision_status: proposed
 ---
 
-# 선정 스택
+# 구현 기준과 최신 권고
 
-이번 구현 기준은 [D-008](../decisions/D-008-technology-stack.md)이다. 아래는 개발 계약이며 설치·배포 완료 목록이 아니다.
+사용자 위임으로 정한 최초 기준은 [D-008](../decisions/D-008-technology-stack.md)이다. **11/13 최신 권고는 [D-010](../decisions/D-010-practical-stack.md)**이며 아래 모델·호스팅 표에 반영했다. Render 제외는 사용자 정보이고, 새 제공사/유료 플랜은 추천 단계다. 설치·결제·실호출·배포 완료 목록이 아니다.
 
-**재검토 중:** [D-009](../decisions/D-009-stack-review.md)와 [기술 조사](../research/index.md)에 Live/TTS·Supabase 용량·무료 VM PostgreSQL·Render/Netlify 대안을 정리했다. 다음 표는 최초 기준이며 음성/호스트의 새 선택을 확정한 표가 아니다.
+구체적인 모델 ID·API·비용·지연 목표·실패 시 대안은 [현재 추천 구성](../research/recommended-stack.md)에 모았다. 이 문서의 초기 모델/상한 변경도 proposed이며 실행 전 계정과 품질 검증을 거친다.
 
 | 영역 | 선택 | 이번 작업에서 쓰는 범위 |
 | --- | --- | --- |
@@ -35,12 +41,13 @@ decision_status: proposed
 | UI | Tailwind, React `useReducer` | 채팅 상태·입출력 모드; 전역 상태 라이브러리 추가 없음 |
 | DB·인증 | Supabase Postgres + Auth, `@supabase/supabase-js`, `@supabase/ssr` | 미리 만든 작가 계정의 이메일/비밀번호 로그인, SQL migration·RLS |
 | 파일 | Supabase private Storage | 작품 사진·원본 PDF·승인 해설 음성 |
-| 글 생성 | Liner Chat Completions, 서버 `fetch` | 해설 초안과 근거 기반 Q&A |
+| 해설 초안 | Liner Chat Completions, `openai/gpt-6.1-sol` 우선 | 작가 등록/검수 단계. 행사 키의 허용 모델 확인 |
+| 관람 Q&A | OpenAI Responses, `gpt-6-luna` | 공개 승인 근거로 짧은 답 생성. 행사 전에 보유 키로 시험 |
 | 음성 인식 | OpenAI `gpt-transcribe` | 완성된 녹음 파일을 텍스트로 변환 |
-| 음성 합성 | OpenAI `gpt-4o-mini-tts`, `coral`, MP3 | 승인 해설과 확정된 답변만 낭독; 임시 선택 |
+| 음성 합성 | Typecast `ssfm-v31`, 한국어 음성 1종, MP3 | 승인 해설 사전 생성·저장, 새 답변은 확정 글의 TTS 스트리밍 |
 | 브라우저 음성 | MediaRecorder, HTML audio | 버튼 녹음·인식문 확인·재생·정지 |
 | 검증·QR | Zod, `qrcode` | 서버 입력/모델 결과 검증, URL QR 출력 |
-| 배포 | Vercel, Node runtime | HTTPS 미리보기부터 배포 확인 |
+| 배포 | Vercel, Node runtime; 상업/팀 주안은 Pro | DB와 가까운 리전. 무료 제약이 필수이면 Netlify 대안 비교 |
 
 Next/React/Tailwind의 세부 패치 조합은 프로젝트를 생성할 때 안정 템플릿이 설치한 호환 버전을 lockfile에 고정한다. 행사 중 메이저 버전을 바꾸지 않는다. ORM·LangChain·에이전트 프레임워크·Redis·벡터 DB·작업 큐는 첫 구현에 추가하지 않는다.
 
@@ -50,7 +57,7 @@ Next/React/Tailwind의 세부 패치 조합은 프로젝트를 생성할 때 안
 
 1. 글 입력 또는 녹음 파일을 받는다. 녹음은 STT 후 인식문을 확인·수정해서 전송한다.
 2. 하나의 채팅 요청에서 전시·작품 번호·현재 작품을 확인한다.
-3. 기본 설명 요청은 승인된 해설을 그대로 반환한다. 후속 질문은 공개 승인 근거를 조회해 Liner로 답한다.
+3. 기본 설명 요청은 승인된 해설을 그대로 반환한다. 후속 질문은 공개 승인 근거를 조회해 OpenAI Q&A 모델로 답하도록 권고한다.
 4. 답변·인용을 확정한 뒤 글로 표시하거나 **같은 답변**을 TTS로 읽는다.
 
 입력과 출력 기본값은 각각 `text`. 한쪽을 바꾸어 다른 쪽을 변경하지 않는다. 음성 출력에도 답변 글·출처를 펼쳐 볼 수 있다. `useReducer`의 상태는 메시지 목록, 활성 작품, 확인된 부위, 입력 모드, 출력 모드, 현재 녹음/재생으로 제한한다.
@@ -61,11 +68,15 @@ Next/React/Tailwind의 세부 패치 조합은 프로젝트를 생성할 때 안
 
 | 실제 저장 단위 | 내용 |
 | --- | --- |
-| `exhibitions` | 소유자, 전시 제목, 공개 식별자·상태 |
-| `artworks` | 전시 내 고유 번호, 제목, 이미지, 편집 중 자료/해설, 활성 공개 버전 참조 |
-| `materials` | 비공개 파일 경로, 출처 라벨, 대상 작품·쪽수 |
+| `artist_profiles` | 계정과 별개인 작가 ID·소유자·표시 이름·문서 참조 |
+| `knowledge_documents` | AI용 작가/전시/작품 서술 sections·출처·revision; 사용자용 위키 UI 없음 |
+| `exhibitions` | 소유자·artist ID, 전시 제목·기간·장소·문서 참조, 공개 스냅샷·상태 |
+| `artworks` | 전시 내 고유 번호, 제목·이미지·문서 참조, 편집 중 해설, 활성 공개 버전 참조 |
+| `materials` | 비공개 파일 경로·출처, 소유 작가/전시/작품 범위·쪽수 |
 | `publications` | 불변의 승인 근거 JSON, 해설 글·해시·음성 경로, 작품·버전 |
 | `api_requests` | 중복 방지 ID, 세션 해시, 대상 공개 버전, 단기 답변/음성 상태·사용량·만료 시각 |
+
+D-011의 DB 원본·AI용 내부 위키 요구로 기존 5개 저장 단위를 7개로 보완한다. 정형 속성은 각 엔티티, 서술 원본은 knowledge_documents가 담당한다. 사용자 폼 저장 시 같이 검증·반영하며 파일 동기화나 별도 위키 서비스는 추가하지 않는다. [지식 계약](artist-knowledge.md).
 
 논리 모델의 Evidence·Narration·Audio를 첫날부터 모두 개별 테이블로 분해하지 않는다. `publications`에 작은 승인 묶음을 저장하고, 음성 준비 후 활성 참조를 트랜잭션으로 교체한다. 수정은 초안에만 적용한다. 전체 버전 이력 편집 UI는 만들지 않는다.
 
@@ -78,11 +89,11 @@ Next/React/Tailwind의 세부 패치 조합은 프로젝트를 생성할 때 안
 # 제품 RAG는 작품 단위 조회부터
 
 - 숫자 선택은 전시 ID+작품 번호의 정확 조회다. 작품 번호를 벡터 검색에 맡기지 않는다.
-- 현재 공개 작품의 승인 발췌와 필요한 전시 공통 근거만 가져온다. 자료가 작으면 이 범위 전체를 쓰고, 예산 초과 시 문단 키워드로 추린다.
+- 현재 공개 작품의 승인 발췌와 해당 전시에 승인된 작가 공통·전시 공통 근거만 가져온다. 내부 문서의 링크 자체를 공개 검색 권한으로 사용하지 않는다. 자료가 작으면 이 범위 전체를 쓰고, 예산 초과 시 문단 키워드로 추린다.
 - 첫 문맥 예산은 근거 총 8,000자·최대 12개 발췌다. 자르기 전에 출처/작품 경계를 지킨다. 모델 토큰 제한과 같은 단위라고 주장하지 않는다.
-- Liner 결과는 `answer`, `citations`, `outcome`의 구조로 검증한다. 인용 ID가 이번 근거 목록에 없으면 그대로 출력하지 않는다. 인용 ID 검증만으로 문장 사실성이 보장되는 것은 아니므로 평가 질문을 돌린다.
+- Q&A 결과는 `answer`, `citations`, `outcome`의 구조로 검증한다. 인용 ID가 이번 근거 목록에 없으면 그대로 출력하지 않는다. 인용 ID 검증만으로 문장 사실성이 보장되는 것은 아니므로 평가 질문을 돌린다.
 - 최근 같은 작품 대화는 의미 해석에만 사용한다. 이전 답변을 새 사실의 근거로 사용하지 않는다.
-- 첫 구현은 **비스트리밍**이다. 답변을 받은 뒤 출처와 공개 상태를 확인하고 전달한다. 음성은 별도 요청이다.
+- Q&A 글은 **전체 답 검증 후 전달**한다. 음성은 별도 요청이며 확정 글을 읽는 MP3 바이트 전달은 스트리밍을 권고한다. 미검증 LLM 토큰을 먼저 공개하지 않는다.
 
 임베딩은 실제 질문에서 표현 차이로 관련 발췌를 놓치는 사례가 확인될 때 추가한다. 문서가 작은 이번 MVP에서 외부 벡터 인프라까지 만들 이유는 없다. 기획 vault의 Python RAG와 제품의 TypeScript RAG는 별개다.
 
@@ -94,17 +105,17 @@ Next/React/Tailwind의 세부 패치 조합은 프로젝트를 생성할 때 안
 
 # API 경계
 
-후속 API 명세는 [기능명세 v1.0의 OP-01~20](functional-spec.md#8-api-명세로-넘길-업무-계약)과 [예외 코드](user-scenarios.md#예외-처리-목록)를 입력으로 사용한다. 아래는 경로 묶음이며 개별 요청/응답 스키마가 아니다.
+후속 API 명세는 [기능명세 v1.0의 OP-01~22](functional-spec.md#8-api-명세로-넘길-업무-계약)과 [예외 코드](user-scenarios.md#예외-처리-목록)를 입력으로 사용한다. 아래는 경로 묶음이며 개별 요청/응답 스키마가 아니다.
 
 | 경로 묶음 | 역할 |
 | --- | --- |
-| `/api/admin/...` | 전시·작품 저장, 초안 생성, 검수, 음성 준비, 게시/중지. 사용자·소유권 검사 |
+| `/api/admin/...` | 작가 프로필·전시·작품·내부 지식 저장, 초안 생성, 검수, 음성 준비, 게시/중지. 사용자·소유권 검사 |
 | `/api/chat` | 텍스트 요청의 작품 해석·승인 해설 또는 RAG 답변. 현재 공개 상태 검사 |
 | `/api/transcribe` | 제한된 녹음만 STT. 음성 입력과 채팅 전송 분리 |
 | `/api/speech` | 서버가 생성한 답변 ID 또는 공개 해설 ID를 받아 낭독. 임의 텍스트를 무제한 읽는 공개 API로 만들지 않음 |
 | `/api/media/...` | 공개 버전을 확인한 뒤 private 이미지/음성 제공. 비공개 원본 PDF 제공 금지 |
 
-Liner/음성 제공사 차이는 작은 서버 함수 `generateNarration`, `answerQuestion`, `transcribe`, `synthesizeSpeech`로 감싼다. 범용 다중 제공사 플랫폼은 만들지 않는다. 행사 키 전에는 Liner 함수만 mock으로 두고 화면에 개발용 모의 응답임을 표시한다.
+제공사 차이는 작은 서버 함수 `generateNarration`, `answerQuestion`, `transcribe`, `synthesizeSpeech`로 감싼다. 범용 다중 제공사 플랫폼은 만들지 않는다. 행사 전 초안은 보유 OpenAI 키로 동일 모델 접근을 시험하거나 mock을 표시한다. 행사 때 초안 생성만 Liner로 연결·재검증하며 Q&A를 기다리게 하지 않는다.
 
 글/음성/파일은 모두 서버의 공개 상태 검사를 통과해야 한다. 공개 미디어 응답은 `no-store`로 제공하고 raw Storage URL은 공개하지 않는다. 중지 후 새 요청을 차단하되 이미 내려받은 파일·녹음까지 회수할 수 있다고 약속하지 않는다. 재방문·새 질문·재생 전 오래된 채팅의 공개 버전을 재확인한다.
 
@@ -120,20 +131,20 @@ Liner/음성 제공사 차이는 작은 서버 함수 `generateNarration`, `answ
 | 도록 | PDF 파일당 6MB. 초과하면 필요한 쪽만 분리/압축해 접수 |
 | 녹음 | 한 번 30초 또는 3MB 중 먼저 도달한 제한. 무음·권한 거부·크기 오류 처리 |
 | 질문/답변 | 질문 500자, 기본 해설·답변 600자 이내를 목표. 긴 답은 추가 질문으로 이어감 |
-| TTS | 기본 목소리 1종, MP3 3MB 이내. 글 해시+음성 버전으로 연결 |
+| TTS | 기본 목소리 1종, MP3 8MB 이내를 최신 권고 상한으로 제안. 글 해시+음성 버전으로 연결; 4.5MB 초과 미디어는 스트리밍 전달 |
 | 외부 호출 | 한 호출 30초 타임아웃, 해당 Route 최대 60초. 긴 일괄 작업 없음 |
 | 재시도 | 실패 상태 보존·수동 재시도, 같은 request ID 중복 실행 차단 |
 | 사용량 | 세션별 분당 6회 생성/인식/합성의 초기 제한과 전시 전체 일일 사용량 상한. DB에서 원자적으로 집계; 금액 상한은 키 잔액·첫 호출 단가 확인 후 설정 |
 
-파일은 인증된 브라우저에서 Supabase Storage로 직접 업로드해 Vercel Function의 4.5MB 요청 본문 제한을 피한다. 4.5MB는 버퍼링한 응답에도 적용되며 현재 문서는 스트리밍 응답 예외를 안내한다. 공개 이미지/음성 응답은 이번 설계의 3MB 제한 안에서 제공한다. 버킷 제한과 서버 검증을 함께 적용한다. [플랫폼 제약과 대안](../research/nextjs-hosting.md)
+파일은 인증된 브라우저에서 Supabase Storage로 직접 업로드해 Vercel Function의 4.5MB 요청 본문 제한을 피한다. 4.5MB는 버퍼링한 응답에도 적용되며 현재 문서는 스트리밍 응답 예외를 안내한다. 이미지는 3MB, TTS MP3는 새 권고 8MB 상한을 각각 검사한다. Typecast의 출력 비트레이트를 고려한 음성 상한 조정이며 이미지·녹음 입력 3MB를 함께 늘리지 않는다. 큰 음성을 Next의 버퍼링 응답으로 내보내지 않는다. [플랫폼 제약과 대안](../research/nextjs-hosting.md)
 
 녹음 MIME은 `isTypeSupported()`로 WebM/Opus·MP4/AAC 지원을 확인해 고른다. 확장자를 바꿔 변환한 것처럼 처리하지 않는다. HTTPS에서 iPhone Safari와 Android Chrome을 확인하고 자동재생이 막히면 재생 버튼을 제공한다.
 
 # 음성 선택의 수명과 검증
 
-사용자는 OpenAI 키가 있다고 확인했다. 오늘 한국어 숫자·작품명 인식과 낭독을 각 한 번 실제 호출해 모델 접근을 확인한다. `gpt-transcribe`는 현재 공식 파일 전사 시작 모델이다.[^stt]
+사용자는 OpenAI 키가 있다고 확인했다. 11/13 첫 단계에서 한국어 숫자·작품명 전사, Q&A, Typecast 낭독의 실제 접근과 품질을 확인하도록 계획한다. `gpt-transcribe`는 현재 공식 파일 전사 시작 모델이다.[^stt]
 
-이번 TTS는 REST 요청으로 확정 문장을 낭독하는 경로를 빠르게 완성하기 위한 임시 선택이다. **`gpt-4o-mini-tts`는 2027-01-06 종료 예정**이다. 공식 대체는 Realtime API의 `gpt-realtime-2.1-mini`이며 모델 ID만 바꾸는 교체가 아니다. 이번 데모 후 운영을 계속한다면 출시 전 음성 어댑터 교체·내용 일치 검증을 다시 해야 한다.[^tts]
+최신 TTS 우선 권고는 Typecast `ssfm-v31`이다. 키/음성/라이선스 준비나 품질 시험이 실패하면 기존 OpenAI `gpt-4o-mini-tts`/`coral`을 시연용 대안으로 시험한다. **이 OpenAI 모델은 2027-01-06 종료 예정**이며 장기 기본값으로 유지하지 않는다. 실제 한국어 비교 우위는 아직 검증하지 않았다.[^tts]
 
 오늘 선택 모델 접근이 안 되면 이를 즉시 개발 장애로 다룬다. 라이너 음성은 행사 키 검증 전까지 대체 완료로 간주하지 않는다. 음성 실패 때 텍스트로 복구할 수 있어야 하지만, 네 입출력 조합을 실제로 확인하지 못했다면 MVP 완료로 표시하지 않는다. 음성에는 AI 생성임을 안내한다.
 

@@ -4,13 +4,16 @@ id: RES-003
 title: Next.js 통합 서버와 무료·행사 호스팅 비교
 description: Next.js의 애플리케이션 경계와 배포 제공사의 제한을 구분하고 Render·Netlify·Cloudflare·Railway·VM을 검토한다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags: [mawd, hosting, research]
 rag_include: true
 generated:
   by: codex/gpt-6
   at: '2026-11-12T06:02:54+00:00'
 sources:
+- id: current-stack
+  resource: /research/recommended-stack.md
+  title: Render 제외 후 최신 스택·모델 권고
 - id: request
   resource: /references/user-stack-review.md
   title: 사용자 호스팅 조사 요청
@@ -33,6 +36,8 @@ decision_status: proposed
 ---
 
 # 판단
+
+**11/13 갱신:** 사용자 안내로 Render는 행사 제공 후보에서 제외했다. 현재 추천은 [RES-004](recommended-stack.md)다. 아래 일반 서비스 비교는 유지하되 11/12 파트너 등재를 최신 지원 정보로 해석하지 않는다. 무료 Netlify의 함수 기본 리전은 미국이며 리전 변경은 Pro/Enterprise 조건이라는 점도 현재 권고에 반영했다.
 
 **Next.js 통합 개발은 이번 인력·일정에 적합하다.** 작가 입력/권한·게시·작품 조회·AI API 호출 정도는 같은 TypeScript 앱의 Route Handlers로 충분히 설계할 수 있다. Next.js를 쓴다고 Vercel만 써야 하는 것은 아니다. 장시간 OCR·대량 음성 생성은 나중에 별도 worker로 분리한다.
 
@@ -63,7 +68,7 @@ Next.js 공식 가이드는 Backend for Frontend 기능이 완전한 백엔드 �
 
 | 옵션 | 확인한 조건 | 이 프로젝트에 대한 판단 |
 | --- | --- | --- |
-| **Render** | 공식 MAWD 파트너. 일반 Free Web은 15분 무활동 뒤 휴면, 다시 켜는 데 약 1분. workspace 월 750 instance hours | 행사 크레딧으로 휴면 없는 서비스를 쓸 수 있다면 우선 후보. 일반 Free만 쓰면 첫 접속 지연을 시연에서 감수 |
+| **Render** | 11/13 사용자 안내로 행사 제공 후보 제외. 일반 Free Web은 15분 무활동 뒤 휴면, 다시 켜는 데 약 1분. workspace 월 750 instance hours | 이번 행사 지원을 전제로 선정하지 않음 |
 | **Netlify Free** | Next App Router/SSR/Route Handlers 지원. 월 300크레딧 hard limit, production 배포 1회 15크레딧 | Vercel 외의 관리형 무료 후보. 개발 중 매번 production 배포하면 잔량을 빨리 소모하므로 미리보기와 사용량 관리 |
 | **Cloudflare Workers Free** | 일 10만 요청, 요청당 CPU 10ms, 메모리 128MB. 현재 Next 가이드는 vinext 권고 | 간단 API/파일 전달에 강점. 기존 Next 코드의 호환성·런타임 차이를 먼저 검증해야 해 이번 일정의 첫 선택은 아님 |
 | **Railway** | 신규 trial $5/30일, 이후 Free 월 $1 크레딧 | Node/Docker 배포 후보지만 계속 무료로 운영할 넉넉한 서버 예산으로 보지 않음 |
@@ -77,14 +82,14 @@ Workers의 10ms는 네트워크 응답을 기다리는 전체 시간이 아니�
 
 # 대회에서 제공되는 것의 확인 범위
 
-공식 모집 페이지에 **Render가 파트너로 명시**되어 있다. 공개 페이지에서 Render 크레딧의 금액·기간·적용 서비스·만료/결제 조건은 확인하지 못했다. 따라서 “대회에서 무료 서버를 제공한다”는 확정 기록은 하지 않는다. 기획 담당이 현장 안내에서 이 네 항목을 확인한다. 외부 메시지는 보내지 않았다.
+11/12 공식 모집 페이지의 Render 등재는 과거 조회 이력이다. **11/13 [사용자 안내](../references/user-render-excluded.md)로 Render 제외를 반영했다.** 지원 확인을 기다리는 작업도 제거한다. 외부 메시지는 보내지 않았다.
 
 사용자가 전달한 AI API 크레딧과 일반 호스팅 크레딧은 다르다. Render에 배포하는 것만으로 “제공 API 한 개 이상 핵심 사용” 요건을 충족한다고 가정하지 않는다. Liner 핵심 호출 계획은 유지한다. 행사 Liner Notion 가이드는 이번 재조회에서 404로 본문을 확인하지 못했으므로 공개 API 문서와 실제 행사 키 검증을 구분한다.
 
 # 권고 순서
 
 1. **지금 개발:** Next.js Node 앱 + 관리형 Supabase DB/Auth, 파일 직접 업로드. 핵심 기능을 호스팅 전용 API에 묶지 않는다.
-2. **배포 후보:** Render 행사 혜택이 확인되고 휴면 없는 서비스에 적용되면 우선 평가. 확인 전 사전 개발을 멈추지 않는다.
+2. **배포 후보:** Render 제외 이후 Vercel을 우선 권고한다. 유료/무료 조건과 AI 역할 배분은 [현재 추천](recommended-stack.md)에 따른다.
 3. **무료 대안:** Netlify에서 최소 Route Handler·녹음 업로드·SSR을 먼저 배포해 호환성과 크레딧을 확인한다. 기존 Vercel 경로도 실제 사용 조건에 맞으면 유지 가능하다.
 4. **자체 서버:** 이미 준비한 무료 VM이 있고 복원/권한/배포를 확인할 수 있다면 별도 대안. 새 인프라 운영을 추가하면서 기능 일정도 그대로 지킬 수 있다고 가정하지 않는다.
 

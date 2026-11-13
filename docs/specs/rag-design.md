@@ -4,7 +4,7 @@ id: SPEC-003
 title: 제품 RAG 설계
 description: 작가 승인 근거만 사용하는 관람객 Q&A의 구현 계약.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags:
 - mawd
 rag_include: true
@@ -13,6 +13,9 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: knowledge-screens
+  resource: /decisions/D-011-knowledge-and-screens.md
+  title: AI용 내부 지식·DB 원본과 필수 화면 요구
 - id: user
   resource: /references/user-mvp.md
   title: 최신 사용자 MVP 우선순위
@@ -36,7 +39,7 @@ sources:
 
 # 제품 검색 흐름
 
-1. 자료 입력/추출 후 원문과 쪽수·작품 연결을 유지.
+1. 일반 입력 폼을 작가·전시·작품의 내부 문서로 정규화하고 출처·쪽수·관계를 DB에 저장. [내부 지식 계약](artist-knowledge.md).
 2. 작가가 공개 발췌와 해설을 승인.
 3. 활성 Publication에 포함된 Evidence 버전만 검색 대상으로 구성.
 4. 요청의 전시·작품·공개 여부를 서버에서 확인한 **후** 해당 범위에서 검색.
@@ -56,13 +59,13 @@ sources:
 
 구현은 Supabase에서 현재 공개 버전의 승인 근거 JSON을 읽는 방식으로 정했다. 벡터 DB·임베딩은 추가하지 않는다. 근거 8,000자/12개 이내의 초기 예산, 비스트리밍 답변 검증과 상세 API 경계는 [기술 스택](technology-stack.md)을 따른다.
 
-작품별 자료가 작으면 현재 작품의 승인 발췌 + 관련 전시 공통 자료를 필터로 가져온 뒤 키워드로 선택하는 방식부터 시작한다. 전체 전시 원문을 매 요청에 무제한 넣지 않는다. 문단·작품·출처 경계를 유지하며 문맥 예산을 둔다. 의미 검색 성능이 필요한지 평가한 뒤 임베딩을 추가한다. 별도 벡터 DB 설치 자체를 RAG의 필수 조건으로 보지 않는다.
+작품별 자료가 작으면 현재 작품의 승인 발췌 + 해당 전시에 승인된 작가 공통·전시 공통 자료를 필터로 가져온 뒤 키워드로 선택하는 방식부터 시작한다. 전체 전시 원문을 매 요청에 무제한 넣지 않는다. 문단·작품·출처 경계를 유지하며 문맥 예산을 둔다. 의미 검색 성능이 필요한지 평가한 뒤 임베딩을 추가한다. 별도 벡터 DB 설치 자체를 RAG의 필수 조건으로 보지 않는다.
 
 # 청크 계약
 
-청크는 owner_id, exhibition_id, artwork_id 또는 공통 범위, material_id, evidence_id, evidence_version, publication_id, language, source_label, page, body, content_hash를 갖는다. 공개 원본 파일 URL 대신 허용된 출처 라벨·발췌를 인용한다.
+청크는 owner_id, artist_id, exhibition_id, artwork_id 또는 공통 범위, source_document_id, source_section_id, source_revision, material_id, evidence_id, evidence_version, publication_id, language, source_label, page, body, content_hash를 갖는다. 공개 원본 파일 URL 대신 허용된 출처 라벨·발췌를 인용한다.
 
-작가 세계 공통 자료도 같은 전시에서 승인된 범위만 사용한다. 다른 전시 작품 전체를 유사도만으로 가져오지 않는다. tenant/전시/승인 필터는 검색 뒤 가리기보다 검색 후보 생성에 먼저 적용한다.
+작가 세계 공통 자료는 전시 밖의 작가 문서에 한 번 저장하지만 관람 시에는 현재 전시에서 승인·게시한 버전만 사용한다. 연결된 위키 전체나 최신 초안을 재귀적으로 가져오지 않는다. 작가 홈 수정은 기존 공개본에 자동 전파하지 않고, 근거 철회는 참조하는 모든 전시·작품에 전파한다. 다른 전시 작품 전체를 유사도만으로 가져오지 않는다. tenant/전시/승인 필터는 검색 뒤 가리기보다 검색 후보 생성에 먼저 적용한다.
 
 # 답변 계약
 
@@ -87,5 +90,7 @@ sources:
 | 모드 변경 | 같은 작품·답변·출처 유지, 한쪽 모드가 다른 쪽을 변경하지 않음 |
 | “이 부분”만 지칭 | 대상 확인 질문, 보지 않은 그림을 추측하지 않음 |
 | OCR 오인식/작품 연결 오류 | 검수 전 공개 없음 |
+| 같은 작가의 다른 전시·미승인 작가 공통 section | 현재 전시에 승인된 버전만 사용 |
+| 공유 작가 원본 일반 수정/철회 | 수정은 공개 유지, 철회는 전체 참조 전시 차단 |
 
 실제 작가 자료가 없어서 아직 제품 답변 품질·한국어 인식·검색 정확도를 측정하지 않았다. 가상 자료 평가와 실제 파일럿을 분리한다.

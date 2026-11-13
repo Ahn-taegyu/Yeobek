@@ -4,7 +4,7 @@ id: P-005
 title: 검증 계획과 지표 정의
 description: 기능 수용 기준과 사업 가설을 분리한다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags:
 - mawd
 rag_include: true
@@ -12,6 +12,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:12:26+09:00'
 sources:
+- id: knowledge-screens
+  resource: /decisions/D-011-knowledge-and-screens.md
+  title: AI용 내부 지식·DB 원본과 필수 화면 요구
 - id: user
   resource: /references/user-mvp.md
   title: 최신 사용자 MVP 우선순위
@@ -31,7 +34,7 @@ decision_status: proposed
 
 동작 수용 기준은 [기능명세](../specs/functional-spec.md)를 따른다. 사용·지불 의향은 별도 실험이다. 원문 없는 과거 피드백을 구매 증거로 쓰지 않는다.
 
-구체적인 수행 입력·대체 흐름·합격 조건은 [사용자 시나리오 UC-01~16 / 수용 기준 AC-01~16](../specs/user-scenarios.md)에 있다. 네 입출력 조합은 해설과 Q&A를 각각 검사하며, 공개 철회·버전 교체·응답 지연·타인 접근도 포함한다. 명세 작성 시점의 AC는 모두 미실행이며 문서 검증과 제품 검증을 구별한다.
+구체적인 수행 입력·대체 흐름·합격 조건은 [사용자 시나리오 UC-01~19 / 수용 기준 AC-01~19](../specs/user-scenarios.md)에 있다. 네 입출력 조합은 해설과 Q&A를 각각 검사하며, 공개 철회·버전 교체·응답 지연·타인 접근도 포함한다. 추가로 작가 공통 정보의 두 전시 재사용·철회, 온보딩의 QR 대상 보존, 작품 정보 탐색/선택 구분을 확인한다. 명세 작성 시점의 AC는 모두 미실행이며 문서 검증과 제품 검증을 구별한다.
 
 # MVP 관찰
 

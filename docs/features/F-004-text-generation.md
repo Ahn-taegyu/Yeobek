@@ -4,7 +4,7 @@ id: F-004
 title: 작품별 글 해설 생성
 description: 현재 작품 자료와 관련 전시·작가 공통 자료로 한국어 해설 초안을 생성하는 제안이다. 공개 여부는 F-003과 별개다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags:
 - mawd
 - feature
@@ -20,6 +20,9 @@ build_order: 3
 depends_on:
 - F-002
 sources:
+- id: current-stack
+  resource: /research/recommended-stack.md
+  title: Render 제외 후 최신 스택·모델 권고
 - id: user
   resource: /references/user-mvp.md
   title: 최신 사용자 MVP 우선순위
@@ -32,6 +35,8 @@ sources:
 ---
 
 # 목적과 첫 범위
+
+11/13 최신 권고는 Liner를 통한 해설 초안 생성이다. 행사 전 임시 제공사와 행사 키 수령 후 실제 파트너 호출을 구분하며, 초안은 작가 검수 후에만 게시한다. [추천 모델/API](../research/recommended-stack.md).
 
 현재 작품 자료와 관련 전시·작가 공통 자료로 한국어 해설 초안을 생성하는 제안이다. 공개 여부는 F-003과 별개다.
 

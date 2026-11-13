@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [Render 제외와 스택 추천 요청](user-render-excluded.md) — 11/13 사용자 최신 행사 정보·부드러운 경험 요구.
+
 - [GitHub 공유·에이전트 협업 요청](user-repository-handoff.md) — yeoback 비공개 저장소와 자동 검색/수정 준비.
 
 - [최신 MVP 원안](user-mvp.md) — 원래 강조 우선순위.
@@ -15,3 +17,4 @@
 - [형식 근거](format-references.md) — OKF·Bases 공식 문서.
 
 기존 프로젝트의 MAWD_AI_docent_market_research.xlsx는 수정하지 않았고 이번 정리의 직접 검증 근거로 사용하지 않았다. Notion의 시장·요금·법률 관련 주장도 별도로 원출처 재검증한 사실로 승격하지 않았다.
+- [작가 지식·화면 요구](user-wiki-screens.md), [DB 원본 선택](user-wiki-storage.md), [내부 위키 목적·작가 열람 질문](user-wiki-purpose.md) — 11/13 후속 요구/응답.

@@ -12,11 +12,13 @@ okf_version: "0.2"
 
 - [우선순위](product/mvp-priorities.md) — 사용자 원안과 이번 단계.
 - [기능명세 v1.0](specs/functional-spec.md) — 범위·권한·입력·상태·API 업무 계약.
-- [화면 상세](specs/screen-spec.md) — 와이어프레임 기준이 되는 11개 논리 화면·버튼·표시 상태.
-- [사용자 시나리오와 예외](specs/user-scenarios.md) — 16개 흐름·26개 예외·수용 기준.
+- [화면 상세](specs/screen-spec.md) — 와이어프레임 기준이 되는 13개 논리 화면·버튼·표시 상태.
+- [사용자 시나리오와 예외](specs/user-scenarios.md) — 19개 흐름·26개 예외·수용 기준.
 - [통합 도슨트 채팅](specs/chat-interaction.md) — 해설·질문·작품 문맥과 독립적인 네 입출력 조합.
-- [기술 스택](specs/technology-stack.md) — Next.js·Supabase·Liner·OpenAI 음성, 입력/저장/API 경계.
+- [AI용 작가 지식](specs/artist-knowledge.md) — 내부 문서·출처·연결·승인 검색, 사용자용 위키와 구분.
+- [기술 스택](specs/technology-stack.md) — Next.js·Supabase와 최신 AI 역할 권고, 입력/저장/API 경계.
 - [기술 재검토](research/index.md) — Live/한국어 TTS·Supabase와 큰 파일·무료 PostgreSQL 서버·배포 대안.
+- [최신 추천 스택과 AI 역할](research/recommended-stack.md) — Render 제외, 부드러운 관람 경험, 각 모델/API·비용·검증 순서.
 - [개발 계획](product/delivery-plan.md) — 사전 개발·팀 역할·11/15 04:30 내부 목표.
 - [검토 결과](product/review-findings.md) — 충돌·불필요한 복잡성·누락.
 - [제품 방향](product/overview.md) — 사업안 비교·가설.
@@ -24,7 +26,7 @@ okf_version: "0.2"
 
 # 개념 목록
 
-- [기능 22개](features/index.md) — 기능별 우선순위·수용 기준·의존성.
+- [기능 23개](features/index.md) — 기능별 우선순위·수용 기준·의존성.
 - [결정](decisions/index.md) — 확정과 미결정.
 - [설계](specs/index.md) — 데이터·제품 RAG·파트너·저장소.
 - [출처](references/index.md) — 원문과 사용자 추가 응답.

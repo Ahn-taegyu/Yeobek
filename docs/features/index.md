@@ -12,7 +12,7 @@
 - [F-008 전시·작품 QR 배포](F-008-qr.md) — 원안 P1, 현재 MVP.
 - [F-009 NFC 태그로 작품 선택](F-009-nfc.md) — 원안 P1, 현재 Later.
 - [F-010 위치 기반 작품 선택](F-010-location.md) — 원안 P1, 현재 Hold.
-- [F-011 관람객 작품 리스트](F-011-artwork-list.md) — 원안 P1, 현재 MVP.
+- [F-011 관람객 작품 목록·정보](F-011-artwork-list.md) — 원안 P1, 현재 MVP.
 - [F-012 AI 작가 인터뷰](F-012-interview.md) — 원안 P2, 현재 P2.
 - [F-013 그룹 관람](F-013-group.md) — 원안 P2, 현재 P2.
 - [F-014 관람 데이터 수집·집계](F-014-analytics.md) — 원안 P2, 현재 P2.
@@ -24,3 +24,4 @@
 - [F-020 관람 후 전시 후기](F-020-reviews.md) — 원안 unspecified, 현재 Later.
 - [F-021 승인 버전 게시·공개 중지](F-021-publication.md) — 원안 prerequisite, 현재 MVP.
 - [F-022 통합 채팅·독립 입력/출력 모드](F-022-chat-modes.md) — 추가 요구 구현 prerequisite, 현재 MVP.
+- [F-023 AI용 작가·전시·작품 연결 지식 저장](F-023-artist-knowledge.md) — 후속 요구 prerequisite, 현재 MVP. 사용자용 위키 편집기가 아닌 내부 지식 저장.

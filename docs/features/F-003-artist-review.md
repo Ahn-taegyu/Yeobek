@@ -4,7 +4,7 @@ id: F-003
 title: 공개 근거·해설 작가 검수
 description: 작가가 공개 가능한 근거와 생성 해설을 확인·수정·승인한다. 원본 파일 업로드 자체는 승인으로 취급하지 않는다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags:
 - mawd
 - feature
@@ -21,6 +21,9 @@ depends_on:
 - F-002
 - F-004
 sources:
+- id: knowledge-screens
+  resource: /decisions/D-011-knowledge-and-screens.md
+  title: AI용 내부 지식·DB 원본과 필수 화면 요구
 - id: user
   resource: /references/user-mvp.md
   title: 최신 사용자 MVP 우선순위
@@ -35,6 +38,8 @@ sources:
 # 목적과 첫 범위
 
 작가가 공개 가능한 근거와 생성 해설을 확인·수정·승인한다. 원본 파일 업로드 자체는 승인으로 취급하지 않는다.
+
+11/13 보완안: 기존 근거 검수 영역에서 AI가 참고할 작가 공통/전시 공통/작품 자료와 출처·사용 버전·공개 승인 여부를 구분한다. 정정은 원래 입력 화면으로 연결한다. 별도 전체 위키 화면은 MVP에 추가하지 않는다. 작가 공통 근거 철회는 참조하는 모든 전시·작품에 적용한다. [내부 지식 계약](../specs/artist-knowledge.md).
 
 # 우선순위
 

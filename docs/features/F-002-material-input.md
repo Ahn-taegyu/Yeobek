@@ -5,7 +5,7 @@ title: 작가 자료·이미지·도록 입력
 description: 작품 제목·번호·사진·작가 메모, 선택적 재료·크기·제작연도, 도록 파일과 근거 발췌문을 저장한다. 일요일에는 PDF 보관·수동
   발췌 연결까지 구현하고 자동 추출 수준은 후속 결정한다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags:
 - mawd
 - feature
@@ -20,7 +20,11 @@ work_status: not_started
 build_order: 2
 depends_on:
 - F-001
+- F-023
 sources:
+- id: knowledge-screens
+  resource: /decisions/D-011-knowledge-and-screens.md
+  title: AI용 내부 지식·DB 원본과 필수 화면 요구
 - id: user
   resource: /references/user-mvp.md
   title: 최신 사용자 MVP 우선순위
@@ -38,6 +42,8 @@ sources:
 # 목적과 첫 범위
 
 작품 제목·번호·사진·작가 메모, 선택적 재료·크기·제작연도, 도록 파일과 근거 발췌문을 저장한다. 일요일에는 PDF 보관·수동 발췌 연결까지 구현하고 자동 추출 수준은 후속 결정한다.
+
+입력은 일반 폼으로 받고 작가/전시/작품에 해당하는 내부 지식 문서·section·출처로 저장한다. 작가 공통 정보는 재입력하지 않고 연결한다. 이는 사용자용 위키 편집기나 자동 OCR을 추가하는 기능이 아니다. [내부 지식 계약](../specs/artist-knowledge.md).
 
 # 우선순위
 
@@ -60,6 +66,7 @@ sources:
 # 선행 조건
 
 - [F-001 전시 개설·작가 접근](F-001-exhibition.md)
+- [F-023 AI용 연결 지식 저장](F-023-artist-knowledge.md)
 
 # 근거와 연결
 

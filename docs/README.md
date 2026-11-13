@@ -12,6 +12,12 @@ generated:
   by: codex/gpt-6
   at: '2026-11-13T02:07:34+09:00'
 sources:
+- id: knowledge-screens
+  resource: /decisions/D-011-knowledge-and-screens.md
+  title: AI용 내부 지식·DB 원본과 필수 화면 요구
+- id: current-stack
+  resource: /research/recommended-stack.md
+  title: Render 제외 후 최신 스택·모델 권고
 - id: handoff
   resource: /references/user-repository-handoff.md
   title: GitHub 공유와 에이전트 협업 요청
@@ -29,16 +35,18 @@ sources:
 
 1. [MVP 우선순위](product/mvp-priorities.md) — 원래 우선순위와 현재 범위.
 2. [기능명세 v1.0](specs/functional-spec.md) — 범위·권한·입력·상태·API 업무 계약. [화면 상세](specs/screen-spec.md), [시나리오·예외](specs/user-scenarios.md)를 함께 읽는다.
-3. [기술 스택](specs/technology-stack.md) — Next.js·Supabase·Liner·OpenAI 음성.
+3. [기술 스택](specs/technology-stack.md) — Next.js·Supabase와 최신 AI 역할 권고.
 4. [개발 순서와 역할](product/delivery-plan.md) — 사전 개발부터 11/15 04:30 내부 완료까지.
 5. [결정 목록](decisions/index.md) — 확정·제안·미결정.
 6. [전체 목차](index.md), [기획 검토](product/review-findings.md).
 
-**최신 기술 조사:** [음성·DB·호스팅 비교](research/index.md), [D-009 변경 제안](decisions/D-009-stack-review.md). GPT-Live/Gemini Live·한국어 TTS, 큰 이미지/PDF, 무료 VM PostgreSQL 직접 운영, Render 행사 파트너와 무료 호스팅을 비교했다. 새 모델/호스트는 아직 선정·검증하지 않았다.
+**11/13 기획 추가:** [AI용 내부 지식](specs/artist-knowledge.md)과 [작가 홈·온보딩·작품 정보 화면](specs/screen-spec.md)을 반영했다. DB 원본·내부 위키 목적과 필수 화면은 [D-011](decisions/D-011-knowledge-and-screens.md)의 사용자 요구다. 그리드+상단 선택 칩, 기존 검수에서 AI 참고 정보를 확인하는 배치는 제안이며 별도 위키 탐색 화면을 구현한 것이 아니다.
+
+**11/13 최신 추천:** [Render 제외 후 스택·모델·API](research/recommended-stack.md), [D-010](decisions/D-010-practical-stack.md). Vercel·Supabase, OpenAI Q&A/STT·Liner 초안·Typecast 낭독을 권고한다. Render 행사 후보 제외는 사용자 정보이며 유료 플랜·음성 ID·품질·실호출은 미확정/미검증이다. [기존 비교 조사](research/index.md)는 이력으로 함께 보존한다.
 
 **확정:** 사업안은 미정으로 두고 공통 도슨트부터, 인식은 QR·숫자, 제공 API 최소 한 개 필수.
 **관람객 경험:** 해설·질문은 [하나의 채팅](specs/chat-interaction.md), 텍스트/음성 입력과 출력은 독립 선택이다. 음성→텍스트, 텍스트→음성도 MVP에 포함한다.
-**추가 확정:** 사전 개발 가능, OpenAI 키 보유, 이미지 부분 선택·카메라는 후속. [선정 스택](specs/technology-stack.md)으로 진행하며 PDF는 보관·수동 발췌 연결부터 구현한다.
+**추가 확정:** 사전 개발 가능, OpenAI 키 보유, 이미지 부분 선택·카메라는 후속, Render 행사 제공 후보 제외. PDF는 보관·수동 발췌 연결부터 구현한다. [기술 스택](specs/technology-stack.md)의 최신 모델/플랜 권고는 제안과 실제 검증을 구분한다.
 **검증 대기:** 실제 API 접근·한국어 음성/답변 품질·계정 한도·정확한 공식 제출 시각. 실제 작가 자료/파일럿은 아직 없다. 장기 PDF 자동화 수준도 미결정이다.
 
 # 후속 설계에 사용하기

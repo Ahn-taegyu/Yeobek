@@ -9,3 +9,5 @@
 - [D-007 부위 지칭과 이미지·카메라 범위](D-007-visual-reference.md) — accepted.
 - [D-008 기술 스택과 개발 기준](D-008-technology-stack.md) — accepted; 사용자 위임에 따른 구현 선택.
 - [D-009 음성·저장소·호스팅 재검토](D-009-stack-review.md) — proposed; 공식 문서 조사에 따른 대안. 한국어 청취·실제 계정/배포 검증 전.
+- [D-010 Render 제외 후 현실적인 스택](D-010-practical-stack.md) — partial; Render 제외 반영, OpenAI Q&A/STT·Liner 초안·Typecast TTS와 호스팅은 최신 권고.
+- [D-011 AI용 내부 지식과 필수 화면](D-011-knowledge-and-screens.md) — accepted; DB 원본·작가/전시 분리·요청 화면. 세부 배치는 제안.

@@ -4,7 +4,7 @@ id: D-008
 title: 일요일 MVP 기술 스택과 개발 기준
 description: Next.js·Supabase·Liner·OpenAI 음성과 작은 범위 검색으로 구현한다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-13'
 tags:
 - mawd
 - architecture
@@ -13,6 +13,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: current-stack
+  resource: /research/recommended-stack.md
+  title: Render 제외 후 최신 스택·모델 권고
 - id: direction
   resource: /references/user-build-direction.md
   title: 사용자 기술 선택 위임과 사전 개발·키 확인
@@ -25,6 +28,8 @@ review_status: under-review
 ---
 
 # 결정 상태
+
+**최신 추천:** [D-010](D-010-practical-stack.md)에서 Render 제외, OpenAI 직접 Q&A·Typecast TTS·Liner 해설 제작으로 조정을 권고했다. 아래 선택은 11/12의 위임 기준을 보존한 기록이며 새 권고를 사용자가 개별 승인한 것으로 승격하지 않는다.
 
 **accepted — 사용자가 위임한 기술 선택을 이번 구현 기준으로 채택했다.** 사용자가 개별 벤더·모델을 직접 선택했다는 뜻이 아니며 실제 호출·배포·성능 검증은 아직 남아 있다. 사용자 확정 사항과 선택자의 판단을 구별하기 위해 `decision_basis: delegated-selection`을 기록한다.
 
