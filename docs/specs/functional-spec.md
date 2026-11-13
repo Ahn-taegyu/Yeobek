@@ -68,7 +68,7 @@ sources:
 
 | 구분 | 현재 기준 | 근거 |
 | --- | --- | --- |
-| 사용자 확정 | 사업안 유보·공통 도슨트 우선, QR·숫자, 단일 채팅, 네 입력×출력 조합, 이미지 부분 선택·카메라 후순위 | D-001, D-002, D-006, D-007 |
+| 사용자 확정 | 사업안 1번·공통 도슨트 우선, QR·숫자, 단일 채팅, 네 입력×출력 조합, 이미지 부분 선택·카메라 후순위 | D-014, D-002, D-006, D-007 |
 | 위임한 구현 선택 | 한국어, 사전 생성 작가 계정, 기본 text/text, 녹음 후 인식문 확인, PDF 보관·수동 발췌, Q&A 글 검증 후 전달, 기본 음성 1종 | [D-008](../decisions/D-008-technology-stack.md), [기술 스택](technology-stack.md) |
 | 11/13 최신 기술 권고 | Render 제외 반영. OpenAI Q&A/STT·Liner 해설 초안·Typecast TTS, 확정 글의 음성 전달 스트리밍. 신규 제공사/플랜은 미확정 | [D-010](../decisions/D-010-practical-stack.md), [모델/API 추천](../research/recommended-stack.md) |
 | 11/13 사용자 추가 확정 | AI용 내부 위키·DB 원본, 작가 홈·전시 입력, 관람 온보딩·목록 배경 채팅·작품 정보·선택 표시 | [D-011](../decisions/D-011-knowledge-and-screens.md) |

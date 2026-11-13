@@ -6,6 +6,8 @@
 
 - [AI 하네스 수정·발전 계획 요청 원문](user-harness-playbooks-plan.md) — 단계별 제안과 승인 범위.
 
+- [사업안 1번 확정](user-business-scope.md) — 도슨트 공급 회사의 1인 운영 채택. 운영 자동화 세부는 제안.
+
 - [AI 하네스 PR2 검토와 수정 요청](user-ai-pr2-review.md) — 검토 전달 내용 요약과 후속 계약.
 
 - [제품 플러그인과 품질 요구](user-plugin-quality.md) — pstack과 같은 스킬·도구·지침 조합.
