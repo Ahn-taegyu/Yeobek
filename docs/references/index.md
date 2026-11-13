@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [AI 하네스 PR3 재검토 요청 원문](user-pr3-rereview.md) — 3~4단계 범위 설명과 PR 재검토 요청.
+
 - [Claude AI 하네스 PR2 검토 메모 원문](claude-ai-harness-review-notes.md) — 과거 재현·pstack 대응의 원자료.
 
 - [AI 하네스 수정·발전 계획 요청 원문](user-harness-playbooks-plan.md) — 단계별 제안과 승인 범위.

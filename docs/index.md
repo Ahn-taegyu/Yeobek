@@ -11,6 +11,8 @@ okf_version: "0.2"
 
 # MVP부터 읽기
 
+- [AI 하네스 PR3 재검토 요청](references/user-pr3-rereview.md) — 3~4단계 미적용 이유와 PR 재검토 요청 원문.
+
 - [AI 하네스 플레이북 발전 검토](reviews/ai-harness-review-2026-11-13.md) — 기존 수정, 재현 원자료와 후속 계획의 범위.
 
 - [AI 하네스 PR2 수정 검토](reviews/ai-harness-fix-review.md) — 재현 결함·검증 상태·후속 통합 조건.

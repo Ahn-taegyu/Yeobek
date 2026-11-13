@@ -68,6 +68,25 @@ describe("playbook step execution", () => {
     expect(() => run.skip("output.validate", "no_candidates")).toThrow("step_out_of_order");
   });
 
+  it("rejects undeclared steps after all declared steps have been handled", async () => {
+    const run = startPlaybook("narration-evaluate");
+    await run.step("author.recheck", () => true);
+    run.skip("model.evaluate", "no_candidates");
+    run.skip("output.validate", "no_candidates");
+    run.skip("candidate.rank", "no_candidates");
+
+    const execute = vi.fn();
+    await expect(run.step("candidate.rank", execute)).rejects.toThrow("step_out_of_order");
+    // @ts-expect-error An untyped caller can pass an undefined step ID at runtime.
+    await expect(run.step(undefined, execute)).rejects.toThrow("step_out_of_order");
+    // @ts-expect-error An untyped caller can also pass undefined to skip.
+    expect(() => run.skip(undefined, "no_candidates")).toThrow("step_out_of_order");
+    expect(execute).not.toHaveBeenCalled();
+    expect(run.finish().map(({ id }) => id)).toEqual([
+      "author.recheck", "model.evaluate", "output.validate", "candidate.rank",
+    ]);
+  });
+
   it("rejects overlapping steps and closure while an async step is pending", async () => {
     const run = startPlaybook("narration-evaluate");
     let complete!: () => void;

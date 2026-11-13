@@ -45,7 +45,8 @@ export function startPlaybook<Id extends PlaybookId>(id: Id) {
   function assertNext(stepId: PlaybookStepId<Id>) {
     assertIdle();
     if (failure) throw new PlaybookOrderError("playbook_failed");
-    if (declared[records.length]?.id !== stepId) throw new PlaybookOrderError("step_out_of_order");
+    const next = declared[records.length];
+    if (!next || next.id !== stepId) throw new PlaybookOrderError("step_out_of_order");
   }
 
   function record(entry: PlaybookStepRecord) {
