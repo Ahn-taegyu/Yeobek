@@ -29,7 +29,7 @@ export function compilePlugin() {
     return [name, { description: match[2], instructions: match[3].trim() }];
   }));
   const message = z.string().trim().min(1).max(600).refine(v => !v.includes("\u0000"));
-  const messages = z.strictObject({ chooseOne: message, chooseArtwork: message, noNarration: message,
+  const messages = z.strictObject({ chooseOne: message, chooseArtwork: message, artworkUnavailable: message, noNarration: message,
     clarify: message, point: message, insufficient: message }).parse(JSON.parse(read(manifest.messages)));
   const bundle = { ...manifest, instructions: read(manifest.instructions), messages, skills };
   const fingerprint = createHash("sha256").update(JSON.stringify(bundle)).digest("hex");

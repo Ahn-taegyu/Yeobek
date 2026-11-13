@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { ChatRequest, PublicationContext } from "../../src/lib/ai/contracts";
+import type { ChatRequestInput, PublicationContext } from "../../src/lib/ai/contracts";
 
 // Entirely fictional evaluation data; never a real artist statement or publication.
 export const ids = {
@@ -17,7 +17,7 @@ export function syntheticPublication(): PublicationContext {
       artworkId: ids.artwork, scope: "artwork", sourceLabel: "합성 평가 자료", body, contentHash: hash(body) }],
   };
 }
-export function syntheticRequest(overrides: Partial<ChatRequest> = {}): ChatRequest {
+export function syntheticRequest(overrides: Partial<ChatRequestInput> = {}): ChatRequestInput {
   return { requestId: ids.request, exhibitionId: ids.exhibition, artworkId: ids.artwork, question: "오른쪽 위의 파란 모양은 무엇인가요?",
     inputMode: "text", outputMode: "text", contextSequence: 2, ...overrides };
 }

@@ -19,7 +19,7 @@
     "prebuild": "npm run ai:bundle:check",
     "preai:eval": "npm run ai:bundle:check",
     "preai:smoke": "npm run ai:bundle:check",
-    "ai:eval": "vitest run tests/unit/ai-harness.test.ts tests/unit/ai-chat-intent.test.ts tests/unit/ai-narration-boundaries.test.ts tests/unit/ai-providers.test.ts tests/unit/ai-plugin.test.ts tests/unit/ai-narration.test.ts tests/unit/ai-comparison.test.ts",
+    "ai:eval": "vitest run tests/unit/ai-harness.test.ts tests/unit/ai-chat-intent.test.ts tests/unit/ai-narration-boundaries.test.ts tests/unit/ai-deadline-outcome.test.ts tests/unit/ai-providers.test.ts tests/unit/ai-plugin.test.ts tests/unit/ai-narration.test.ts tests/unit/ai-comparison.test.ts",
     "preai:compare": "npm run ai:bundle:check",
     "ai:compare": "node scripts/ai-compare.mjs",
     "ai:review": "node scripts/ai-review.mjs",

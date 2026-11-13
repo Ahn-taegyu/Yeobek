@@ -1,8 +1,8 @@
 import "server-only";
 import { z } from "zod";
-import { answerJsonSchema, answerSchema, chatRequestSchema, type DocentReply, type ModelAnswer, type PublicationContext,
+import { answerJsonSchema, answerSchema, narrationDraftSchema, chatRequestSchema, type DocentReply, type ModelAnswer, type NarrationDraft, type PublicationContext,
   type PublicationRef, type PublicationStore, type SpeechSourceStore } from "./contracts";
-import { assertNotCancelled, HarnessError, isNarrationRequest, mentionedNumbers, selectEvidence, textHash, validateContext } from "./context";
+import { assertNotCancelled, HarnessError, resolveIntent, mentionedNumbers, selectEvidence, textHash, validateContext } from "./context";
 import { DOCENT_SYSTEM_PROMPT, PROMPT_VERSION } from "./prompts";
 import type { AiSpeechProvider, AiTextProvider } from "./providers/types";
 import { assertPlaybookToolConfigured, DOCENT_COPY } from "./plugin";
@@ -10,8 +10,8 @@ import { assertPlaybookToolConfigured, DOCENT_COPY } from "./plugin";
 const reference = (context: PublicationContext): PublicationRef => ({ exhibitionId: context.exhibitionId,
   artworkId: context.artworkId, publicationId: context.publicationId, version: context.version });
 
-export function validateAnswer(output: unknown, allowedIds: string[]): ModelAnswer {
-  const parsed = answerSchema.safeParse(output);
+function validateCitedText(output: unknown, allowedIds: string[], schema: typeof answerSchema | typeof narrationDraftSchema) {
+  const parsed = schema.safeParse(output);
   if (!parsed.success) throw new HarnessError("invalid_output");
   const answer = parsed.data;
   if (/(?:https?:\/\/|www\.|data:|file:\/\/)/iu.test(answer.answer) ||
@@ -22,6 +22,12 @@ export function validateAnswer(output: unknown, allowedIds: string[]): ModelAnsw
     throw new HarnessError("invalid_output");
   }
   return answer;
+}
+export function validateAnswer(output: unknown, allowedIds: string[]): ModelAnswer {
+  return validateCitedText(output, allowedIds, answerSchema);
+}
+export function validateNarrationDraft(output: unknown, allowedIds: string[]): NarrationDraft {
+  return validateCitedText(output, allowedIds, narrationDraftSchema);
 }
 
 async function assertCurrent(store: PublicationStore, ref: PublicationRef, signal?: AbortSignal) {
@@ -41,6 +47,10 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
       const parsed = chatRequestSchema.safeParse(input);
       if (!parsed.success) throw new HarnessError("invalid_request");
       const request = parsed.data;
+      // Parsing applies question as the transport default, but omitted intent
+      // must still allow number-only and legacy basic narration requests.
+      const rawIntent = (input as { intent?: "question" | "narration" }).intent;
+      const intent = resolveIntent({ question: request.question, intent: rawIntent });
       assertNotCancelled(signal);
       const base = { requestId: request.requestId, contextSequence: request.contextSequence,
         inputMode: request.inputMode, outputMode: request.outputMode, promptVersion: PROMPT_VERSION };
@@ -58,7 +68,10 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
       assertPlaybookToolConfigured("visitor-answer", "publication.read");
       const loaded = await deps.publications.load(selector, signal);
       assertNotCancelled(signal);
-      if (!loaded) throw new HarnessError("publication_unavailable");
+      if (!loaded) {
+        if ("number" in selector) return fixed(DOCENT_COPY.artworkUnavailable, "clarify");
+        throw new HarnessError("publication_unavailable");
+      }
       const context = validateContext(loaded, selector);
       const ref = reference(context);
       await assertCurrent(deps.publications, ref, signal);
@@ -66,8 +79,7 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
         await assertCurrent(deps.publications, ref, signal);
         return result;
       };
-      if (request.intent === "narration" ||
-        (request.intent !== "question" && isNarrationRequest(request.question))) {
+      if (intent === "narration") {
         if (!context.narration) return finish(fixed(DOCENT_COPY.noNarration, "insufficient_evidence", ref));
         return finish({ ...base, publication: ref, source: "approved_narration", outcome: "answered",
           answer: context.narration.text, citations: [...context.narration.citations] });

@@ -41,6 +41,23 @@ function setup(actorId = ids.owner) {
 afterEach(() => vi.useRealTimers());
 
 describe("artist narration candidate selection", () => {
+  it("does not dispatch the first store load when cancelled in the same turn", async () => {
+    const s = setup(); const controller = new AbortController();
+    const pending = s.harness.draft(request, controller.signal);
+    controller.abort();
+    expect(await pending).toMatchObject({ status: "abstained", reason: "cancelled" });
+    expect(s.store.loadOwnedContext).not.toHaveBeenCalled();
+    expect(s.generator.generate).not.toHaveBeenCalled();
+  });
+  it.each([600, 601, 2000])("accepts a %i-codepoint draft and reports the target warning separately", async length => {
+    const s = setup();
+    const draft = { ...overview, answer: "🌙".repeat(length) };
+    s.generator.generate.mockResolvedValue(response(draft));
+    const result = await s.harness.draft({ ...request, strategy: "single" });
+    expect(result).toMatchObject({ status: "selected", selected: draft, overTarget: length > 600 });
+    expect(s.generator.generate.mock.calls[0][0].schema.name).toBe("yeobek_narration_draft");
+    expect(s.judge.generate).toHaveBeenCalledOnce();
+  });
   it("starts both calls before either resolves and verifies the only returned draft against the original sources", async () => {
     const s = setup();
     const pending: ((value: AiTextResponse) => void)[] = [];
@@ -126,7 +143,7 @@ describe("artist narration candidate selection", () => {
 
   it("stops on round-two rejection and repairs local structural errors without paying for a judge over invalid candidates", async () => {
     const s = setup();
-    s.generator.generate.mockResolvedValue(response({ ...overview, answer: "원".repeat(601) }));
+    s.generator.generate.mockResolvedValue(response({ ...overview, answer: "원".repeat(2001) }));
     const result = await s.harness.draft(request);
     expect(result).toMatchObject({ status: "abstained", reason: "invalid_candidate", metrics: { rounds: 2 } });
     expect(s.generator.generate).toHaveBeenCalledTimes(4);

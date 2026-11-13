@@ -3,9 +3,10 @@ import { randomInt } from "node:crypto";
 import { z } from "zod";
 import { KnowledgeError, validateArtistKnowledgeContext, type ArtistKnowledgeStore } from "./artist-knowledge";
 import { textHash } from "./context";
-import { answerJsonSchema, type ModelAnswer } from "./contracts";
+import { AI_LIMITS, codepoints, narrationDraftJsonSchema, type NarrationDraft } from "./contracts";
 import { AiError, type AiErrorCode } from "./errors";
-import { validateAnswer } from "./harness";
+import { validateNarrationDraft } from "./harness";
+import { abortable, createDeadline } from "./deadline";
 import { assertPlaybookToolConfigured, playbookPrompt } from "./plugin";
 import { NARRATION_SYSTEM_PROMPT, PROMPT_VERSION } from "./prompts";
 import type { AiProviderTrace, AiTextProvider, AiTextRequest } from "./providers/types";
@@ -70,7 +71,7 @@ export interface NarrationCallMetric {
   trace?: AiProviderTrace;
 }
 
-type AbstentionReason = "invalid_request" | "unavailable" | "invalid_context" | "stale_context" |
+export type AbstentionReason = "invalid_request" | "unavailable" | "invalid_context" | "stale_context" |
   "insufficient_evidence" | "clarify" | "generation_failed" | "invalid_candidate" |
   "judge_failed" | "below_threshold" | "cancelled" | "timeout";
 type NarrationResultBase = {
@@ -87,11 +88,11 @@ type NarrationResultBase = {
   };
 };
 export type NarrationResult = NarrationResultBase & (
-  { status: "selected"; reason: "passed"; selected: ModelAnswer; selectedCandidateId: string } |
+  { status: "selected"; reason: "passed"; selected: NarrationDraft; selectedCandidateId: string; overTarget: boolean } |
   { status: "abstained"; reason: AbstentionReason; selected: null; selectedCandidateId: null }
 );
 
-type Candidate = { id: string; draft: ModelAnswer };
+type Candidate = { id: string; draft: NarrationDraft };
 type Feedback = "invalid_candidate" | "grounding" | "relevance" | "tone" | "concision" | "unsupported_intent" | "confidentiality";
 
 function failedCriteria(evaluation: JudgeEvaluation): Feedback[] {
@@ -116,22 +117,6 @@ function validateEvaluations(output: unknown, candidates: Candidate[]): JudgeEva
     return null;
   }
   return parsed.data.evaluations;
-}
-
-// The abort race also bounds a store or injected provider that ignores its signal.
-function abortable<T>(signal: AbortSignal, operation: (signal: AbortSignal) => Promise<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const abort = () => reject(signal.reason);
-    if (signal.aborted) {
-      abort();
-      return;
-    }
-    signal.addEventListener("abort", abort, { once: true });
-    void Promise.resolve().then(() => {
-      signal.throwIfAborted();
-      return operation(signal);
-    }).then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
-  });
 }
 
 /** actorId comes from server authentication. The store must authorize every
@@ -162,16 +147,15 @@ export function createNarrationHarness(actorId: string, deps: {
       if (!parsed.success || !z.uuid().safeParse(actorId).success) return abstain("invalid_request");
       const { documentId, expectedRevision, strategy } = parsed.data;
       const budget = NARRATION_LIMITS[strategy];
-      const deadline = new AbortController();
-      const timer = setTimeout(() => deadline.abort(new AiError("timeout")), NARRATION_LIMITS.deadlineMs);
-      const requestSignal = signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal;
+      const deadline = createDeadline(NARRATION_LIMITS.deadlineMs, signal);
+      const requestSignal = deadline.signal;
       function interrupted(): "cancelled" | "timeout" | undefined {
         if (signal?.aborted) return "cancelled";
-        if (deadline.signal.aborted || now() - started >= NARRATION_LIMITS.deadlineMs) return "timeout";
+        if (deadline.timedOut() || now() - started >= NARRATION_LIMITS.deadlineMs) return "timeout";
       }
       const load = () => {
         assertPlaybookToolConfigured("narration-draft", "author.read");
-        return abortable(requestSignal, activeSignal => deps.store.loadOwnedContext(actorId, documentId, activeSignal));
+        return abortable(requestSignal, activeSignal => deps.store.loadOwnedContext(actorId, documentId, activeSignal), { defer: true });
       };
 
       async function invoke<T>(
@@ -186,12 +170,11 @@ export function createNarrationHarness(actorId: string, deps: {
         const maxOutputTokens = call.role === "generation" ? NARRATION_LIMITS.generationOutputTokens : NARRATION_LIMITS.judgeOutputTokens;
         const metric: NarrationCallMetric = { ...call, maxOutputTokens, elapsedMs: 0, status: "failed" };
         metrics.calls.push(metric);
-        const timeout = new AbortController();
-        const callTimer = setTimeout(() => timeout.abort(new AiError("timeout")), NARRATION_LIMITS.callTimeoutMs);
-        const callSignal = AbortSignal.any([requestSignal, timeout.signal]);
+        const timeout = createDeadline(NARRATION_LIMITS.callTimeoutMs, requestSignal);
+        const callSignal = timeout.signal;
         try {
           const response = await abortable(callSignal, activeSignal =>
-            provider.generate({ ...request, maxOutputTokens, signal: activeSignal }));
+            provider.generate({ ...request, maxOutputTokens, signal: activeSignal }), { defer: true });
           metric.trace = response.trace;
           const interruptedAfterCall = interrupted();
           if (interruptedAfterCall) throw new AiError(interruptedAfterCall);
@@ -207,7 +190,7 @@ export function createNarrationHarness(actorId: string, deps: {
           metric.errorCode = interrupted() ?? (error instanceof AiError ? error.code : "provider_unavailable");
           return { value: null, errorCode: metric.errorCode };
         } finally {
-          clearTimeout(callTimer);
+          timeout.dispose();
           metric.elapsedMs = now() - callStarted;
         }
       }
@@ -256,11 +239,11 @@ export function createNarrationHarness(actorId: string, deps: {
           const attempts = await Promise.all(candidateStrategies.map(async (expression, index) => {
             const id = `r${round}-c${index + 1}`;
             const result = await invoke(deps.generator, {
-              system: NARRATION_SYSTEM_PROMPT, schema: answerJsonSchema,
+              system: NARRATION_SYSTEM_PROMPT, schema: narrationDraftJsonSchema,
               input: JSON.stringify({ sources, strategy: expression, feedback }),
             }, { role: "generation", round, candidateId: id }, output => {
               try {
-                return validateAnswer(output, allowedIds);
+                return validateNarrationDraft(output, allowedIds);
               } catch {
                 return null;
               }
@@ -307,8 +290,9 @@ export function createNarrationHarness(actorId: string, deps: {
               if (!await checkSnapshot()) return abstain(interrupted() ?? "stale_context");
               const stoppedBeforeSelection = interrupted();
               if (stoppedBeforeSelection) return abstain(stoppedBeforeSelection);
-              const selected = validateAnswer(winner.draft, allowedIds);
-              return { ...resultBase(), status: "selected", reason: "passed", selected, selectedCandidateId: winner.id };
+              const selected = validateNarrationDraft(winner.draft, allowedIds);
+              return { ...resultBase(), status: "selected", reason: "passed", selected, selectedCandidateId: winner.id,
+                overTarget: codepoints(selected.answer) > AI_LIMITS.narrationTarget };
             }
             reason = missingEvidence ?? "below_threshold";
           }
@@ -322,7 +306,7 @@ export function createNarrationHarness(actorId: string, deps: {
         if (rechecking) return abstain("stale_context");
         return abstain(error instanceof KnowledgeError && error.code === "invalid_context" ? "invalid_context" : "unavailable");
       } finally {
-        clearTimeout(timer);
+        deadline.dispose();
       }
     },
   };

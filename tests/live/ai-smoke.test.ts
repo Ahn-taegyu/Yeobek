@@ -6,8 +6,8 @@ import { createOpenAiSpeechProvider, createOpenAiTextProvider, createOpenAiTrans
 import { createTypecastSpeechProvider } from "../../src/lib/ai/providers/typecast";
 import { createLinerTextProvider } from "../../src/lib/ai/providers/liner";
 import { AiError } from "../../src/lib/ai/errors";
-import { validateAnswer } from "../../src/lib/ai/harness";
-import { answerJsonSchema } from "../../src/lib/ai/contracts";
+import { validateAnswer, validateNarrationDraft } from "../../src/lib/ai/harness";
+import { answerJsonSchema, narrationDraftJsonSchema } from "../../src/lib/ai/contracts";
 import { DOCENT_SYSTEM_PROMPT, NARRATION_SYSTEM_PROMPT } from "../../src/lib/ai/prompts";
 import { ids, syntheticPublication } from "../fixtures/ai";
 
@@ -17,9 +17,12 @@ it("explicit live capability smoke (not answer quality or listening evaluation)"
     if (task === "qa" || task === "draft") {
       const provider = task === "qa" ? createOpenAiTextProvider() : createLinerTextProvider();
       const result = await provider.generate({ system: task === "qa" ? DOCENT_SYSTEM_PROMPT : NARRATION_SYSTEM_PROMPT,
-        input: JSON.stringify({ question: task === "qa" ? "작품에 사용한 재료를 알려주세요." : "이 작품의 기본 해설 후보를 작성해주세요.",
-          evidence: syntheticPublication().evidence.map(({ id, version, sourceLabel, body }) => ({ id, version, sourceLabel, body })) }), schema: answerJsonSchema });
-      if (validateAnswer(result.output, [ids.evidence]).outcome !== "answered") throw new Error("no usable answer");
+        input: JSON.stringify(task === "qa" ? { question: "작품에 사용한 재료를 알려주세요.",
+          evidence: syntheticPublication().evidence.map(({ id, version, sourceLabel, body }) => ({ id, version, sourceLabel, body })) }
+          : { sources: syntheticPublication().evidence.map(({ id, scope, body }) => ({ id, scope, text: body })), strategy: "overview", feedback: [] }),
+        schema: task === "qa" ? answerJsonSchema : narrationDraftJsonSchema });
+      const validate = task === "qa" ? validateAnswer : validateNarrationDraft;
+      if (validate(result.output, [ids.evidence]).outcome !== "answered") throw new Error("no usable answer");
     } else if (task === "stt") {
       const path = process.env.AI_SMOKE_AUDIO;
       if (!path) throw new Error("invalid recording");
