@@ -56,6 +56,7 @@ jobs:
       - name: Verify mock AI jobs in development mode
         env:
           AI_PROVIDER_MODE: mock
+          FEATURE_VOICE_REQUIRED: "false"
           APP_ORIGIN: http://localhost:3001
           TEST_APP_ORIGIN: http://localhost:3001
         run: |
@@ -72,6 +73,7 @@ jobs:
             sleep 1
           done
           npm run test:jobs
+          npm run test:publication
       - name: Stop the disposable stack
         if: always()
         run: npm run db:stop

@@ -53,7 +53,7 @@ sources:
 
 # 범위와 공통 계약
 
-[기능명세 OP-01~22](functional-spec.md#8-api-명세로-넘길-업무-계약)를 HTTP로 구체화한 계약이다. 초기 기반과 W1 해설 작업 경로는 구현 중이며 그 밖의 후속 경로는 설계 제안이다. W1 로컬 DB·HTTP 검증은 통과했고 최신 head CI는 대기 중이다. 검증 범위와 한계는 [개발 기반 현황](development-foundation.md)에 기록한다. [D-011](../decisions/D-011-knowledge-and-screens.md), [내부 지식](artist-knowledge.md), [데이터 모델](data-model.md), [채팅](chat-interaction.md)을 함께 적용한다.
+[기능명세 OP-01~22](functional-spec.md#8-api-명세로-넘길-업무-계약)를 HTTP로 구체화한 계약이다. 초기 기반과 W1 해설 작업은 병합됐고 W4 글 승인·게시 경로는 구현 및 검증 중이다. 그 밖의 후속 경로는 설계 제안이다. 검증 범위와 한계는 [개발 기반 현황](development-foundation.md)에 기록한다. [D-011](../decisions/D-011-knowledge-and-screens.md), [내부 지식](artist-knowledge.md), [데이터 모델](data-model.md), [채팅](chat-interaction.md)을 함께 적용한다.
 
 - JSON 성공 응답은 `{ "data": ..., "requestId": "UUID" }`, 오류는 `{ "error": { "code": "...", "message": "...", "retryable": true, "retryAfter": 5, "fields": {} }, "requestId": "UUID" }` 형태다. `retryAfter`(초)와 `fields`는 선택 사항이며, `retryAfter`가 있으면 `Retry-After` 헤더도 반환한다. `retryable`은 429와 5xx에서 true이되 서버 설정 오류는 false다. 오류는 비밀·내부 오류를 노출하지 않는다. 미디어 바이트는 예외다.
 - 리소스 ID와 생성 요청 ID는 UUID다. 생성 요청은 클라이언트가 안정적인 `id`를 생성해 재시도하며, 같은 소유자·ID·동일 입력은 기존 결과를 반환하고 다른 입력이면 409다. `requestId`는 추적용이고 리소스 ID와 구별한다. `POST` 생성 성공은 201, 동일 재시도는 200, 조회·변경은 200이다.
@@ -62,7 +62,7 @@ sources:
 - PATCH는 `expectedRevision`을 요구하며 정형 필드와 문서를 함께 바꾸면 `expectedDocumentRevision`도 요구한다. DB에서 두 버전을 원자적으로 확인·저장하고 충돌 시 409로 재조회하게 한다. 초안 변경은 기존 공개 스냅샷을 바꾸지 않는다. 목록은 소유 또는 공개 범위를 서버에서 제한하고 안정적인 순서로 반환한다.
 - 입력은 서버에서 타입·길이·관계·UUID를 검사한다. 요청 크기와 횟수 제한을 적용한다. 생성·인식·합성은 세션당 분 6회와 전시 일일 상한을 원자적으로 적용하는 제안이며, 녹음 30초/3MB, 질문 500자 등 상세 값은 [초기 상한](technology-stack.md#초기-상한과-실패-처리)을 따른다. 실제 한도와 오류 정책은 구현 시 검증한다.
 
-# W1 해설 작업 경로 (로컬 검증 완료, CI 대기)
+# W1 해설 작업 경로 (PR #5 병합)
 
 | 경로 | 요청과 동작 |
 | --- | --- |
@@ -71,11 +71,25 @@ sources:
 | `POST /api/admin/jobs/{id}/retry` | `{requestId,expectedAttempt}`로 실패·중단된 시도 재시도 |
 | `PATCH /api/admin/artworks/{id}/narration` | `{expectedRevision,text,sourceJobId?}`로 작가가 명시적으로 초안 적용. 생성만으로 편집본이나 공개본을 바꾸지 않음 |
 
-작업은 소유자별 일일 한도(초기 100회), 180초 lease와 30일 만료 정책을 사용한다. 요청 안에서 동기 실행하며 프로세스 중단 시 조회와 재시도로 복구한다. 작업 예약·완료는 서버 전용 `SUPABASE_SERVICE_ROLE_KEY`를 쓰는 신뢰된 worker가 수행하고 owner는 검증된 세션에서 전달한다. 타인 작업은 노출하지 않는다. 모의 모드는 개발·테스트 환경에 한정한다. DB 타입·권한·모의 HTTP 로컬 검증은 통과했고 최신 head CI는 대기 중이다. 만료 후 접근은 차단하며 물리 삭제 정리는 W5에서 구현할 예정이다.
+작업은 소유자별 일일 한도(초기 100회), 180초 lease와 30일 만료 정책을 사용한다. 요청 안에서 동기 실행하며 프로세스 중단 시 조회와 재시도로 복구한다. 작업 예약·완료는 서버 전용 `SUPABASE_SERVICE_ROLE_KEY`를 쓰는 신뢰된 worker가 수행하고 owner는 검증된 세션에서 전달한다. 타인 작업은 노출하지 않는다. 모의 모드는 개발·테스트 환경에 한정한다. DB 타입·권한·모의 HTTP 로컬 검증과 PR #5 CI를 통과했다. 만료 후 접근은 차단하며 물리 삭제 정리는 W5에서 구현할 예정이다.
 
 작업 응답은 `id,kind,artworkId,documentId,requestId,attempt,status,routing,resultCode,expectedRevision,expectedDocumentRevision,strategy,result,mock,createdAt,updatedAt,expiresAt`를 포함한다. 성공 결과는 `result.selected.answer/citations/followUpQuestions?`, `overTarget`, `mock`이며 내부 단계·사용량·원자료는 HTTP에 넣지 않는다. 추가 질문 플래그를 끄면 저장된 작업을 읽을 때도 해당 필드를 생략한다. 요청 본문의 `requestId`는 작업 중복 방지 키이며 응답 봉투의 추적 ID와 별개다.
 
 최초 예약은 최종 작업이 실패해도 HTTP 201이므로 `status`를 확인한다. 동일 생성 요청 재전송은 200이며, 재시도는 새 요청 ID와 현재 `expectedAttempt`를 사용한다. `running`은 조회로 확인하고 임대 만료 시 `failed/REQUEST_TIMEOUT`으로 표시된다. `succeeded`는 명시적 저장 가능, `abstained`는 자료·후보 검토 필요, `failed/cancelled`는 재시도 가능 상태다. 입력 자료가 바뀌면 새 revision으로 새 생성 요청을 보낸다. 예약 거부는 429 `AUTHOR_JOB_LIMIT`, 요청 ID 재사용 충돌은 409 `REQUEST_ID_CONFLICT`, 진행 중·완료 시도 재시도는 409 `JOB_ATTEMPT_CONFLICT`다. `routing`은 작가 수정이 필요한 `author`, 설정·시스템 점검이 필요한 `operator`, 정상·취소의 `none`을 구별한다.
+
+# W4 글 승인·게시 경로 (진행 중)
+
+| 경로 | 계약 |
+| --- | --- |
+| `POST /api/admin/artworks/{id}/evidence` | `scope`, `sourceLabel`, `body`, `source`, 선택적 `evidenceId`·`expectedVersion`으로 근거 생성/수정 |
+| `GET /api/admin/artworks/{id}/review` | 작품·근거·해설 승인·음성·공개본·차단 사유와 소개 근거 핀 조회 |
+| `POST /api/admin/artworks/{id}/approvals` | `kind=evidence`의 `evidenceId,version` 또는 `kind=narration`의 `expectedRevision,citations`로 각각 승인 |
+| `POST /api/admin/exhibitions/{id}/publication` | `publish`는 `requestId,expectedRevision,artworks,intro`로 선택 작품과 소개 근거 버전을 원자적으로 게시; `pause/resume`은 `expectedRevision,artworkId?` 사용 |
+| `GET /api/admin/exhibitions/{id}/labels` | 공개 경로·작품 번호와 제목 조회 |
+| `POST /api/admin/evidence/{id}/impact` | `expectedVersion`으로 다른 전시까지 포함한 철회 영향과 token 조회 |
+| `POST /api/admin/evidence/{id}/revoke` | `expectedVersion,impactToken`으로 영향 재검사 후 철회 |
+
+소개 `intro`는 `bio,introduction,theme` 각각 승인 근거의 `{id,version}` 또는 null을 명시한다. 출처가 바뀐 근거는 현재 버전 검사에 실패한다. 게시·재개의 현재 음성 필수 설정은 신뢰된 worker만 전달하며 DB가 같은 트랜잭션에서 동기화·검사한다. 플래그 변경 자체는 기존 공개본을 바꾸지 않는다. `audio_assets` 스키마만 준비되어 현재 음성 없는 새 게시·재게시에는 `FEATURE_VOICE_REQUIRED=false`가 필요하다. W3 업로드 후 음성 작업·Storage를 연결한다. W5 공개 문맥 RPC는 관람 HTTP와 다르며 HTTP 연결은 미구현이다. 로컬 DB 197개·단위 357개·typecheck·build와 새 게시 HTTP 5개가 통과했다. 이미지 준비는 DB fixture이며 실제 업로드·미디어 검증은 W3에서 연결한다.
 
 # 초기 기반 경로
 
@@ -109,7 +123,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | 15 일부 | `GET /api/public/exhibitions/{id}/artworks/{artworkId}` | 해당 전시의 활성 공개 작품 → 공개 스냅샷·활성 publication ID; 비공개는 404 |
 | 운영 | `GET /api/health` | DB 공개 조회 RPC까지 3초 제한으로 호출 → `{status:"ok"}`; Auth·Storage·AI 전체 상태 검사는 아님 |
 
-관람 조회는 전시와 작품의 현재 공개 게이트 및 활성 publication을 확인하고 원시 DB, 내부 위키, 비공개 PDF나 Storage URL을 반환하지 않는다. 게시 기능이 준비되기 전에는 공개할 활성 묶음이 없어 404가 정상이다. 공개 응답의 `Cache-Control: no-store`는 캐시 저장을 금지하는 지시이며, 중지 이후 새 요청의 데이터 반환을 차단하는 것은 SQL의 현재 공개 조건 검사다.
+관람 조회는 전시와 작품의 현재 공개 게이트 및 활성 publication을 확인하고 원시 DB, 내부 위키, 비공개 PDF나 Storage URL을 반환하지 않는다. 유효한 공개 묶음이 없으면 404다. 공개 응답의 `Cache-Control: no-store`는 캐시 저장을 금지하는 지시이며, 중지 이후 새 요청의 데이터 반환을 차단하는 것은 SQL의 현재 공개 조건 검사다.
 
 # 시나리오 예외와 현재 HTTP 대응
 
@@ -157,7 +171,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 다음은 구현 예정 계약이다. 아직 제공하지 않는 기능에 성공을 가장하는 엔드포인트를 만들지 않는다. 관리자 경로는 모두 인증·소유권, 변경은 revision과 동일 출처 검사 대상이다. 비동기 요청의 `id`는 중복 실행 방지용 UUID다.
 
-[AI 하네스](ai-harness.md)의 서버 모듈·제공사 어댑터와 오프라인 검사는 준비되어 있다. 아래 AI HTTP 경로는 여전히 미구현이다. 내부 camelCase 타입은 아래 업무 필드와 HTTP 연결 시 매핑하며, 인증·현재 공개 DB gate·세션·작업 멱등성·예산을 통과한 서버에서만 호출한다. 범용 프롬프트/임의 텍스트 프록시로 노출하지 않는다.
+[AI 하네스](ai-harness.md)의 서버 모듈·제공사 어댑터와 오프라인 검사는 준비되어 있다. 아래 표에서 W1·W4로 연결한 경로는 구현했고 나머지 AI HTTP 경로는 미구현이다. 내부 camelCase 타입은 아래 업무 필드와 HTTP 연결 시 매핑하며, 인증·현재 공개 DB gate·세션·작업 멱등성·예산을 통과한 서버에서만 호출한다. 범용 프롬프트/임의 텍스트 프록시로 노출하지 않는다.
 
 | OP | 경로와 입력 | 결과·조건 |
 | --- | --- | --- |
@@ -166,9 +180,9 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | 07 | `GET/POST /api/admin/materials`; `GET/PATCH /api/admin/materials/{id}`; `POST /api/admin/evidence` | 소유 범위의 원본·출처·발췌·쪽수·대상과 문서/section/revision 관리. 변경은 버전 검사 |
 | 08 | `GET /api/admin/artworks/{id}/review` | 초안·근거·승인·음성·공개 버전·차단 사유 |
 | 09 | `POST /api/admin/artworks/{id}/generations` | 위 W1 계약을 따름. 기존 편집본 자동 덮어쓰기 금지 |
-| 10 | `POST /api/admin/artworks/{id}/approvals` `{kind,version,revision}` | 승인자·시각·정확한 버전. 미승인 인용 및 충돌 거부 |
+| 10 | `POST /api/admin/artworks/{id}/approvals` | 위 W4 근거·해설 분리 승인 계약 |
 | 11 | `POST /api/admin/artworks/{id}/audio` `{id,narration_version,revision}` | 작업 상태·글 해시·음성 설정 버전. 승인된 글만 합성 |
-| 12 | `POST /api/admin/exhibitions/{id}/publication` `{action,revision,artwork_versions}` | 게시/중지/재개 상태·버전·작품별 차단 사유. 게시 원자성 및 최소 한 작품 검사 |
+| 12 | `POST /api/admin/exhibitions/{id}/publication` | 위 W4 선택 작품·소개 핀 및 게시/중지/재개 계약 |
 | 13 | `GET /api/admin/evidence/{id}/impact?version=...`; `POST /api/admin/evidence/{id}/revoke` `{version,revision,confirmed_impact}` | 소유 전시 전체 영향 조회 후 공개 차단·철회·정리 상태 |
 | 14 | `GET /api/admin/exhibitions/{id}/labels` | 현재 공개 전시·작품만 안정 URL·번호·제목 반환 |
 | 15 | `POST /api/public/exhibitions/{id}/versions/check` `{publication_ids}` | 현재 이용 가능한 공개 버전만 확인; 번호 조회도 해당 전시 공개 범위로 제한 |
@@ -183,7 +197,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 # 남은 설계 확인
 
-W0부터 실행 중인 17개 메서드·경로의 요청·응답 원천은 `src/lib/contracts/`이며 `routes.ts`가 각 스키마를 연결한다. 기존 `api/schemas.ts`와 `ai/contracts.ts`의 HTTP 관련 export는 호환 재수출한다. `src/lib/client`의 `requestApi`는 동일 출처 fetch·응답 봉투 검증·구조화 오류를 제공하며 로그인·로그아웃·프로필·전시 목록에서 사용한다. JSON Schema 스냅샷은 요청 변환 전 입력과 응답 출력을 구분하고 미등록 실행 경로를 검사한다. 신규 관람·작업 경로는 아직 등록/구현 전이다. [백엔드 작업 추적](backend-completion.md).
+W0부터 실행 중인 17개 메서드·경로의 요청·응답 원천은 `src/lib/contracts/`이며 `routes.ts`가 각 스키마를 연결한다. 기존 `api/schemas.ts`와 `ai/contracts.ts`의 HTTP 관련 export는 호환 재수출한다. `src/lib/client`의 `requestApi`는 동일 출처 fetch·응답 봉투 검증·구조화 오류를 제공하며 로그인·로그아웃·프로필·전시 목록에서 사용한다. JSON Schema 스냅샷은 요청 변환 전 입력과 응답 출력을 구분하고 미등록 실행 경로를 검사한다. 현재는 W1 네 경로와 W4 일곱 경로를 합쳐 28개 메서드·경로가 등록되어 있다. 관람 채팅·음성 경로는 미구현이다. [백엔드 작업 추적](backend-completion.md).
 
 후속 자료·근거·작업의 세부 스키마, 목록 페이지네이션, 생성 중복 요청 보존 기간과 공개 세션 식별 방식은 구현 전에 확정한다. 제한 값은 설계 제안이며 실제 제공사·환경 검증 결과가 아니다. 서버와 DB 오류 매핑, 동시 수정·타인 접근·공개 중지 후 접근을 실제 구현에서 검증해야 한다.
 
@@ -191,4 +205,4 @@ W0부터 실행 중인 17개 메서드·경로의 요청·응답 원천은 `src/
 
 [PR2 검토](../reviews/ai-harness-fix-review.md)의 구조화 `intent` (`narration`·`question`)와 `artworkNumber` (1~9999)는 내부 모듈에 구현되며 공개 HTTP는 미구현이다. 계획된 OP-17 HTTP의 `number`를 내부 `artworkNumber`로, `artwork_id`를 `artworkId`로 매핑한다. 질문은 필수다. 해설 버튼은 `narration`과 `artworkId`, 숫자 입력은 `narration`과 번호를 보낸다. 명시적 question은 Q&A이며 구조화 번호와 명백한 텍스트 번호가 충돌하면 확인한다.
 
-승인 해설은 2,000 Unicode 코드 포인트까지 원문 그대로, 관람 생성 답은 600, 작가 해설 후보는 2,000까지 다루며 `overTarget`이 600자 초과 여부를 나타낸다. 낭독은 신뢰할 수 있게 저장한 답변의 출처·outcome·인용과 현재 공개 문맥을 검사하고 승인 해설이면 글·인용·publication 버전까지 비교해야 한다. 현재 `api_requests`에는 해당 필드가 없어 영속 저장 구현이 선행된다. 음성 전송 상한은 2,000 코드 포인트다. 게시자의 근거 검증과 신규 migration은 [데이터 모델](data-model.md)에 정의하며 아직 미구현이다.
+승인 해설은 2,000 Unicode 코드 포인트까지 원문 그대로, 관람 생성 답은 600, 작가 해설 후보는 2,000까지 다루며 `overTarget`이 600자 초과 여부를 나타낸다. 낭독은 신뢰할 수 있게 저장한 답변의 출처·outcome·인용과 현재 공개 문맥을 검사하고 승인 해설이면 글·인용·publication 버전까지 비교해야 한다. 현재 `api_requests`에는 해당 필드가 없어 영속 저장 구현이 선행된다. 음성 전송 상한은 2,000 코드 포인트다. 게시 근거 검증은 위 W4 계약으로 구현·검증 중이다.

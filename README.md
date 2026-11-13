@@ -1,6 +1,6 @@
 # Yeobek
 
-작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**, 해설 생성·작업 저장 API, 서버 AI 어댑터·하네스와 기획 문서·검색 도구가 있습니다. 승인·게시·관람 채팅 연결과 화면은 후속 구현입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
+작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. 현재는 **Next.js·Supabase 인증/초안 저장 기반**, 해설 생성·작업 저장 API, 서버 AI 어댑터·하네스와 기획 문서·검색 도구가 있습니다. 글 승인·게시 API는 로컬 DB·HTTP 검증을 마쳤고 음성·관람 채팅 연결과 화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
 
 ## 앱 실행
 
@@ -20,7 +20,7 @@ npm run dev
 
 ## AI 연결 준비
 
-`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 실제 외부 모델 호출은 아직 0회입니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증을 마쳤고 최신 head CI 확인을 기다립니다. 게시·승인 DB 어댑터와 관람 채팅 HTTP는 연결 전이며 키를 넣어도 관람 화면이 활성화되지는 않습니다.
+`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 실제 외부 모델 호출은 아직 0회입니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증과 [PR #5 CI](https://github.com/Ahn-taegyu/Yeobek/pull/5)를 통과해 병합됐습니다. 글 승인·게시 API는 DB 검증을 마치고 HTTP 검증 전이며 관람 채팅 HTTP는 연결 전입니다. 키를 넣어도 관람 화면이 활성화되지는 않습니다.
 
 1. `.env.example`의 AI 항목을 기존 `.env.local`에 추가하고 `LINER_API_KEY`를 서버에 설정합니다. 키에 `NEXT_PUBLIC_`를 붙이지 않습니다.
 2. `AI_ROUTE_DRAFT`, `AI_ROUTE_ORGANIZE`, `AI_ROUTE_JUDGE`, `AI_ROUTE_QA`, `AI_ROUTE_STT`, `AI_ROUTE_TTS`는 `제공사:모델` 형식으로 선택합니다. Liner TTS는 계정에서 확인한 고정 모델을 `AI_ROUTE_TTS` 또는 `LINER_TTS_MODEL`에, 음성을 `LINER_TTS_VOICE`에 지정해야 합니다. 평가 모델은 초안과 다른 인식 가능한 계열이어야 합니다.
@@ -42,7 +42,7 @@ npm run ai:smoke -- stt --audio=path/to/test.webm
 
 `ai:check`는 설정을 검사하며 키를 출력하거나 접속하지 않습니다. `ai:smoke`는 `AI_PROVIDER_MODE=live`가 필요하며 `typecast-tts`, `openai-tts`, `exaone`도 선택할 수 있습니다. 시험은 응답 계약을 확인하며 한국어 품질·근거 충실도와 행사 키 권한은 별도 실측이 필요합니다.
 
-기존 인증·작가 CRUD와 공개 조회의 경로는 `src/lib/contracts/`에 계약을 두고 프런트에서 `requestApi`를 `@/lib/client`로 가져와 사용합니다. W1 해설 작업 외 게시·채팅 HTTP가 구현됐다는 뜻은 아닙니다.
+기존 인증·작가 CRUD와 공개 조회의 경로는 `src/lib/contracts/`에 계약을 두고 프런트에서 `requestApi`를 `@/lib/client`로 가져와 사용합니다. W4 글 게시 HTTP는 검증 중이며 관람 채팅 HTTP는 아직 없습니다.
 
 W1 해설 작업은 소유자별 일일 초기 한도 100회, 180초 lease, 30일 작업 만료를 사용합니다. 요청 중 동기 실행하고 중단되면 작업 조회 후 재시도하며, 결과는 작가가 별도로 적용해야 초안이 바뀝니다. 모의 모드는 development/test에서만 허용합니다. 30일 만료 후 접근을 차단하며 실제 삭제 정리는 W5에서 구현할 예정입니다.
 
@@ -54,9 +54,13 @@ npm run dev -- --hostname 127.0.0.1 --port 3001
 # 다른 터미널
 $env:TEST_APP_ORIGIN="http://localhost:3001"
 npm run test:jobs
+# 게시 검사 서버는 FEATURE_VOICE_REQUIRED=false로 실행해야 합니다.
+npm run test:publication
 ```
 
 CI에도 이 개발 모드 모의 작업 검사가 포함됩니다. 실제 외부 호출 검사는 아닙니다.
+
+W4는 근거·해설을 따로 승인하고 선택 작품과 승인된 소개 근거 버전을 게시하는 경로를 구현 중입니다. 음성 준비 스키마만 있으므로 현재 음성 없는 게시·재게시에는 `FEATURE_VOICE_REQUIRED=false`가 필요합니다. 음성 작업·Storage는 W3 업로드 이후 연결하며, 로컬 DB 검사 187개와 typecheck는 통과했고 HTTP 검증은 아직입니다.
 
 ## 앱 검사와 DB 변경
 

@@ -15,6 +15,9 @@ export const DEFAULT_POLICIES = Object.freeze({
   job_retention_days: 30,
   job_lease_seconds: 180,
   proposal_ttl_seconds: 86400,
+  voice_config_version: 1,
+  evidence_body_chars: 2000,
+  evidence_label_chars: 100,
 });
 export type PolicyKey = keyof typeof DEFAULT_POLICIES;
 export type AppPolicies = { readonly [Key in PolicyKey]: number };
