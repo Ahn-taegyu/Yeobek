@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [검토서 재확인 요청](user-review-revision.md) — 코드·명세·검증 근거를 다시 대조해 검토서 수정.
+
 - [프로젝트 이름 정정](user-project-name.md) — 현재 이름은 Yeobek, 과거 요청 원문은 보존.
 
 - [작업 근거 검토 요청](user-review-request.md) — 직전 개발 결과를 근거와 함께 검토할 자료 요청.

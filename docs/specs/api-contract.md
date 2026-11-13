@@ -49,9 +49,15 @@ sources:
 
 # 초기 기반 경로
 
-JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출처는 최대 24개, section은 주체별 최대 2개다. 변경 요청에는 동일 출처의 Origin과 application/json이 필요하다. 403 `FORBIDDEN`, 415 `UNSUPPORTED_MEDIA_TYPE`, 503 `SERVICE_UNAVAILABLE`도 반환한다. 인증 서비스 장애를 로그인 실패 401과 구분한다. 아직 별도 관람 API 호출량 제한기는 구현하지 않았으며 로그인 요청 제한은 Supabase Auth 정책을 적용한다. 프로필은 사전 발급 계정의 첫 인증 조회에서 문서와 함께 지연 생성한다.
+JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출처는 최대 24개, section은 주체별 최대 2개다. 변경 요청에는 동일 출처의 Origin과 application/json이 필요하다. 403 `FORBIDDEN`, 415 `UNSUPPORTED_MEDIA_TYPE`, 503 `SERVICE_UNAVAILABLE`도 반환한다. 인증 서비스 장애를 로그인 실패 401과 구분한다. 아직 별도 관람 API 호출량 제한기는 구현하지 않았으며 로그인 요청 제한은 Supabase Auth 정책을 적용한다. 프로필은 첫 `GET /api/admin/profile` 또는 첫 전시 생성에서 빈 문서와 함께 지연 생성한다. 계정 생성·로그인·전시 목록 조회만으로 생성하지 않으며, 프로필이 없는 상태의 프로필 PATCH는 404다.
 
-아래 필드는 계약 초안이며 `?`는 선택, `document`는 `{id, subjectType, subjectId, revision, sections, sourceRefs, updatedAt}`이다. HTTP 필드는 camelCase이고 DB의 snake_case와 서버에서 변환한다. `sections`는 `{id,body}` 배열이며 ID는 문서 내 안정적이다: 작가 `bio`/`practice`, 전시 `introduction`/`theme`, 작품 `description`/`notes`. `sourceRefs`는 최초 폼 저장에서 빈 배열이며 직접 입력·자료·문서 출처를 해당 소유 범위에서 검증한다. 생성·수정의 `sections`, `sourceRefs`는 내부 문서 원본이며 정형 필드와 트랜잭션으로 저장한다. 프로필은 사전 생성된 계정당 하나다.
+**현재 정형 정보 PATCH는 전체 편집 값 저장이다.** 프로필은 displayName, 전시는 title, 작품은 number/title과 함께 sections·sourceRefs·expectedRevision·expectedDocumentRevision을 요구한다. 선택 필드인 날짜·장소·작품 메타데이터를 생략하면 null로 바뀐다. 생략한 필드를 기존 값으로 유지하는 부분 수정 계약이 아니다. 문서 단독 PATCH는 sections·sourceRefs·expectedRevision을 요구한다.
+
+revision과 출처 검사를 통과한 뒤 문서 sections/sourceRefs가 기존 JSONB 값과 동일하면 문서 revision은 유지한다. 달라지면 증가하며 정형 정보 revision은 성공 저장마다 증가한다. 호출자는 응답의 각각의 revision을 다음 저장에 사용한다. `document` 출처는 저장 시 원본 현재 revision과 section을 확인하고 `material` 출처는 범위·ready 상태·PDF 쪽수 형식을 확인한다. material version이나 실제 PDF 페이지 수를 고정·확인하는 기능은 아직 없다.
+
+**알려진 명세 차이:** 현재 프로필 PATCH는 displayName을 1자 이상 요구하지만 [기능명세](functional-spec.md#41-입력-필드와-검증)는 초안 이름을 선택으로 둔다. 이는 폼 연결 전에 맞출 항목이며 이번 문서 정정으로 코드가 수정된 것은 아니다. 본문 section은 현재 공백을 제거하지 않고 저장하며 Zod 4.6.7과 DB의 상한은 코드포인트 기준이다. 표시 문자 수·공백 처리 기준의 상세 정합성은 [재검토서](../reviews/mvp-foundation-2026-11-13.md)를 따른다.
+
+아래 필드는 현재 초기 API 계약이며 `?`는 생략 가능, `document`는 `{id, subjectType, subjectId, revision, sections, sourceRefs, updatedAt}`이다. HTTP 필드는 camelCase이고 DB의 snake_case와 서버에서 변환한다. `sections`는 `{id,body}` 배열이며 ID는 문서 내 안정적이다: 작가 `bio`/`practice`, 전시 `introduction`/`theme`, 작품 `description`/`notes`. `sourceRefs`는 빈 배열도 허용하며 직접 입력·자료·문서 출처를 해당 소유 범위에서 검증한다. 생성·수정의 `sections`, `sourceRefs`는 내부 문서 원본이며 정형 필드와 트랜잭션으로 저장한다. 프로필은 사전 생성된 계정당 하나다.
 
 | OP | 경로 | 입력 → `data` |
 | --- | --- | --- |
@@ -71,9 +77,9 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | 07, 22 일부 | `PATCH /api/admin/knowledge/{id}` | `{expectedRevision,sections,sourceRefs}` → document; 문서만 수정하며 승인·게시하지 않음 |
 | 15 일부 | `GET /api/public/exhibitions/{id}` | 활성 공개 전시 → 공개 스냅샷과 공개 작품 목록; 비공개·중지·삭제는 404 |
 | 15 일부 | `GET /api/public/exhibitions/{id}/artworks/{artworkId}` | 해당 전시의 활성 공개 작품 → 공개 스냅샷·활성 publication ID; 비공개는 404 |
-| 운영 | `GET /api/health` | 서비스 생존 여부 → `{status:"ok"}`; 자격 증명·내부 정보 없음 |
+| 운영 | `GET /api/health` | DB 공개 조회 RPC까지 3초 제한으로 호출 → `{status:"ok"}`; Auth·Storage·AI 전체 상태 검사는 아님 |
 
-관람 조회는 전시와 작품의 현재 공개 게이트 및 활성 publication을 확인하고 원시 DB, 내부 위키, 비공개 PDF나 Storage URL을 반환하지 않는다. 게시 기능이 준비되기 전에는 공개할 활성 묶음이 없어 404가 정상이다. 공개 응답은 `Cache-Control: no-store`로 중지 이후 새 요청을 차단한다.
+관람 조회는 전시와 작품의 현재 공개 게이트 및 활성 publication을 확인하고 원시 DB, 내부 위키, 비공개 PDF나 Storage URL을 반환하지 않는다. 게시 기능이 준비되기 전에는 공개할 활성 묶음이 없어 404가 정상이다. 공개 응답의 `Cache-Control: no-store`는 캐시 저장을 금지하는 지시이며, 중지 이후 새 요청의 데이터 반환을 차단하는 것은 SQL의 현재 공개 조건 검사다.
 
 # 후속 경로
 
