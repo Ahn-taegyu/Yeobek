@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [작업 근거 검토 요청](user-review-request.md) — 직전 개발 결과를 근거와 함께 검토할 자료 요청.
+
 - [MVP 개발 시작·협업 규칙 요청](user-development-start.md) — 역할별 브랜치, Sol/Terra 위임 선호와 교차 검증.
 
 - [Render 제외와 스택 추천 요청](user-render-excluded.md) — 11/13 사용자 최신 행사 정보·부드러운 경험 요구.
