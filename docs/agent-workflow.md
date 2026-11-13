@@ -33,7 +33,7 @@ sources:
 
 # 1. 저장소를 처음 열면
 
-프로젝트 이름은 **yeoback**이며 MAWD는 기존 행사·기획 문서의 명칭이다. 과거 원문·ID는 이름에 맞춰 일괄 수정하지 않는다. 현재 실행 가능한 것은 문서 검사·검색·문맥 생성 도구다. 제품 AI 도슨트가 구현되었다고 해석하지 않는다.
+프로젝트 이름은 **yeoback**이며 MAWD는 기존 행사·기획 문서의 명칭이다. 과거 원문·ID는 이름에 맞춰 일괄 수정하지 않는다. 문서 검사·검색 도구와 Next.js·Supabase의 인증·초안 저장 기반이 있다. 실제 구현 경계는 [개발 기반 현황](specs/development-foundation.md)을 읽는다. AI 도슨트 전체가 구현되었다고 해석하지 않는다. Commit·Branch·PR·worktree와 서브에이전트 교차 검증에는 [개발 협업 규칙](collaboration.md)을 함께 적용한다.
 
 저장소 루트 `AGENTS.md` → 이 폴더의 [AGENTS.md](AGENTS.md) → 이 문서를 읽는다. 상세 형식은 [지식 계약](specs/knowledge-contract.md), 제품 범위는 [MVP 우선순위](product/mvp-priorities.md)와 [결정 목록](decisions/index.md)을 확인한다.
 

@@ -6,9 +6,13 @@ okf_version: "0.2"
 
 - [사용법](README.md) — Obsidian 열기·검색 명령·갱신 방법.
 - [에이전트 작업 절차](agent-workflow.md) — 새 환경 준비·OKF/Bases/RAG·출처를 보존하는 수정·자동 검증.
+- [개발 협업 규칙](collaboration.md) — Commit·Branch·PR·worktree·위임 검토·인계 사례.
 - [대시보드](dashboard.md) — 기능·결정·출처 Bases.
 
 # MVP부터 읽기
+
+- [개발 기반 현황](specs/development-foundation.md) — 실제 Next.js·Supabase 코드, 검증 범위와 다음 작업.
+- [API 계약](specs/api-contract.md) — 초기 구현 경로와 후속 경로·입출력·오류.
 
 - [우선순위](product/mvp-priorities.md) — 사용자 원안과 이번 단계.
 - [기능명세 v1.0](specs/functional-spec.md) — 범위·권한·입력·상태·API 업무 계약.

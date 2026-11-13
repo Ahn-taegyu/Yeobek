@@ -16,12 +16,15 @@ generated:
 source_priority: P1
 proposed_phase: MVP
 decision_status: proposed
-work_status: not_started
+work_status: in_progress
 build_order: 2
 depends_on:
 - F-001
 - F-023
 sources:
+- id: implementation
+  resource: /specs/development-foundation.md
+  title: 작품 저장 기반과 후속 업로드
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -49,7 +52,7 @@ sources:
 
 - 사용자 원안: **P1**.
 - 현재 구현 제안: **MVP**. 사용자 원안과 상세 설계 제안을 구분한다.
-- 구현 상태: 미착수. 이 문서는 기능명세이며 앱 구현 완료 표시가 아니다.
+- 구현 상태: 개발 중. 작품 정형 정보·텍스트 문서 저장 API와 자료 메타데이터 구조를 구현했다. 사진/PDF 업로드·입력 폼은 남아 있다. [개발 기반 현황](../specs/development-foundation.md).
 
 # 수용 기준
 
