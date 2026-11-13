@@ -1,8 +1,20 @@
 # 출처와 보존본
 
+- [검토 반영 작업의 적용 확인 요청](user-fix-review.md) — 수정 커밋을 실행해 확인하고 별도 결과 문서로 기록.
+- [검토 내용의 구현 반영 요청](user-review-implementation.md) — 추가 검토의 실제 코드 반영과 재검증.
+
+- [실제 코드 검토와 기획 대조 요청](user-code-plan-review.md) — 코드를 실행해 검토하고 기획 적용 여부를 검토서에 기록.
+- [검토서 재확인 요청](user-review-revision.md) — 코드·명세·검증 근거를 다시 대조해 검토서 수정.
+
+- [프로젝트 이름 정정](user-project-name.md) — 현재 이름은 Yeobek, 과거 요청 원문은 보존.
+
+- [작업 근거 검토 요청](user-review-request.md) — 직전 개발 결과를 근거와 함께 검토할 자료 요청.
+
+- [MVP 개발 시작·협업 규칙 요청](user-development-start.md) — 역할별 브랜치, Sol/Terra 위임 선호와 교차 검증.
+
 - [Render 제외와 스택 추천 요청](user-render-excluded.md) — 11/13 사용자 최신 행사 정보·부드러운 경험 요구.
 
-- [GitHub 공유·에이전트 협업 요청](user-repository-handoff.md) — yeoback 비공개 저장소와 자동 검색/수정 준비.
+- [GitHub 공유·에이전트 협업 요청](user-repository-handoff.md) — 당시 요청명 yeoback(현재 Yeobek)의 비공개 저장소와 자동 검색/수정 준비.
 
 - [최신 MVP 원안](user-mvp.md) — 원래 강조 우선순위.
 - [기능 명세 작성 요청](user-functional-spec.md) — 화면·시나리오·예외를 와이어프레임과 API 명세의 기준으로 구체화.

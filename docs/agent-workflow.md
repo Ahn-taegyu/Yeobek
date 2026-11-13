@@ -5,12 +5,15 @@ title: 에이전트의 기획 검색·수정·검증 절차
 description: 새 clone에서 OKF·Bases·로컬 RAG를 이해하고 출처를 유지하며 자동으로 작업하는 공통 안내.
 status: stable
 updated: '2026-11-13'
-tags: [mawd, yeoback, agents]
+tags: [mawd, yeobek, agents]
 rag_include: false
 generated:
   by: codex/gpt-6
   at: '2026-11-13T02:07:34+09:00'
 sources:
+- id: name
+  resource: /references/user-project-name.md
+  title: 프로젝트 이름을 Yeobek으로 정정
 - id: request
   resource: /references/user-repository-handoff.md
   title: GitHub 공유와 에이전트 협업 요청
@@ -33,7 +36,7 @@ sources:
 
 # 1. 저장소를 처음 열면
 
-프로젝트 이름은 **yeoback**이며 MAWD는 기존 행사·기획 문서의 명칭이다. 과거 원문·ID는 이름에 맞춰 일괄 수정하지 않는다. 현재 실행 가능한 것은 문서 검사·검색·문맥 생성 도구다. 제품 AI 도슨트가 구현되었다고 해석하지 않는다.
+프로젝트 이름은 **Yeobek**이며 MAWD는 기존 행사·기획 문서의 명칭이다. [이름 정정 요청](references/user-project-name.md)에 따라 현재 표기는 Yeobek, 패키지·태그·파일명 같은 소문자 식별자는 yeobek을 쓴다. 과거 원문·ID와 공유된 migration은 소급 수정하지 않는다. 문서 검사·검색 도구와 Next.js·Supabase의 인증·초안 저장 기반이 있다. 실제 구현 경계는 [개발 기반 현황](specs/development-foundation.md)을 읽는다. AI 도슨트 전체가 구현되었다고 해석하지 않는다. Commit·Branch·PR·worktree와 서브에이전트 교차 검증에는 [개발 협업 규칙](collaboration.md)을 함께 적용한다.
 
 저장소 루트 `AGENTS.md` → 이 폴더의 [AGENTS.md](AGENTS.md) → 이 문서를 읽는다. 상세 형식은 [지식 계약](specs/knowledge-contract.md), 제품 범위는 [MVP 우선순위](product/mvp-priorities.md)와 [결정 목록](decisions/index.md)을 확인한다.
 
@@ -42,7 +45,7 @@ sources:
 | AGENTS.md를 읽는 에이전트 | 루트 및 docs의 AGENTS.md | 경로별 지침과 본 절차 |
 | Claude Code | 루트 CLAUDE.md | `@AGENTS.md` 가져오기; [공식 문서](https://code.claude.com/docs/en/memory) |
 | Gemini CLI | 루트 GEMINI.md | AGENTS와 본 절차 읽기 지시; [공식 문서](https://geminicli.com/docs/cli/gemini-md/) |
-| Cursor | .cursor/rules/yeoback.mdc | alwaysApply 규칙에서 공통 지침 읽기; [공식 문서](https://cursor.com/docs/rules) |
+| Cursor | .cursor/rules/yeobek.mdc | alwaysApply 규칙에서 공통 지침 읽기; [공식 문서](https://cursor.com/docs/rules) |
 | GitHub Copilot | .github/copilot-instructions.md | 공통 지침 읽기; [형식 참조](https://code.visualstudio.com/docs/agents/reference/custom-instructions-reference) |
 
 자동 로딩은 사용하는 도구·버전·설정에 달려 있다. 파일을 추가했다고 모든 에이전트에서 준수를 보장하지 않는다. 인식되지 않으면 사용자가 AGENTS.md를 읽도록 지시한다. 도구별 진입점에 업무 규칙을 복제하지 않고 이 문서를 갱신한다.

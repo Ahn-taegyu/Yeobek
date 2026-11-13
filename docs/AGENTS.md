@@ -5,7 +5,7 @@ title: docs 에이전트 진입 지침
 description: 문서 작업 전에 적용할 검색·수정·검증 지침의 진입점.
 status: stable
 updated: '2026-11-13'
-tags: [mawd, yeoback, agents]
+tags: [mawd, yeobek, agents]
 rag_include: false
 generated:
   by: codex/gpt-6

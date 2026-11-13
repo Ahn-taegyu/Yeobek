@@ -28,3 +28,7 @@ node_modules/
 .vercel/
 dist/
 coverage/
+*.tsbuildinfo
+supabase/.temp/
+supabase/.branches/
+test-results/

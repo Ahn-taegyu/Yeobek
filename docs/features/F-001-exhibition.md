@@ -15,10 +15,13 @@ generated:
 source_priority: prerequisite
 proposed_phase: MVP
 decision_status: proposed
-work_status: not_started
+work_status: in_progress
 build_order: 1
 depends_on: []
 sources:
+- id: implementation
+  resource: /specs/development-foundation.md
+  title: 실제 개발 기반과 남은 화면
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -41,7 +44,7 @@ sources:
 
 - 사용자 원안: **prerequisite**.
 - 현재 구현 제안: **MVP**. 사용자 원안과 상세 설계 제안을 구분한다.
-- 구현 상태: 미착수. 이 문서는 기능명세이며 앱 구현 완료 표시가 아니다.
+- 구현 상태: 개발 중. 로그인·조회 화면 골격과 프로필/전시 API·소유권·버전 검사를 구현했다. 입력 폼 연결은 남아 있다. [개발 기반 현황](../specs/development-foundation.md).
 
 # 수용 기준
 

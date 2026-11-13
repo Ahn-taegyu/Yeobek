@@ -14,6 +14,9 @@ generated:
   at: '2026-11-12T14:49:23+09:00'
 decision_status: proposed
 sources:
+- id: review-implementation
+  resource: /references/user-review-implementation.md
+  title: MVP 기반 리뷰 반영 요청
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -110,7 +113,7 @@ sources:
 
 ## 4.1 입력 필드와 검증
 
-앞뒤 공백 제거 후 사용자에게 표시되는 문자 기준으로 프런트·서버의 길이 계산을 일치시킨다. 기존 기술 상한 이외의 길이·번호 범위는 이번 설계의 초기 제안이다. HTML은 실행하지 않고 일반 텍스트로 취급한다.
+이번 MVP의 작가 자료 입력 길이 단위는 유니코드 코드포인트이며, 후속 자료 편집기 카운터도 같은 기준을 사용한다. 로그인 폼의 HTML maxLength는 브라우저의 UTF-16 단위 제한이므로 이 자료 본문 계약과 구분한다. section 본문 API·DB는 JavaScript `trim()`에 해당하는 앞뒤 공백을 제거하고 5,000자 상한을 검사한다. 기존 본문과 정규화 결과가 같으면 기존 원문을 보존한다. 코드포인트는 화면의 결합 문자·복합 이모지 묶음 수와 다를 수 있으며, 원래 표시 문자 제안을 이 기준으로 구체화했다. 기존 기술 상한 이외의 길이·번호 범위는 이번 설계의 초기 제안이다. HTML은 실행하지 않고 일반 텍스트로 취급한다.
 
 | 대상/필드 | 초안 저장 | 공개/처리 조건 | 검증·표시 |
 | --- | --- | --- | --- |

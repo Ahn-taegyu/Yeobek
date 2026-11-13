@@ -5,7 +5,7 @@ title: AI용 작가·전시·작품 연결 지식 저장
 description: 작가 입력을 DB 원본의 내부 위키 문서로 나누고 관계·출처·승인 범위를 보존한다.
 status: draft
 updated: '2026-11-13'
-tags: [yeoback, feature, knowledge]
+tags: [yeobek, feature, knowledge]
 rag_include: true
 generated:
   by: codex/gpt-6
@@ -13,11 +13,14 @@ generated:
 source_priority: prerequisite
 proposed_phase: MVP
 decision_status: accepted
-work_status: not_started
+work_status: in_progress
 build_order: 2
 depends_on:
 - F-001
 sources:
+- id: implementation
+  resource: /specs/development-foundation.md
+  title: 실제 내부 지식 저장 기반
 - id: decision
   resource: /decisions/D-011-knowledge-and-screens.md
   title: 사용자 확정 내부 지식·화면 요구
@@ -27,6 +30,8 @@ sources:
 ---
 
 # 목적과 첫 범위
+
+개발 상태: DB 원본의 주체별 문서와 연결 범위·revision 검사, 초안 조회/수정 API를 구현했다. 검수·승인·게시된 근거 재사용 및 철회는 후속이다. [개발 기반 현황](../specs/development-foundation.md).
 
 일반 작가·전시·작품 입력 폼의 정보를 AI가 읽을 문서 단위로 정리해 DB에 저장한다. 작가 공통 정보는 전시마다 독립 원본으로 복제하지 않고 연결한다. 문서 본문·관계·출처·버전은 내부 구조이며 사용자에게 위키 편집기를 요구하지 않는다.
 

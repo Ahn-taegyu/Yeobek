@@ -1,0 +1,58 @@
+name: App checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run db:start
+      - run: npm run db:test
+      - run: npm run db:types
+      - name: Check schema type drift
+        run: git diff --exit-code -- src/lib/supabase/database.types.ts
+      - run: npm run db:env
+      - run: npm run build
+      - name: Verify the running API
+        run: |
+          npm run start -- --hostname 127.0.0.1 > /tmp/yeobek-app.log 2>&1 &
+          for attempt in {1..60}; do
+            if curl --silent --fail http://localhost:3000/api/health > /dev/null; then
+              break
+            fi
+            if (( attempt == 60 )); then
+              echo "App health check did not become ready."
+              tail -n 100 /tmp/yeobek-app.log
+              exit 1
+            fi
+            sleep 1
+          done
+          npm run test:integration
+      - name: Stop the disposable stack
+        if: always()
+        run: npm run db:stop

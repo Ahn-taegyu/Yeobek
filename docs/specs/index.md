@@ -1,5 +1,8 @@
 # 설계 문서
 
+- [개발 기반 현황](development-foundation.md) — 실제 코드·DB·검증 범위와 후속 작업.
+- [API 계약](api-contract.md) — 초기/후속 HTTP 경로와 입력·응답·오류.
+
 - [기능명세 v1.0](functional-spec.md) — 범위·권한·입력·14개 업무 규칙·20개 API 업무 작업.
 - [화면 상세](screen-spec.md) — 13개 논리 화면의 구성·버튼·상태·와이어프레임 제작 목록.
 - [시나리오·예외·수용 기준](user-scenarios.md) — 19개 사용자 흐름·26개 예외 유형·완료 판정.

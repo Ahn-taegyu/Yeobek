@@ -1,4 +1,4 @@
-# yeoback repository instructions
+# Yeobek repository instructions
 
 Read and follow the root `AGENTS.md` before work. For documentation, also read `docs/AGENTS.md` and `docs/agent-workflow.md`.
 Use `python scripts/knowledge.py setup` for the first setup, `python scripts/knowledge.py search "query" --json` for evidence, and `python scripts/knowledge.py verify` after edits.
