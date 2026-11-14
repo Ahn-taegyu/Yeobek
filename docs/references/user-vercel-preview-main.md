@@ -1,6 +1,6 @@
 ---
 type: Reference
-id: SRC-065
+id: SRC-066
 title: GitHub main 병합 시 Vercel Preview 갱신
 description: 테스트 프로젝트의 Preview를 최신 main에 맞추고 병합 시마다 자동 배포한다.
 status: stable
