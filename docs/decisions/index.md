@@ -22,3 +22,5 @@
 - [D-016 작가 직접 회원가입과 로그인 선택](D-016-artist-auth.md) — accepted. 기존 사전 계정 전용 기준을 변경하며 직접 가입은 마감 전 범위(SRC-038)이고 구현 전.
 
 - [D-017 Notion P0 기능 범위와 승인본 사용](D-017-p0-feature-spec.md).
+
+- [D-018 작가 검수·체험 개선과 사진 기반 글 인터뷰](D-018-author-experience.md) — accepted; 구현·품질 검증은 별도.
