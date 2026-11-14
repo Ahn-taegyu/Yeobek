@@ -85,7 +85,7 @@ sources:
 | W5 | done, PR #7·10 | P0 전시 문맥·출력 전환은 W12 |
 | W8 | in_progress, PR #11의 진행 안내·문의 범위 병합 | 예약 안내·Alt·요약·분류·브리핑·물리 삭제 등 잔여 |
 | W2 | done, [PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), main9c6efbf | 최종 head351156f App43567373083·Knowledge43567373169 성공, W10·이력/만료 신규220000 |
-| 파일 읽기(A) | in_progress, [Draft PR #28](https://github.com/Ahn-taegyu/Yeobek/pull/28) | 신규230000·231000 전진 적용/DB31·권한1 성공, HTTP·최신 CI 대기; materialExtraction 기본off |
+| 파일 읽기(A) | done, [PR #28](https://github.com/Ahn-taegyu/Yeobek/pull/28), main4f7faee | 최종 head04facaa App43571147499·Knowledge43571147654 성공, HTTP/비활성 회귀 통과; materialExtraction 기본off |
 | D0 | done, PR #14 | main 861d27a, App·Knowledge CI 성공 |
 | W10 | done, PR #15, main dadc23b | v3 온보딩·사진/포스터·홈 상태, 전체 CI 성공 |
 | W13 | done, PR #16, main44bf7d3 | 리스크1·5·6·8·9 및 기한 반영, App·Knowledge CI 성공. 운영 적용은 W7 |
@@ -408,3 +408,17 @@ W2는 PR #13 main9c6efbf 병합 완료다. 최종 검사 head351156f68458b0b7d28
 materialExtraction 기본off, 기존 플래그 유지, 실외부 AI/TTS/발송0회. 한도·보관·모의 경계는 [조사](../research/material-reader.md), HTTP와 화면 미구현 경계는 [인계](frontend-handoff.md#파일-읽기--a-담당)에 기록했다. 전체 최신 CI·프런트·실물 품질은 아직 완료가 아니다.
 
 PR #28 첫 head609b4c8의 Knowledge CI는 성공했고 App 타입 검사에서 PDF.js의 미지원 isEvalSupported 옵션과 모의 응답 타입이 실패했다. 설치된 타입 선언을 확인해 옵션을 제거하고 테스트 응답에 명시적 타입을 지정했다. 읽기 단위11개를 재확인했고, 본문 삭제·해시 재업로드 검사를 추가해 DB31개가 통과했다. 최신 head 전체 CI는 확인 전이다.
+
+# A 최종 완료·인계 (2026-11-14)
+
+| 범위 | 병합·검사 head | 최종 CI | 직접 확인·남은 경계 |
+| --- | --- | --- | --- |
+| W11a/b | [#18](https://github.com/Ahn-taegyu/Yeobek/pull/18), main40564e6 / head1d596e1 | [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396278)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396325) 성공 | 승인 조회 포트 DB34, 실제 게시 비공개 노출·미리보기 DB24, 최초 로컬 모의 HTTP6. 공개 snapshot 연결은 B 담당 |
+| W2 | [#13](https://github.com/Ahn-taegyu/Yeobek/pull/13), main9c6efbf / head351156f | [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43567373083)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43567373169) 성공 | 기존 DB220000 전진 적용, 후보/권한56+W10/한도11. 생성→조회→명시적 적용→이력 HTTP는 CI에서 확인 |
+| 파일 읽기 | [#28](https://github.com/Ahn-taegyu/Yeobek/pull/28), main4f7faee / head04facaa | [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147499)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147654) 성공 | 기존 DB230000/231000 전진, 파일 DB31+권한1, 실제 Storage 파일 HTTP/기본off·후보 적용 확인. 새 DB988개 포함 |
+
+위 수치는 서로 다른 묶음의 실행 범위이며 중복 합산하지 않는다. A는 공유 로컬 DB를 reset하지 않았다. SQL은 별도 Sol 검토와 부모 수정·직접 검사, 나머지는 부모 diff 대조·좁은 회귀·최종 CI로 확인했다. 최초 타입/fixture 실패와 정정은 각 PR에 보존했다. 병합 SHA와 검사 SHA를 구분하며 후속 변경의 검증으로 재사용하지 않는다.
+
+W9·W10·W11·W2는 병합 상태를 표에 반영했다. 새 expectedQa/exhibitionQa/previewChat/qaRewrite/materialExtraction은 기본off다. 전시 Q&A·학습 manifest는 이미 구현된 API를 보존했고 삭제하지 않았다. 추가 제외는 관람 보완 요청→Q&A 전환, 평가 집계, OCR 라이브러리, W6·W8 잔여·Alt·브리핑이다. 실외부 AI/TTS/발송0회이며 실물 품질·비용·지연·운영 cron/SMTP는 완료로 세지 않는다.
+
+B 인계: `get_approved_qa_for_publication` 계약과 동일 게시 트랜잭션 사용, 신규 migration 번호/불변성, source12개/8,000자 예산을 전달했다. W12·시연 확장·최종 전체 흐름은 B의 완료 기록을 따른다. [프런트 인계](frontend-handoff.md)의 W11·W2·파일 읽기 절은 A의 병합 코드와 일치한다. 후보 검수 UI는 이번 디자인 범위 밖이므로 프런트가 명시적 검수·적용을 제공하기 전까지 파일 학습을 숨긴다. B의 키 당일 문서 예정 경로는 `docs/specs/key-day-checklist.md`이며, A 문서에서 그 파일의 병합/실물 검증 완료를 주장하지 않는다.
