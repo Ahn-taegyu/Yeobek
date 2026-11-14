@@ -23,7 +23,17 @@ export const DEFAULT_POLICIES = Object.freeze({
   pdf_max_bytes: 6 * 1024 * 1024,
   upload_ttl_seconds: 3600,
   author_uploads_per_day: 100,
+  automation_event_lease_seconds: 120,
+  automation_dispatch_lease_seconds: 60,
+  automation_event_max_attempts: 3,
+  automation_event_retention_days: 30,
+  automation_jobs_per_day: 100,
+  automation_batch_signals: 50,
+  automation_batch_events: 3,
+  automation_batch_dispatch: 5,
 });
+/** Technical execution envelope; stays below the DB runner lease (120 seconds). */
+export const AUTOMATION_RUNTIME_LIMITS = Object.freeze({ rpcMs: 5000, deadlineMs: 60000, generationMs: 40000 });
 export type PolicyKey = keyof typeof DEFAULT_POLICIES;
 export type AppPolicies = { readonly [Key in PolicyKey]: number };
 export const POLICY_TECHNICAL_MAX = 2147483647;

@@ -65,6 +65,8 @@ jobs:
           TEST_CRON_SECRET: local-integration-only-0123456789abcdef
           APP_ORIGIN: http://localhost:3001
           TEST_APP_ORIGIN: http://localhost:3001
+          CHANNEL_TALK_CHANNEL_ID: support-test-channel
+          CHANNEL_TALK_WEBHOOK_TOKEN: local-support-only-0123456789abcdef
         run: |
           node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-mock.log 2>&1 &
           mock_pid=$!
@@ -84,6 +86,8 @@ jobs:
           npm run test:publication
           npm run test:visitor
           npm run test:audio
+          npm run test:automation
+          npm run test:support
           kill "$mock_pid"
           wait "$mock_pid" || true
           FEATURE_GAPS=false node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-gaps-off.log 2>&1 &

@@ -11,6 +11,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-13T02:07:34+09:00'
 sources:
+- id: ci-first
+  resource: /references/user-ci-first-validation.md
+  title: CI 검사와 로컬 검증 중복 최소화
 - id: lifecycle
   resource: /references/user-git-lifecycle-delegation.md
   title: Git 작업 생명주기와 병합 판단 위임
@@ -113,7 +116,7 @@ python scripts/knowledge.py verify
 | 검색 동작·검사 규칙 | tools/kb.py·test_kb.py | 본 절차·knowledge-contract·CI·필요한 회귀 테스트 |
 | 에이전트 절차·진입점 | 루트 AGENTS·docs/AGENTS·이 문서 | 얇은 도구별 진입점·루트 README |
 
-완료 순서: **관련 검색 → 원문/결정 확인 → 필요한 출처 기록 → 결정/기능/명세 동시 수정 → 목차/로그 갱신 → verify → diff 검토**. 단순 오탈자는 출처/결정 파일을 새로 만들지 않고 해당 문서와 필요한 이력만 수정한다.
+완료 순서: **관련 검색 → 원문/결정 확인 → 필요한 출처 기록 → 결정/기능/명세 동시 수정 → 목차/로그 갱신 → 필요한 로컬 check → diff 검토 → 최신 CI verify 확인**. 단순 오탈자는 출처/결정 파일을 새로 만들지 않고 해당 문서와 필요한 이력만 수정한다.
 
 예를 들어 사용자가 기존 후속 기능을 MVP로 올린다고 확정한 경우, 실제 발언을 새 출처로 남기고 관련 결정을 갱신한다. 그 기능의 `proposed_phase`와 요약·선행 관계를 변경하되 `source_priority`에 보존한 최초 우선순위는 유지한다. 이 예시는 기능 범위를 바꾸라는 지시가 아니다.
 
@@ -143,6 +146,8 @@ python scripts/knowledge.py verify
 # 7. 자동 검증과 GitHub 공유
 
 [사용자 위임](references/user-git-lifecycle-delegation.md)에 따라 검토 가능한 목적별 커밋, 묶음 완료·인계 시 push, 독립 수용 흐름의 Draft PR, 검증·교차 검토·최신 head CI 후 병합 판단을 [개발 협업 규칙](collaboration.md#4-pull-request)에 따라 수행한다. 검사 결과는 SHA·범위·환경이 같으면 재사용하고 변경 영향이 있을 때 다시 실행한다. 보호 정책과 요구된 사람 승인을 우회하지 않는다.
+
+[CI 중심 검증 요청](references/user-ci-first-validation.md)에 따라 전체 검사를 로컬에서 미리 반복하지 않는다. 로컬은 필요한 문서 `check`, 변경된 검색 동작의 좁은 회귀와 실패 재현만 수행하고, 전체 `verify`와 앱 회귀는 최신 head CI 결과를 직접 확인한다. 서브에이전트의 실제 diff 검토·수정 피드백은 계속 적용한다.
 
 `python scripts/knowledge.py verify`로 YAML/파일 링크/고유 ID/상태/의존성/Bases, 검색 출처·필터·변경/삭제에 따른 인덱스 갱신을 확인한다. GitHub의 `Knowledge checks`는 push(main)·PR·수동 실행에서 Windows와 Linux의 새 checkout에 같은 절차를 적용한다.
 

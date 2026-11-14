@@ -385,6 +385,141 @@ exports[`HTTP route contracts > snapshots approveArtwork 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots approveOutbox 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "expectedRevision": {
+        "exclusiveMinimum": 0,
+        "maximum": 2147483647,
+        "type": "integer",
+      },
+    },
+    "required": [
+      "expectedRevision",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/ops/outbox/{id}/approve",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "type": "string",
+          },
+          "category": {
+            "enum": [
+              "transactional",
+              "marketing",
+              "usage",
+              "status",
+            ],
+            "type": "string",
+          },
+          "channel": {
+            "enum": [
+              "mail",
+              "support",
+            ],
+            "type": "string",
+          },
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "eventId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "mock": {
+            "type": "boolean",
+          },
+          "resultCode": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "revision": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+          "state": {
+            "enum": [
+              "draft",
+              "approved",
+              "sending",
+              "accepted",
+              "unknown",
+              "rejected",
+              "suppressed",
+              "failed",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "eventId",
+          "channel",
+          "category",
+          "body",
+          "state",
+          "revision",
+          "mock",
+          "resultCode",
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots changePublication 1`] = `
 {
   "body": {
@@ -4117,6 +4252,78 @@ exports[`HTTP route contracts > snapshots getArtwork 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots getConsents 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": null,
+  "path": "/api/admin/profile/consents",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "category": {
+              "enum": [
+                "transactional",
+                "marketing",
+              ],
+              "type": "string",
+            },
+            "granted": {
+              "type": "boolean",
+            },
+            "revision": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer",
+            },
+            "updatedAt": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                  "type": "string",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+          },
+          "required": [
+            "category",
+            "granted",
+            "revision",
+            "updatedAt",
+          ],
+          "type": "object",
+        },
+        "maxItems": 2,
+        "minItems": 2,
+        "type": "array",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots getExhibition 1`] = `
 {
   "body": null,
@@ -7827,6 +8034,166 @@ exports[`HTTP route contracts > snapshots listMaterials 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots listOutbox 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": null,
+  "path": "/api/ops/outbox",
+  "query": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "cursor": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "state": {
+        "default": "draft",
+        "enum": [
+          "all",
+          "draft",
+          "approved",
+          "sending",
+          "accepted",
+          "unknown",
+          "rejected",
+          "suppressed",
+          "failed",
+        ],
+        "type": "string",
+      },
+    },
+    "type": "object",
+  },
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "body": {
+                  "type": "string",
+                },
+                "category": {
+                  "enum": [
+                    "transactional",
+                    "marketing",
+                    "usage",
+                    "status",
+                  ],
+                  "type": "string",
+                },
+                "channel": {
+                  "enum": [
+                    "mail",
+                    "support",
+                  ],
+                  "type": "string",
+                },
+                "createdAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                  "type": "string",
+                },
+                "eventId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "mock": {
+                  "type": "boolean",
+                },
+                "resultCode": {
+                  "type": [
+                    "string",
+                    "null",
+                  ],
+                },
+                "revision": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 2147483647,
+                  "type": "integer",
+                },
+                "state": {
+                  "enum": [
+                    "draft",
+                    "approved",
+                    "sending",
+                    "accepted",
+                    "unknown",
+                    "rejected",
+                    "suppressed",
+                    "failed",
+                  ],
+                  "type": "string",
+                },
+              },
+              "required": [
+                "id",
+                "eventId",
+                "channel",
+                "category",
+                "body",
+                "state",
+                "revision",
+                "mock",
+                "resultCode",
+                "createdAt",
+              ],
+              "type": "object",
+            },
+            "maxItems": 100,
+            "type": "array",
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+        },
+        "required": [
+          "items",
+          "nextCursor",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots login 1`] = `
 {
   "body": {
@@ -8028,6 +8395,225 @@ exports[`HTTP route contracts > snapshots purgeExpired 1`] = `
           "answers",
           "gaps",
           "jobs",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots receiveChannelWebhook 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "properties": {
+      "entity": {
+        "additionalProperties": {},
+        "propertyNames": {
+          "type": "string",
+        },
+        "type": "object",
+      },
+      "event": {
+        "maxLength": 40,
+        "type": "string",
+      },
+      "type": {
+        "maxLength": 40,
+        "type": "string",
+      },
+    },
+    "required": [
+      "event",
+      "type",
+      "entity",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": null,
+  "path": "/api/webhooks/channeltalk",
+  "query": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "properties": {
+      "token": {
+        "type": "string",
+      },
+    },
+    "required": [
+      "token",
+    ],
+    "type": "object",
+  },
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "const": true,
+            "type": "boolean",
+          },
+          "duplicate": {
+            "type": "boolean",
+          },
+          "ignored": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "accepted",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots rejectOutbox 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "expectedRevision": {
+        "exclusiveMinimum": 0,
+        "maximum": 2147483647,
+        "type": "integer",
+      },
+    },
+    "required": [
+      "expectedRevision",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/ops/outbox/{id}/reject",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "type": "string",
+          },
+          "category": {
+            "enum": [
+              "transactional",
+              "marketing",
+              "usage",
+              "status",
+            ],
+            "type": "string",
+          },
+          "channel": {
+            "enum": [
+              "mail",
+              "support",
+            ],
+            "type": "string",
+          },
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "eventId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "mock": {
+            "type": "boolean",
+          },
+          "resultCode": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "revision": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+          "state": {
+            "enum": [
+              "draft",
+              "approved",
+              "sending",
+              "accepted",
+              "unknown",
+              "rejected",
+              "suppressed",
+              "failed",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "eventId",
+          "channel",
+          "category",
+          "body",
+          "state",
+          "revision",
+          "mock",
+          "resultCode",
+          "createdAt",
         ],
         "type": "object",
       },
@@ -9819,6 +10405,244 @@ exports[`HTTP route contracts > snapshots revokeEvidence 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots runAutomation 1`] = `
+{
+  "body": null,
+  "method": "POST",
+  "params": null,
+  "path": "/api/cron/automation",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "busy": {
+            "type": "boolean",
+          },
+          "discarded": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "dispatch": {
+            "additionalProperties": false,
+            "properties": {
+              "accepted": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "claimed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "failed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "persistenceFailures": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "rejected": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "skipped": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "unknown": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "claimed",
+              "accepted",
+              "rejected",
+              "unknown",
+              "failed",
+              "skipped",
+              "persistenceFailures",
+            ],
+            "type": "object",
+          },
+          "dispatchReady": {
+            "type": "boolean",
+          },
+          "escalated": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "failed": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "mock": {
+            "type": "boolean",
+          },
+          "persistenceFailures": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "processed": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "scheduled": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "support": {
+            "additionalProperties": false,
+            "properties": {
+              "dispatch": {
+                "additionalProperties": false,
+                "properties": {
+                  "accepted": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "claimed": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "failed": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "persistenceFailures": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "rejected": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "skipped": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "unknown": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                },
+                "required": [
+                  "claimed",
+                  "accepted",
+                  "rejected",
+                  "unknown",
+                  "failed",
+                  "skipped",
+                  "persistenceFailures",
+                ],
+                "type": "object",
+              },
+              "dispatchReady": {
+                "type": "boolean",
+              },
+              "escalated": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "failed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "mock": {
+                "type": "boolean",
+              },
+              "persistenceFailures": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "processed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "suppressed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "mock",
+              "dispatchReady",
+              "processed",
+              "suppressed",
+              "escalated",
+              "failed",
+              "persistenceFailures",
+              "dispatch",
+            ],
+            "type": "object",
+          },
+          "suppressed": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "mock",
+          "busy",
+          "dispatchReady",
+          "scheduled",
+          "discarded",
+          "processed",
+          "suppressed",
+          "escalated",
+          "failed",
+          "persistenceFailures",
+          "dispatch",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots saveNarration 1`] = `
 {
   "body": {
@@ -10861,6 +11685,78 @@ exports[`HTTP route contracts > snapshots setArtworkImage 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots setSupportBinding 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+      },
+      "expectedRevision": {
+        "maximum": 2147483647,
+        "minimum": 0,
+        "type": "integer",
+      },
+      "ownerId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "userId": {
+        "maxLength": 200,
+        "minLength": 1,
+        "type": "string",
+      },
+    },
+    "required": [
+      "userId",
+      "ownerId",
+      "enabled",
+      "expectedRevision",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": null,
+  "path": "/api/ops/support/bindings",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "revision": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "revision",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots speech 1`] = `
 {
   "body": {
@@ -11729,6 +12625,99 @@ exports[`HTTP route contracts > snapshots updateArtwork 1`] = `
           "state",
           "imageMaterialId",
           "narrationDraft",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots updateConsent 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "category": {
+        "enum": [
+          "transactional",
+          "marketing",
+        ],
+        "type": "string",
+      },
+      "expectedRevision": {
+        "maximum": 2147483647,
+        "minimum": 0,
+        "type": "integer",
+      },
+      "granted": {
+        "type": "boolean",
+      },
+    },
+    "required": [
+      "category",
+      "granted",
+      "expectedRevision",
+    ],
+    "type": "object",
+  },
+  "method": "PATCH",
+  "params": null,
+  "path": "/api/admin/profile/consents",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "enum": [
+              "transactional",
+              "marketing",
+            ],
+            "type": "string",
+          },
+          "granted": {
+            "type": "boolean",
+          },
+          "revision": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+        },
+        "required": [
+          "category",
+          "granted",
+          "revision",
+          "updatedAt",
         ],
         "type": "object",
       },

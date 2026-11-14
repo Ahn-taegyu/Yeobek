@@ -1,10 +1,31 @@
 {
   "id": "yeobek",
-  "version": "0.8.0",
+  "version": "0.10.0",
   "instructions": "instructions.md",
   "messages": "messages.json",
-  "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration"],
+  "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply"],
   "playbooks": {
+    "ops-support-reply": {
+      "skills": ["support-reply"],
+      "tools": ["support.read"],
+      "steps": [
+        { "id": "support.read", "tool": "support.read" },
+        { "id": "evidence.select" },
+        { "id": "model.generate" },
+        { "id": "output.validate" },
+        { "id": "support.recheck", "tool": "support.read" }
+      ]
+    },
+    "ops-notify": {
+      "skills": ["ops-notify"],
+      "tools": ["status.read"],
+      "steps": [
+        { "id": "status.read", "tool": "status.read" },
+        { "id": "model.generate" },
+        { "id": "output.validate" },
+        { "id": "status.recheck", "tool": "status.read" }
+      ]
+    },
     "visitor-transcribe": {
       "skills": ["speak-docent"],
       "tools": ["voice.reserve", "voice.complete"],

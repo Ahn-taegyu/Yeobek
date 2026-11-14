@@ -27,14 +27,14 @@ isOneToOne: false
                   ]
                 },"ai_jobs": {
                   Row: {
-                    "artwork_id": string,"attempt": number,"audio_approval_id": string | null,"created_at": string,"document_id": string,"expected_document_revision": number,"expected_revision": number,"expires_at": string,"id": string,"kind": string,"lease_until": string,"mock": boolean,"owner_id": string,"request_id": string,"result": Json | null,"result_code": string | null,"routing": string,"source_fingerprint": NonNullable<Json>,"source_ids": NonNullable<Json>,"status": string,"strategy": string | null,"updated_at": string,"voice_config_version": number | null,"voice_fingerprint": string | null
+                    "artwork_id": string | null,"attempt": number,"audio_approval_id": string | null,"automation_event_id": string | null,"created_at": string,"document_id": string | null,"expected_document_revision": number | null,"expected_revision": number | null,"expires_at": string,"id": string,"kind": string,"lease_until": string,"mock": boolean,"owner_id": string,"request_id": string,"result": Json | null,"result_code": string | null,"routing": string,"source_fingerprint": NonNullable<Json>,"source_ids": NonNullable<Json>,"status": string,"strategy": string | null,"updated_at": string,"voice_config_version": number | null,"voice_fingerprint": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "artwork_id": string,"attempt"?: number,"audio_approval_id"?: string | null,"created_at"?: string,"document_id": string,"expected_document_revision": number,"expected_revision": number,"expires_at": string,"id"?: string,"kind"?: string,"lease_until": string,"mock"?: boolean,"owner_id": string,"request_id": string,"result"?: Json | null,"result_code"?: string | null,"routing"?: string,"source_fingerprint": NonNullable<Json>,"source_ids": NonNullable<Json>,"status"?: string,"strategy"?: string | null,"updated_at"?: string,"voice_config_version"?: number | null,"voice_fingerprint"?: string | null
+                    "artwork_id"?: string | null,"attempt"?: number,"audio_approval_id"?: string | null,"automation_event_id"?: string | null,"created_at"?: string,"document_id"?: string | null,"expected_document_revision"?: number | null,"expected_revision"?: number | null,"expires_at": string,"id"?: string,"kind"?: string,"lease_until": string,"mock"?: boolean,"owner_id": string,"request_id": string,"result"?: Json | null,"result_code"?: string | null,"routing"?: string,"source_fingerprint": NonNullable<Json>,"source_ids": NonNullable<Json>,"status"?: string,"strategy"?: string | null,"updated_at"?: string,"voice_config_version"?: number | null,"voice_fingerprint"?: string | null
                   }
                   Update: {
-                    "artwork_id"?: string,"attempt"?: number,"audio_approval_id"?: string | null,"created_at"?: string,"document_id"?: string,"expected_document_revision"?: number,"expected_revision"?: number,"expires_at"?: string,"id"?: string,"kind"?: string,"lease_until"?: string,"mock"?: boolean,"owner_id"?: string,"request_id"?: string,"result"?: Json | null,"result_code"?: string | null,"routing"?: string,"source_fingerprint"?: NonNullable<Json>,"source_ids"?: NonNullable<Json>,"status"?: string,"strategy"?: string | null,"updated_at"?: string,"voice_config_version"?: number | null,"voice_fingerprint"?: string | null
+                    "artwork_id"?: string | null,"attempt"?: number,"audio_approval_id"?: string | null,"automation_event_id"?: string | null,"created_at"?: string,"document_id"?: string | null,"expected_document_revision"?: number | null,"expected_revision"?: number | null,"expires_at"?: string,"id"?: string,"kind"?: string,"lease_until"?: string,"mock"?: boolean,"owner_id"?: string,"request_id"?: string,"result"?: Json | null,"result_code"?: string | null,"routing"?: string,"source_fingerprint"?: NonNullable<Json>,"source_ids"?: NonNullable<Json>,"status"?: string,"strategy"?: string | null,"updated_at"?: string,"voice_config_version"?: number | null,"voice_fingerprint"?: string | null
                   }
                   Relationships: [
                     {
@@ -42,6 +42,12 @@ isOneToOne: false
       columns: ["audio_approval_id"]
 isOneToOne: false
       referencedRelation: "narration_approvals"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ai_jobs_automation_event_id_fkey"
+      columns: ["automation_event_id"]
+isOneToOne: true
+      referencedRelation: "automation_events"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "ai_jobs_owner_id_artwork_id_fkey"
@@ -177,6 +183,94 @@ isOneToOne: false
       referencedColumns: ["owner_id","exhibition_id","artwork_id","id"]
     }
                   ]
+                },"automation_bindings": {
+                  Row: {
+                    "enabled": boolean,"external_id": string,"owner_id": string,"provider": string,"provider_scope": string,"revision": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "enabled"?: boolean,"external_id": string,"owner_id": string,"provider": string,"provider_scope": string,"revision"?: number
+                  }
+                  Update: {
+                    "enabled"?: boolean,"external_id"?: string,"owner_id"?: string,"provider"?: string,"provider_scope"?: string,"revision"?: number
+                  }
+                  Relationships: [
+
+                  ]
+                },"automation_events": {
+                  Row: {
+                    "attempt": number,"completion_fingerprint": string | null,"created_at": string,"dedupe_key": string,"exhibition_id": string | null,"expires_at": string,"id": string,"kind": string,"lease_until": string | null,"mock": boolean,"owner_id": string | null,"result_code": string | null,"source_revision": number | null,"state": string,"trigger_kind": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attempt"?: number,"completion_fingerprint"?: string | null,"created_at"?: string,"dedupe_key": string,"exhibition_id"?: string | null,"expires_at": string,"id"?: string,"kind": string,"lease_until"?: string | null,"mock": boolean,"owner_id"?: string | null,"result_code"?: string | null,"source_revision"?: number | null,"state"?: string,"trigger_kind": string
+                  }
+                  Update: {
+                    "attempt"?: number,"completion_fingerprint"?: string | null,"created_at"?: string,"dedupe_key"?: string,"exhibition_id"?: string | null,"expires_at"?: string,"id"?: string,"kind"?: string,"lease_until"?: string | null,"mock"?: boolean,"owner_id"?: string | null,"result_code"?: string | null,"source_revision"?: number | null,"state"?: string,"trigger_kind"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "automation_events_kind_fkey"
+      columns: ["kind"]
+isOneToOne: false
+      referencedRelation: "automation_policies"
+      referencedColumns: ["kind"]
+    },{
+      foreignKeyName: "automation_events_owner_id_exhibition_id_fkey"
+      columns: ["owner_id","exhibition_id"]
+isOneToOne: false
+      referencedRelation: "exhibitions"
+      referencedColumns: ["owner_id","id"]
+    }
+                  ]
+                },"automation_notify_signals": {
+                  Row: {
+                    "consumed_at": string | null,"created_at": string,"dedupe_key": string,"exhibition_id": string,"exhibition_revision": number,"expires_at": string,"id": string,"owner_id": string,"source_job_id": string | null,"source_mock": boolean | null,"source_revision": number,"trigger_kind": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "consumed_at"?: string | null,"created_at"?: string,"dedupe_key": string,"exhibition_id": string,"exhibition_revision": number,"expires_at"?: string,"id"?: string,"owner_id": string,"source_job_id"?: string | null,"source_mock"?: boolean | null,"source_revision": number,"trigger_kind": string
+                  }
+                  Update: {
+                    "consumed_at"?: string | null,"created_at"?: string,"dedupe_key"?: string,"exhibition_id"?: string,"exhibition_revision"?: number,"expires_at"?: string,"id"?: string,"owner_id"?: string,"source_job_id"?: string | null,"source_mock"?: boolean | null,"source_revision"?: number,"trigger_kind"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "automation_notify_signals_owner_id_exhibition_id_fkey"
+      columns: ["owner_id","exhibition_id"]
+isOneToOne: false
+      referencedRelation: "exhibitions"
+      referencedColumns: ["owner_id","id"]
+    }
+                  ]
+                },"automation_policies": {
+                  Row: {
+                    "allowed_categories": (string)[],"kind": string,"mode": string,"revision": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "allowed_categories"?: (string)[],"kind": string,"mode"?: string,"revision"?: number
+                  }
+                  Update: {
+                    "allowed_categories"?: (string)[],"kind"?: string,"mode"?: string,"revision"?: number
+                  }
+                  Relationships: [
+
+                  ]
+                },"contact_consents": {
+                  Row: {
+                    "category": string,"granted": boolean,"owner_id": string,"revision": number,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category": string,"granted"?: boolean,"owner_id": string,"revision": number,"updated_at"?: string
+                  }
+                  Update: {
+                    "category"?: string,"granted"?: boolean,"owner_id"?: string,"revision"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+
+                  ]
                 },"evidence_items": {
                   Row: {
                     "approved_at": string | null,"artwork_id": string | null,"body": string,"content_hash": string,"created_at": string,"exhibition_id": string,"id": string,"material_id": string | null,"material_version": number | null,"owner_id": string,"page_end": number | null,"page_start": number | null,"scope": string,"source_document_id": string | null,"source_kind": string,"source_label": string,"source_revision": number | null,"source_section_id": string | null,"state": string,"version": number,"withdrawn_at": string | null
@@ -234,6 +328,20 @@ isOneToOne: false
       referencedRelation: "artist_profiles"
       referencedColumns: ["owner_id","id"]
     }
+                  ]
+                },"help_articles": {
+                  Row: {
+                    "body": string,"id": string,"published": boolean,"revision": number,"title": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"id"?: string,"published"?: boolean,"revision"?: number,"title": string
+                  }
+                  Update: {
+                    "body"?: string,"id"?: string,"published"?: boolean,"revision"?: number,"title"?: string
+                  }
+                  Relationships: [
+
                   ]
                 },"knowledge_documents": {
                   Row: {
@@ -345,6 +453,46 @@ isOneToOne: false
       referencedColumns: ["owner_id","exhibition_id","id"]
     }
                   ]
+                },"operators": {
+                  Row: {
+                    "enabled": boolean,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "enabled"?: boolean,"user_id": string
+                  }
+                  Update: {
+                    "enabled"?: boolean,"user_id"?: string
+                  }
+                  Relationships: [
+
+                  ]
+                },"outbound_messages": {
+                  Row: {
+                    "approved_at": string | null,"approved_by": string | null,"binding_id": string | null,"binding_scope": string | null,"body": string,"category": string,"channel": string,"created_at": string,"destination_id": string | null,"dispatch_checked_at": string | null,"event_id": string,"id": string,"lease_until": string | null,"mock": boolean,"owner_id": string,"policy_revision": number,"provider_message_id": string | null,"result_code": string | null,"revision": number,"send_attempt": string | null,"state": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "approved_at"?: string | null,"approved_by"?: string | null,"binding_id"?: string | null,"binding_scope"?: string | null,"body": string,"category": string,"channel": string,"created_at"?: string,"destination_id"?: string | null,"dispatch_checked_at"?: string | null,"event_id": string,"id"?: string,"lease_until"?: string | null,"mock": boolean,"owner_id": string,"policy_revision": number,"provider_message_id"?: string | null,"result_code"?: string | null,"revision"?: number,"send_attempt"?: string | null,"state": string
+                  }
+                  Update: {
+                    "approved_at"?: string | null,"approved_by"?: string | null,"binding_id"?: string | null,"binding_scope"?: string | null,"body"?: string,"category"?: string,"channel"?: string,"created_at"?: string,"destination_id"?: string | null,"dispatch_checked_at"?: string | null,"event_id"?: string,"id"?: string,"lease_until"?: string | null,"mock"?: boolean,"owner_id"?: string,"policy_revision"?: number,"provider_message_id"?: string | null,"result_code"?: string | null,"revision"?: number,"send_attempt"?: string | null,"state"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "outbound_messages_approved_by_fkey"
+      columns: ["approved_by"]
+isOneToOne: false
+      referencedRelation: "operators"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "outbound_messages_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: true
+      referencedRelation: "automation_events"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"publication_evidence_refs": {
                   Row: {
                     "evidence_id": string,"evidence_version": number,"publication_id": string
@@ -425,6 +573,26 @@ isOneToOne: false
       referencedColumns: ["exhibition_id","artwork_id","id"]
     }
                   ]
+                },"support_inquiries": {
+                  Row: {
+                    "binding_revision": number | null,"channel_id": string,"chat_id": string,"completion_fingerprint": string | null,"context_revision": string | null,"event_id": string,"expires_at": string,"id": string,"message_id": string,"mock": boolean,"owner_id": string | null,"provider_created_at": string,"question": string | null,"truncated": boolean,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "binding_revision"?: number | null,"channel_id": string,"chat_id": string,"completion_fingerprint"?: string | null,"context_revision"?: string | null,"event_id": string,"expires_at": string,"id"?: string,"message_id": string,"mock": boolean,"owner_id"?: string | null,"provider_created_at": string,"question"?: string | null,"truncated": boolean,"user_id": string
+                  }
+                  Update: {
+                    "binding_revision"?: number | null,"channel_id"?: string,"chat_id"?: string,"completion_fingerprint"?: string | null,"context_revision"?: string | null,"event_id"?: string,"expires_at"?: string,"id"?: string,"message_id"?: string,"mock"?: boolean,"owner_id"?: string | null,"provider_created_at"?: string,"question"?: string | null,"truncated"?: boolean,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "support_inquiries_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: true
+      referencedRelation: "automation_events"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"visitor_audio_assets": {
                   Row: {
                     "cleanup_after": string | null,"cleanup_claimed": boolean,"id": string,"storage_key": string
@@ -493,14 +661,44 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "approve_evidence":
+            "acquire_notification_run":
+{ Args: { "p_mock": boolean,"p_token": string }; Returns: Json
+                           },
+"approve_evidence":
 { Args: { "p_evidence_id": string,"p_version": number }; Returns: Json
                            },
 "approve_narration":
 { Args: { "p_artwork_id": string,"p_citations": Json,"p_expected_revision": number }; Returns: Json
                            },
+"check_notification_dispatch":
+{ Args: { "p_attempt": string,"p_id": string,"p_mock": boolean,"p_token": string }; Returns: Json
+                           },
+"check_outbound_dispatch":
+{ Args: { "p_attempt": string,"p_id": string,"p_mock": boolean }; Returns: Json
+                           },
 "check_publication_versions":
 { Args: { "p_exhibition_id": string,"p_publications": Json }; Returns: Json
+                           },
+"claim_automation_events":
+{ Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
+                           },
+"claim_automation_notifications":
+{ Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
+                           },
+"claim_channel_token":
+{ Args: { "p_app_id": string,"p_channel_id": string,"p_claim": string }; Returns: Json
+                           },
+"claim_notification_outbound":
+{ Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
+                           },
+"claim_outbound_messages":
+{ Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
+                           },
+"claim_support_events":
+{ Args: { "p_channel_id": string,"p_limit": number,"p_mock": boolean }; Returns: Json
+                           },
+"claim_support_outbound":
+{ Args: { "p_channel_id": string,"p_limit": number,"p_mock": boolean }; Returns: Json
                            },
 "complete_ai_job":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
@@ -511,8 +709,26 @@ isOneToOne: false
 "complete_audio_job":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
                            },
+"complete_automation_event":
+{ Args: { "p_attempt": number,"p_id": string,"p_outbound"?: Json,"p_result_code": string,"p_state": string }; Returns: Json
+                           },
+"complete_automation_job":
+{ Args: { "p_attempt": number,"p_elapsed_ms"?: number,"p_event_id": string,"p_job_id": string,"p_outbound"?: Json,"p_result_code": string,"p_state": string,"p_steps"?: Json,"p_usage"?: Json }; Returns: Json
+                           },
+"complete_channel_token":
+{ Args: { "p_app_id": string,"p_channel_id": string,"p_claim": string,"p_expires_in": number,"p_sealed": string }; Returns: boolean
+                           },
 "complete_material_cleanup":
 { Args: { "p_expected_version": number,"p_id": string,"p_owner": string }; Returns: Json
+                           },
+"complete_notification_dispatch":
+{ Args: { "p_attempt": string,"p_id": string,"p_mock": boolean,"p_provider_id": string,"p_result_code": string,"p_status": string,"p_token": string }; Returns: Json
+                           },
+"complete_outbound_message":
+{ Args: { "p_attempt": string,"p_id": string,"p_provider_id": string,"p_result_code": string,"p_status": string }; Returns: Json
+                           },
+"complete_support_job":
+{ Args: { "p_attempt": number,"p_body": string,"p_category": string,"p_context_revision": string,"p_elapsed_ms": number,"p_event_id": string,"p_job_id": string,"p_mock": boolean,"p_result_code": string,"p_state": string,"p_steps": Json,"p_usage": Json }; Returns: Json
                            },
 "complete_upload":
 { Args: { "p_byte_size": number,"p_content_hash": string,"p_content_type": string,"p_expected_version": number,"p_height": number,"p_id": string,"p_owner": string,"p_pages": number,"p_width": number }; Returns: Json
@@ -532,6 +748,9 @@ isOneToOne: false
 "create_exhibition":
 { Args: { "p_end_date": string,"p_id": string,"p_place": string,"p_sections": Json,"p_source_refs": Json,"p_start_date": string,"p_title": string }; Returns: Json
                            },
+"decide_outbox":
+{ Args: { "p_approve": boolean,"p_expected_revision": number,"p_id": string }; Returns: Json
+                           },
 "delete_artwork":
 { Args: { "p_expected_revision": number,"p_id": string }; Returns: Json
                            },
@@ -540,6 +759,9 @@ isOneToOne: false
                            },
 "dismiss_gap":
 { Args: { "p_enabled": boolean,"p_id": string,"p_owner": string }; Returns: Json
+                           },
+"enqueue_automation_event":
+{ Args: { "p_dedupe_key": string,"p_exhibition_id": string,"p_kind": string,"p_mock": boolean,"p_owner": string,"p_source_revision": number,"p_trigger_kind": string }; Returns: Json
                            },
 "get_ai_job":
 { Args: { "p_job_id": string }; Returns: Json
@@ -553,6 +775,9 @@ isOneToOne: false
 "get_audio_context":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string }; Returns: Json
                            },
+"get_contact_consents":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "get_exhibition":
 { Args: { "p_id": string }; Returns: Json
                            },
@@ -561,6 +786,9 @@ isOneToOne: false
                            },
 "get_narration_context":
 { Args: { "p_artwork_id": string }; Returns: Json
+                           },
+"get_notification_context":
+{ Args: { "p_attempt": number,"p_event_id": string,"p_mock": boolean }; Returns: Json
                            },
 "get_public_artwork":
 { Args: { "p_exhibition_id": string,"p_id": string }; Returns: Json
@@ -579,6 +807,9 @@ isOneToOne: false
                            },
 "get_revoke_impact":
 { Args: { "p_evidence_id": string,"p_expected_version": number }; Returns: Json
+                           },
+"get_support_context":
+{ Args: { "p_attempt": number,"p_event_id": string,"p_mock": boolean }; Returns: Json
                            },
 "get_upload":
 { Args: { "p_allow_cleanup"?: boolean,"p_id": string,"p_owner": string }; Returns: Json
@@ -610,6 +841,12 @@ isOneToOne: false
 "list_materials":
 { Args: { "p_subject_id": string,"p_subject_type": string }; Returns: Json
                            },
+"list_outbox":
+{ Args: { "p_limit"?: number }; Returns: Json
+                           },
+"list_outbox_page":
+{ Args: { "p_before"?: string,"p_limit"?: number,"p_state"?: string }; Returns: Json
+                           },
 "list_visitor_audio_cleanup":
 { Args: { "p_limit"?: number }; Returns: Json
                            },
@@ -634,6 +871,9 @@ isOneToOne: false
 "purge_expired":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"receive_support_inquiry":
+{ Args: { "p_channel_id": string,"p_chat_id": string,"p_created_at": string,"p_message_id": string,"p_mock": boolean,"p_question": string,"p_truncated": boolean,"p_user_id": string }; Returns: Json
+                           },
 "record_gap":
 { Args: { "p_enabled": boolean,"p_question": string,"p_request_id": string,"p_session_hash": string }; Returns: boolean
                            },
@@ -642,6 +882,9 @@ isOneToOne: false
                            },
 "record_visitor_steps":
 { Args: { "p_id": string,"p_session_hash": string,"p_steps": Json }; Returns: undefined
+                           },
+"release_notification_run":
+{ Args: { "p_mock": boolean,"p_token": string }; Returns: undefined
                            },
 "request_upload":
 { Args: { "p_byte_size": number,"p_content_type": string,"p_filename": string,"p_id": string,"p_kind": string,"p_owner": string,"p_subject_id": string,"p_subject_type": string }; Returns: Json
@@ -653,6 +896,9 @@ isOneToOne: false
                            },
 "reserve_audio_job":
 { Args: { "p_approval_id": string,"p_artwork_id": string,"p_expected_revision": number,"p_mock": boolean,"p_owner": string,"p_request_id": string,"p_voice_fingerprint": string }; Returns: Json
+                           },
+"reserve_automation_job":
+{ Args: { "p_event_attempt": number,"p_event_id": string,"p_mock": boolean }; Returns: Json
                            },
 "reserve_visitor_request":
 { Args: { "p_exhibition_id": string,"p_input_hash": string,"p_mock": boolean,"p_request_id": string,"p_session_hash": string }; Returns: Json
@@ -680,8 +926,17 @@ isOneToOne: false
 "save_narration_draft":
 { Args: { "p_artwork_id": string,"p_expected_revision": number,"p_source_job_id"?: string,"p_text": string }; Returns: Json
                            },
+"schedule_automation_notifications":
+{ Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
+                           },
 "set_artwork_image":
 { Args: { "p_artwork_id": string,"p_expected_revision": number,"p_material_id": string }; Returns: Json
+                           },
+"set_contact_consent":
+{ Args: { "p_category": string,"p_expected_revision": number,"p_granted": boolean }; Returns: Json
+                           },
+"set_support_binding":
+{ Args: { "p_channel_id": string,"p_enabled": boolean,"p_expected_revision": number,"p_owner": string,"p_user_id": string }; Returns: Json
                            },
 "sync_audio_config":
 { Args: { "p_fingerprint": string,"p_mock": boolean }; Returns: number

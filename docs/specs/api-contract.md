@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: channel-auth
+  resource: /references/user-channel-webhook-auth.md
+  title: 채널톡 문의 웹훅 인증 선택
 - id: backend
   resource: /references/user-backend-completion.md
   title: 백엔드 완성 계획 요청 원문
@@ -279,3 +282,52 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 음성 두 경로의 60초 처리 기한에는 요청 본문 수신도 포함한다. Next.js `maxDuration=120`은 취소 후 DB 실패 확정·정리 기록을 위한 플랫폼 여유이며 생성 허용 시간을 늘리지 않는다. 같은 세션의 만료 답변은 공개 상태가 유지될 때 410 `ANSWER_EXPIRED`, 타인 세션이나 비공개 전시는 404다. 준비된 승인 음성의 파일 오류·해시 불일치는 오류로 반환하고 새 유료 합성을 시작하지 않는다. 확인된 실패는 새 요청 ID로 재시도하고, 진행 중/응답 유실/캐시 다운로드 오류에는 같은 ID를 재사용한다.
 
 새 ID의 생성 음성 캐시 재사용은 생성 한도를 차감하지 않지만 원장 행이 무한히 늘지 않도록 세션당 분당 60개 초기 정책 `visitor_audio_cache_requests_per_minute`를 별도로 적용한다. 기존 요청 ID 조회는 이 한도에서도 재사용 가능하다. 60은 측정 전 구현 초기값이며 DB 정책에서 변경한다.
+
+# W8 수신 동의·운영자 검토와 내부 DB 계약
+
+`090000` migration의 `get_contact_consents`·`set_contact_consent(category,granted,expectedRevision)`은 인증된 작가 본인만 다루며, 거래성·홍보성 동의는 각각 기본 false·revision 0이다. `list_outbox`·`decide_outbox(id,expectedRevision,approve)`는 등록된 운영자만 실행한다. 일반 로그인 계정은 404에 해당하는 DB 오류를 받는다. 본문 수정은 승인 API에 포함하지 않으며 승인할 때 정확한 revision을 검사한다.
+
+서비스 역할만 `enqueue_automation_event`·`claim_automation_events`·`complete_automation_event`와 발송 claim/check/complete RPC를 실행할 수 있다. 동일 종류·중복 키의 다른 입력과 다른 완료 결과는 충돌이다. `check_outbound_dispatch`는 현재 정책·동의·계정 연결·만료를 다시 확인하고 한 번만 수신 대상과 본문을 반환한다. `accepted`는 제공사 접수, `unknown`은 결과 불명이며 자동 재전송하지 않는다. 이벤트/발송 lease·최대 시도·만료는 `app_policies`에서 읽는다.
+
+작가·운영자 HTTP는 다음과 같이 연결했다. 모두 기존 `{data,requestId}` 봉투와 `no-store`를 쓰고, 변경 요청은 동일 출처를 요구한다. 타입 클라이언트 경로도 같은 계약에서 파생된다.
+
+| 경로 | 입력 | 반환·거부 |
+| --- | --- | --- |
+| `GET /api/admin/profile/consents` | 로그인 | 두 종류의 `{category,granted,revision,updatedAt}` 배열 |
+| `PATCH /api/admin/profile/consents` | `{category,granted,expectedRevision}` | 본인 동의만 변경. 최초 revision 0, 충돌 409 |
+| `GET /api/ops/outbox` | 선택 쿼리 `cursor`, `state` | `{items,nextCursor}`. 기본 draft, 페이지 50개. `state=all` 또는 개별 상태로 이력 조회 |
+| `POST /api/ops/outbox/{id}/approve` | `{expectedRevision}` | 해당 revision의 초안만 승인. 만료·삭제된 전시는 409 `OUTBOX_UNAVAILABLE` |
+| `POST /api/ops/outbox/{id}/reject` | `{expectedRevision}` | 해당 revision의 초안 거절. 만료된 초안도 정리 가능 |
+
+기본 발송함은 만료·삭제된 전시의 초안을 제외하고, 완료된 발송량과 무관하게 오래된 초안을 커서로 조회한다. 이력은 상태 필터로 명시 조회한다. 승인 요청에 본문·주소를 추가할 수 없으며 응답에는 수신 주소·계정 연결·내부 단계 기록을 넣지 않는다. 운영자 외 계정은 404다. 로컬 운영자 지정은 `npm run db:operator -- <기존 로컬 사용자 UUID>`, 해제는 같은 명령에 `--disable`을 붙인다. 이 명령은 로컬 스택·비익명 사용자만 허용한다.
+
+`091000`은 서비스 전용 `reserve_automation_job`·`complete_automation_job`으로 이벤트와 `ai_jobs`·시도별 사용량/단계를 연결한다. 이벤트당 하나의 원장, 일일 자동화 한도, 시도/lease 검사, 완료와 발송함의 원자적 저장을 적용한다. 작가용 작업 조회에는 운영 작업을 노출하지 않는다. `092000`은 발송 예약 및 본문 전달 직전에 전시 삭제도 재검사한다. 검사 이후 이미 외부로 전송된 내용의 회수를 보장하지 않는다.
+
+전시 생성·해설 초안 완료·게시의 상태 신호와 안내 cron은 아래 범위로 연결했다. 승인 독촉·전시 종료의 예약 안내, 다른 자동화 플레이북과 Alt 웹훅 HTTP는 후속이다. 문의 수신과 chat 대상 고정은 아래 범위로 구현 중이다. 서비스 역할이 임의 모델 출력을 수신 대상으로 사용해서는 안 된다.
+
+# W8 진행 안내 실행
+
+`POST /api/cron/automation`은 `Authorization: Bearer <CRON_SECRET>`을 요구하며 요청 본문으로 실행 대상이나 수신자를 받지 않는다. 인증 실패는 404, 서버 비밀값 미설정은 503이다. 기존 봉투 안에 `{mock,busy,dispatchReady,scheduled,discarded,processed,suppressed,escalated,failed,persistenceFailures,dispatch}` 집계를 반환하며 `dispatch`는 `{claimed,accepted,rejected,unknown,failed,skipped,persistenceFailures}`다. `accepted`는 제공사 접수이며 전달 완료가 아니다. 응답에 원문·주소·작업 단계는 넣지 않는다.
+
+`busy=true`이면 같은 실제/모의 모드의 다른 실행이 작업 중이다. 실행 lease는 120초, HTTP 업무 기한은 60초, 개별 DB 호출은 5초로 제한한다. 기본 배치는 신호 50개·AI 이벤트 3개·발송 5개이며 `app_policies`에서 바꾼다. 불확실한 발송 기록 저장 오류가 있으면 lease를 즉시 해제하지 않고 만료를 기다린다. 발송은 한 건씩 예약하며 수신 동의와 최신 정책·현재 대상·두 lease를 검사한다. 이전 전송 완료 이후 최소 334ms 간격을 모드별 DB에 남긴다. `dispatchReady=false`는 스티비 설정 부족 또는 발송 단계에 도달하지 못한 경우다. 설정이 부족하면 승인 메시지는 남겨 둔다.
+
+상태 신호는 원래 변경 트랜잭션에서 저장되며, 실제/모의가 정해진 AI·게시 신호는 그 모드에서만 처리한다. 전시 생성처럼 모드 없는 신호는 신뢰된 cron이 처음 가져갈 때 고정한다. 기존 자료에 대한 소급 일괄 안내는 하지 않는다. 만료 신호는 같은 보존 정책으로 제한된 배치에서 정리한다.
+
+`ops-notify`는 상태와 작품 집계만 모델에 전달하고 구조화 출력·인용·형식·현재 상태를 검사한다. 제목·작가 원자료·관람 질문·주소를 입력하지 않는다. 상태가 변경되면 안내를 중단하고, 발송 직전에도 대상 상태를 확인한다. 기본은 draft이고 운영자가 검토한다. 인용 ID 검사가 문장의 모든 의미적 적합성을 증명하는 것은 아니며 실제 품질은 키 입력 후 평가한다.
+
+발송 검사에서 null 허가를 받으면 현재 배치를 종료한다. 발송 간격 때문에 approved로 반환된 메시지를 같은 배치에서 다시 예약하지 않으며 다음 cron에서 처리한다. 이 경우 `dispatch.skipped`가 증가하고, null 허가 뒤의 다른 대기 메시지도 다음 실행으로 넘어간다.
+
+# W8 채널톡 토큰 내부 계약
+
+`claim_channel_token(app_id,channel_id,claim)`와 `complete_channel_token(app_id,channel_id,claim,sealed,expires_in)`은 service-role 전용 RPC다. 브라우저용 HTTP 경로와 타입 클라이언트에는 추가하지 않는다. 예약 결과는 `cached`(암호문), `refresh`(기존 암호문 또는 null), `busy`, `limited` 중 하나다. 앱별 잠금으로 채널 전체의 발급/갱신 예약을 30분에 10회까지 제한하고, 채널 lease는 30초다. 예약 재사용 방지도 같은 30분 창이며 캐시 재사용은 예약을 소비하지 않는다.
+
+완료는 현재 lease의 소유자만 할 수 있고, 토큰 만료는 발급 전 예약 시각을 기준으로 계산한다. 지연·교체·만료된 완료는 false다. 서버는 암호문을 앱·채널 범위로 검증하고 저장이 확인되기 전에는 토큰을 발신 어댑터에 넘기지 않는다. `CHANNEL_TALK_APP_ID`, `CHANNEL_TALK_CHANNEL_ID`, `CHANNEL_TALK_APP_SECRET`, `CHANNEL_TALK_TOKEN_KEY`는 서버 전용이다. TOKEN_KEY는 32바이트 키의 64자리 hex다. AppStore 서명 키와 별도로 문의 수신은 기존 웹훅 URL 토큰을 사용한다.
+
+
+# 채널톡 문의 수신과 답변 (구현 중)
+
+[사용자 선택](../references/user-channel-webhook-auth.md)에 따라 `POST /api/webhooks/channeltalk?token=…`은 서버 전용 `CHANNEL_TALK_WEBHOOK_TOKEN`과 채널 ID를 확인한다. 토큰은 공백 없는 32~256자이며 URL 전체와 쿼리는 로그에 남기지 않는다. Next 개발 요청 로그 제외 설정 외에 운영 프록시·호스팅 로그의 쿼리 제거를 키 당일 확인해야 한다. AppStore `x-signature` 인증과 혼동하지 않는다.
+
+사용자 개인 채팅의 새 메시지만 수신하고 봇·관리자·그룹·수정 이벤트는 무시한다. 채널·메시지·모의 여부로 중복을 구분하며 다른 내용의 중복은 409다. 오래되거나 미래인 메시지는 거부하고 빈 내용·지원하지 않는 내용이나 2,000자 초과는 자동 답변하지 않는다. 응답은 접수·중복·무시 여부만 반환한다.
+
+`POST /api/ops/support/bindings`는 동일 출처 인증과 운영자 권한 아래 채널 사용자와 작가를 명시적으로 연결하고 예상 revision으로 충돌을 방지한다. cron은 고정된 채팅 대상과 공개 도움말·연결된 계정 상태 근거를 사용하며, 민감 문의·근거 부족은 운영자에게 넘긴다. 생성 후와 발송 직전 문맥·정책·연결을 재확인한다. 만료는 처리 차단이며 저장된 문의의 물리 삭제 작업은 아직 없다. 로컬 인증·실제 DB와 모의 답변을 사용한 HTTP 통합 1개는 통과했다. 실제 제공사 호출과 최신 head CI는 미검증이다.

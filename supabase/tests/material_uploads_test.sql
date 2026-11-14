@@ -3,6 +3,11 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public,extensions;
 select no_plan();
 
+-- Existing local HTTP fixtures must not enter this transaction's cleanup batch.
+-- Rolled back with the test; no Storage objects or retained data are removed.
+update materials set cleanup_after = statement_timestamp() + interval '100 years',
+    upload_expires_at = case when upload_expires_at is not null then statement_timestamp() + interval '100 years' end;
+
 insert into auth.users(id,email) values
     ('00000000-0000-0000-0000-000000000001','material-owner@example.invalid'),
     ('00000000-0000-0000-0000-000000000002','material-other@example.invalid');

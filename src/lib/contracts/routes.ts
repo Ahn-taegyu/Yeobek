@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { channelWebhookSchema, channelWebhookResponse, supportBindingSchema, supportBindingResponse } from "./support";
+import { consentListResponse, consentResponse, updateConsentSchema, decideOutboxSchema, outboxResponse, outboxPageResponse, outboxQuery, notificationRunResponse } from "./automation";
 import { mediaBinary, mediaQuery } from "./media";
 import { speechRequest, transcribeRequest, transcribeResponse } from "./voice";
 import { requestUploadSchema, completeUploadSchema, deleteMaterialSchema, deleteArtworkSchema,
@@ -38,6 +40,14 @@ const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  runAutomation: { method: "POST", path: "/api/cron/automation", response: successEnvelope(notificationRunResponse), statuses: [200] },
+  receiveChannelWebhook: { method: "POST", path: "/api/webhooks/channeltalk", query: z.object({ token: z.string() }), body: channelWebhookSchema, response: successEnvelope(channelWebhookResponse), statuses: [200] },
+  setSupportBinding: { method: "POST", path: "/api/ops/support/bindings", body: supportBindingSchema, response: successEnvelope(supportBindingResponse), statuses: [200] },
+  getConsents: { method: "GET", path: "/api/admin/profile/consents", response: successEnvelope(consentListResponse), statuses: [200] },
+  updateConsent: { method: "PATCH", path: "/api/admin/profile/consents", body: updateConsentSchema, response: successEnvelope(consentResponse), statuses: [200] },
+  listOutbox: { method: "GET", path: "/api/ops/outbox", query: outboxQuery, response: successEnvelope(outboxPageResponse), statuses: [200] },
+  approveOutbox: { method: "POST", path: "/api/ops/outbox/{id}/approve", params: byId, body: decideOutboxSchema, response: successEnvelope(outboxResponse), statuses: [200] },
+  rejectOutbox: { method: "POST", path: "/api/ops/outbox/{id}/reject", params: byId, body: decideOutboxSchema, response: successEnvelope(outboxResponse), statuses: [200] },
   transcribe: { method: "POST", path: "/api/transcribe", body: transcribeRequest, bodyEncoding: "multipart", response: successEnvelope(transcribeResponse), statuses: [200] },
   speech: { method: "POST", path: "/api/speech", body: speechRequest, binary: { mimeTypes: ["audio/mpeg"], maxBytes: 8 * 1024 * 1024 }, statuses: [200] },
   getMedia: { method: "GET", path: "/api/media/{id}", params: byId, query: mediaQuery, binary: mediaBinary, statuses: [200] },

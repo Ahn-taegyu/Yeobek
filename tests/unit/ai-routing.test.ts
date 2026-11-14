@@ -22,12 +22,13 @@ const notConfigured = expect.objectContaining({ code: "not_configured" });
 
 describe("AI capability routes", () => {
   it("defaults to partner routes and requires a catalog model and voice for speech", () => {
-    for (const route of ["draft", "organize", "judge", "qa", "stt"] as const) {
+    for (const route of ["draft", "organize", "automation", "judge", "qa", "stt"] as const) {
       expect(resolveAiRoute(route, {}).provider).toBe("liner");
     }
     expect(() => createConfiguredSpeechProvider(undefined, liner)).toThrow(notConfigured);
     expect(() => createConfiguredSpeechProvider(undefined, { ...liner, AI_ROUTE_TTS: "liner:fixture/speech" })).toThrow(notConfigured);
     expect(() => resolveAiRoute("qa", { AI_ROUTE_QA: "typecast:fixture" })).toThrow(notConfigured);
+    expect(() => resolveAiRoute("automation", { AI_ROUTE_AUTOMATION: "openai:fixture" })).toThrow(notConfigured);
     expect(() => resolveAiRoute("qa", { AI_ROUTE_QA: "liner" })).toThrow(notConfigured);
     expect(resolveAiRoute("qa", { AI_ROUTE_QA: "liner:fixture/model:free" }).model).toBe("fixture/model:free");
   });

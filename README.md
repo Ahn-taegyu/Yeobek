@@ -1,6 +1,6 @@
 # Yeobek
 
-작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. Next.js·Supabase 인증과 초안, 해설 작업, 글 승인·게시, 관람 글 채팅 및 비공개 자료 업로드·삭제 API가 있습니다. W3 자료는 PR #8, W4 작가 음성은 PR #9로 병합됐습니다. W5 관람 음성·공개 미디어는 로컬 구현·검증을 마치고 CI 대기 중이며 화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
+작가가 승인한 자료로 해설과 질문 응답을 제공하는 AI 도슨트입니다. Next.js·Supabase 인증과 초안, 해설 작업, 글 승인·게시, 관람 글 채팅 및 비공개 자료 업로드·삭제 API가 있습니다. W3 자료는 PR #8, W4 작가 음성은 PR #9로 병합됐습니다. W5 관람 음성·공개 미디어는 PR #10의 CI를 통과해 병합됐으며 화면은 후속입니다. [실제 개발 범위](docs/specs/development-foundation.md), [AI 준비 범위](docs/specs/ai-harness.md), [API 계약](docs/specs/api-contract.md)을 먼저 확인하세요. 기존 문서의 MAWD 명칭은 행사·기획 이력으로 보존합니다.
 
 ## 앱 실행
 
@@ -17,6 +17,12 @@ npm run dev
 `db:start`는 `yeobek-mvp` 프로젝트를 localhost에 바인딩한 `yeobek-local` 네트워크에서 시작하고 migration을 적용합니다. `db:env`는 로컬 worker 키를 포함한 Git 제외 `.env.local`을 생성하며 기존 파일은 덮어쓰지 않습니다. 기존 파일이 이 로컬 스택을 가리키고 worker 키가 없다면 `npm run db:env -- --worker`로 그 키만 추가합니다. `db:artist`는 가짜 로컬 작가 계정을 만들고 로그인 정보를 `.env.artist.local`에 저장합니다. 터미널·Git에 키나 비밀번호를 출력하지 않습니다. [로그인](http://localhost:3000/login)에서 그 계정을 사용합니다. 로그인에서 비밀번호를 표시하거나 숨길 수 있습니다. 현재 작가 홈은 계정 이메일과 이름, 전시 기간·장소·작품 수를 포함한 목록 조회를 제공합니다. 입력/검수 화면은 다음 구현입니다.
 
 클라우드의 기존 인증·초안 API에는 `.env.example`의 Supabase 변수 두 개와 `APP_ORIGIN`이 필요합니다. AI 변수는 아래 절차로 별도 설정합니다. W1 해설 작업의 신뢰된 서버 worker에는 서버 전용 `SUPABASE_SERVICE_ROLE_KEY`가 필요합니다. 브라우저에 노출하지 않습니다. `APP_ORIGIN`은 실제 접속 주소와 정확히 맞춥니다. HTTPS에서는 인증 쿠키에 Secure가 적용됩니다. 클라우드에는 migration과 사전 발급 계정이 필요하며, 이 작업은 클라우드 생성·배포를 수행하지 않았습니다.
+
+로컬 계정을 운영자로 지정하려면 `npm run db:operator -- <사용자 UUID>`를 실행합니다. 같은 명령에 `--disable`을 붙이면 해제됩니다. 로컬 Supabase에 이미 있는 비익명 계정만 허용하며 운영자 발송함 HTTP 검토에 사용합니다. 전시 생성·해설 초안 완료·게시의 거래성 안내는 `POST /api/cron/automation`으로 처리합니다. 서버의 `CRON_SECRET`을 Bearer 헤더로 보내며 브라우저에는 전달하지 않습니다. 실제 스케줄러는 아직 배포하지 않았습니다.
+
+자동화도 `AI_PROVIDER_MODE=mock`으로 전체 흐름을 시험할 수 있습니다. 모의 개발 서버의 출처와 시험용 cron 비밀값을 `TEST_APP_ORIGIN`, `TEST_CRON_SECRET`에 지정한 뒤 `npm run test:automation`을 실행합니다. 실환경에는 Liner 키와 스티비 거래성·홍보성 각각의 자동 이메일 URL, API 키, 사용자 정의 문단 필드가 필요합니다(`.env.example`). 스티비 설정이 없으면 승인 발송함을 소비하지 않고 cron 결과의 `dispatchReady=false`로 알립니다. 기본 정책은 운영자 승인 후 발송하는 draft입니다. 채널톡 문의 흐름은 구현 중이며 Alt 실행 연결은 후속입니다.
+
+채널톡 문의는 기존 Open API 웹훅의 URL 토큰 수신과 AppStore Native API 발신을 사용합니다. 서버 전용 `CHANNEL_TALK_WEBHOOK_TOKEN`은 공백 없는 32~256자이며 `CHANNEL_TALK_CHANNEL_ID`와 함께 설정합니다. 발신에는 `CHANNEL_TALK_APP_ID`, `CHANNEL_TALK_APP_SECRET`, 32바이트의 64자리 hex `CHANNEL_TALK_TOKEN_KEY`가 필요합니다. 토큰은 암호화해 DB에 캐시합니다. 웹훅 URL과 쿼리 토큰은 로그에 남기지 않습니다. 개발 요청 로그의 해당 경로 제외가 설정되어 있으며 운영 프록시·호스팅 접근 로그의 쿼리 제거는 키 당일 확인이 필요합니다. 로컬 인증·실제 DB와 모의 답변을 사용한 HTTP 통합 1개는 통과했으나 실제 수신·발신은 미검증이며, 정책·계정 연결과 보존 데이터의 물리 삭제도 확인해야 합니다. [계약과 미확인 범위](docs/research/automation-provider-contracts.md#채널톡-문의-수신-선택)를 확인하세요.
 
 ## AI 연결 준비
 
@@ -68,7 +74,7 @@ AI의 업무 절차와 말투는 [제품 플러그인](docs/specs/product-ai-plu
 
 작가 자료 정리는 원문 블록을 분류한 비공개 후보 → 작가 검토 → 버전 재검사 → 적용의 서버 실행 모듈을 제공합니다. 실제 DB 저장소·검수 UI는 아직 연결하지 않았습니다. `createNarrationRuntime`에는 소유 자료로 해설 후보 2개를 병렬 생성하고 평가·최대 한 라운드 재생성하는 경로와 단일 생성 기준선을 연결했습니다. 최종 결과는 미승인 초안입니다. 관람 글 채팅은 연결됐고 대화 문맥 복제는 후속이며 [작가 해설 비교 계약](docs/specs/narration-evaluation.md)을 확인하세요.
 
-관람 하네스 입력은 선택적인 `intent: "narration" | "question"`와 `artworkNumber`를 받습니다. 해설 버튼은 `intent: "narration"`과 작품 ID를, 숫자 입력은 같은 의도와 작품 번호를 보내며 `question`도 함께 전달합니다. 생략 시 제한된 문장 판별을 사용합니다. 승인 해설은 최대 2,000 Unicode 코드 포인트를 그대로 반환·음성 전달하고, 관람 생성 답변은 600자 상한을 유지합니다. 해설 초안은 별도 2,000자 계약을 쓰고 선택 결과의 `overTarget`으로 600자 초과 경고를 전달합니다. 관람 음성 HTTP는 로컬 검증을 마치고 CI 대기 중이며 UI는 후속입니다. [PR #2 수정 검토서](docs/reviews/ai-harness-fix-review.md)에 재현 근거와 게시 데이터·적용 이력의 후속 요구를 정리했습니다.
+관람 하네스 입력은 선택적인 `intent: "narration" | "question"`와 `artworkNumber`를 받습니다. 해설 버튼은 `intent: "narration"`과 작품 ID를, 숫자 입력은 같은 의도와 작품 번호를 보내며 `question`도 함께 전달합니다. 생략 시 제한된 문장 판별을 사용합니다. 승인 해설은 최대 2,000 Unicode 코드 포인트를 그대로 반환·음성 전달하고, 관람 생성 답변은 600자 상한을 유지합니다. 해설 초안은 별도 2,000자 계약을 쓰고 선택 결과의 `overTarget`으로 600자 초과 경고를 전달합니다. 관람 음성 HTTP는 PR #10으로 병합됐으며 UI는 후속입니다. [PR #2 수정 검토서](docs/reviews/ai-harness-fix-review.md)에 재현 근거와 게시 데이터·적용 이력의 후속 요구를 정리했습니다.
 
 ## 작가 해설 비교 실험
 

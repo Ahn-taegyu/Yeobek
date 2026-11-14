@@ -20,6 +20,8 @@ export function playbookPrompt(id: PlaybookId): string {
 }
 type JobResult<Id> = Id extends "narration-draft" ? NarrationResult : Id extends "narration-audio" ? AudioRunResult : KnowledgeOrganizationResult;
 type CapabilityMap<Id> = {
+  "status.read": () => Promise<unknown | null>;
+  "support.read": () => Promise<unknown | null>;
   "voice.reserve": VisitorVoiceStore["reserve"];
   "voice.complete": VisitorVoiceStore["complete"];
   "voice.read": VisitorVoiceStore["read"];
@@ -44,6 +46,8 @@ type PlaybookCapabilities = {
 };
 
 type CapabilityStores<Id> = {
+  status?: { read: CapabilityMap<Id>["status.read"] };
+  support?: { read: CapabilityMap<Id>["support.read"] };
   voice?: VisitorVoiceStore;
   audio?: AuthorAudioStore;
   visitor?: VisitorLifecycle;
@@ -59,6 +63,8 @@ function requireStore<Store>(store: Store | undefined): Store {
 }
 
 const bindCapability = {
+  "status.read": ({ status }) => requireStore(status).read.bind(status),
+  "support.read": ({ support }) => requireStore(support).read.bind(support),
   "voice.reserve": ({ voice }) => requireStore(voice).reserve.bind(voice),
   "voice.complete": ({ voice }) => requireStore(voice).complete.bind(voice),
   "voice.read": ({ voice }) => requireStore(voice).read.bind(voice),
