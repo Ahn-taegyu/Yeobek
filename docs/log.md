@@ -2,7 +2,15 @@
 
 ## 2026-11-14
 
-- **관람 채팅 공개 중지 작품 안내 구분**: SRC-059에 따라 공개 목록에 없는 번호 중 같은 공개 전시에서 게시된 적이 있고 삭제되지 않은 작품은 `artworkPaused`, 게시된 적 없는 번호는 `artworkUnavailable`로 답한다. 신규235000 `was_artwork_number_published`와 `publication.history` capability를 추가하고 플러그인0.15.0을 생성했다. 프런트의 서버 문구 비교를 제거하고, 재확인으로 선택 작품이 사라지면 진행 중 답변·낭독을 취소한다. 화면 명세 SC-V04와 프런트 인계를 갱신했다. 외부 AI/TTS 호출0회.
+- **관람 채팅 공개 중지 작품 안내 구분**: SRC-063에 따라 공개 목록에 없는 번호 중 같은 공개 전시에서 게시된 적이 있고 삭제되지 않은 작품은 `artworkPaused`, 게시된 적 없는 번호는 `artworkUnavailable`로 답한다. 신규235900 `was_artwork_number_published`와 `publication.history` capability를 추가하고 플러그인0.15.0을 생성했다. 프런트의 서버 문구 비교를 제거하고, 재확인으로 선택 작품이 사라지면 진행 중 답변·낭독을 취소한다. 화면 명세 SC-V04와 프런트 인계를 갱신했다. 외부 AI/TTS 호출0회.
+
+- **Liner 실호출 후속**: 재작성 평가의 추론 포함 토큰 예산, Gemini PCM→MP3 변환, 공통 도슨트 설정을 반영했다. 소량 비교에 따라 Luna 생성·Sonnet 평가를 초기 기본으로 선택하고 인용 ID 오타·근거 부족 상태의 실측 문제를 보강했다. [사용자 요청](references/user-liner-voice-evaluation.md), [측정 범위와 한계](research/liner-docent-live-validation.md).
+
+- **작가 화면 이동 조회 개선**: 작가 홈·프로필·전시·검토 화면이 최근 읽은 데이터를 재사용하고 링크에 마우스를 올리거나 키보드로 이동할 때 필요한 데이터를 미리 읽는다. 저장이 진행 중이면 완료 후 조회하며, 로그인 상태가 바뀌면 이전 조회를 폐기한다. [사용자 요청](references/user-session-navigation.md).
+
+- **무료 텍스트 제공사 선택 시험**: Gemini 생성·Groq 평가의 계정 확인, 키 설정과 제한된 시험 절차를 추가했다. 실제 AI 호출은 0회다. [사용자 요청](references/user-free-ai-providers.md).
+
+- **스티비 가입 인증 메일 연결**: Supabase Auth Send Email 훅에서 서명을 확인하고 가입·재발송 코드만 전용 주소록의 자동 이메일로 보낸다. 모의 발송과 서명 검증을 검사하며 실제 수신과 프로필 표시는 테스트 계정으로 검증한다. [사용자 요청](references/user-stibee-signup.md).
 
 - **작가 가입·전시 진입 수정**: 진행 중 전시는 해당 전시명과 작품 목록으로 연결한다. 이름·작가명은 가입에서 받아 인증 및 직접 로그인 후 처음 생성되는 프로필에 반영한다. [사용자 요청](references/user-artist-signup-exhibition.md).
 - **API 적용 전 준비 범위 확정**: SRC-058에 수정 계획·최소 승인/게시 UI 확장·인증된 purge GET 요청과 유료 호출/원격 설정 제외를 기록했다. 작업 추적·화면·API·프런트 인계·키 당일 점검표를 연결한다. 실호출·운영 cron은 미실행이다.

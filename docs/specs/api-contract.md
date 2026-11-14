@@ -467,7 +467,15 @@ signupRequestId는 최초 가입 입력의 requestId다. 생성 요청의 응답
 
 초기 구현 정책(사용자 확정 수치 아님): 네트워크 가입·재발송 합계10/분·60/시간, 인증60/분·300/시간; 이메일 가입·재발송5/시간, 인증10/시간. 같은 요청 ID도 한도에 포함한다. DB에는 HMAC 해시·UUID·kind·시각만 남기고48시간 후 최대1000개씩 purge한다. 원본 이메일/비밀번호/코드는 기록하지 않는다. 스케줄 실제 연결은 W7이며 정리 완료로 간주하지 않는다. 공개 Supabase 재발송은 제공사 자체 한도를 따르므로 앱 원장으로 모두 통제한다고 주장하지 않는다.
 
-배포 순서: 신규 migration180000/181000→Auth 설정(enable_signup:false,confirmations:true,min password8,OTP6,confirmation 코드 템플릿/SMTP)→서버→가입 플래그 활성화. 클라우드 Auth 설정은 이 커밋에서 원격 변경하지 않는다. 새 정책은 [키 당일 점검 대상](../research/signup-auth-contract.md)이다. 가입/선택/코드 입력 프런트는 이 백엔드 API와 별도 인계한다.
+배포 시 migration180000/181000과 프로필 migration234000을 적용하고 공개 가입 끔, 이메일 확인 켬, 비밀번호 최소 8자, OTP 6자리로 설정한다. [테스트 Supabase의 스티비 훅](#preview-스티비-가입-인증) 또는 코드 전용 SMTP 템플릿을 준비하고 서버를 배포한 뒤 가입을 활성화한다. [키 당일 점검 항목](../research/signup-auth-contract.md)을 확인한다.
+
+### Preview 스티비 가입 인증
+
+1. 스티비 스탠다드 이상에서 테스트 인증 전용 주소록을 만들고 텍스트 사용자 정의 필드 `yeobek_code`를 추가한다. 같은 주소록의 자동 이메일에서 **API로 요청하기** 및 **트리거 중복 허용**을 선택한다. 즉시 발송, 중복 제한 0분으로 지정하고 본문에 `$%yeobek_code%$`를 넣어 실행한다. [스티비 발송 API 설정](https://help.stibee.com/email/automation/api)
+2. 테스트 Supabase에 `stibee-signup-email` 함수를 배포한다. Auth의 **Send Email** HTTP 훅은 `https://<project-ref>.supabase.co/functions/v1/stibee-signup-email`로 향하게 하고, 생성된 서명 비밀값 전체를 함수 환경의 `SEND_EMAIL_HOOK_SECRET`에 저장한다. 앞 단계의 워크스페이스 API 키·숫자 주소록 ID·발송 API URL은 각각 `STIBEE_API_KEY`, `STIBEE_SIGNUP_LIST_ID`, `STIBEE_SIGNUP_URL`에 저장한다. 이 훅은 프로젝트의 Auth 이메일을 맡으며 가입·재발송 이벤트를 지원한다. [Supabase Send Email 훅](https://supabase.com/docs/guides/auth/auth-hooks/send-email-hook)
+3. Vercel Preview에 같은 Supabase의 `SUPABASE_SERVICE_ROLE_KEY`와 Preview 기준 `APP_ORIGIN`을 설정한다. 연결을 준비한 뒤 Preview에 `FEATURE_SIGNUP=true`를 설정하고 재배포한다. 가입 및 재발송 코드가 실제로 도착하는지, 인증 후 비밀번호로 직접 로그인해야 하는지, 가입 시 입력한 이름·작가명이 프로필에 표시되는지 확인한다.
+
+발송 함수는 주소록에 이메일을 광고성 정보 수신 미동의로 등록한다. 기존 구독자의 수신 상태를 유지하고, 코드는 개별 발송 변수로만 전달한다. 스티비가 API 요청을 접수해도 수신거부나 자동 삭제 상태면 메일이 생략될 수 있다.
 
 
 # W11 예상 Q&A·미리보기·전시 일괄 생성

@@ -89,4 +89,9 @@
 - [진행 중 전시 진입과 가입 시 작가 프로필](user-artist-signup-exhibition.md) — SRC-057.
 
 - [API 적용 수정 계획과 승인·게시 UI 및 cron GET 구현 요청](user-api-rollout-publication.md) — SRC-058, 실호출 전 준비와 원격 설정 변경 제외.
-- [관람 채팅의 공개 중지 작품과 없는 번호 안내 구분](user-visitor-paused-artwork-copy.md) — SRC-059, 게시 이력 있는 번호는 온라인 안내 중지 문구.
+- [Preview 가입 인증 메일을 스티비로 발송](user-stibee-signup.md) — SRC-059.
+
+- [무료 AI 제공사 시험 요청](user-free-ai-providers.md) — SRC-060.
+- [같은 세션에서 페이지 이동 시 미리 불러온 데이터 사용](user-session-navigation.md) — SRC-061.
+- [Liner 재작성·음성 수정과 도슨트 모델 통일](user-liner-voice-evaluation.md) — SRC-062.
+- [관람 채팅의 공개 중지 작품과 없는 번호 안내 구분](user-visitor-paused-artwork-copy.md) — SRC-063, 게시 이력 있는 번호는 온라인 안내 중지 문구.

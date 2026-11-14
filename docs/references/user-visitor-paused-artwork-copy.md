@@ -1,6 +1,6 @@
 ---
 type: Reference
-id: SRC-059
+id: SRC-063
 title: 관람 채팅의 공개 중지 작품과 없는 번호 안내 구분
 description: 번호로 물은 작품이 공개 중지된 경우와 처음부터 없는 번호를 다른 고정 문구로 안내하는 사용자 결정.
 status: stable

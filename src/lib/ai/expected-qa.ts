@@ -39,17 +39,18 @@ export interface ExpectedQaStore {
   complete(job: ExpectedQaJob, result: ExpectedQaCompletion): Promise<ExpectedQaJob>;
 }
 
-const jsonSchema = {
+const jsonSchema = (allowedIds: string[]) => ({
   name: "yeobek_expected_qa",
   definition: {
     type: "object", additionalProperties: false, required: ["items"], properties: {
       items: { type: "array", items: { type: "object", additionalProperties: false,
         required: ["question", "answer", "citations"], properties: {
-          question: { type: "string" }, answer: { type: "string" }, citations: { type: "array", items: { type: "string" } },
+          question: { type: "string" }, answer: { type: "string" },
+          citations: { type: "array", items: { type: "string", enum: allowedIds } },
         } } },
     },
   },
-};
+});
 
 export function validateQaContext(ownerId: string, job: Pick<ExpectedQaJob,
   "scope" | "exhibitionId" | "artworkId" | "documentId" | "expectedRevision" | "expectedDocumentRevision">, context: ExpectedQaContext | null) {
@@ -109,7 +110,7 @@ export async function executeExpectedQa(ownerId: string, store: ExpectedQaStore,
       flow.skip("output.validate", "insufficient_evidence");
     } else {
       const response = await flow.step("model.generate", () => abortable(deadline.signal, activeSignal => text.generate({
-        system: playbookPrompt("expected-qa-draft"), schema: jsonSchema, signal: activeSignal,
+        system: playbookPrompt("expected-qa-draft"), schema: jsonSchema(evidence.map(source => source.id)), signal: activeSignal,
         maxOutputTokens: 3072, input: JSON.stringify({ scope: job.scope, maxItems, evidence }),
       }), { defer: true }));
       usage.push(response.trace);

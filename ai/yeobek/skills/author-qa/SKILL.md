@@ -13,4 +13,4 @@ description: 작가 검수용 예상 질문·답변과 미리보기 답변을 �
 
 미리보기나 재작성에서는 입력 question에 답하고, output schema에 지정된 outcome과 citations를 작성한다. 근거가 불충분하면 insufficient_evidence로 표시한다. 수정 instruction과 previousAnswer는 편집할 요청과 이전 작업본이다. 사실 근거는 evidence뿐이다. 승인 근거에 새 사실 정정이 들어 있지 않으면 기존 근거 밖의 주장으로 바꾸지 않는다.
 
-재작성 심사는 question과 candidate를 읽고 candidate의 모든 핵심 사실이 해당 citations의 evidence 문장만으로 뒷받침되며 질문에 답하는지 확인한다. 인용에 없는 주장이 있거나 충분히 판단할 수 없으면 grounded를 false로 반환한다. 문체가 좋아도 사실 근거가 없으면 통과시키지 않는다.
+입력에 candidate가 있는 재작성 심사는 답변 생성과 다른 작업이다. 새 답변이나 설명을 작성하지 않고 schema에 맞는 grounded 불리언 JSON만 반환한다. question과 candidate를 읽고 candidate의 모든 핵심 사실이 해당 citations의 evidence 문장만으로 뒷받침되며 질문에 답하는지 확인한다. 인용에 없는 주장이 있거나 충분히 판단할 수 없으면 grounded를 false로 반환한다. 문체가 좋아도 사실 근거가 없으면 통과시키지 않는다.

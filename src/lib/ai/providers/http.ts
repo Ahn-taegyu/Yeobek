@@ -17,6 +17,11 @@ interface ProviderRequest {
   signal?: AbortSignal;
 }
 
+interface SpeechConversion {
+  acceptsContentType: (value: string) => boolean;
+  toMp3: (audio: Uint8Array, signal: AbortSignal) => Promise<Uint8Array>;
+}
+
 export function objectValue(value: unknown): Record<string, unknown> | undefined {
   if (value && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -56,18 +61,25 @@ export function providerTrace(
   config: { model: string; apiKey: string },
   response?: Record<string, unknown>,
 ): AiProviderTrace {
-  const reportedModel = response?.model;
+  const reportedModel = provider === "gemini" ? response?.modelVersion : response?.model;
   const model = typeof reportedModel === "string" &&
     /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(reportedModel) &&
     !reportedModel.includes(config.apiKey)
     ? reportedModel
     : config.model;
   const trace: AiProviderTrace = { provider, model };
-  const tokens = objectValue(response?.usage);
+  const gemini = provider === "gemini";
+  const chatCompletion = provider === "liner" || provider === "exaone" || provider === "groq";
+  const tokens = objectValue(gemini ? response?.usageMetadata : response?.usage);
   const usage: AiUsage = {};
-  const input = tokenCount((provider === "liner" || provider === "exaone") ? tokens?.prompt_tokens : tokens?.input_tokens);
-  const output = tokenCount((provider === "liner" || provider === "exaone") ? tokens?.completion_tokens : tokens?.output_tokens);
-  const total = tokenCount(tokens?.total_tokens);
+  const input = tokenCount(gemini ? tokens?.promptTokenCount : chatCompletion ? tokens?.prompt_tokens : tokens?.input_tokens);
+  let output = tokenCount(gemini ? tokens?.candidatesTokenCount : chatCompletion ? tokens?.completion_tokens : tokens?.output_tokens);
+  if (gemini && output !== undefined && tokens?.thoughtsTokenCount !== undefined) {
+    // Gemini reports thought tokens separately from visible candidate tokens.
+    const thoughts = tokenCount(tokens.thoughtsTokenCount);
+    output = thoughts === undefined ? undefined : tokenCount(output + thoughts);
+  }
+  const total = tokenCount(gemini ? tokens?.totalTokenCount : tokens?.total_tokens);
   if (input !== undefined) usage.inputTokens = input;
   if (output !== undefined) usage.outputTokens = output;
   if (total !== undefined) usage.totalTokens = total;
@@ -120,7 +132,7 @@ async function readBoundedBody(response: Response, limit: number, signal: AbortS
 async function request(
   input: ProviderRequest,
   options: AiProviderOptions,
-  expectedTypes: readonly string[],
+  expectedTypes: readonly string[] | SpeechConversion,
   maxBytes: number,
 ): Promise<Uint8Array> {
   if (input.signal?.aborted) throw new AiError("cancelled");
@@ -143,9 +155,13 @@ async function request(
       if (response.status === 429) throw new AiError("rate_limited");
       if (response.status === 503) throw new AiError("provider_unavailable");
       if (!response.ok) throw new AiError("provider_rejected");
-      const contentType = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
-      if (!contentType || !expectedTypes.includes(contentType)) throw new AiError("invalid_response");
-      return await readBoundedBody(response, maxBytes, signal);
+      const contentType = response.headers.get("content-type") ?? "";
+      const accepted = "acceptsContentType" in expectedTypes
+        ? expectedTypes.acceptsContentType(contentType)
+        : expectedTypes.includes(contentType.split(";")[0].trim().toLowerCase());
+      if (!accepted) throw new AiError("invalid_response");
+      const bytes = await readBoundedBody(response, maxBytes, signal);
+      return "toMp3" in expectedTypes ? await expectedTypes.toMp3(bytes, signal) : bytes;
     } finally {
       if (response.body && !response.bodyUsed) {
         void response.body.cancel().catch(() => {});
@@ -186,9 +202,10 @@ export const SPEECH_CONTENT_TYPE = "audio/mpeg";
 export async function requestSpeech(
   input: ProviderRequest,
   options: AiProviderOptions,
-  expectedTypes: readonly string[] = [SPEECH_CONTENT_TYPE],
+  expectedTypes: readonly string[] | SpeechConversion = [SPEECH_CONTENT_TYPE],
 ): Promise<Uint8Array> {
   const audio = await request(input, options, expectedTypes, MAX_SPEECH_RESPONSE_BYTES);
+  if (audio.length > MAX_SPEECH_RESPONSE_BYTES) throw new AiError("response_too_large");
   const hasId3 = audio.length >= 10 && audio[0] === 0x49 && audio[1] === 0x44 && audio[2] === 0x33;
   const hasFrameSync = audio.length >= 4 && audio[0] === 0xff && (audio[1] & 0xe0) === 0xe0;
   if (!hasId3 && !hasFrameSync) throw new AiError("invalid_response");

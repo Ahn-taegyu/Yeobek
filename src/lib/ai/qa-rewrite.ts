@@ -22,6 +22,9 @@ export interface QaRewriteStore {
   complete(job: QaRewriteJob, result: ExpectedQaCompletion): Promise<QaRewriteJob>;
 }
 const judgment = z.strictObject({ grounded: z.boolean() });
+// Completion caps include reasoning as well as the final JSON at gateways.
+// Keep a finite budget matching narration evaluation, even for a boolean verdict.
+export const QA_REWRITE_JUDGE_OUTPUT_TOKENS = 3000;
 const judgeSchema = { name: "yeobek_artist_qa_rewrite_judge", definition: {
   type: "object", required: ["grounded"], additionalProperties: false, properties: { grounded: { type: "boolean" } },
 } };
@@ -74,7 +77,7 @@ export async function executeQaRewrite(ownerId: string, store: QaRewriteStore, t
         const assessment = await flow.step("model.judge", () => invoke(judge, {
           system: playbookPrompt("artist-qa-rewrite"), input: JSON.stringify({ question, candidate,
             evidence: evidence.filter(source => answer.citations.includes(source.id)) }),
-          schema: judgeSchema, maxOutputTokens: 256,
+          schema: judgeSchema, maxOutputTokens: QA_REWRITE_JUDGE_OUTPUT_TOKENS,
         }));
         const grounded = await flow.step("judge.validate", () => {
           deadline.signal.throwIfAborted();

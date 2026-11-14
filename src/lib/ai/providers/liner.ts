@@ -7,6 +7,7 @@ import type { AiProviderOptions, AiTextProvider, AiSpeechProvider, AiTranscripti
 
 import { recordingExtension, RECORDING_CONTENT_TYPES } from "./recording";
 import { mediaDataUrl, mediaJsonBody } from "./media";
+import { linerPcmConversion } from "./liner-pcm";
 
 const LINER_COMPLETIONS_URL = "https://platform.liner.com/api/v1/chat/completions";
 
@@ -72,14 +73,16 @@ export function createLinerTranscriptionProvider(config: AiModelConfig, options:
 }
 
 export function createLinerSpeechProvider(config: OpenAiSpeechConfig, options: AiProviderOptions = {}): AiSpeechProvider {
+  const usesPcm = /^google\/gemini-[\w.-]+-tts(?:-preview)?(?::free)?$/.test(config.model);
   return {
     async synthesize({ text, signal }) {
       validateSpeechText(text);
       const audio = await requestSpeech({
         url: "https://platform.liner.com/api/v1/audio/speech",
         headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" },
-        body: jsonBody({ model: config.model, voice: config.voice, input: text, response_format: "mp3" }), signal,
-      }, options);
+        body: jsonBody({ model: config.model, voice: config.voice, input: text, response_format: usesPcm ? "pcm" : "mp3" }),
+        signal,
+      }, options, usesPcm ? linerPcmConversion : undefined);
       return { audio, contentType: SPEECH_CONTENT_TYPE, trace: providerTrace("liner", config) };
     },
   };

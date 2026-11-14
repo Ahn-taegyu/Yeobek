@@ -37,6 +37,10 @@ sources:
 
 공개 주소는 기존 `listLabels` RPC/HTTP가 반환하는 **`/exhibitions/{exhibitionId}`**, 작품 주소는 **`/exhibitions/{exhibitionId}/artworks/{artworkId}`**를 유지한다. `/visit/{exhibitionId}`는 화면 구현 후보였으며 기존 공개 주소를 바꾸는 서버 계약이 아니다. 프런트가 `/visit` 아래에 화면을 만들면 기존 `/exhibitions` 주소에서 동일 화면으로 연결하는 경로를 제공한다. 서버 API 주소는 `/api/public/exhibitions/{id}`다. QR 제작은 이번 범위 밖이며 라벨 API는 유지한다.
 
+## 작가 화면 이동과 조회
+
+작가 홈·프로필·전시·검토·게시 화면은 탭 메모리에서 조회 결과를 최대 2분 재사용한다. 홈은 브라우저가 여유 있을 때 첫 전시 데이터를 읽는다. 주요 링크는 페이지를 미리 불러오고 마우스, 키보드 포커스, 터치로 이동을 시작할 때 필요한 조회도 시작한다. 같은 조회가 진행 중이면 결과를 함께 쓴다. 저장 요청 전후와 로그인·로그아웃 시 기록을 비우고, 다른 탭에도 변경을 알린다. 공개 전시는 철회 상태를 확인할 수 있도록 접속마다 공개 API로 조회한다. [사용자 요청](../references/user-session-navigation.md).
+
 계약 원천: `src/lib/contracts/routes.ts`, 각 Zod 스키마, `src/lib/client/index.ts`. 아래 스키마 이름으로 `z.input<typeof schema>`(요청), `z.output<typeof schema>`(응답)를 얻거나 `requestApi` 추론을 사용한다. 임의로 HTTP 타입을 복제하지 않는다.
 
 # 공통 호출·오류·플래그
@@ -216,7 +220,7 @@ SC-A06에서 `getPublicationChecklist` (`GET /api/admin/exhibitions/{id}/publica
 
 ## B 후속: 작품 지칭과 음성 연결 (PR #25 계약)
 
-질문에 명확한 공개 번호나 공개 작품 제목이 있으면 서버가 해당 작품으로 답한다. `reply.publication.artworkId`를 답변 대상과 상단 선택에 함께 반영하되, `contextSequence`가 현재 요청보다 오래된 응답은 선택을 덮어쓰지 않는다. 번호/제목 충돌·중복 제목·여러 작품 지칭·명시적으로 없는 제목은 `outcome:clarify, publication:null`로 재확인을 요청한다. 제목은 현재 공개본만 대조하며 비공개 초안 제목이나 유사어를 모델 추측으로 선택하지 않는다. 공개 목록에 없는 번호는 같은 공개 전시에서 그 번호로 게시된 적이 있고 작품이 삭제되지 않았으면 고정 문구 `artworkPaused`, 아니면 `artworkUnavailable`로 답한다. 프런트는 서버 문구를 그대로 표시한다([SRC-059](../references/user-visitor-paused-artwork-copy.md)). `image`는 선택된 활성 공개본 참조 또는 null이다.
+질문에 명확한 공개 번호나 공개 작품 제목이 있으면 서버가 해당 작품으로 답한다. `reply.publication.artworkId`를 답변 대상과 상단 선택에 함께 반영하되, `contextSequence`가 현재 요청보다 오래된 응답은 선택을 덮어쓰지 않는다. 번호/제목 충돌·중복 제목·여러 작품 지칭·명시적으로 없는 제목은 `outcome:clarify, publication:null`로 재확인을 요청한다. 제목은 현재 공개본만 대조하며 비공개 초안 제목이나 유사어를 모델 추측으로 선택하지 않는다. 공개 목록에 없는 번호는 같은 공개 전시에서 그 번호로 게시된 적이 있고 작품이 삭제되지 않았으면 고정 문구 `artworkPaused`, 아니면 `artworkUnavailable`로 답한다. 프런트는 서버 문구를 그대로 표시한다([SRC-063](../references/user-visitor-paused-artwork-copy.md)). `image`는 선택된 활성 공개본 참조 또는 null이다.
 
 작품 버튼 선택 자체로 채팅·TTS API를 호출하지 않는다. STT 응답은 입력창에 표시하고 관람객 확인 후 `/api/chat`으로 전송한다. 음성이 켜졌으면 답변의 `answerId`로 `/api/speech`를 호출하고 음소거 시 재생/생성을 중단한다. 글 답변의 `outputMode:text`도 이후 명시적으로 speech를 요청할 수 있다는 기존 계약을 유지한다. 서버의 선택 참조 검증과 프런트 상단 표시·음소거 UI 검증은 구분한다.
 

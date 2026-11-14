@@ -8,7 +8,8 @@ import { useState, type FormEvent } from "react";
 import { requestApi } from "@/lib/client";
 import { sectionDefinitions } from "@/lib/contracts/knowledge-sections";
 import { onboardingKeywordOptions } from "@/lib/contracts/onboarding";
-import { errorMessage, Field, Header, Loading, loadProfile, PrivateImage, Questions, sectionsFrom, Steps, useArtistLoad } from "./ui";
+import { errorMessage, Field, Header, Loading, PrivateImage, Questions, sectionsFrom, Steps, useArtistLoad } from "./ui";
+import { loadProfile, profileKey } from "./navigation-data";
 
 import { uploadMaterial } from "./upload";
 
@@ -24,7 +25,7 @@ const groups = [
 ] as const;
 
 export function Onboarding() {
-  const result = useArtistLoad(loadProfile);
+  const result = useArtistLoad(loadProfile, profileKey);
   if (!result.data) return <><Header title="기본 정보" /><Loading {...result} /></>;
   return <OnboardingSteps initial={result.data} />;
 }
@@ -127,7 +128,7 @@ function OnboardingSteps({ initial }: { initial: Profile }) {
 }
 
 export function ArtistWorld() {
-  const result = useArtistLoad(loadProfile);
+  const result = useArtistLoad(loadProfile, profileKey);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();

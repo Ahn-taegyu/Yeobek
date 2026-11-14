@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ApiClientError, requestApi } from "@/lib/client";
+import { forgetArtistPage, loadArtistPage } from "@/lib/client/artist-navigation";
 import { AI_LIMITS } from "@/lib/contracts/chat";
 
 import type { PreviewAnswer, QaRewriteJob } from "@/lib/contracts/qa";
-import { errorMessage, Field, Header, Loading, PrivateImage, useArtistLoad } from "./ui";
+import { ArtistLink, errorMessage, Field, Header, Loading, PrivateImage, useArtistLoad } from "./ui";
+import { artworkListKey, exhibitionKey, loadArtworkList, loadExhibitionOverview, overviewKey } from "./navigation-data";
 
 type Batch = Awaited<ReturnType<typeof requestApi<"getTrainingBatch">>>["data"];
 type Target = Batch["targets"][number];
@@ -31,13 +32,11 @@ function latestVisibleQaItems(items: QaItem[]) {
 }
 
 function useReviewData(id: string) {
-  return useArtistLoad(useCallback(async (signal: AbortSignal) => {
-    const params = { id };
-    const [exhibition, artworks] = await Promise.all([
-      requestApi("getExhibition", { params, signal }), requestApi("listArtworks", { params, signal }),
-    ]);
-    return { exhibition: exhibition.data, works: artworks.data.items };
-  }, [id]));
+  const load = useCallback((signal: AbortSignal) => loadExhibitionOverview(id, signal), [id]);
+  return useArtistLoad(load, overviewKey(id), () => {
+    forgetArtistPage(exhibitionKey(id));
+    forgetArtistPage(artworkListKey(id));
+  });
 }
 
 export function Learning({ id }: { id: string }) {
@@ -139,44 +138,51 @@ export function Learning({ id }: { id: string }) {
           {busy ? "학습 중…" : running ? "진행 확인" : batch ? "다시 시도" : "여운 학습시키기"}
         </button>}
         {incomplete && <p role="status">{needsMaterial ? "학습을 마치지 못했어요. 전시 자료를 확인해주세요." : "일부 학습을 마치지 못했어요. 다시 시도해주세요."}</p>}
-        {batch && hasNarration && <Link className="artist-action" href={`${root(id)}/review?batch=${batch.id}`}>
+        {batch && hasNarration && <ArtistLink className="artist-action" href={`${root(id)}/review?batch=${batch.id}`}
+          prepare={() => import("./narration-review").then(({ prepareNarrationReview }) => prepareNarrationReview(id, result.data?.works[0]?.id))}>
           기본 해설 검토
-        </Link>}
+        </ArtistLink>}
         {batch?.status === "completed" && (!incomplete || hasQuestions) &&
-          <Link className={`artist-action${incomplete ? " secondary" : ""}`} href={`${root(id)}/faq`}>
+          <ArtistLink className={`artist-action${incomplete ? " secondary" : ""}`} href={`${root(id)}/faq`}
+            prepare={() => loadArtistPage(faqKey(id), signal => loadFaq(id, signal))}>
             {incomplete ? "생성된 질문 보기" : "자주하는 질문"}
-          </Link>}
+          </ArtistLink>}
       </> : <p>먼저 작품을 등록해주세요.</p>}
       {error && <p className="error" role="alert">{error}</p>}
     </section>}
   </>;
 }
 
+const faqKey = (id: string) => `faq:${id}`;
+
+async function loadFaq(id: string, signal: AbortSignal) {
+  const params = { id };
+  const works = await loadArtistPage(artworkListKey(id), signal => loadArtworkList(id, signal), signal);
+  const scopes = [{}, ...works.map(work => ({ artworkId: work.id }))];
+  const items: QaItem[] = [];
+  for (let offset = 0; offset < scopes.length; offset += 5) {
+    const lists = await Promise.all(scopes.slice(offset, offset + 5)
+      .map(query => requestApi("listQaItems", { params, query, signal })));
+    items.push(...lists.flatMap(({ data }) => data));
+  }
+  return latestVisibleQaItems(items);
+}
+
 export function Faq({ id }: { id: string }) {
-  const load = useCallback(async (signal: AbortSignal) => {
-    const params = { id };
-    const { data } = await requestApi("listArtworks", { params, signal });
-    const scopes = [{}, ...data.items.map(work => ({ artworkId: work.id }))];
-    const items: QaItem[] = [];
-    for (let offset = 0; offset < scopes.length; offset += 5) {
-      const lists = await Promise.all(scopes.slice(offset, offset + 5)
-        .map(query => requestApi("listQaItems", { params, query, signal })));
-      items.push(...lists.flatMap(({ data }) => data));
-    }
-    return latestVisibleQaItems(items);
-  }, [id]);
-  const result = useArtistLoad(load);
+  const load = useCallback((signal: AbortSignal) => loadFaq(id, signal), [id]);
+  const result = useArtistLoad(load, faqKey(id), () => forgetArtistPage(artworkListKey(id)));
+  const preparePreview = () => loadArtistPage(overviewKey(id), signal => loadExhibitionOverview(id, signal));
   return <div className="artist-faq yeobek-appear">
     <Header title="자주하는 질문" back={root(id)} />
     {result.data ? <>
       {result.data.length ? <ul>{result.data.map(item => {
         const params = new URLSearchParams({ qa: item.id });
         if (item.artworkId) params.set("work", item.artworkId);
-        return <li key={item.id}><Link href={`${root(id)}/preview?${params}`}>
+        return <li key={item.id}><ArtistLink href={`${root(id)}/preview?${params}`} prepare={preparePreview}>
           <span>{item.question}</span><span aria-hidden="true">›</span>
-        </Link></li>;
+        </ArtistLink></li>;
       })}</ul> : <p>등록된 예상 질문이 없어요.</p>}
-      <Link className="artist-action" href={`${root(id)}/preview`}>여운 답변 미리보기</Link>
+      <ArtistLink className="artist-action" href={`${root(id)}/preview`} prepare={preparePreview}>여운 답변 미리보기</ArtistLink>
     </> : <Loading {...result} />}
   </div>;
 }

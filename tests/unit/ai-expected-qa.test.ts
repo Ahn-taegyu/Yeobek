@@ -36,6 +36,9 @@ describe("expected QA authoring", () => {
     const { run, store, generate } = setup();
     await expect(run()).resolves.toMatchObject({ created: true, job: { status: "succeeded", result: { itemIds: [ids.session] } } });
     expect(generate).toHaveBeenCalledOnce();
+    expect(generate.mock.calls[0][0].schema.definition).toMatchObject({ properties: { items: { items: {
+      properties: { citations: { items: { type: "string", enum: [ids.evidence] } } },
+    } } } });
     const input = JSON.parse(generate.mock.calls[0][0].input);
     expect(input).toEqual({ scope: "artwork", maxItems: 3,
       evidence: [{ id: ids.evidence, version: 3, scope: "artwork", body: entry.answer }] });

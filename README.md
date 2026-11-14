@@ -26,10 +26,10 @@ npm run dev
 
 ## AI 연결 준비
 
-`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 실제 외부 모델 호출은 아직 0회입니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증과 [PR #5 CI](https://github.com/Ahn-taegyu/Yeobek/pull/5)를 통과해 병합됐습니다. 글 승인·게시 API는 PR #6 CI를 통과해 병합됐으며 관람 글 채팅 HTTP도 연결했습니다. 키를 넣어도 관람 화면이 활성화되지는 않습니다.
+`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 도슨트는 Liner `openai/gpt-6-luna`, 독립 평가는 `anthropic/claude-sonnet-5.5`입니다. 해설·예상 Q&A·미리보기·재작성·관람 답변은 같은 도슨트 모델을 사용합니다. 실제 Liner 연결 결과와 작은 표본의 한계는 [모델·음성 검토](docs/research/liner-docent-live-validation.md)를 확인하세요.
 
 1. `.env.example`의 AI 항목을 기존 `.env.local`에 추가하고 `LINER_API_KEY`를 서버에 설정합니다. 키에 `NEXT_PUBLIC_`를 붙이지 않습니다.
-2. `AI_ROUTE_DRAFT`, `AI_ROUTE_ORGANIZE`, `AI_ROUTE_JUDGE`, `AI_ROUTE_QA`, `AI_ROUTE_STT`, `AI_ROUTE_TTS`는 `제공사:모델` 형식으로 선택합니다. Liner TTS는 계정에서 확인한 고정 모델을 `AI_ROUTE_TTS` 또는 `LINER_TTS_MODEL`에, 음성을 `LINER_TTS_VOICE`에 지정해야 합니다. 평가 모델은 초안과 다른 인식 가능한 계열이어야 합니다.
+2. `AI_ROUTE_DOCENT`, `AI_ROUTE_ORGANIZE`, `AI_ROUTE_JUDGE`, `AI_ROUTE_STT`, `AI_ROUTE_TTS`는 `제공사:모델` 형식입니다. 기존 환경은 **DRAFT·QA를 제거하고 DOCENT 한 값으로 이전**합니다. 레거시 `AI_ROUTE_DRAFT`/`AI_ROUTE_QA`도 사용할 수 있지만 설정한 모든 도슨트 경로가 일치해야 합니다. 다르면 설정 오류로 중단합니다. Liner TTS는 계정에서 확인한 고정 모델과 `LINER_TTS_VOICE`가 필요합니다. Gemini TTS는 PCM을 받아 서버에서 MP3로 변환합니다. 평가 모델은 도슨트와 다른 인식 가능한 계열이어야 합니다. 원격 환경 변경은 별도 배포 작업입니다.
 3. OpenAI·Typecast·EXAONE은 비교 후보입니다. 해당 `AI_ROUTE_*`와 제공사 키, 필요한 음성 설정을 명시해 선택합니다. 자동 장애 전환은 없습니다. `.env.example`에 예시가 있습니다.
 4. 키 없는 개발·시험에는 `AI_PROVIDER_MODE=mock`을 사용합니다. `NODE_ENV=development` 또는 `test`에서만 허용되며 production에서는 거부합니다. 모의 결과에는 `mock: true`가 표시됩니다.
 
@@ -45,6 +45,8 @@ npm run ai:smoke -- tts
 # 권한 있는 30초/3MiB 이내 시험 녹음
 npm run ai:smoke -- stt --audio=path/to/test.webm
 ```
+
+Gemini 생성과 Groq 평가를 선택적으로 시험할 수 있습니다. 무료 계정·청구 상태 확인과 합성 자료 사용 등 선행 조건은 [무료 텍스트 시험 절차](docs/specs/key-day-checklist.md#무료-텍스트-제공사-선택-시험)를 따르세요. 음성·자료·자동화는 해당 범위가 아닙니다.
 
 `ai:check`는 설정을 검사하며 키를 출력하거나 접속하지 않습니다. `ai:smoke`는 `AI_PROVIDER_MODE=live`가 필요하며 `typecast-tts`, `openai-tts`, `exaone`도 선택할 수 있습니다. 시험은 응답 계약을 확인하며 한국어 품질·근거 충실도와 행사 키 권한은 별도 실측이 필요합니다.
 
@@ -162,7 +164,9 @@ python scripts/knowledge.py verify
 
 W9는 이메일 가입·코드 확인·재발송·세션 조회 API를 제공합니다. 프런트 선택/가입/코드 입력 화면은 별도 연결 대상입니다. `FEATURE_SIGNUP=false`가 기본이며 Auth·메일 구성을 확인한 후 명시적으로 켭니다. Supabase 공개 가입은 계속 꺼 두고 서버 서비스 키로 미인증 계정만 생성합니다. 신규 계정은 이메일 확인과 비밀번호 직접 로그인이 모두 필요합니다.
 
-로컬 `supabase/config.toml`은 비밀번호 최소8자·OTP6자리·코드 전용 확인 메일을 지정합니다. 기존 로컬 스택은 데이터 보존 stop/start로 설정을 반영합니다. 클라우드에는 같은 Auth 설정, `supabase/templates/confirmation.html` 템플릿, 실제 SMTP 도달 점검이 필요합니다. Auth 코드를 URL에 넣지 않고 최초 signup requestId를 재발송/확인까지 유지합니다. 최초 ID를 잃은 pending 계정의 복구는 아직 없습니다. 상세 [API 계약](docs/specs/api-contract.md#w9-이메일-가입-계약-검증-중)과 [검증 경계](docs/research/signup-auth-contract.md)를 확인하세요.
+로컬 `supabase/config.toml`은 비밀번호 최소8자·OTP6자리·코드 전용 확인 메일을 지정합니다. 기존 로컬 스택은 데이터 보존 stop/start로 설정을 반영합니다. Auth 코드를 URL에 넣지 않고 최초 signup requestId를 재발송/확인까지 유지합니다. 최초 ID를 잃은 pending 계정의 복구는 아직 없습니다. 상세 [API 계약](docs/specs/api-contract.md#w9-이메일-가입-계약-검증-중)과 [검증 경계](docs/research/signup-auth-contract.md)를 확인하세요.
+
+클라우드 테스트는 [Preview 스티비 가입 인증](docs/specs/api-contract.md#preview-스티비-가입-인증)을 참고하세요. SMTP를 사용하는 별도 배포에서는 Supabase의 `supabase/templates/confirmation.html`과 SMTP 도달을 확인하세요.
 
 `VISITOR_IP_HASH_SECRET`은 가입 한도의 이메일·네트워크 HMAC에도 서로 다른 접두사로 사용합니다. 원본 이메일/IP·비밀번호·코드는 한도 원장에 저장하지 않습니다. 로컬 Auth·Mailpit 통합은 `TEST_APP_ORIGIN`을 실행 중인 가입 활성 앱 주소로 지정한 뒤 `node --test tests/integration/signup.test.mjs`로 확인합니다. Supabase 직접 `/resend`는 제공사 한도를 따르며 앱 한도로 전부 통제되지 않습니다.
 
