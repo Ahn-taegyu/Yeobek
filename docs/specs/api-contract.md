@@ -596,8 +596,20 @@ P0 전시(`authoringStep` 비어 있지 않음)는 `artworks` 단계와 기존 �
 
 두 API는 previewExperience+previewChat, 같은 출처와 작가 인증을 요구한다. off404, 미인증401, 타 계정·삭제 전시·만료/없는 답변404, 입력 충돌409, 음성 원장 만료410, 한도429이며 모든 성공/오류/음성 응답에 private/no-store를 적용한다. 공개 관람 음성 API는 미리보기 답변 ID를 받아도 비공개 음성을 반환하지 않는다.
 
-20261115001000은 전용 비공개 음성 원장과 서비스 역할 전용 reserve/complete/load RPC를 추가한다. 전사 녹음은 저장하지 않고 인식 결과와 낭독 MP3 바이트만 최대24시간 보관한다. 음성은 공개 Storage에 저장되지 않으며 기존 purge 호출이 만료 원장·바이트를 최대1000건씩 함께 정리한다. 클라이언트에는 저장 경로·원장 객체·base64를 노출하지 않는다.
+20261115020000은 전용 비공개 음성 원장과 서비스 역할 전용 reserve/complete/load RPC를 추가한다. 전사 녹음은 저장하지 않고 인식 결과와 낭독 MP3 바이트만 최대24시간 보관한다. 음성은 공개 Storage에 저장되지 않으며 기존 purge 호출이 만료 원장·바이트를 최대1000건씩 함께 정리한다. 클라이언트에는 저장 경로·원장 객체·base64를 노출하지 않는다.
 
 소유자별 최근24시간 신규 STT/TTS 예약을 합산20회로 제한한다. 이는 기존 작가 글 생성 한도와 별도이며, 성공·실패 예약 모두 포함한다. 같은 입력·requestId는 한도와 모델 호출을 추가 소비하지 않으며 입력이 바뀌면409다. 처리 중·응답 유실의 재생은 같은 ID, 원장의 실패가 확정된 PREVIEW_VOICE_FAILED 응답 후 다음 명시적 재생만 새 ID로 처리한다. timeout·응답 검증 실패처럼 완료 여부가 불명확한 오류는 같은 ID를 유지한다. 120초 lease와 요청60초 기한을 사용하고, 완료 및 반환 시 전시·미리보기 답변의 접근 가능성을 다시 확인한다.
 
 배포는 migration 적용 후 앱을 교체하고 플래그는 명시적으로 켠다. 되돌릴 때 새 플래그를 끄고 추가 원장을 유지하며 기존 purge로 만료분을 정리한다. 운영 배포·실외부 음성 호출은 이 구현 검증에 포함하지 않는다. UI 모의 화면과 제공사 모의 계약 검증은 실제 녹음 인식률·음질·비용 확인을 대신하지 않는다.
+
+## 작품 글 인터뷰 계약 (F-024)
+
+서버 기능 플래그 `FEATURE_ARTWORK_INTERVIEW`는 기본 꺼짐이다. 꺼진 상태에서 아래 인터뷰 경로는 실행할 수 없다. 인터뷰 기능을 켜더라도 인증된 소유 작가만 대상 작품에 접근하며, 타 계정의 조회·생성·답변 변경은 404다.
+
+| 작업 | 경로 | 동작 |
+| --- | --- | --- |
+| 인터뷰 조회 | `GET /api/admin/artworks/{id}/interview` | 작품의 인터뷰 질문 및 답변 상태를 소유 작가에게 조회한다. 생성하지 않는다. 성공 응답의 `data`는 `{exhibitionId,artworkTitle,imageReady,questions}`이며 질문은 `{id,slot,question,answer,status,version,evidenceId}`다. `status`는 `pending/answered/skipped/approved`; 질문 최대 5개, 질문 글자 수 최대 500, 답변 최대 2000이다. |
+| 질문 생성 | `POST /api/admin/artworks/{id}/interview/generations` | 요청 body `{requestId}`. 작품 사진·글 자료를 보고 자료에 답이 없는 질문을 최대 5개 생성한다. 기존 작업 원장·한도를 재사용한다. 성공 응답의 `data`는 `{job,questions}`이며 job은 `{id,attempt,status,resultCode}`다. 작업 status는 `running/succeeded/failed/cancelled/abstained`; 현재 세부 결과 코드 표는 구현 계약에 따른다. |
+| 답변 처리 | `PATCH /api/admin/artworks/{id}/interview/answers/{questionId}` | 저장은 `{action:"save",expectedVersion,answer}`, 건너뛰기는 `{action:"skip",expectedVersion}`, 승인은 `{action:"approve",expectedVersion}`를 보낸다. save는 공백 제거 후 비어 있지 않은 최대 2000자다. approve는 먼저 저장된 답변에 대해서만 가능하다. 성공 응답의 `data`는 GET과 같은 인터뷰 객체다. |
+
+각 인터뷰 질문은 슬롯 1~5에 저장되며 답변 초안은 작품 범위 근거 초안으로 동기화된다. 인터뷰 화면에서 명시 승인하고 기존 게시 절차를 통과하기 전에는 공개 응답·관람 답변 근거가 될 수 없다. 인터뷰 질문·미승인 답변은 공개 응답에서 제외한다. 타 계정·삭제 대상은 404, 비활성 기능도 404다. 세부 오류 코드 표는 별도 문서화 전까지 일반 API 오류 계약을 따른다. 질문과 답변은 `artwork_interview_questions`와 `artwork_interview_answers`에 저장하며 작업 실행은 기존 `ai_jobs`와 `ai_job_attempts`를 재사용한다. 계약 원본은 `src/lib/contracts/interview.ts`, 라우트 연결은 `src/lib/contracts/routes.ts`, 저장 구조·RPC는 `supabase/migrations/20261115010000_artwork_text_interview.sql`이다. 사진 분석 품질은 실제 사진 입력을 처리하는 모델 호출로만 평가하고 모의 계약 검증과 구별한다.

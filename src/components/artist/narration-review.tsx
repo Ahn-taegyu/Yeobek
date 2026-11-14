@@ -293,7 +293,11 @@ function ArtworkDraft({ initial, initialJob, initialDocuments, initialNotice }: 
         const checked = selected.includes(item);
         return <li key={`${item.id}:${item.version}`}>
           <strong>{item.sourceLabel}</strong>
-          <p className="artist-workflow-text">{item.body}</p>
+          <p className="artist-note">{item.state === "draft" ? "승인 대기" : "승인됨"}</p>
+          <details>
+            <summary>근거 보기</summary>
+            <p className="artist-workflow-text">{item.body}</p>
+          </details>
           {item.state === "draft" ? <button className="artist-action secondary" disabled={blocked}
             onClick={() => approveEvidence(item)}>근거 승인</button> :
             <label className="artist-workflow-choice"><input type="checkbox" checked={checked} aria-label={`${item.sourceLabel} 근거를 해설에 사용`}

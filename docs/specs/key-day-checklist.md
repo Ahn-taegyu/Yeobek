@@ -73,6 +73,10 @@ AI_ROUTE_JUDGE=groq:openai/gpt-oss-120b
 
 # Auth와 기본 배포
 
+## 테스트 Preview
+
+Vercel `yeobek-test`는 GitHub `Docendocen/Yeobek`에 연결하며 `main`은 Preview 환경에서 빌드한다. Production 브랜치는 `yeobek-production`으로 지정한다. [고정 Preview 주소](https://yeobek-test-git-main-theo-s-projects17.vercel.app)의 배포 커밋이 최신 `main`과 같은지 확인한다. 새 버전이 사용하는 Supabase migration은 테스트 프로젝트에 순서대로 먼저 적용한다. [사용자 요청](../references/user-vercel-preview-main.md) · [Vercel Git 배포](https://vercel.com/docs/git).
+
 - [ ] 배포 SHA와 migration 적용 순서 확인. 기존 데이터를 보존하며 신규 migration을 전진 적용한다. 서비스 역할 키는 서버 전용이고 브라우저 번들에 포함되지 않는다.
 - [ ] `APP_ORIGIN`과 실제 HTTPS 주소·Auth 리디렉션 허용 목록을 맞춘다. 로그인 쿠키의 Secure·SameSite, 다른 출처 쓰기 거부, 로그아웃 후 관리자 401을 확인한다.
 - [ ] 클라우드 Supabase 공개 가입 OFF, 이메일 인증 ON, 최소 비밀번호 8자, 코드 6자리와 코드 전용 이메일 템플릿을 확인한다. 실제 발신자·수신/스팸함·재발송 한도를 확인한다. [스티비 Preview 설정](api-contract.md#preview-스티비-가입-인증)을 사용하면 전용 주소록과 훅을 점검한다.
