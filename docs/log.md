@@ -2,6 +2,8 @@
 
 ## 2026-11-14
 
+- **W12 공개 시각 snapshot 준비**: 신규201000 migration으로 게시 시각 고정·초안 수정 분리와 공개 응답 startTime/endTime을 추가했다. 구 공개본은 null을 유지한다. 응답 계약 좁은 검사1개 통과, SQL 독립 검토에서 차단 문제 없음. 최초 CI의 pending 이미지 fixture가 storage_key 제약을 누락해 해당 fixture를 보완했다. DB/HTTP 새 CI는 대기다.
+
 - **W12 이미지 선택 게시 준비**: 신규200000 migration에서 공개 image_key를 nullable로 바꾸고 두 게시 진입점의 선택 이미지 처리를 통합했다. 제공된 이미지의 소유/ready 검증은 유지한다. 독립 SQL 검토의 legacy publish 누락·기존 pgTAP 기대값을 보완하고 DB/HTTP 회귀를 추가했다. DB 실행·전체 CI는 대기이며 로컬 스택은 사용하지 않았다.
 
 - **W12 글 우선 게시 설정**: SRC-055의 최신 결정 원문을 확인해 voiceRequired 기본값·예제 환경을 false로 바꿨다. 명시 true 배포는 호환 유지하며 CI는 true/false 경로를 구분한다. 관련 정책 단위6개 통과. 공개 확장·자동 TTS 화면 연결·전체 CI는 아직 진행 중이다.

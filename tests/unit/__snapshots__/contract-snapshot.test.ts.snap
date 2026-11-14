@@ -10332,6 +10332,12 @@ exports[`HTTP route contracts > snapshots getPublicExhibition 1`] = `
               "null",
             ],
           },
+          "endTime": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
           "id": {
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
@@ -10350,6 +10356,12 @@ exports[`HTTP route contracts > snapshots getPublicExhibition 1`] = `
             ],
           },
           "startDate": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "startTime": {
             "type": [
               "string",
               "null",

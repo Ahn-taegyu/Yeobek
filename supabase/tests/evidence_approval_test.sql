@@ -47,9 +47,9 @@ select is(get_review_bundle('20000000-0000-0000-0000-000000000001')->'blocking_c
     '[]'::jsonb,'approved text without image or audio can pass review');
 
 reset role;
-insert into materials(id,owner_id,artwork_id,kind,state,byte_size) values
+insert into materials(id,owner_id,artwork_id,kind,state,storage_key,byte_size) values
     ('30000000-0000-0000-0000-000000000099','00000000-0000-0000-0000-000000000001',
-     '20000000-0000-0000-0000-000000000001','image','pending',100);
+     '20000000-0000-0000-0000-000000000001','image','pending','00000000-0000-0000-0000-000000000001/pending-fixture',100);
 update artworks set image_material_id = '30000000-0000-0000-0000-000000000099'
     where id = '20000000-0000-0000-0000-000000000001';
 set local role authenticated;

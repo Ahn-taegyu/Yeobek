@@ -23,6 +23,7 @@ select save_narration_draft('20000000-0000-0000-0000-000000000003',1,'Second nar
 
 reset role;
 update app_features set enabled = false where key = 'voice_required';
+update exhibitions set start_time='09:30',end_time='18:00' where id='10000000-0000-0000-0000-000000000001';
 insert into materials(id,owner_id,artwork_id,kind,state,storage_key,byte_size) values
     ('30000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001',
      '20000000-0000-0000-0000-000000000001','image','ready','00000000-0000-0000-0000-000000000001/image1',100),
@@ -69,6 +70,11 @@ select is(publish('00000000-0000-0000-0000-000000000001','10000000-0000-0000-000
     current_setting('test.select1')::jsonb,current_setting('test.intro1')::jsonb,false),
     current_setting('test.publish1')::jsonb || '{"created":false}'::jsonb,'successful publish replays before revision check');
 select is((select image_key from publications where artwork_id = '20000000-0000-0000-0000-000000000001'),null::text,'legacy publisher accepts an absent image');
+select is(get_public_exhibition('10000000-0000-0000-0000-000000000001')->>'start_time','09:30','publication snapshots its start time');
+reset role;
+update exhibitions set start_time='10:00' where id='10000000-0000-0000-0000-000000000001';
+set local role service_role;
+select is(get_public_exhibition('10000000-0000-0000-0000-000000000001')->>'start_time','09:30','draft time edits do not alter the public snapshot');
 select is(jsonb_array_length(load_publication_context('10000000-0000-0000-0000-000000000001',
     '20000000-0000-0000-0000-000000000001',null)->'evidence'),2,'Q&A receives all current approved scoped evidence');
 select is(load_publication_context('10000000-0000-0000-0000-000000000001',
