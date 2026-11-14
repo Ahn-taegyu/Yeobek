@@ -29,10 +29,14 @@ export function VerificationLinks({ id, batch, prepareFaq }: {
   </nav>;
 }
 
-/** Editor entry: shows the review links only once the latest training batch has completed. */
+/** Editor entry after the training button: shows the review links only once the latest batch has completed. */
 export function TrainedVerificationLinks({ id }: { id: string }) {
   const load = useCallback(async (signal: AbortSignal) =>
     (await requestApi("getLatestTrainingBatch", { params: { id }, signal })).data, [id]);
   const latest = useArtistLoad(load);
-  return latest.data ? <VerificationLinks id={id} batch={latest.data} /> : null;
+  if (latest.data?.status !== "completed") return null;
+  return <section aria-labelledby="trained-verification">
+    <h2 id="trained-verification">학습 결과 검증</h2>
+    <VerificationLinks id={id} batch={latest.data} />
+  </section>;
 }

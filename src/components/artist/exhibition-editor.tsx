@@ -135,7 +135,6 @@ function ExhibitionSteps({ initial }: { initial: Exhibition | null }) {
         <button className="artist-action" value="next" disabled={busy}>{busy ? "저장 중…" : "다음"}</button>
       </div>
     </form>}
-    {saved && <TrainedVerificationLinks id={saved.id} />}
     {step === 3 && saved && <ExhibitionMaterials exhibition={saved}
       onChange={setSaved} onBack={() => transitionScreen(() => setStep(2))} />}
   </>;
@@ -223,6 +222,7 @@ function ExhibitionMaterials({ exhibition, onChange, onBack }: {
       <ArtistLink className="artist-action secondary" href={`/artist/exhibitions/${id}/publication`}
         prepare={() => import("./publication").then(({ preparePublication }) => preparePublication(id))}>전시 게시 관리</ArtistLink>
     </div>
+    <TrainedVerificationLinks id={id} />
   </section>;
 }
 
