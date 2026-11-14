@@ -53,7 +53,7 @@ export async function sendSignupEmail(
   request: Request, env: (key: string) => string | undefined, send: typeof fetch = fetch,
 ) {
   if (request.method !== "POST") return failure(405, "Method not allowed");
-  const secret = env("SEND_EMAIL_HOOK_SECRET")?.match(/^v1,whsec_([A-Za-z0-9+/]{43}=)$/)?.[1];
+  const secret = env("SEND_EMAIL_HOOK_SECRET")?.match(/^v1,whsec_([A-Za-z0-9+/]{43}=|[A-Za-z0-9+/]{80})$/)?.[1];
   if (!secret) return failure(503, "Email delivery is not configured");
 
   const raw = await readPayload(request).catch(() => null);

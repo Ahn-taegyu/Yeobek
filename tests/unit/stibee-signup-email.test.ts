@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { sendSignupEmail } from "../../supabase/functions/stibee-signup-email/handler";
 
-const secret = Buffer.alloc(32, 42);
+const secret = Buffer.alloc(60, 42);
 const email = "artist@example.test";
 const signup = {
   user: { email, app_metadata: { yeobek_signup_request_id: "8484b834-f29e-4af2-bf42-80644d154f76" } },
@@ -16,10 +16,10 @@ const settings: Record<string, string> = {
 };
 const env = (name: string) => settings[name];
 
-function request(body: unknown = signup, timestamp = Math.floor(Date.now() / 1000), mutate = (text: string) => text) {
+function request(body: unknown = signup, timestamp = Math.floor(Date.now() / 1000), mutate = (text: string) => text, key = secret) {
   const id = "msg_0123";
   const text = JSON.stringify(body);
-  const signature = createHmac("sha256", secret).update(`${id}.${timestamp}.${text}`).digest("base64");
+  const signature = createHmac("sha256", key).update(`${id}.${timestamp}.${text}`).digest("base64");
   return new Request("https://example.test/hook", {
     method: "POST", body: mutate(text),
     headers: { "webhook-id": id, "webhook-timestamp": String(timestamp), "webhook-signature": `v1,${signature}` },
@@ -49,6 +49,13 @@ describe("Supabase signup email via Stibee", () => {
     ).mockResolvedValueOnce(new Response("ok"));
     expect((await sendSignupEmail(request(), env, send)).status).toBe(200);
     expect(send).toHaveBeenCalledTimes(2);
+  });
+
+  it("also accepts the documented 32-byte secret format", async () => {
+    const key = Buffer.alloc(32, 43);
+    const getSetting = (name: string) => name === "SEND_EMAIL_HOOK_SECRET" ? `v1,whsec_${key.toString("base64")}` : env(name);
+    const send = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response("ok")).mockResolvedValueOnce(new Response("ok"));
+    expect((await sendSignupEmail(request(signup, undefined, undefined, key), getSetting, send)).status).toBe(200);
   });
 
   it("rejects tampered, stale, oversized, and unsupported messages before making any provider calls", async () => {
