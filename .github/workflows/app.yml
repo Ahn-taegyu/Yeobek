@@ -37,6 +37,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:demo:guards
       - run: npm run db:start
       - run: npm run db:test
       - run: npm run db:types
@@ -101,6 +102,7 @@ jobs:
           npm run test:automation
           npm run test:support
           npm run test:proposals
+          npm run test:demo
           npm run test:qa
           kill "$mock_pid"
           wait "$mock_pid" || true
