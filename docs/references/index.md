@@ -53,3 +53,5 @@
 - [작가 가입·로그인 결정 전달](user-artist-auth.md) — SRC-035. [가입 후 직접 로그인 확정](user-auth-direct-login.md) — SRC-036.
 
 - [Notion P0 명세와 후속 보완](user-p0-feature-spec.md) — SRC-037.
+
+- [작가 직접 가입 마감 전 포함 결정](user-auth-signup-timing.md) — SRC-038, SRC-033의 가입 연기 문장을 대체.

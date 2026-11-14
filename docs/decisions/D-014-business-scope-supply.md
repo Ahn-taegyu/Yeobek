@@ -25,6 +25,9 @@ sources:
 - id: overview
   resource: /product/overview.md
   title: 두 사업안 비교
+- id: auth-timing
+  resource: /references/user-auth-signup-timing.md
+  title: 작가 직접 가입 마감 전 포함 결정
 ---
 
 # 결정 상태
@@ -43,7 +46,7 @@ sources:
 
 # 후속 확정 범위와 미구현
 
-[후속 요청](../references/user-backend-completion.md)은 보완 요청 루프, 운영 집계 API, 추가 질문 생성과 W8 업무 자동화(스티비·채널톡·Alt)를 이번 범위에 포함했다. 자료 부족 질문의 최소 저장과 30일 보존은 [D-005](D-005-measurement.md)를 따른다. 이 범위는 구현 완료를 뜻하지 않는다. 작가 직접 가입은 마감 이후다. 세부 정책·제공사 권한과 품질은 검증이 필요하다.
+[후속 요청](../references/user-backend-completion.md)은 보완 요청 루프, 운영 집계 API, 추가 질문 생성과 W8 업무 자동화(스티비·채널톡·Alt)를 이번 범위에 포함했다. 자료 부족 질문의 최소 저장과 30일 보존은 [D-005](D-005-measurement.md)를 따른다. 이 범위는 구현 완료를 뜻하지 않는다. 작가 직접 가입은 이 요청에서 마감 이후로 두었으나, 이후 [D-016](D-016-artist-auth.md)과 [사용자 결정](../references/user-auth-signup-timing.md)으로 마감 전 범위에 포함됐다. 세부 정책·제공사 권한과 품질은 검증이 필요하다.
 
 지불 의향, 실제 사용 의향과 공급자 작업 시간은 검증되지 않았다.
 
