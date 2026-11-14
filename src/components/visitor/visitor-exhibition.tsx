@@ -78,10 +78,11 @@ const publicTransport: ExperienceTransport = {
   speak(body, signal) { return requestApi("speech", { body, signal }); },
 };
 
-function PublicImage({ id, kind, alt, className, fallback }: ExperienceImageProps) {
+function PublicImage({ id, kind, alt, className, fallback, thumbnail = false }: ExperienceImageProps) {
   const [failed, setFailed] = useState(false);
   if (failed) return <span className={className} aria-hidden="true">{fallback}</span>;
-  return <Image unoptimized className={className} src={`/api/media/${id}?kind=${kind}`}
+  // Request a resized copy: thumbnails are about 90-120px, posters and answer images about 350px wide.
+  return <Image unoptimized className={className} src={`/api/media/${id}?kind=${kind}&w=${thumbnail ? 320 : 640}`}
     width={kind === "poster" ? 233 : 352} height={kind === "poster" ? 392 : 180} alt={alt} onError={() => setFailed(true)} />;
 }
 
@@ -89,7 +90,30 @@ function unavailable(error: unknown) {
   return error instanceof ApiClientError && (error.status === 404 || error.code === "INVALID_INPUT");
 }
 
+class PlaybackError extends Error {}
+
+// 0.05s of 8kHz mono silence. Playing it inside a tap lets mobile browsers play the
+// real answer on the same element later, after the speech request has finished.
+let silence: string | undefined;
+function silentWav() {
+  if (silence) return silence;
+  const samples = 400, bytes = new Uint8Array(44 + samples), view = new DataView(bytes.buffer);
+  const text = (offset: number, value: string) => [...value].forEach((char, index) => view.setUint8(offset + index, char.charCodeAt(0)));
+  text(0, "RIFF"); view.setUint32(4, 36 + samples, true); text(8, "WAVE"); text(12, "fmt ");
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, 8000, true); view.setUint32(28, 8000, true); view.setUint16(32, 1, true); view.setUint16(34, 8, true);
+  text(36, "data"); view.setUint32(40, samples, true); bytes.fill(128, 44);
+  silence = `data:audio/wav;base64,${btoa(String.fromCharCode(...bytes))}`;
+  return silence;
+}
+
+function setSource(player: HTMLAudioElement, src: string, onEnded?: () => void) {
+  player.onended = onEnded ?? null;
+  player.src = src;
+}
+
 function message(error: unknown) {
+  if (error instanceof PlaybackError) return "소리를 재생하지 못했어요. '답변 듣기'를 눌러 다시 들어주세요.";
   if (error instanceof ApiClientError && error.code === "REQUEST_IN_PROGRESS") {
     return "답변을 준비하고 있어요. 잠시 후 다시 눌러주세요.";
   }
@@ -100,11 +124,12 @@ function responseMayBePending(error: unknown) {
   return error instanceof ApiClientError && ["NETWORK_ERROR", "REQUEST_IN_PROGRESS"].includes(error.code);
 }
 
-function ArtImage({ artwork, className, decorative = false, ImageComponent }: {
-  artwork: Artwork; className?: string; decorative?: boolean; ImageComponent: ComponentType<ExperienceImageProps>;
+function ArtImage({ artwork, className, decorative = false, thumbnail = false, ImageComponent }: {
+  artwork: Artwork; className?: string; decorative?: boolean; thumbnail?: boolean; ImageComponent: ComponentType<ExperienceImageProps>;
 }) {
   return artwork.image
-    ? <ImageComponent key={artwork.image.id} id={artwork.image.id} kind="image" className={className} fallback={String(artwork.number)} alt={decorative ? "" : artwork.title} />
+    ? <ImageComponent key={artwork.image.id} id={artwork.image.id} kind="image" className={className} fallback={String(artwork.number)}
+      alt={decorative ? "" : artwork.title} thumbnail={thumbnail} />
     : <span className={className} aria-hidden="true">{artwork.number}</span>;
 }
 
@@ -192,9 +217,18 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
 
   function stopAudio() {
     audio.current?.pause();
-    audio.current = null;
     if (audioUrl.current) URL.revokeObjectURL(audioUrl.current);
     audioUrl.current = null;
+  }
+
+  /** Call synchronously from a tap. One element is reused so a later, asynchronous play() is still allowed. */
+  function unlockAudio() {
+    if (mutedNow.current) return;
+    const player = audio.current ?? new Audio();
+    audio.current = player;
+    if (audioUrl.current) return;
+    setSource(player, silentWav());
+    void player.play().catch(() => {});
   }
 
   async function play(answerId: string, signal: AbortSignal) {
@@ -204,15 +238,15 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
     if (signal.aborted || mutedNow.current) return;
     const url = URL.createObjectURL(blob);
     audioUrl.current = url;
-    const player = new Audio(url);
+    const player = audio.current ?? new Audio();
     audio.current = player;
-    player.onended = () => { if (audio.current === player) stopAudio(); };
+    setSource(player, url, () => { if (audioUrl.current === url) stopAudio(); });
     try {
       await player.play();
     } catch {
-      if (audio.current === player) {
+      if (audioUrl.current === url) {
         stopAudio();
-        throw new Error("Audio playback failed");
+        if (!signal.aborted) throw new PlaybackError("Audio playback failed");
       }
     }
   }
@@ -228,7 +262,8 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
 
   function select(work: Artwork) {
     const nextId = work.id;
-    if (nextId !== selected) {
+    const changed = nextId !== selected;
+    if (changed) {
       contextSequence.current += 1;
       pendingChat.current = null;
       operation.current?.abort();
@@ -240,12 +275,20 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
     }
     setSelected(nextId);
     setPicker(null);
+    // Picking a different artwork immediately shows its approved introduction.
+    if (changed) send(`${work.number}. ${work.title}`, { artworkId: nextId, intent: "narration", fromDraft: false });
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = question.trim();
-    if (!text || codepoints(text) > AI_LIMITS.question || recording.state !== "idle" || operation.current) return;
+    if (!text || codepoints(text) > AI_LIMITS.question || recording.state !== "idle") return;
+    unlockAudio();
+    send(text, { artworkId: selected, fromDraft: true });
+  }
+
+  function send(text: string, { artworkId, intent, fromDraft }: { artworkId: string | null; intent?: "narration"; fromDraft: boolean }) {
+    if (operation.current) return;
     const turnId = crypto.randomUUID();
     setAsking({ id: turnId, question: text, leaving: false });
     void run("chat", async signal => {
@@ -258,9 +301,9 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
 
     async function ask(signal: AbortSignal) {
       const input = {
-        exhibitionId: exhibition.id, artworkId: selected,
-        question: text, contextSequence: contextSequence.current,
-        inputMode: voiceDraft ? "voice" : "text", outputMode: mutedNow.current ? "text" : "voice",
+        exhibitionId: exhibition.id, artworkId, question: text, ...(intent ? { intent } : {}),
+        contextSequence: contextSequence.current,
+        inputMode: fromDraft && voiceDraft ? "voice" : "text", outputMode: mutedNow.current ? "text" : "voice",
       } satisfies Omit<ChatRequestInput, "requestId">;
       const key = JSON.stringify(input);
       const requestId = pendingChat.current?.key === key ? pendingChat.current.requestId : crypto.randomUUID();
@@ -281,8 +324,10 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
         id: turnId, question: text, reply, artwork: resolved, reveal: true,
       }]);
       setAsking(null);
-      setQuestion("");
-      setVoiceDraft(false);
+      if (fromDraft) {
+        setQuestion("");
+        setVoiceDraft(false);
+      }
       if (reply.outputMode === "voice" && reply.canSpeak !== false) await play(reply.answerId, signal);
     }
   }
@@ -310,6 +355,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
         mutedNow.current = !muted;
         setMuted(!muted);
         if (!muted) stopAudio();
+        else unlockAudio();
       }}><Image src="/yeobek/visitor-toolbar-sound.svg" alt="" width={25} height={25} />{muted && <span aria-hidden="true">×</span>}</button>
       <span className={active ? styles.artworkTitle : styles.brand}>{active ? `${active.number}. ${active.title}` : brand.name}</span>
       <button className={styles.textButton} aria-expanded={picker !== null}
@@ -330,9 +376,9 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       {picker === "grid" && exhibition.artworks.length > 0 && !shown.length && <p>검색 결과가 없어요.</p>}
       <ul className={picker === "grid" ? styles.grid : styles.strip}>
         {(picker === "grid" ? shown : exhibition.artworks).map(work => <li key={work.id}>
-          <button className={styles.tile} aria-pressed={selected === work.id} onClick={() => transitionScreen(() => select(work))}>
-            <ArtImage ImageComponent={ImageComponent} artwork={work} className={styles.thumbnail} decorative />
-            <span className={picker === "grid" ? styles.visuallyHidden : undefined}>{work.number}. {work.title}</span>
+          <button className={styles.tile} aria-pressed={selected === work.id} onClick={() => { unlockAudio(); transitionScreen(() => select(work)); }}>
+            <ArtImage ImageComponent={ImageComponent} artwork={work} className={styles.thumbnail} decorative thumbnail />
+            <span className={picker === "grid" ? styles.visuallyHidden : styles.tileName} title={`${work.number}. ${work.title}`}>{work.number}. {work.title}</span>
           </button>
         </li>)}
       </ul>
@@ -353,7 +399,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
         {reveal ? <RevealLines className={styles.answer} text={reply.answer} /> : <p className={styles.answer}>{reply.answer}</p>}
         {reply.notice && <p>{reply.notice}</p>}
         {!muted && reply.canSpeak !== false && <button className={styles.textButton} disabled={busy !== null}
-          onClick={() => void run("speech", signal => play(reply.answerId, signal))}>답변 듣기</button>}
+          onClick={() => { unlockAudio(); void run("speech", signal => play(reply.answerId, signal)); }}>답변 듣기</button>}
       </article>), ...(asking ? [<article className={`${styles.turn} yeobek-appear`} key={asking.id}>
         <p className={styles.bubble}>{asking.question}</p>
         <AiStarLogo className={`${styles.thinking}${asking.leaving ? ` ${styles.thinkingDone}` : ""}`}
