@@ -56,7 +56,7 @@ JSON 성공은 `{data, requestId}`, 실패는 `{error:{code,message,retryable,fi
 | 429 `AUTHOR_JOB_LIMIT`, `AUTHOR_UPLOAD_LIMIT`, `VISITOR_REQUEST_LIMIT`, `RATE_LIMITED` | `retryAfter`가 있으면 대기. 관람 한도 후에도 공개 승인 해설·저장 음성 사용 가능 |
 | 503 `SERVER_CONFIGURATION_ERROR`, `SERVICE_UNAVAILABLE` | 설정/서비스 안내. `retryable` 기준으로 재시도 |
 
-서버 플래그는 현재 `signup=false`, `gaps=false`, `opsAggregation=false`, `voiceRequired=true`, `followUpQuestions=true`가 기본이다. 브라우저가 요청 본문으로 덮어쓸 수 없고 공개 플래그 조회 API도 없다. 배포 설정과 인계 기준을 맞춘다. 모의 모드는 개발/test 서버의 `AI_PROVIDER_MODE=mock`에서만 허용되며 `mock:true`는 실물 품질 검증을 뜻하지 않는다. 인증·CRUD는 모의 데이터가 아니라 실제 로컬 Auth/DB를 쓴다.
+서버 플래그는 현재 `signup=false`, `gaps=false`, `opsAggregation=false`, `voiceRequired=false`, `followUpQuestions=true`가 기본이다. 브라우저가 요청 본문으로 덮어쓸 수 없고 공개 플래그 조회 API도 없다. 배포 설정과 인계 기준을 맞춘다. 모의 모드는 개발/test 서버의 `AI_PROVIDER_MODE=mock`에서만 허용되며 `mock:true`는 실물 품질 검증을 뜻하지 않는다. 인증·CRUD는 모의 데이터가 아니라 실제 로컬 Auth/DB를 쓴다.
 
 # 화면별 연결표
 
@@ -69,7 +69,7 @@ JSON 성공은 `{data, requestId}`, 실패는 `{error:{code,message,retryable,fi
 | SC-A03 전시 1~3단계·작업 공간 | GET/POST `/api/admin/exhibitions` `listExhibitions/createExhibition`, GET/PATCH `/api/admin/exhibitions/{id}` `getExhibition/updateExhibition`, POST `.../{id}/advance` `advanceExhibition`, PATCH `.../{id}/poster` `setExhibitionPoster` | `authoring.ts`: `createExhibitionBody`, `updateExhibitionBody`, `advanceExhibitionSchema/Response`; `responses.ts`: `exhibitionResponse` | `state=draft/published/paused`와 `authoringStep=basic/world/artworks` 분리. 진행 실패는 HTTP 200 `advanced:false,blockers`; W12 게시 체크리스트는 예정 |
 | SC-A04 작품·자료 편집 | GET/POST `/api/admin/exhibitions/{id}/artworks` `listArtworks/createArtwork`; GET/PATCH `/api/admin/artworks/{id}` `getArtwork/updateArtwork`; POST `.../exhibitions/{id}/artworks/reorder` `reorderArtworks`; 업로드·이미지 연결은 아래 절 | `authoring.ts`: `createArtworkBody`, `updateArtworkBody`, `reorderArtworksSchema`; `responses.ts`: `artworkResponse`, `artworkListResponse`; `materials.ts` | 초안 번호와 공개 번호 분리, `DUPLICATE_NUMBER`, `MATERIAL_IN_USE`, `ACTIVE_PUBLICATION`, `UPLOAD_EXPIRED` |
 | SC-A05 해설 검수·학습 | POST `/api/admin/artworks/{id}/generations` `generateNarration`, GET `/api/admin/jobs/{id}` `getJob`, POST `.../jobs/{id}/retry` `retryJob`, PATCH `.../artworks/{id}/narration` `saveNarration`; GET `.../artworks/{id}/review` `reviewArtwork`, POST `.../evidence` `upsertEvidence`, POST `.../approvals` `approveArtwork`, POST `.../audio` `generateAudio` | `jobs.ts`: `GenerateNarration`, `RetryJob`, `AnyAiJob`, `saveNarrationSchema`; `publication.ts`: `reviewResponse`, `upsertEvidenceSchema`, `approvalSchema` | 작업 running/succeeded/abstained/failed/cancelled, 생성 성공≠적용/승인. `JOB_ATTEMPT_CONFLICT`, `AI_INVALID_CONTEXT`. followUpQuestions·voiceRequired. W11은 예정 |
-| SC-A06 게시·중지 | POST `/api/admin/exhibitions/{id}/publication` `changePublication`; POST `/api/admin/evidence/{id}/impact` `evidenceImpact`, POST `.../revoke` `revokeEvidence` | `publication.ts`: `publicationSchema`, `publicationResponse`, `evidenceImpactSchema`, `revokeEvidenceSchema`, `revokeImpactResponse` | publish/pause/resume, 철회는 영향 토큰 필요. `voiceRequired=true`; 현재 리뷰 `blockingCodes` 제공. 이미지 선택 게시·W12 체크리스트는 예정 |
+| SC-A06 게시·중지 | POST `/api/admin/exhibitions/{id}/publication` `changePublication`; POST `/api/admin/evidence/{id}/impact` `evidenceImpact`, POST `.../revoke` `revokeEvidence` | `publication.ts`: `publicationSchema`, `publicationResponse`, `evidenceImpactSchema`, `revokeEvidenceSchema`, `revokeImpactResponse` | publish/pause/resume, 철회는 영향 토큰 필요. `voiceRequired` 기본 false(명시 true 설정 호환); 현재 리뷰 `blockingCodes` 제공. 이미지 선택 게시·W12 체크리스트는 예정 |
 | SC-A07 번호 라벨 | GET `/api/admin/exhibitions/{id}/labels` `listLabels` | `publication.ts`: `labelsResponse` | 공개 주소·번호·제목만. 활성 공개본 없으면 목록 비어 있음. QR 제작 제외 |
 | SC-A08 로그인·가입 선택 | GET `/api/auth/session` `getSession` | `signup.ts`: `authSessionResponse` | `authenticated`에 따라 홈/선택 화면. 세션 조회는 signup off에서도 가능 |
 | SC-A09 회원가입·코드 확인 | POST `/api/auth/signup` `signup`, POST `/api/auth/resend` `resendSignup`, POST `/api/auth/verify` `verifySignup` | `signup.ts`: `signupSchema`, `resendSignupSchema`, `verifySignupSchema`, `signupPendingResponse`, `signupVerifiedResponse` | 202 verification_required → 200 verified, 항상 authenticated:false. `INVALID_VERIFICATION_CODE`, `SIGNUP_UNAVAILABLE`; signup 기본 off |
@@ -137,3 +137,7 @@ main `de06460`에는 이 API·플래그가 없다. A의 W11 PR 병합 뒤 실제
 # 공개 확장과 시연 데이터 — 예정(W12/W7, B 담당)
 
 이미지 없이 게시, 항목별 게시 체크리스트, 공개 포스터·시간, 채팅의 작품 이미지 참조, `exhibitionScopeChat`과 승인 Q&A snapshot은 후속이다. 기존 `voiceRequired`·음성/필수 Q&A 정책을 임의로 바꾸지 않는다. `db:seed:demo`와 키 당일 체크리스트는 아직 작성 전이다. 모의 게시 허용은 개발 시연에 한정하며 운영 게시 금지는 W12에서 회귀 검사로 확인한다.
+
+## W12 글 우선 게시 변경 진행
+
+최신 사용자 결정(SRC-055, A의 결정 기록)에 따라 저장 음성 사전 준비를 게시 필수에서 제외한다. 서버 기본값과 예제 환경은 voiceRequired=false이며 기존 배포의 명시 true는 유지된다. 이 기본값 변경만으로 이미지 없는 게시·전시 문맥·자동 TTS 화면 연결까지 완료한 것은 아니다. 음성을 켠 관람객의 답변 이후 speech 호출은 프런트 연결과 통합 검증이 필요하다.
