@@ -40,6 +40,16 @@ function keywords(question: string) {
 }
 
 function result(data: Record<string, unknown>, name: string) {
+  if (name === "yeobek_ops_support_reply") {
+    const terms = typeof data.question === "string" ? keywords(data.question) : [];
+    const evidence = rows(data.evidence);
+    const selected = evidence.find(item => {
+      const body = item.body;
+      return typeof body === "string" && codepoints(body) <= 2000 && terms.some(term => body.includes(term));
+    });
+    if (!selected || typeof selected.body !== "string" || typeof selected.id !== "string") return { answer: "", citations: [], category: "escalate" };
+    return { answer: selected.body, citations: [selected.id], category: selected.kind === "status" ? "status" : "usage" };
+  }
   if (name === "yeobek_ops_notification") {
     return { paragraph: `현재 등록된 작품은 ${data.artworkCount}개입니다. 작가 홈에서 진행 상태를 확인해 주세요.`,
       citations: [data.statusId], outcome: "ready" };

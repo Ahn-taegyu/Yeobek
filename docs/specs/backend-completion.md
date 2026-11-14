@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: channel-auth
+  resource: /references/user-channel-webhook-auth.md
+  title: 채널톡 문의 웹훅 인증 선택
 - id: request
   resource: /references/user-backend-completion.md
   title: 백엔드 완성 계획 요청 원문
@@ -32,7 +35,7 @@ sources:
 | W5 | 관람 채팅·음성·보완 요청 | done (글 PR #7·음성/미디어 PR #10 CI 통과·병합, 실제 음질은 키 당일) |
 | W6 | 운영 집계 API | not_started |
 | W7 | 통합 검증·시연 자료·프런트와 키 당일 인계 | not_started |
-| W8 | 운영 자동화 정책·이벤트·발송함·스티비/채널톡/Alt | in_progress (진행 안내 이벤트→AI→승인/자동→발송 모의 통합 검증, 나머지 업무·웹훅 후속) |
+| W8 | 운영 자동화 정책·이벤트·발송함·스티비/채널톡/Alt | in_progress (진행 안내 이벤트→AI→승인/자동→발송 모의 통합 검증, 문의 흐름 구현 중, 나머지 업무·Alt 웹훅 후속) |
 
 # 의존 순서와 검증
 
@@ -148,3 +151,8 @@ PR #11 head `514e104`의 App checks `43545439379`와 Knowledge checks `435454393
 사용자 재확인 요청 후 같은 두 workflow의 실패 job만 재실행했다. 두 번째 시도에서 App job `132299534589`와 Windows/Linux 문서 job `132299558594`·`132299558803`이 실제 실행 단계를 시작한 것을 확인했다. 앞 문단의 실행 차단은 해소됐으며 이 확인 시점에는 아직 검사 완료 전이다.
 
 두 번째 시도의 Knowledge 검사는 성공했다. App은 lint·타입·단위·DB·빌드·일반 HTTP·기존 모의 AI 흐름을 통과했으나 새 자동화 HTTP의 auto 안내 대기에서 실패했다. SQL과 실행기를 대조한 결과, 발송 간격으로 approved에 돌려놓은 메시지를 같은 배치에서 재예약하고 중복 ID 검사로 빠져나오면 새 sending lease가 남는 경로를 재현했다. CI의 개별 행 이력은 없으므로 정확히 같은 경로였는지는 추론이다. null 허가 시 배치를 끝내 다음 cron에서 재시도하게 수정했으며 별도 Sol이 SQL·코드 교차 검토를 수행했다. 부모는 수정 전 좁은 회귀 실패와 수정 후 발송 검사 40개 성공을 확인했다. 최신 사용자 지시에 따라 전체 로컬 검사는 반복하지 않고 새 head CI에서 확인한다. 다른 null 허가도 남은 배치를 다음 실행으로 넘기므로 다음 cron 예약이 필요하다.
+
+
+# W8 문의 자동화 진행
+
+[사용자 선택](../references/user-channel-webhook-auth.md)에 따라 기존 채널톡 웹훅 URL 토큰으로 수신하고 AppStore Native API로 발신한다. 명시적 계정 연결, 고정된 chat 대상, 근거 기반 답변과 발송 전 재확인을 추가했다. 부모가 로컬 문의 pgTAP 31개와 관련 단위·계약 107개를 확인했다. 로컬 인증·실제 DB와 모의 답변을 사용한 HTTP 통합 1개는 통과했으며 실제 외부 호출은 미검증이고 물리 보존 삭제와 운영 로그 쿼리 제거 확인은 남았다. 문의 변경 전 SHA `8f80bd4`의 App·Knowledge CI는 성공했으나 현재 문의 변경의 최신 head CI는 대기 중이다. W2·W6·W7과 나머지 W8은 미완료다.

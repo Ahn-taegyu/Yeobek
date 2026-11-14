@@ -50,3 +50,5 @@
 - [백엔드 완성 계획 요청](user-backend-completion.md) — SRC-033, W0~W8와 파트너·운영 자동화 범위.
 - [Git 작업 시점과 병합 판단 위임](user-git-lifecycle-delegation.md) — SRC-034, 작업 묶음과 중복 검증 절감.
 - [CI 중심 검증 요청](user-ci-first-validation.md) — SRC-035, 전체 CI와 로컬 검증 중복 최소화.
+
+- [채널톡 문의 웹훅 인증 선택](user-channel-webhook-auth.md) — SRC-036, 기존 웹훅 URL 토큰 수신 선택.

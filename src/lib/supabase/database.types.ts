@@ -185,14 +185,14 @@ isOneToOne: false
                   ]
                 },"automation_bindings": {
                   Row: {
-                    "enabled": boolean,"external_id": string,"owner_id": string,"provider": string,"provider_scope": string
+                    "enabled": boolean,"external_id": string,"owner_id": string,"provider": string,"provider_scope": string,"revision": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "enabled"?: boolean,"external_id": string,"owner_id": string,"provider": string,"provider_scope": string
+                    "enabled"?: boolean,"external_id": string,"owner_id": string,"provider": string,"provider_scope": string,"revision"?: number
                   }
                   Update: {
-                    "enabled"?: boolean,"external_id"?: string,"owner_id"?: string,"provider"?: string,"provider_scope"?: string
+                    "enabled"?: boolean,"external_id"?: string,"owner_id"?: string,"provider"?: string,"provider_scope"?: string,"revision"?: number
                   }
                   Relationships: [
 
@@ -573,6 +573,26 @@ isOneToOne: false
       referencedColumns: ["exhibition_id","artwork_id","id"]
     }
                   ]
+                },"support_inquiries": {
+                  Row: {
+                    "binding_revision": number | null,"channel_id": string,"chat_id": string,"completion_fingerprint": string | null,"context_revision": string | null,"event_id": string,"expires_at": string,"id": string,"message_id": string,"mock": boolean,"owner_id": string | null,"provider_created_at": string,"question": string | null,"truncated": boolean,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "binding_revision"?: number | null,"channel_id": string,"chat_id": string,"completion_fingerprint"?: string | null,"context_revision"?: string | null,"event_id": string,"expires_at": string,"id"?: string,"message_id": string,"mock": boolean,"owner_id"?: string | null,"provider_created_at": string,"question"?: string | null,"truncated": boolean,"user_id": string
+                  }
+                  Update: {
+                    "binding_revision"?: number | null,"channel_id"?: string,"chat_id"?: string,"completion_fingerprint"?: string | null,"context_revision"?: string | null,"event_id"?: string,"expires_at"?: string,"id"?: string,"message_id"?: string,"mock"?: boolean,"owner_id"?: string | null,"provider_created_at"?: string,"question"?: string | null,"truncated"?: boolean,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "support_inquiries_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: true
+      referencedRelation: "automation_events"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"visitor_audio_assets": {
                   Row: {
                     "cleanup_after": string | null,"cleanup_claimed": boolean,"id": string,"storage_key": string
@@ -674,6 +694,12 @@ isOneToOne: false
 "claim_outbound_messages":
 { Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
                            },
+"claim_support_events":
+{ Args: { "p_channel_id": string,"p_limit": number,"p_mock": boolean }; Returns: Json
+                           },
+"claim_support_outbound":
+{ Args: { "p_channel_id": string,"p_limit": number,"p_mock": boolean }; Returns: Json
+                           },
 "complete_ai_job":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
                            },
@@ -700,6 +726,9 @@ isOneToOne: false
                            },
 "complete_outbound_message":
 { Args: { "p_attempt": string,"p_id": string,"p_provider_id": string,"p_result_code": string,"p_status": string }; Returns: Json
+                           },
+"complete_support_job":
+{ Args: { "p_attempt": number,"p_body": string,"p_category": string,"p_context_revision": string,"p_elapsed_ms": number,"p_event_id": string,"p_job_id": string,"p_mock": boolean,"p_result_code": string,"p_state": string,"p_steps": Json,"p_usage": Json }; Returns: Json
                            },
 "complete_upload":
 { Args: { "p_byte_size": number,"p_content_hash": string,"p_content_type": string,"p_expected_version": number,"p_height": number,"p_id": string,"p_owner": string,"p_pages": number,"p_width": number }; Returns: Json
@@ -779,6 +808,9 @@ isOneToOne: false
 "get_revoke_impact":
 { Args: { "p_evidence_id": string,"p_expected_version": number }; Returns: Json
                            },
+"get_support_context":
+{ Args: { "p_attempt": number,"p_event_id": string,"p_mock": boolean }; Returns: Json
+                           },
 "get_upload":
 { Args: { "p_allow_cleanup"?: boolean,"p_id": string,"p_owner": string }; Returns: Json
                            },
@@ -838,6 +870,9 @@ isOneToOne: false
                            },
 "purge_expired":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"receive_support_inquiry":
+{ Args: { "p_channel_id": string,"p_chat_id": string,"p_created_at": string,"p_message_id": string,"p_mock": boolean,"p_question": string,"p_truncated": boolean,"p_user_id": string }; Returns: Json
                            },
 "record_gap":
 { Args: { "p_enabled": boolean,"p_question": string,"p_request_id": string,"p_session_hash": string }; Returns: boolean
@@ -899,6 +934,9 @@ isOneToOne: false
                            },
 "set_contact_consent":
 { Args: { "p_category": string,"p_expected_revision": number,"p_granted": boolean }; Returns: Json
+                           },
+"set_support_binding":
+{ Args: { "p_channel_id": string,"p_enabled": boolean,"p_expected_revision": number,"p_owner": string,"p_user_id": string }; Returns: Json
                            },
 "sync_audio_config":
 { Args: { "p_fingerprint": string,"p_mock": boolean }; Returns: number

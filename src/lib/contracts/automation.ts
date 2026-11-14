@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { revision, uuid } from "./requests";
+import { supportRunResponse } from "./support";
 
 export const consentCategory = z.enum(["transactional", "marketing"]);
 export const updateConsentSchema = z.strictObject({
@@ -28,6 +29,7 @@ export const outboxQuery = z.strictObject({ cursor: uuid.optional(), state: z.en
 export const outboxPageResponse = z.object({ items: outboxListResponse, nextCursor: uuid.nullable() });
 const count = z.number().int().nonnegative();
 export const notificationRunResponse = z.strictObject({
+  support: supportRunResponse.optional(),
   mock: z.boolean(), busy: z.boolean(), dispatchReady: z.boolean(), scheduled: count, discarded: count,
   processed: count, suppressed: count, escalated: count, failed: count, persistenceFailures: count,
   dispatch: z.strictObject({ claimed: count, accepted: count, rejected: count, unknown: count,

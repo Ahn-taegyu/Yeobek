@@ -20,9 +20,9 @@ npm run dev
 
 로컬 계정을 운영자로 지정하려면 `npm run db:operator -- <사용자 UUID>`를 실행합니다. 같은 명령에 `--disable`을 붙이면 해제됩니다. 로컬 Supabase에 이미 있는 비익명 계정만 허용하며 운영자 발송함 HTTP 검토에 사용합니다. 전시 생성·해설 초안 완료·게시의 거래성 안내는 `POST /api/cron/automation`으로 처리합니다. 서버의 `CRON_SECRET`을 Bearer 헤더로 보내며 브라우저에는 전달하지 않습니다. 실제 스케줄러는 아직 배포하지 않았습니다.
 
-자동화도 `AI_PROVIDER_MODE=mock`으로 전체 흐름을 시험할 수 있습니다. 모의 개발 서버의 출처와 시험용 cron 비밀값을 `TEST_APP_ORIGIN`, `TEST_CRON_SECRET`에 지정한 뒤 `npm run test:automation`을 실행합니다. 실환경에는 Liner 키와 스티비 거래성·홍보성 각각의 자동 이메일 URL, API 키, 사용자 정의 문단 필드가 필요합니다(`.env.example`). 스티비 설정이 없으면 승인 발송함을 소비하지 않고 cron 결과의 `dispatchReady=false`로 알립니다. 기본 정책은 운영자 승인 후 발송하는 draft입니다. 채널톡·Alt 전체 실행 연결은 후속입니다.
+자동화도 `AI_PROVIDER_MODE=mock`으로 전체 흐름을 시험할 수 있습니다. 모의 개발 서버의 출처와 시험용 cron 비밀값을 `TEST_APP_ORIGIN`, `TEST_CRON_SECRET`에 지정한 뒤 `npm run test:automation`을 실행합니다. 실환경에는 Liner 키와 스티비 거래성·홍보성 각각의 자동 이메일 URL, API 키, 사용자 정의 문단 필드가 필요합니다(`.env.example`). 스티비 설정이 없으면 승인 발송함을 소비하지 않고 cron 결과의 `dispatchReady=false`로 알립니다. 기본 정책은 운영자 승인 후 발송하는 draft입니다. 채널톡 문의 흐름은 구현 중이며 Alt 실행 연결은 후속입니다.
 
-채널톡 발신은 서버 전용 `CHANNEL_TALK_APP_ID`, `CHANNEL_TALK_CHANNEL_ID`, `CHANNEL_TALK_APP_SECRET`, `CHANNEL_TALK_TOKEN_KEY`로 준비합니다. TOKEN_KEY는 무작위 32바이트의 64자리 hex이며 모든 서버가 같은 값을 유지해야 합니다. 토큰은 암호화해 DB에 캐시하고 공유 한도 안에서 갱신합니다. 수신용 SIGNING_KEY와는 별개입니다. 아직 문의 웹훅·작가 연결·답변 실행기는 연결되지 않았으며 설정만으로 문의 응대가 활성화되지 않습니다. [토큰 계약과 미확인 범위](docs/research/automation-provider-contracts.md#채널톡-토큰-발급갱신-후속)를 확인하세요.
+채널톡 문의는 기존 Open API 웹훅의 URL 토큰 수신과 AppStore Native API 발신을 사용합니다. 서버 전용 `CHANNEL_TALK_WEBHOOK_TOKEN`은 공백 없는 32~256자이며 `CHANNEL_TALK_CHANNEL_ID`와 함께 설정합니다. 발신에는 `CHANNEL_TALK_APP_ID`, `CHANNEL_TALK_APP_SECRET`, 32바이트의 64자리 hex `CHANNEL_TALK_TOKEN_KEY`가 필요합니다. 토큰은 암호화해 DB에 캐시합니다. 웹훅 URL과 쿼리 토큰은 로그에 남기지 않습니다. 개발 요청 로그의 해당 경로 제외가 설정되어 있으며 운영 프록시·호스팅 접근 로그의 쿼리 제거는 키 당일 확인이 필요합니다. 로컬 인증·실제 DB와 모의 답변을 사용한 HTTP 통합 1개는 통과했으나 실제 수신·발신은 미검증이며, 정책·계정 연결과 보존 데이터의 물리 삭제도 확인해야 합니다. [계약과 미확인 범위](docs/research/automation-provider-contracts.md#채널톡-문의-수신-선택)를 확인하세요.
 
 ## AI 연결 준비
 

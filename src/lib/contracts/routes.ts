@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { channelWebhookSchema, channelWebhookResponse, supportBindingSchema, supportBindingResponse } from "./support";
 import { consentListResponse, consentResponse, updateConsentSchema, decideOutboxSchema, outboxResponse, outboxPageResponse, outboxQuery, notificationRunResponse } from "./automation";
 import { mediaBinary, mediaQuery } from "./media";
 import { speechRequest, transcribeRequest, transcribeResponse } from "./voice";
@@ -40,6 +41,8 @@ const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
   runAutomation: { method: "POST", path: "/api/cron/automation", response: successEnvelope(notificationRunResponse), statuses: [200] },
+  receiveChannelWebhook: { method: "POST", path: "/api/webhooks/channeltalk", query: z.object({ token: z.string() }), body: channelWebhookSchema, response: successEnvelope(channelWebhookResponse), statuses: [200] },
+  setSupportBinding: { method: "POST", path: "/api/ops/support/bindings", body: supportBindingSchema, response: successEnvelope(supportBindingResponse), statuses: [200] },
   getConsents: { method: "GET", path: "/api/admin/profile/consents", response: successEnvelope(consentListResponse), statuses: [200] },
   updateConsent: { method: "PATCH", path: "/api/admin/profile/consents", body: updateConsentSchema, response: successEnvelope(consentResponse), statuses: [200] },
   listOutbox: { method: "GET", path: "/api/ops/outbox", query: outboxQuery, response: successEnvelope(outboxPageResponse), statuses: [200] },

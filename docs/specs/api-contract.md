@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: channel-auth
+  resource: /references/user-channel-webhook-auth.md
+  title: 채널톡 문의 웹훅 인증 선택
 - id: backend
   resource: /references/user-backend-completion.md
   title: 백엔드 완성 계획 요청 원문
@@ -300,7 +303,7 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 
 `091000`은 서비스 전용 `reserve_automation_job`·`complete_automation_job`으로 이벤트와 `ai_jobs`·시도별 사용량/단계를 연결한다. 이벤트당 하나의 원장, 일일 자동화 한도, 시도/lease 검사, 완료와 발송함의 원자적 저장을 적용한다. 작가용 작업 조회에는 운영 작업을 노출하지 않는다. `092000`은 발송 예약 및 본문 전달 직전에 전시 삭제도 재검사한다. 검사 이후 이미 외부로 전송된 내용의 회수를 보장하지 않는다.
 
-전시 생성·해설 초안 완료·게시의 상태 신호와 안내 cron은 아래 범위로 연결했다. 승인 독촉·전시 종료의 예약 안내, 다른 자동화 플레이북·웹훅 HTTP와 문의의 실제 chat 대상 고정은 후속이다. 서비스 역할이 임의 모델 출력을 수신 대상으로 사용해서는 안 된다.
+전시 생성·해설 초안 완료·게시의 상태 신호와 안내 cron은 아래 범위로 연결했다. 승인 독촉·전시 종료의 예약 안내, 다른 자동화 플레이북과 Alt 웹훅 HTTP는 후속이다. 문의 수신과 chat 대상 고정은 아래 범위로 구현 중이다. 서비스 역할이 임의 모델 출력을 수신 대상으로 사용해서는 안 된다.
 
 # W8 진행 안내 실행
 
@@ -318,4 +321,13 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 
 `claim_channel_token(app_id,channel_id,claim)`와 `complete_channel_token(app_id,channel_id,claim,sealed,expires_in)`은 service-role 전용 RPC다. 브라우저용 HTTP 경로와 타입 클라이언트에는 추가하지 않는다. 예약 결과는 `cached`(암호문), `refresh`(기존 암호문 또는 null), `busy`, `limited` 중 하나다. 앱별 잠금으로 채널 전체의 발급/갱신 예약을 30분에 10회까지 제한하고, 채널 lease는 30초다. 예약 재사용 방지도 같은 30분 창이며 캐시 재사용은 예약을 소비하지 않는다.
 
-완료는 현재 lease의 소유자만 할 수 있고, 토큰 만료는 발급 전 예약 시각을 기준으로 계산한다. 지연·교체·만료된 완료는 false다. 서버는 암호문을 앱·채널 범위로 검증하고 저장이 확인되기 전에는 토큰을 발신 어댑터에 넘기지 않는다. `CHANNEL_TALK_APP_ID`, `CHANNEL_TALK_CHANNEL_ID`, `CHANNEL_TALK_APP_SECRET`, `CHANNEL_TALK_TOKEN_KEY`는 서버 전용이다. TOKEN_KEY는 32바이트 키의 64자리 hex다. `CHANNEL_TALK_SIGNING_KEY`는 수신 서명용으로 발신 토큰과 별개이며 웹훅 연결은 후속이다.
+완료는 현재 lease의 소유자만 할 수 있고, 토큰 만료는 발급 전 예약 시각을 기준으로 계산한다. 지연·교체·만료된 완료는 false다. 서버는 암호문을 앱·채널 범위로 검증하고 저장이 확인되기 전에는 토큰을 발신 어댑터에 넘기지 않는다. `CHANNEL_TALK_APP_ID`, `CHANNEL_TALK_CHANNEL_ID`, `CHANNEL_TALK_APP_SECRET`, `CHANNEL_TALK_TOKEN_KEY`는 서버 전용이다. TOKEN_KEY는 32바이트 키의 64자리 hex다. AppStore 서명 키와 별도로 문의 수신은 기존 웹훅 URL 토큰을 사용한다.
+
+
+# 채널톡 문의 수신과 답변 (구현 중)
+
+[사용자 선택](../references/user-channel-webhook-auth.md)에 따라 `POST /api/webhooks/channeltalk?token=…`은 서버 전용 `CHANNEL_TALK_WEBHOOK_TOKEN`과 채널 ID를 확인한다. 토큰은 공백 없는 32~256자이며 URL 전체와 쿼리는 로그에 남기지 않는다. Next 개발 요청 로그 제외 설정 외에 운영 프록시·호스팅 로그의 쿼리 제거를 키 당일 확인해야 한다. AppStore `x-signature` 인증과 혼동하지 않는다.
+
+사용자 개인 채팅의 새 메시지만 수신하고 봇·관리자·그룹·수정 이벤트는 무시한다. 채널·메시지·모의 여부로 중복을 구분하며 다른 내용의 중복은 409다. 오래되거나 미래인 메시지는 거부하고 빈 내용·지원하지 않는 내용이나 2,000자 초과는 자동 답변하지 않는다. 응답은 접수·중복·무시 여부만 반환한다.
+
+`POST /api/ops/support/bindings`는 동일 출처 인증과 운영자 권한 아래 채널 사용자와 작가를 명시적으로 연결하고 예상 revision으로 충돌을 방지한다. cron은 고정된 채팅 대상과 공개 도움말·연결된 계정 상태 근거를 사용하며, 민감 문의·근거 부족은 운영자에게 넘긴다. 생성 후와 발송 직전 문맥·정책·연결을 재확인한다. 만료는 처리 차단이며 저장된 문의의 물리 삭제 작업은 아직 없다. 로컬 인증·실제 DB와 모의 답변을 사용한 HTTP 통합 1개는 통과했다. 실제 제공사 호출과 최신 head CI는 미검증이다.
