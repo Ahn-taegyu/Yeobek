@@ -159,8 +159,12 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
     });
   }, setError);
 
+  function togglePicker() {
+    transitionScreen(() => setPicker(picker ? null : "row"));
+  }
+
   function select(work: Artwork) {
-    const nextId = work.id;
+    const nextId = selected === work.id ? null : work.id;
     if (nextId !== selected) {
       contextSequence.current += 1;
       pendingChat.current = null;
@@ -171,7 +175,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
       setError("");
     }
     setSelected(nextId);
-    setPicker(null);
+    if (nextId !== null) setPicker(null);
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -228,9 +232,12 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
         setMuted(!muted);
         if (!muted) stopAudio();
       }}><Image src="/yeobek/visitor-sound.svg" alt="" width={24} height={24} />{muted && <span aria-hidden="true">×</span>}</button>
-      <span className={styles.brand}>{active ? `${active.number}. ${active.title}` : brand.name}</span>
-      <button className={styles.textButton} aria-expanded={picker !== null}
-        onClick={() => transitionScreen(() => setPicker(picker ? null : "row"))}>{picker ? "닫기" : "작품 선택"}</button>
+      {active
+        ? <button type="button" className={styles.artworkTitle} aria-expanded={picker !== null}
+            onClick={togglePicker}>{active.number}. {active.title}</button>
+        : <span className={styles.brand}>{brand.name}</span>}
+      <button type="button" className={styles.textButton} aria-expanded={picker !== null}
+        onClick={togglePicker}>{picker ? "닫기" : "작품 선택"}</button>
     </div>
     {picker && <section className={styles.picker} aria-label="작품 목록">
       <div className={styles.pickerHeading}><h2>작품 목록</h2>
