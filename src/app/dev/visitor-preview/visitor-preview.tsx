@@ -17,7 +17,7 @@ const works = [
   ...work,
   id: `preview-work-${index + 1}`,
   number: index + 1,
-  image: { id: String(index + 1) },
+  image: index === 3 || index === 4 ? null : { id: String(index + 1) },
 }));
 
 const exhibition: ExperienceExhibition = {
@@ -35,11 +35,16 @@ const exhibition: ExperienceExhibition = {
 function PreviewImage({ id, alt, className, kind }: ExperienceImageProps) {
   const index = Number(id);
   if (!Number.isInteger(index) || index < 1 || index > works.length) return null;
-  return <Image unoptimized src={`/yeobek/preview/work-${index}.png`} alt={alt}
+  const imageName = kind === "poster" || index > 3 ? `work-${index}` : `sample-${index}`;
+  return <Image unoptimized src={`/yeobek/preview/${imageName}.png`} alt={alt}
     className={className} width={kind === "poster" ? 233 : 352} height={kind === "poster" ? 392 : 352} />;
 }
 
 const previewTransport: ExperienceTransport = {
+  async getNarration(_exhibitionId, artworkId) {
+    const work = works.find(item => item.id === artworkId);
+    return work ? `[시연 기본 해설] ${work.title}. ${work.description}` : null;
+  },
   async ask(body) {
     const selected = works.find(work => work.id === body.artworkId);
     return {

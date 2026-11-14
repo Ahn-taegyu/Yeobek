@@ -21,6 +21,10 @@ async function loadExhibition(id: string, signal: AbortSignal) {
 }
 
 const publicTransport: ExperienceTransport = {
+  async getNarration(exhibitionId, artworkId, signal) {
+    const { data } = await requestApi("getPublicArtwork", { params: { id: exhibitionId, artworkId }, signal });
+    return data.narrationText || null;
+  },
   async ask(body, signal) {
     const { data } = await requestApi("chat", { body, signal });
     return { ...data, artworkId: data.publication?.artworkId ?? null };
@@ -51,10 +55,20 @@ function responseMayBePending(error: unknown) {
   return error instanceof ApiClientError && ["NETWORK_ERROR", "REQUEST_IN_PROGRESS"].includes(error.code);
 }
 
-function ArtImage({ artwork, className, decorative = false, ImageComponent }: {
-  artwork: Artwork; className?: string; decorative?: boolean; ImageComponent: ComponentType<ExperienceImageProps>;
+function ArtImage({ artwork, className, decorative = false, ImageComponent, picker = false, grid = false }: {
+  artwork: Artwork; className?: string; decorative?: boolean; ImageComponent: ComponentType<ExperienceImageProps>; picker?: boolean; grid?: boolean;
 }) {
-  return artwork.image
+  const [failed, setFailed] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
+  if (picker) return <span className={styles.pickerImage} onErrorCapture={() => setFailed(true)}>
+    {artwork.image?.id?.trim() && !failed
+      ? <ImageComponent key={artwork.image.id} id={artwork.image.id} kind="image" className={className} alt="" />
+      : !fallbackFailed && <span className={`${className} ${styles.fallbackImage} ${grid ? styles.gridFallback : ""}`}>
+        <Image src={grid ? "/yeobek/artwork-default.png" : "/yeobek/visitor-fallback.png"}
+          width={grid ? 332 : 320} height={grid ? 186 : 320} alt="" onError={() => setFallbackFailed(true)} />
+      </span>}
+  </span>;
+  return artwork.image?.id
     ? <ImageComponent key={artwork.image.id} id={artwork.image.id} kind="image" className={className} fallback={String(artwork.number)} alt={decorative ? "" : artwork.title} />
     : <span className={className} aria-hidden="true">{artwork.number}</span>;
 }
@@ -102,6 +116,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
   const [question, setQuestion] = useState("");
   const [voiceDraft, setVoiceDraft] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
+  const [narration, setNarration] = useState<{ artworkId: string; text: string | null; error?: boolean } | null>(null);
   const [muted, setMuted] = useState(initiallyMuted);
   const [busy, setBusy] = useState<"chat" | "transcribe" | "speech" | null>(null);
   const [error, setError] = useState("");
@@ -113,6 +128,17 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
   const mutedNow = useRef(initiallyMuted);
   const transcript = useRef<HTMLDivElement>(null);
   const active = exhibition.artworks.find(work => work.id === selected);
+
+  useEffect(() => {
+    if (!selected || !transport.getNarration) return;
+    const controller = new AbortController();
+    void transport.getNarration(exhibition.id, selected, controller.signal).then(text => {
+      if (!controller.signal.aborted) setNarration({ artworkId: selected, text });
+    }).catch(() => {
+      if (!controller.signal.aborted) setNarration({ artworkId: selected, text: null, error: true });
+    });
+    return () => controller.abort();
+  }, [exhibition.id, selected, transport]);
 
   useEffect(() => () => {
     operation.current?.abort();
@@ -177,8 +203,9 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
   }, setError);
 
   function select(work: Artwork) {
-    const nextId = work.id;
+    const nextId = work.id === selected ? null : work.id;
     if (nextId !== selected) {
+      setNarration(null);
       contextSequence.current += 1;
       pendingChat.current = null;
       operation.current?.abort();
@@ -188,7 +215,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       setError("");
     }
     setSelected(nextId);
-    setPicker(null);
+    if (nextId !== null) setPicker(null);
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -265,18 +292,23 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       <ul className={picker === "grid" ? styles.grid : styles.strip}>
         {(picker === "grid" ? shown : exhibition.artworks).map(work => <li key={work.id}>
           <button className={styles.tile} aria-pressed={selected === work.id} onClick={() => transitionScreen(() => select(work))}>
-            <ArtImage ImageComponent={ImageComponent} artwork={work} className={styles.thumbnail} decorative />
+            <ArtImage key={work.image?.id ?? work.id} ImageComponent={ImageComponent} artwork={work} className={styles.thumbnail} decorative picker grid={picker === "grid"} />
             <span className={picker === "grid" ? styles.visuallyHidden : undefined}>{work.number}. {work.title}</span>
           </button>
         </li>)}
       </ul>
     </section>}
     <div className={styles.transcript} ref={transcript} aria-live="polite" inert={picker === "grid"}>
-      {!turns.length && <div className={styles.welcome}>
+      {!turns.length && (!selected || !transport.getNarration) && <div className={styles.welcome}>
         <h1 className={styles.visuallyHidden}>{exhibition.title}</h1>
         <Image className={styles.welcomeMark} src="/yeobek/visitor-yeoun.svg" width={171} height={155} alt="" />
         <p>전시에서 느낀 감동과 기억이 오래도록 남을 수 있도록,<br />작품에 담긴 이야기를 들려드릴게요.</p>
       </div>}
+      {active && transport.getNarration && <article className={styles.narration} aria-live="polite">
+        {active.image && <ArtImage ImageComponent={ImageComponent} artwork={active} className={styles.narrationImage} />}
+        <p>{narration?.artworkId !== active.id ? "작품 해설을 불러오고 있어요." :
+          narration.error ? "작품 해설을 불러오지 못했어요." : narration.text || "공개된 기본 해설이 없어요."}</p>
+      </article>}
       {turns.map(({ question, reply, artwork }) => <article className={`${styles.turn} yeobek-appear`} key={reply.answerId}>
         <p className={styles.bubble}>{question}</p>
         {reply.image === undefined && artwork?.image && <ArtImage ImageComponent={ImageComponent} key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
