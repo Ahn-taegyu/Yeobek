@@ -101,14 +101,14 @@ export function SignupForm() {
   </div>;
 
   return <>
-    {pending ? <form onSubmit={verify} aria-busy={busy}>
+    {pending ? <form method="post" onSubmit={verify} aria-busy={busy}>
       <p>{pending.email}의 받은편지함에서 인증 코드 6자리를 확인해주세요.</p>
       <label htmlFor="signup-code">인증 코드</label>
       <input id="signup-code" name="code" type="text" inputMode="numeric" autoComplete="one-time-code"
         pattern="[0-9]{6}" maxLength={6} required disabled={busy} />
       <button disabled={busy}>{busy ? "처리 중…" : "인증하기"}</button>
       <button type="button" className="secondary" disabled={busy} onClick={resend}>인증 코드 다시 받기</button>
-    </form> : <form onSubmit={signup} aria-busy={busy}>
+    </form> : <form method="post" onSubmit={signup} aria-busy={busy}>
       <label htmlFor="signup-email">이메일</label>
       <input id="signup-email" name="email" type="email" autoComplete="email" maxLength={254} required disabled={busy} />
       <label htmlFor="signup-password">비밀번호</label>
