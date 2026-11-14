@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { generateProposalSchema, applyProposalSchema, appliedProposalResponse, proposalResponse, historyQuery, historyResponse } from "./proposals";
 import { channelWebhookSchema, channelWebhookResponse, supportBindingSchema, supportBindingResponse } from "./support";
 import { consentListResponse, consentResponse, updateConsentSchema, decideOutboxSchema, outboxResponse, outboxPageResponse, outboxQuery, notificationRunResponse } from "./automation";
 import { mediaBinary, mediaQuery } from "./media";
@@ -7,7 +8,7 @@ import { requestUploadSchema, completeUploadSchema, deleteMaterialSchema, delete
   setArtworkImageSchema, materialResponse, materialListResponse, uploadResponse, listMaterialsQuery,
   materialDownloadResponse, deletedArtworkResponse } from "./materials";
 import { visitorChatRequest, visitorReplyResponse, gapListResponse, gapResponse, checkVersionsRequest, checkVersionsResponse, purgeResponse } from "./visitor";
-import { generateNarrationSchema, narrationJobResponse, jobResponse, audioJobResponse, generateAudioSchema, retryJobSchema, saveNarrationSchema } from "./jobs";
+import { generateNarrationSchema, narrationJobResponse, jobResponse, audioJobResponse, organizeJobResponse, generateAudioSchema, retryJobSchema, saveNarrationSchema } from "./jobs";
 import { approvalSchema, approvalResponse, evidenceImpactSchema, evidenceResponse, labelsResponse,
   publicationSchema, publicationResponse, reviewResponse, revokeEvidenceSchema, revokeImpactResponse,
   upsertEvidenceSchema } from "./publication";
@@ -40,6 +41,10 @@ const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  generateProposal: { method: "POST", path: "/api/admin/knowledge/{id}/proposals", params: byId, body: generateProposalSchema, response: successEnvelope(organizeJobResponse), statuses: [200, 201] },
+  getProposal: { method: "GET", path: "/api/admin/proposals/{id}", params: byId, response: successEnvelope(proposalResponse), statuses: [200] },
+  applyProposal: { method: "POST", path: "/api/admin/proposals/{id}/apply", params: byId, body: applyProposalSchema, response: successEnvelope(appliedProposalResponse), statuses: [200] },
+  listDocumentHistory: { method: "GET", path: "/api/admin/knowledge/{id}/history", params: byId, query: historyQuery, response: successEnvelope(historyResponse), statuses: [200] },
   runAutomation: { method: "POST", path: "/api/cron/automation", response: successEnvelope(notificationRunResponse), statuses: [200] },
   receiveChannelWebhook: { method: "POST", path: "/api/webhooks/channeltalk", query: z.object({ token: z.string() }), body: channelWebhookSchema, response: successEnvelope(channelWebhookResponse), statuses: [200] },
   setSupportBinding: { method: "POST", path: "/api/ops/support/bindings", body: supportBindingSchema, response: successEnvelope(supportBindingResponse), statuses: [200] },

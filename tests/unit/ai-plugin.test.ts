@@ -190,6 +190,68 @@ describe("artist organization proposals", () => {
 });
 
 describe("organization job lifecycle", () => {
+  it("stages the database identity only after a successful job reservation", async () => {
+    const s = artistSetup();
+    const identity = { id: ids.other, expiresAt: 2000000 };
+    const proposalIdentity = vi.fn(() => identity);
+    const jobs = { reserve: vi.fn(async () => {}), complete: vi.fn(async () => {}) };
+    const harness = createArtistKnowledgeHarness(ids.owner, { ...s, jobs, proposalIdentity, now: () => 1000000 });
+    expect(await harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).toMatchObject({
+      proposal: identity, usage: [{ provider: "liner", model: "fake" }], elapsedMs: expect.any(Number),
+    });
+    expect(jobs.reserve.mock.invocationCallOrder[0]).toBeLessThan(proposalIdentity.mock.invocationCallOrder[0]);
+    expect(s.store.storeProposal).toHaveBeenCalledWith(expect.objectContaining(identity), expect.any(AbortSignal));
+  });
+
+  it("retains the provider charge when the selection is invalid", async () => {
+    const s = artistSetup();
+    const trace = { provider: "liner" as const, model: "fake", usage: { totalTokens: 20 } };
+    s.text.generate.mockResolvedValue({ output: { malformed: true }, trace });
+    const jobs = { reserve: vi.fn(async () => {}), complete: vi.fn(async () => {}) };
+    const harness = createArtistKnowledgeHarness(ids.owner, { ...s, jobs });
+    await expect(harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).rejects.toMatchObject({ code: "invalid_output" });
+    expect(jobs.complete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      proposal: null, usage: [trace], elapsedMs: expect.any(Number),
+    }));
+    expect(s.store.storeProposal).not.toHaveBeenCalled();
+  });
+
+  it("settles a caller-aborted reservation as REQUEST_CANCELLED and rethrows the abort", async () => {
+    const s = artistSetup();
+    const controller = new AbortController();
+    const original = new DOMException("request ended", "AbortError");
+    s.store.loadOwnedContext.mockImplementation(async () => {
+      controller.abort(original);
+      return s.context;
+    });
+    const jobs = { reserve: vi.fn(async () => {}), complete: vi.fn(async () => {}) };
+    const harness = createArtistKnowledgeHarness(ids.owner, { ...s, jobs });
+    await expect(harness.propose({ documentId: ids.artwork, expectedRevision: 2 }, controller.signal)).rejects.toBe(original);
+    expect(jobs.complete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      proposal: null, failure: expect.objectContaining({ code: "REQUEST_CANCELLED" }), usage: [],
+    }));
+    expect(s.text.generate).not.toHaveBeenCalled();
+  });
+
+  it("bounds a context reader that ignores cancellation and settles its reserved job", async () => {
+    vi.useFakeTimers();
+    try {
+      const s = artistSetup();
+      s.store.loadOwnedContext.mockImplementation(() => new Promise(() => undefined));
+      const jobs = { reserve: vi.fn(async () => {}), complete: vi.fn(async () => {}) };
+      const harness = createArtistKnowledgeHarness(ids.owner, { ...s, jobs });
+      const failure = expect(harness.propose({ documentId: ids.artwork, expectedRevision: 2 })).rejects.toMatchObject({ code: "timeout" });
+      await vi.advanceTimersByTimeAsync(30000);
+      await failure;
+      expect(jobs.complete).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+        proposal: null, failure: expect.objectContaining({ code: "REQUEST_TIMEOUT" }), usage: [],
+      }));
+      expect(s.text.generate).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("completes a failed proposal and rethrows the original access error", async () => {
     const s = artistSetup();
     const failure = new ApiError(403, "FORBIDDEN", "denied");

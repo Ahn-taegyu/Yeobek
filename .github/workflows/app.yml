@@ -88,6 +88,7 @@ jobs:
           npm run test:audio
           npm run test:automation
           npm run test:support
+          npm run test:proposals
           kill "$mock_pid"
           wait "$mock_pid" || true
           FEATURE_GAPS=false node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-gaps-off.log 2>&1 &

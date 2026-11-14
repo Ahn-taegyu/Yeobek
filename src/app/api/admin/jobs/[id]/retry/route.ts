@@ -5,6 +5,7 @@ import { retryJobSchema } from "@/lib/contracts/jobs";
 import { retryNarration } from "@/lib/ai/author-service";
 import { retryAudio } from "@/lib/ai/audio-service";
 import { loadJob } from "@/lib/ai/stores/jobs";
+import { retryOrganization } from "@/lib/ai/organization-service";
 
 export const maxDuration = 180;
 export function POST(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -14,7 +15,8 @@ export function POST(request: Request, context: { params: Promise<{ id: string }
     const id = uuid.parse((await context.params).id);
     const input = await readJson(request, retryJobSchema);
     const job = await loadJob(db, id);
-    return job.kind === "audio" ? (await retryAudio(user.id, id, input, request.signal)).job
+    return job.kind === "organize" ? (await retryOrganization(db, user.id, id, input, request.signal)).job
+      : job.kind === "audio" ? (await retryAudio(user.id, id, input, request.signal)).job
       : (await retryNarration(db, user.id, id, input, request.signal)).job;
   });
 }
