@@ -6,6 +6,7 @@ import { createDocentHarness } from "../../src/lib/ai/harness";
 import { getPlaybookFailureSteps } from "../../src/lib/ai/playbook";
 import { selectEvidence } from "../../src/lib/ai/context";
 import { createArtistKnowledgeHarness, type ArtistKnowledgeContext, type KnowledgeProposal, type KnowledgeOrganizationResult } from "../../src/lib/ai/artist-knowledge";
+import type { AiTextResponse } from "../../src/lib/ai/providers/types";
 import { ids, syntheticPublication, syntheticRequest } from "../fixtures/ai";
 
 function artistSetup() {
@@ -26,7 +27,7 @@ function artistSetup() {
       return { documentRevision: saved.appliedRevision };
     }),
   };
-  const text = { generate: vi.fn(async () => ({ output: { sections: [{ id: "practice", sourceIds: [ids.evidence] }] },
+  const text = { generate: vi.fn(async (): Promise<AiTextResponse> => ({ output: { sections: [{ id: "practice", sourceIds: [ids.evidence] }] },
     trace: { provider: "liner" as const, model: "fake" } })) };
   const harness = createArtistKnowledgeHarness(ids.owner, { store, text, now: () => 1000000 });
   return { context, store, text, harness, proposal: () => saved! };
