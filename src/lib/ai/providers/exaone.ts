@@ -7,7 +7,8 @@ import type { AiProviderOptions, AiTextProvider } from "./types";
 
 export function createExaoneTextProvider(config: AiModelConfig, options: AiProviderOptions = {}): AiTextProvider {
   return {
-    async generate({ system, input, schema, signal, maxOutputTokens }) {
+    async generate({ system, input, schema, signal, maxOutputTokens, media }) {
+      if (media) throw new AiError("invalid_input");
       // K-EXAONE 2.5 does not document a schema parameter. Request JSON in the
       // system prompt; the calling harness still validates its own local schema.
       const response = await requestJson({

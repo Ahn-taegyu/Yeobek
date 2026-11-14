@@ -815,6 +815,9 @@ isOneToOne: false
 "complete_material_cleanup":
 { Args: { "p_expected_version": number,"p_id": string,"p_owner": string }; Returns: Json
                            },
+"complete_material_read":
+{ Args: { "p_chunks": Json,"p_method": string,"p_owner": string,"p_read_id": string,"p_request_id": string,"p_result_code": string }; Returns: Json
+                           },
 "complete_notification_dispatch":
 { Args: { "p_attempt": string,"p_id": string,"p_mock": boolean,"p_provider_id": string,"p_result_code": string,"p_status": string,"p_token": string }; Returns: Json
                            },
@@ -910,6 +913,9 @@ isOneToOne: false
                            },
 "get_knowledge_document":
 { Args: { "p_subject_id": string,"p_subject_type": string }; Returns: Json
+                           },
+"get_material_read":
+{ Args: { "p_request_id": string }; Returns: Json
                            },
 "get_narration_context":
 { Args: { "p_artwork_id": string }; Returns: Json
@@ -1059,6 +1065,9 @@ isOneToOne: false
                            },
 "reserve_expected_qa_job":
 { Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_mock": boolean,"p_owner": string,"p_request_id": string }; Returns: Json
+                           },
+"reserve_material_read":
+{ Args: { "p_document_id": string,"p_expected_document_revision": number,"p_expected_version": number,"p_material_id": string,"p_mock": boolean,"p_owner": string,"p_request_id": string }; Returns: Json
                            },
 "reserve_organize_job":
 { Args: { "p_document_id": string,"p_expected_document_revision": number,"p_mock": boolean,"p_owner": string,"p_request_id": string }; Returns: Json

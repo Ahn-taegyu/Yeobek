@@ -40,6 +40,12 @@ function keywords(question: string) {
 }
 
 function result(data: Record<string, unknown>, name: string) {
+  if (name === "yeobek_material_pages") {
+    if (!Number.isInteger(data.pageCount) || Number(data.pageCount) < 1 || Number(data.pageCount) > 20) throw new AiError("invalid_input");
+    return { pages: Array.from({ length: Number(data.pageCount) }, (_, index) => ({
+      page: index + 1, text: `개발 시연용 참고 자료 ${index + 1}쪽입니다. 실제 파일에서 읽은 내용이 아닙니다.`,
+    })) };
+  }
   if (name === "yeobek_expected_qa") {
     const source = excerpts(data.evidence, "body").find(row => codepoints(row.text) <= AI_LIMITS.answer);
     const question = data.scope === "artwork" ? "이 작품에는 어떤 특징이 있나요?" : "이 전시에는 어떤 특징이 있나요?";
@@ -74,7 +80,13 @@ function result(data: Record<string, unknown>, name: string) {
   }
   if (name === "yeobek_knowledge_organization") {
     const section = data.subjectType === "artist" ? "bio" : data.subjectType === "exhibition" ? "introduction" : "description";
-    const sourceIds = excerpts(data.sources, "text").slice(0, 12).map(source => source.id);
+    let length = 0;
+    const sourceIds = excerpts(data.sources, "text").slice(0, 12).filter(source => {
+      const next = length + codepoints(source.text) + (length ? 2 : 0);
+      if (next > 5000) return false;
+      length = next;
+      return true;
+    }).map(source => source.id);
     return { sections: sourceIds.length ? [{ id: section, sourceIds }] : [] };
   }
   const withQuestions = name === "yeobek_narration_draft_with_questions";

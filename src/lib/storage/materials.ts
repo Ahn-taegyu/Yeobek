@@ -47,6 +47,15 @@ async function downloadBytes(worker: DbClient, bucket: string, key: string, maxB
   return readMaterialResponse(response, maxBytes);
 }
 
+/** Use only a storage key/hash from the owner-checked extraction reservation. */
+export async function downloadMaterialForRead(worker: DbClient, key: string, maxBytes: number, expectedHash: string) {
+  const bytes = await downloadBytes(worker, FINAL, key, maxBytes);
+  if (bytes.byteLength !== maxBytes || createHash("sha256").update(bytes).digest("hex") !== expectedHash) {
+    throw new ApiError(409, "SOURCE_REVISION_CONFLICT", "저장된 파일이 변경되었습니다. 자료를 확인해 주세요.");
+  }
+  return bytes;
+}
+
 /** The browser receives a capability for the temporary key only, never the final key. */
 export async function requestMaterialUpload(ownerId: string, input: z.infer<typeof requestUploadSchema>) {
   const worker = workerClient();
