@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: unified-docent
+  resource: /references/user-liner-voice-evaluation.md
+  title: Liner 수정과 공통 도슨트 요구
 - id: free-providers
   resource: /references/user-free-ai-providers.md
   title: 무료 AI 제공사 시험 요청
@@ -66,16 +69,17 @@ sources:
 
 | 기능 | 설계 기본값 | 경계 |
 | --- | --- | --- |
-| 관람 Q&A | OpenAI Responses `gpt-6-luna`, reasoning `low` | 검증 후 전체 답 전달 |
-| 작가 해설 초안 | Liner Chat Completions `openai/gpt-6.1-sol` | 후보만 반환, 승인·게시 아님 |
-| 작가 해설 평가 | OpenAI Responses `gpt-6-luna` | Q&A와 별도 `OPENAI_JUDGE_MODEL` 설정; 사람 검토 필요 |
-| 음성 인식 | OpenAI `gpt-transcribe` | 녹음 입력과 질문 전송 분리 |
-| 음성 합성 | Typecast `ssfm-v31`, 설정된 한국어 voice ID | 확정된 글만 합성 |
+| 공통 도슨트 | Liner `openai/gpt-6-luna` | 해설·Q&A·미리보기·재작성·관람에 동일 모델, 검증 후 전달 |
+| 독립 평가 | Liner `anthropic/claude-sonnet-5.5` | 공통 도슨트와 다른 계열, 사람 검토 필요 |
+| 음성 인식 | Liner `openai/whisper-1` | 녹음 입력과 질문 전송 분리 |
+| 음성 합성 | 고정 모델/voice를 명시해야 함; 시연은 Liner Gemini Flash Lite TTS/Kore | 확정된 글만 합성, Gemini PCM→MP3 서버 변환 |
 | 임시 음성 대안 | OpenAI `gpt-4o-mini-tts`, `coral` | 명시적으로 선택; 실제 한국어 음질 확인 필요 |
 
-서버 전용 환경 변수는 `OPENAI_API_KEY`, `OPENAI_QA_MODEL`, `OPENAI_JUDGE_MODEL`, `OPENAI_STT_MODEL`, `LINER_API_KEY`, `LINER_DRAFT_MODEL`, `TYPECAST_API_KEY`, `TYPECAST_TTS_MODEL`, `TYPECAST_VOICE_ID`, `AI_TTS_PROVIDER` (`typecast` 또는 `openai`), `OPENAI_TTS_MODEL`, `OPENAI_TTS_VOICE`다. 키는 로컬 비공개 환경 파일이나 배포 환경의 서버 비밀 설정에 두고 클라이언트 변수·저장소·로그에 넣지 않는다. 사용자가 Typecast 계정에서 키와 한국어 음성 ID를 확보해 설정한 뒤 실제 요청과 음질을 확인한다. 없으면 `AI_TTS_PROVIDER=openai`를 명시하고 OpenAI 키와 대안 모델·음성을 설정해 임시 시험한다. 자동 장애 전환으로 비용이나 음색을 바꾸지 않는다. OpenAI의 안내에 따르면 `gpt-4o-mini-tts`는 2027-01-06 종료 예정이므로 행사 이후 대체 모델을 다시 확인한다. Realtime 모델을 동일한 TTS 대체품으로 취급하지 않는다.
+서버 전용 키는 LINER_API_KEY, OPENAI_API_KEY, EXAONE_API_KEY, GEMINI_API_KEY, GROQ_API_KEY, TYPECAST_API_KEY다. 앱의 모델 선택은 아래 AI_ROUTE_*가 기준이며 낮은 수준 어댑터의 OPENAI_QA_MODEL 등 기본값과 혼동하지 않는다. 음성 선택은 LINER_TTS_VOICE, TYPECAST_VOICE_ID, OPENAI_TTS_VOICE로 지정한다. 키는 로컬 비공개 환경 파일이나 서버 비밀 설정에 두며 클라이언트·저장소·로그에 넣지 않는다. Typecast가 준비되지 않으면 다른 제공사를 명시적으로 선택해야 하며 비용/음색을 바꾸는 자동 장애 전환은 없다.
 
-Liner는 `POST https://platform.liner.com/api/v1/chat/completions`에 서버 인증과 `model`, `messages`를 보내고 비스트리밍 응답의 `choices[0].message.content`를 읽는다. JSON Schema 응답 형식을 지원하더라도 서버 검증을 생략하지 않는다. 모델 목록 등재는 행사 키의 접근 권한 확인이 아니다. 제공사에 내장된 외부 검색·도구 호출을 허용하지 않는다.
+최신 라우팅은 `AI_ROUTE_DOCENT`·`AI_ROUTE_JUDGE`와 업무별 `AI_ROUTE_*`로 설정한다. 위의 개별 OpenAI/Typecast 변수 설명은 명시적 비교 경로이며 현재 기본값이 아니다. 기존 DRAFT·QA 설정은 동일한 공통 별칭으로만 허용한다. 서로 다른 기존 값은 제거하고 DOCENT로 이전해야 한다. 재작성 평가 토큰은 3,000으로 조정하며 호출당 30초/전체 65초를 유지한다. 비교 근거·설정 이전·PCM 변환의 제한은 [Liner 실측 검토](../research/liner-docent-live-validation.md)를 따른다.
+
+Liner는 `POST https://platform.liner.com/api/v1/chat/completions`에 서버 인증과 `model`, `messages`를 보내고 비스트리밍 응답의 `choices[0].message.content`를 읽는다. JSON Schema 응답 형식을 지원하더라도 서버 검증을 생략하지 않는다. 예상 Q&A는 현재 허용 인용 ID를 스키마 enum에도 전달하고 서버에서 다시 검사한다. 모델 목록 등재는 행사 키의 접근 권한 확인이 아니다. 제공사에 내장된 외부 검색·도구 호출을 허용하지 않는다.
 
 선택적으로 텍스트 QA/DRAFT/ORGANIZE에 Gemini, JUDGE에 Groq를 직접 지정할 수 있다. 기본 Liner 경로와 음성·자료·자동화 경로는 변경하지 않는다. 무료 계정·과금 상태는 코드가 보증하지 않으며, 합성 자료만 사용하는 사전 확인과 제한된 시험 절차는 [키 당일 점검표](key-day-checklist.md#무료-텍스트-제공사-선택-시험)를 따른다. CLI smoke는 DB 없이 실행하며 앱에서 이 제공사를 사용하려면 제공사 추적값을 허용하는 신규 migration을 먼저 적용해야 한다. 실제 호출과 품질은 미검증이다.
 

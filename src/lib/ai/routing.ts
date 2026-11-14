@@ -5,13 +5,14 @@ import { AI_MODELS,
 import { AiError } from "./errors";
 
 const linerDraft = AI_MODELS.draft;
+const docentDefault = "openai/gpt-6-luna";
 const defaults = {
-  draft: linerDraft,
+  draft: docentDefault,
   organize: linerDraft,
   material: "google/gemini-3.8-flash",
   automation: linerDraft,
-  judge: "google/gemini-3.8-flash",
-  qa: "openai/gpt-6-luna",
+  judge: "anthropic/claude-sonnet-5.5",
+  qa: docentDefault,
   stt: "openai/whisper-1",
   tts: undefined,
 } as const;
@@ -38,7 +39,13 @@ export function resolveAiRoute(capability: AiCapability, env: AiEnvironment = pr
   const providers: readonly LiveAiProvider[] = capability === "tts" ? speechProviders :
     capability === "stt" ? transcriptionProviders : capability === "automation" ? ["liner"] :
     capability === "material" ? ["liner", "openai"] : textProviders;
-  const configured = env["AI_ROUTE_" + capability.toUpperCase()]?.trim();
+  // Drafts, expected Q&A, previews, rewrites and visitor answers share one
+  // speaker. Retain legacy aliases, but reject conflicting deployments.
+  const docent = capability === "draft" || capability === "qa";
+  const speakerRoutes = docent ? [env.AI_ROUTE_DOCENT, env.AI_ROUTE_DRAFT, env.AI_ROUTE_QA]
+    .map(value => value?.trim()).filter((value): value is string => Boolean(value)) : [];
+  if (new Set(speakerRoutes).size > 1) throw new AiError("not_configured");
+  const configured = docent ? speakerRoutes[0] : env["AI_ROUTE_" + capability.toUpperCase()]?.trim();
   const legacySpeech = capability === "tts" ? env.AI_TTS_PROVIDER?.trim() : undefined;
   const selection = configured || legacySpeech || "liner";
   const colon = selection.indexOf(":");
@@ -50,7 +57,7 @@ export function resolveAiRoute(capability: AiCapability, env: AiEnvironment = pr
     ? provider === "liner" ? env.LINER_TTS_MODEL?.trim()
       : provider === "typecast" ? env.TYPECAST_TTS_MODEL?.trim() || AI_MODELS.typecastSpeech
       : env.OPENAI_TTS_MODEL?.trim() || AI_MODELS.openAiSpeech
-    : capability === "draft" ? env.LINER_DRAFT_MODEL?.trim() || defaults.draft
+    : docent ? env.LINER_DRAFT_MODEL?.trim() || defaults.draft
     : defaults[capability];
   const model = modelIdentifier(explicit, fallback);
   if ((provider === "gemini" || provider === "groq") && model !== AI_MODELS[provider]) {

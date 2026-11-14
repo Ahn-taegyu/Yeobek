@@ -186,7 +186,7 @@ describe("explicit free provider routes and pricing", () => {
 
   it("compares actual model families across providers and rejects unidentified selections", () => {
     expect(() => assertIndependentJudge(env)).not.toThrow();
-    expect(() => assertIndependentJudge({ AI_ROUTE_DRAFT: geminiRoute })).toThrow(notConfigured);
+    expect(() => assertIndependentJudge({ AI_ROUTE_DRAFT: geminiRoute })).not.toThrow();
     expect(() => assertIndependentJudge({ AI_ROUTE_JUDGE: groqRoute })).toThrow(notConfigured);
     expect(() => assertIndependentJudge({ AI_ROUTE_DRAFT: "openai:gpt-6-luna", AI_ROUTE_JUDGE: groqRoute })).toThrow(notConfigured);
     expect(() => assertIndependentJudge({ AI_ROUTE_DRAFT: "liner:openai/gpt-oss-120b", AI_ROUTE_JUDGE: groqRoute })).toThrow(notConfigured);

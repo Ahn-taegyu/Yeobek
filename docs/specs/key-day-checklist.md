@@ -11,6 +11,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-14T15:05:00+09:00'
 sources:
+- id: unified-docent
+  resource: /references/user-liner-voice-evaluation.md
+  title: Liner 수정과 공통 도슨트 요구
 - id: free-providers
   resource: /references/user-free-ai-providers.md
   title: 무료 AI 제공사 시험 요청
@@ -61,8 +64,7 @@ sources:
 AI_PROVIDER_MODE=mock
 GEMINI_API_KEY=발급받은_Gemini_키
 GROQ_API_KEY=발급받은_Groq_키
-AI_ROUTE_QA=gemini:gemini-3.5-flash-lite
-AI_ROUTE_DRAFT=gemini:gemini-3.5-flash-lite
+AI_ROUTE_DOCENT=gemini:gemini-3.5-flash-lite
 AI_ROUTE_ORGANIZE=gemini:gemini-3.5-flash-lite
 AI_ROUTE_JUDGE=groq:openai/gpt-oss-120b
 ```
@@ -79,6 +81,9 @@ AI_ROUTE_JUDGE=groq:openai/gpt-oss-120b
 - [ ] 한도용 HMAC 비밀값과 신뢰 프록시 헤더를 확인한다. 행사 공유 NAT에서 실제 사용량을 측정하고, 원본 IP를 저장하지 않는다.
 
 # 실제 AI·음성·공개 흐름
+
+- [ ] 기존 환경의 서로 다른 DRAFT·QA 값을 제거하고 `AI_ROUTE_DOCENT` 하나로 이전한다. 기본 도슨트는 Liner Luna, 독립 판정은 Sonnet이며 명시적 기존 JUDGE 값도 의도한 모델인지 확인한다. 원격 환경 변경은 배포 담당 작업이다. [실측·토큰·음성 수정 근거](../research/liner-docent-live-validation.md).
+- [ ] Gemini TTS는 PCM 요청→서버 MP3 변환 경로를 확인한다. raw PCM을 MP3로 이름만 바꿔 보내지 않는다. 짧은 실제 답변으로 저장·재전송·브라우저 재생을 확인하고 큰 음성/모바일 호환은 별도 점검한다.
 
 - [ ] `AI_PROVIDER_MODE=live`, 업무별 제공사·모델 ID·키 권한을 확인한다. `npm run ai:check`는 설정 검사일 뿐 실제 호출 성공이 아니다.
 - [ ] 플러그인 버전·해시, 모델/음성 설정 버전과 배포 SHA를 기록한다. 평가 모델은 생성 모델과 다른 계열이라는 기존 계약을 확인한다.

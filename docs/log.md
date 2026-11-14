@@ -2,6 +2,8 @@
 
 ## 2026-11-14
 
+- **Liner 실호출 후속**: 재작성 평가의 추론 포함 토큰 예산, Gemini PCM→MP3 변환, 공통 도슨트 설정을 반영했다. 소량 비교에 따라 Luna 생성·Sonnet 평가를 초기 기본으로 선택하고 인용 ID 오타·근거 부족 상태의 실측 문제를 보강했다. [사용자 요청](references/user-liner-voice-evaluation.md), [측정 범위와 한계](research/liner-docent-live-validation.md).
+
 - **작가 화면 이동 조회 개선**: 작가 홈·프로필·전시·검토 화면이 최근 읽은 데이터를 재사용하고 링크에 마우스를 올리거나 키보드로 이동할 때 필요한 데이터를 미리 읽는다. 저장이 진행 중이면 완료 후 조회하며, 로그인 상태가 바뀌면 이전 조회를 폐기한다. [사용자 요청](references/user-session-navigation.md).
 
 - **무료 텍스트 제공사 선택 시험**: Gemini 생성·Groq 평가의 계정 확인, 키 설정과 제한된 시험 절차를 추가했다. 실제 AI 호출은 0회다. [사용자 요청](references/user-free-ai-providers.md).

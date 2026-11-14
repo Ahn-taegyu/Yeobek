@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { executePreview, type PreviewStore } from "@/lib/ai/preview";
 import { executeQaRewrite, type QaRewriteStore } from "@/lib/ai/qa-rewrite";
+import { AiError } from "@/lib/ai/errors";
 import type { ExpectedQaContext } from "@/lib/ai/expected-qa";
 import { qaCorrectionEvidenceSchema, qaRewriteSchema, type PreviewAnswer, type QaRewriteJob } from "@/lib/contracts/qa";
 import type { AiTextRequest, AiTextResponse } from "@/lib/ai/providers/types";
@@ -106,6 +107,19 @@ describe("artist QA rewrite", () => {
       await expect(s.run()).resolves.toMatchObject({ job: { status: output.grounded ? "failed" : "abstained", result: null } });
       expect(s.store.complete.mock.calls[0][1]).not.toHaveProperty("items");
     }
+  });
+
+  it("budgets reasoning plus verdict and keeps truncated evaluations closed without retry", async () => {
+    const s = rewriteSetup();
+    s.judge.mockImplementationOnce(async request => {
+      expect(request.maxOutputTokens).toBeGreaterThanOrEqual(2048);
+      expect(request.maxOutputTokens).toBeLessThanOrEqual(4096);
+      expect(request.schema.definition).toMatchObject({ required: ["grounded"], additionalProperties: false });
+      throw new AiError("incomplete");
+    });
+    await expect(s.run()).resolves.toMatchObject({ job: { status: "failed", resultCode: "AI_GENERATION_FAILED", result: null } });
+    expect(s.judge).toHaveBeenCalledOnce();
+    expect(s.store.complete.mock.calls[0][1]).not.toHaveProperty("items");
   });
 
   it("settles cancellation after reservation even when provider ignores the signal", async () => {

@@ -26,10 +26,10 @@ npm run dev
 
 ## AI 연결 준비
 
-`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 실제 외부 모델 호출은 아직 0회입니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증과 [PR #5 CI](https://github.com/Ahn-taegyu/Yeobek/pull/5)를 통과해 병합됐습니다. 글 승인·게시 API는 PR #6 CI를 통과해 병합됐으며 관람 글 채팅 HTTP도 연결했습니다. 키를 넣어도 관람 화면이 활성화되지는 않습니다.
+`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 도슨트는 Liner `openai/gpt-6-luna`, 독립 평가는 `anthropic/claude-sonnet-5.5`입니다. 해설·예상 Q&A·미리보기·재작성·관람 답변은 같은 도슨트 모델을 사용합니다. 실제 Liner 연결 결과와 작은 표본의 한계는 [모델·음성 검토](docs/research/liner-docent-live-validation.md)를 확인하세요.
 
 1. `.env.example`의 AI 항목을 기존 `.env.local`에 추가하고 `LINER_API_KEY`를 서버에 설정합니다. 키에 `NEXT_PUBLIC_`를 붙이지 않습니다.
-2. `AI_ROUTE_DRAFT`, `AI_ROUTE_ORGANIZE`, `AI_ROUTE_JUDGE`, `AI_ROUTE_QA`, `AI_ROUTE_STT`, `AI_ROUTE_TTS`는 `제공사:모델` 형식으로 선택합니다. Liner TTS는 계정에서 확인한 고정 모델을 `AI_ROUTE_TTS` 또는 `LINER_TTS_MODEL`에, 음성을 `LINER_TTS_VOICE`에 지정해야 합니다. 평가 모델은 초안과 다른 인식 가능한 계열이어야 합니다.
+2. `AI_ROUTE_DOCENT`, `AI_ROUTE_ORGANIZE`, `AI_ROUTE_JUDGE`, `AI_ROUTE_STT`, `AI_ROUTE_TTS`는 `제공사:모델` 형식입니다. 기존 환경은 **DRAFT·QA를 제거하고 DOCENT 한 값으로 이전**합니다. 레거시 `AI_ROUTE_DRAFT`/`AI_ROUTE_QA`도 사용할 수 있지만 설정한 모든 도슨트 경로가 일치해야 합니다. 다르면 설정 오류로 중단합니다. Liner TTS는 계정에서 확인한 고정 모델과 `LINER_TTS_VOICE`가 필요합니다. Gemini TTS는 PCM을 받아 서버에서 MP3로 변환합니다. 평가 모델은 도슨트와 다른 인식 가능한 계열이어야 합니다. 원격 환경 변경은 별도 배포 작업입니다.
 3. OpenAI·Typecast·EXAONE은 비교 후보입니다. 해당 `AI_ROUTE_*`와 제공사 키, 필요한 음성 설정을 명시해 선택합니다. 자동 장애 전환은 없습니다. `.env.example`에 예시가 있습니다.
 4. 키 없는 개발·시험에는 `AI_PROVIDER_MODE=mock`을 사용합니다. `NODE_ENV=development` 또는 `test`에서만 허용되며 production에서는 거부합니다. 모의 결과에는 `mock: true`가 표시됩니다.
 
