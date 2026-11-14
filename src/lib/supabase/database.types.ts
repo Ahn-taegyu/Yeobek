@@ -757,6 +757,9 @@ isOneToOne: false
 "complete_visitor_voice":
 { Args: { "p_failure_code"?: string,"p_id": string,"p_result": Json,"p_session_hash": string }; Returns: Json
                            },
+"consume_signup_budget":
+{ Args: { "p_email_hash": string,"p_kind": string,"p_network_hash": string,"p_request_id": string }; Returns: undefined
+                           },
 "consume_visitor_network_budget":
 { Args: { "p_exhibition_id": string,"p_kind": string,"p_network_hash": string,"p_request_id": string,"p_session_hash": string }; Returns: undefined
                            },
@@ -831,6 +834,9 @@ isOneToOne: false
                            },
 "get_revoke_impact":
 { Args: { "p_evidence_id": string,"p_expected_version": number }; Returns: Json
+                           },
+"get_signup_verification_identity":
+{ Args: { "p_email": string,"p_signup_request_id": string }; Returns: string
                            },
 "get_support_context":
 { Args: { "p_attempt": number,"p_event_id": string,"p_mock": boolean }; Returns: Json

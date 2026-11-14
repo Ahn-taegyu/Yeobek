@@ -6,6 +6,7 @@ const variables = {
   followUpQuestions: "FEATURE_FOLLOW_UP_QUESTIONS",
   opsAggregation: "FEATURE_OPS_AGGREGATION",
   voiceRequired: "FEATURE_VOICE_REQUIRED",
+  signup: "FEATURE_SIGNUP",
 } as const;
 export type Feature = keyof typeof variables;
 export type Features = Readonly<Record<Feature, boolean>>;

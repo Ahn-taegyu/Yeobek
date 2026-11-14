@@ -14,6 +14,9 @@ generated:
   at: '2026-11-12T14:49:23+09:00'
 decision_status: proposed
 sources:
+- id: signup-contract
+  resource: /research/signup-auth-contract.md
+  title: W9 이메일 가입과 직접 로그인 경계
 - id: figma-authoring
   resource: /references/figma-authoring-v3.md
   title: Figma 작가 입력 화면 직접 대조
@@ -382,7 +385,7 @@ A02~A04는 자기 입력을 읽고 수정하는 화면이다. A05의 AI 참고 �
 | 오류 | 입력 오류, 인증 실패, 네트워크 실패, 중복 요청 및 응답 유실을 안내. 계정 존재 여부나 비밀번호를 불필요하게 노출하지 않음. 계정이 생성됐으나 연결에 실패한 경우 재가입 없이 확인·복구하는 방식은 설계 제안 |
 | 세션 | 로그인 상태를 서버에서 확인. 로그아웃 성공 후 세션 종료·관리자 캐시 제거 및 SC-A08 이동. 만료와 종료 실패는 각각 안내 |
 
-소셜 로그인, 비밀번호 추가 강도 규칙과 재설정, 인증 메일 재발송, 동의·보관, 세션 수명은 Q-09에서 관리한다. 가입 API, 제공사의 자동 세션 억제, 오류 복구와 버튼 활성화는 구현 제안이며 미검증이다. [개발 기반 현황](development-foundation.md).
+소셜 로그인은 이번 범위에서 제외한다. 비밀번호 추가 강도 규칙과 재설정, 동의·보관, 세션 수명은 Q-09의 기존 동작을 유지한다. W9의 가입·재발송·코드 확인 API와 비밀번호 세션 조건은 [가입 계약](api-contract.md#w9-이메일-가입-계약-검증-중)으로 구현·검증 중이다. 화면 버튼과 코드 입력은 프런트 인계 대상이다. [개발 기반 현황](development-foundation.md).
 
 # 6. 상태와 전이
 

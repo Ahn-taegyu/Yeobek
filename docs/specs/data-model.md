@@ -13,6 +13,9 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: signup-contract
+  resource: /research/signup-auth-contract.md
+  title: W9 이메일 가입과 직접 로그인 경계
 - id: figma-authoring
   resource: /references/figma-authoring-v3.md
   title: Figma 작가 입력 화면 직접 대조
@@ -129,3 +132,10 @@ R1 설계(미구현): 서비스 역할 전용 RPC가 권한 확인된 삭제 요
 170000은 artist_profiles에 full_name, keywords, onboarding_completed_at, avatar_material_id를, exhibitions에 poster_material_id를 추가한다. 이름은 소유자 전용이고 이메일은 Auth가 원본이다. 성별은 수집하지 않는다. 사진 FK는 owner·subject·material의 복합 참조로 다른 작가/전시 연결을 차단한다. ready 상태·검증 해시·크기는 RPC에서 확인한다. 사진 연결과 삭제는 기존 작가별 게시 잠금을 먼저 취해 직렬화한다. 새 RPC 3개는 authenticated만 실행하며 전체 public RPC 권한 대조 목록을 확장한다.
 
 171000은 기존 catalog에 활동 이력 5개를 추가하고 기간/홈 상태를 조회 시 계산한다. 활동 이력만 입력한 상태는 작품 세계 등록으로 보지 않는다. 비공개 이름/키워드/사진 필드를 공개 snapshot·운영 자동화에 자동 복사하지 않는다. 공개 포스터와 예상 Q&A 저장은 각각 W12/W11의 후속이다. 배포·구버전 클라이언트 경계는 [API 계약](api-contract.md#w10-v3-온보딩사진홈-계약)을 따른다.
+
+
+## W9 인증 계정과 한도
+
+가입 계정/비밀번호/확인 코드는 Supabase Auth가 관리한다. 서버 app_metadata의 yeobek_signup_request_id는 최초 가입 UUID이며 공개 user_metadata로 대체하지 않는다. 별도 이메일·비밀번호 업무 테이블을 만들지 않는다. private signup_attempts는 HMAC network/email 해시, 요청UUID, kind, attempted_at만 보관한다. 서비스 RPC가 두 식별자 잠금을 순서대로 잡아 한도를 확인·차감한다.48시간 이후1000행 단위 정리는 기존 purge_expired 응답 형식을 유지한다.
+
+181000은 신규 가입 표시가 있는 JWT에 password AMR을 요구한다. 소유자·운영자 RPC 및 기존6개 소유자 SELECT 정책에 제한을 더하며, 기존 계정·서비스 역할·익명 공개 관람 의미는 유지한다. Auth 계정 생성만으로 작가 프로필을 만들지 않는다. 기존 lazy 생성과 계정별 unique 제약을 사용한다.
