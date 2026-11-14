@@ -6,7 +6,9 @@ import { useState, type FormEvent } from "react";
 import { requestApi } from "@/lib/client";
 import { sectionDefinitions } from "@/lib/contracts/knowledge-sections";
 import { onboardingKeywordOptions } from "@/lib/contracts/onboarding";
-import { errorMessage, Field, Header, Loading, loadProfile, Questions, sectionsFrom, Steps, useArtistLoad } from "./ui";
+import { errorMessage, Field, Header, Loading, loadProfile, PrivateImage, Questions, sectionsFrom, Steps, useArtistLoad } from "./ui";
+
+import { uploadMaterial } from "./upload";
 
 type Profile = Awaited<ReturnType<typeof loadProfile>>;
 type Keywords = NonNullable<Profile["keywords"]>;
@@ -61,6 +63,21 @@ function OnboardingSteps({ initial }: { initial: Profile }) {
     } finally { setBusy(false); }
   }
 
+  async function uploadAvatar(file: File) {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const material = await uploadMaterial(file, "artist", profile.id, "image");
+      const { data } = await requestApi("setArtistAvatar", {
+        body: { expectedRevision: profile.revision, materialId: material.id },
+      });
+      setProfile({ ...data, accountEmail: profile.accountEmail });
+    } catch (error) {
+      setError(error instanceof Error && error.constructor === Error ? error.message : errorMessage(error));
+    } finally { setBusy(false); }
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void next(new FormData(event.currentTarget));
@@ -70,7 +87,15 @@ function OnboardingSteps({ initial }: { initial: Profile }) {
     <Header title={["기본 정보", "활동 이력", "나의 작업 키워드"][step - 1]} />
     <form key={step} onSubmit={submit} aria-busy={busy}>
       {step === 1 && <>
-        <Image className="artist-avatar" src="/yeobek/artist-avatar.png" alt="" width={136} height={136} />
+        {profile.avatarMaterialId ? <PrivateImage key={profile.avatarMaterialId} className="artist-avatar artist-avatar-large"
+          materialId={profile.avatarMaterialId} alt="프로필 사진" /> :
+          <Image className="artist-avatar" src="/yeobek/artist-avatar.png" alt="" width={136} height={136} loading="eager" />}
+        <Field label="프로필 사진"><input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy}
+          onChange={event => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (file) void uploadAvatar(file);
+          }} /></Field>
         <Field label="이름*"><input name="fullName" autoComplete="name" maxLength={100} required defaultValue={profile.fullName ?? ""} placeholder="이름을 입력해주세요" /></Field>
         <Field label="작가명 (활동명)*"><input name="displayName" maxLength={100} required defaultValue={profile.displayName ?? ""} placeholder="활동명이 없다면 본명을 입력해주세요" /></Field>
         <p className="artist-note">입력한 이름은 서비스 내 닉네임과 전시 작가명으로 사용됩니다.</p>
