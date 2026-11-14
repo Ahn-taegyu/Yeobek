@@ -935,11 +935,11 @@ isOneToOne: false
 "get_public_media_refs":
 { Args: { "p_mock": boolean,"p_publication_ids": (string)[] }; Returns: Json
                            },
-"get_qa_rewrite_job":
-{ Args: { "p_job_id": string }; Returns: Json
-                           },
 "get_publication_checklist":
 { Args: { "p_exhibition_id": string }; Returns: Json
+                           },
+"get_qa_rewrite_job":
+{ Args: { "p_job_id": string }; Returns: Json
                            },
 "get_review_bundle":
 { Args: { "p_artwork_id": string }; Returns: Json
