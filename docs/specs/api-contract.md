@@ -311,3 +311,9 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 상태 신호는 원래 변경 트랜잭션에서 저장되며, 실제/모의가 정해진 AI·게시 신호는 그 모드에서만 처리한다. 전시 생성처럼 모드 없는 신호는 신뢰된 cron이 처음 가져갈 때 고정한다. 기존 자료에 대한 소급 일괄 안내는 하지 않는다. 만료 신호는 같은 보존 정책으로 제한된 배치에서 정리한다.
 
 `ops-notify`는 상태와 작품 집계만 모델에 전달하고 구조화 출력·인용·형식·현재 상태를 검사한다. 제목·작가 원자료·관람 질문·주소를 입력하지 않는다. 상태가 변경되면 안내를 중단하고, 발송 직전에도 대상 상태를 확인한다. 기본은 draft이고 운영자가 검토한다. 인용 ID 검사가 문장의 모든 의미적 적합성을 증명하는 것은 아니며 실제 품질은 키 입력 후 평가한다.
+
+# W8 채널톡 토큰 내부 계약
+
+`claim_channel_token(app_id,channel_id,claim)`와 `complete_channel_token(app_id,channel_id,claim,sealed,expires_in)`은 service-role 전용 RPC다. 브라우저용 HTTP 경로와 타입 클라이언트에는 추가하지 않는다. 예약 결과는 `cached`(암호문), `refresh`(기존 암호문 또는 null), `busy`, `limited` 중 하나다. 앱별 잠금으로 채널 전체의 발급/갱신 예약을 30분에 10회까지 제한하고, 채널 lease는 30초다. 예약 재사용 방지도 같은 30분 창이며 캐시 재사용은 예약을 소비하지 않는다.
+
+완료는 현재 lease의 소유자만 할 수 있고, 토큰 만료는 발급 전 예약 시각을 기준으로 계산한다. 지연·교체·만료된 완료는 false다. 서버는 암호문을 앱·채널 범위로 검증하고 저장이 확인되기 전에는 토큰을 발신 어댑터에 넘기지 않는다. `CHANNEL_TALK_APP_ID`, `CHANNEL_TALK_CHANNEL_ID`, `CHANNEL_TALK_APP_SECRET`, `CHANNEL_TALK_TOKEN_KEY`는 서버 전용이다. TOKEN_KEY는 32바이트 키의 64자리 hex다. `CHANNEL_TALK_SIGNING_KEY`는 수신 서명용으로 발신 토큰과 별개이며 웹훅 연결은 후속이다.

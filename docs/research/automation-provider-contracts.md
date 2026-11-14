@@ -41,6 +41,9 @@ sources:
 - id: channel-signature
   resource: https://github.com/channel-io/app-sdk/blob/main/ts/packages/server/src/guards/signature.guard.ts
   title: 채널톡 서명 검증 소스
+- id: channel-token
+  resource: https://github.com/channel-io/app-sdk/blob/main/ts/packages/server/src/native/client.ts
+  title: 채널톡 토큰 발급·갱신 클라이언트
 ---
 
 # 조사 상태
@@ -70,6 +73,14 @@ sources:
 [웹훅](https://altalt.io/en/developers/webhooks)은 본문 자체가 아닌 노트 ID·revision·처리 상태를 알린다. `webhook-id`, `webhook-timestamp`, `webhook-signature`와 원본 바이트로 Standard Webhooks 서명을 확인하고 5분 허용 오차·중복 ID·역순 revision을 처리한다. 먼저 이벤트를 안전하게 저장해 응답하고, 실제 전사 조회·정리는 작업 실행기로 넘긴다. 삭제와 `access_lost` 통지는 저장된 복사본의 접근 중지·후보 무효화에도 연결해야 한다.
 
 구현 판단: 서버 공용 키가 볼 수 있는 모든 노트를 모든 작가가 가져올 수 있게 하지 않는다. 인증된 작가와 미리 연결한 노트/통합 범위를 검사하고 원전사를 비공개 원자료로 보관한다. AI는 정리 후보만 만들며 작가 확인 전 공개 근거로 올리지 않는다.
+
+# 채널톡 토큰 발급·갱신 후속
+
+공식 SDK의 `issueToken`은 `{secret,channelId}`, `refreshToken`은 `{refreshToken}`을 Native Function으로 호출하며 응답은 `accessToken`, `refreshToken`, `expiresIn`(초)다. 두 호출은 앱당 30분에 10회 제한을 공유하므로 프로세스마다 발급하지 않고 DB 예약·캐시를 사용한다. 이 값은 제공사 한도이며 제품 업무 정책과 구별한다. 요청 형식은 [SDK 클라이언트](https://github.com/channel-io/app-sdk/blob/main/ts/packages/server/src/native/client.ts)를 다시 확인했으며 실호출은 하지 않았다.
+
+`channel-token.ts` 어댑터와 `channel-token-cache.ts`, `channel-runtime.ts`를 추가했다. `110000` 신규 migration의 서비스 전용 RPC가 채널별 30초 lease와 앱별 30분 한도를 보장한다. 캐시가 60초 이상 유효하면 외부 발급 없이 재사용한다. 앱·채널을 추가 인증 데이터로 묶은 AES-256-GCM 암호문만 DB에 저장하고 키는 서버 환경 변수에 둔다. 키나 원문 토큰은 클라이언트·로그·문서에 출력하지 않는다.
+
+토큰 갱신 응답이 유실되면 이전 refresh token의 효력을 알 수 없으므로 내부 재시도나 자동 신규 발급을 하지 않는다. 기한이 지난 완료는 저장하지 않으며 발급 예약은 실패에도 환급하지 않는다. 키 교체·갱신 거절 시 운영자가 확인해야 한다. 키를 무작정 바꾸면 기존 암호문을 해독할 수 없으므로 이전 키 복구 또는 해당 앱·채널 캐시 정리와 재발급 절차가 필요하다. 전용 복구 도구와 키 당일 점검은 W7에 남는다. 이 구성은 문의 웹훅·계정 연결을 대신하지 않으며 아직 문의 처리 실행기에 연결되지 않았다.
 
 # 다음 구현 경계
 

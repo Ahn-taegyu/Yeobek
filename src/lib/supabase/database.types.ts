@@ -665,6 +665,9 @@ isOneToOne: false
 "claim_automation_notifications":
 { Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
                            },
+"claim_channel_token":
+{ Args: { "p_app_id": string,"p_channel_id": string,"p_claim": string }; Returns: Json
+                           },
 "claim_notification_outbound":
 { Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
                            },
@@ -685,6 +688,9 @@ isOneToOne: false
                            },
 "complete_automation_job":
 { Args: { "p_attempt": number,"p_elapsed_ms"?: number,"p_event_id": string,"p_job_id": string,"p_outbound"?: Json,"p_result_code": string,"p_state": string,"p_steps"?: Json,"p_usage"?: Json }; Returns: Json
+                           },
+"complete_channel_token":
+{ Args: { "p_app_id": string,"p_channel_id": string,"p_claim": string,"p_expires_in": number,"p_sealed": string }; Returns: boolean
                            },
 "complete_material_cleanup":
 { Args: { "p_expected_version": number,"p_id": string,"p_owner": string }; Returns: Json

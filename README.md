@@ -22,6 +22,8 @@ npm run dev
 
 자동화도 `AI_PROVIDER_MODE=mock`으로 전체 흐름을 시험할 수 있습니다. 모의 개발 서버의 출처와 시험용 cron 비밀값을 `TEST_APP_ORIGIN`, `TEST_CRON_SECRET`에 지정한 뒤 `npm run test:automation`을 실행합니다. 실환경에는 Liner 키와 스티비 거래성·홍보성 각각의 자동 이메일 URL, API 키, 사용자 정의 문단 필드가 필요합니다(`.env.example`). 스티비 설정이 없으면 승인 발송함을 소비하지 않고 cron 결과의 `dispatchReady=false`로 알립니다. 기본 정책은 운영자 승인 후 발송하는 draft입니다. 채널톡·Alt 전체 실행 연결은 후속입니다.
 
+채널톡 발신은 서버 전용 `CHANNEL_TALK_APP_ID`, `CHANNEL_TALK_CHANNEL_ID`, `CHANNEL_TALK_APP_SECRET`, `CHANNEL_TALK_TOKEN_KEY`로 준비합니다. TOKEN_KEY는 무작위 32바이트의 64자리 hex이며 모든 서버가 같은 값을 유지해야 합니다. 토큰은 암호화해 DB에 캐시하고 공유 한도 안에서 갱신합니다. 수신용 SIGNING_KEY와는 별개입니다. 아직 문의 웹훅·작가 연결·답변 실행기는 연결되지 않았으며 설정만으로 문의 응대가 활성화되지 않습니다. [토큰 계약과 미확인 범위](docs/research/automation-provider-contracts.md#채널톡-토큰-발급갱신-후속)를 확인하세요.
+
 ## AI 연결 준비
 
 `src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 실제 외부 모델 호출은 아직 0회입니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증과 [PR #5 CI](https://github.com/Ahn-taegyu/Yeobek/pull/5)를 통과해 병합됐습니다. 글 승인·게시 API는 PR #6 CI를 통과해 병합됐으며 관람 글 채팅 HTTP도 연결했습니다. 키를 넣어도 관람 화면이 활성화되지는 않습니다.
