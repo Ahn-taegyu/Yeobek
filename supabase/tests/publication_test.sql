@@ -29,6 +29,12 @@ insert into materials(id,owner_id,artwork_id,kind,state,storage_key,byte_size) v
      '20000000-0000-0000-0000-000000000001','image','ready','00000000-0000-0000-0000-000000000001/image1',100),
     ('30000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000001',
      '20000000-0000-0000-0000-000000000003','image','ready','00000000-0000-0000-0000-000000000001/image3',100);
+insert into materials(id,owner_id,exhibition_id,kind,state,storage_key,byte_size,content_type,content_hash)
+values ('70000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001',
+    '10000000-0000-0000-0000-000000000001','image','ready',
+    '00000000-0000-0000-0000-000000000001/poster.png',32,'image/png',sha256('Poster'::bytea));
+update exhibitions set poster_material_id='70000000-0000-0000-0000-000000000001'
+    where id='10000000-0000-0000-0000-000000000001';
 -- First artwork deliberately has no image: exercise legacy public.publish.
 update artworks set image_material_id = '30000000-0000-0000-0000-000000000003' where id = '20000000-0000-0000-0000-000000000003';
 select set_config('test.bio_document',(select id::text from knowledge_documents
@@ -71,6 +77,13 @@ select is(publish('00000000-0000-0000-0000-000000000001','10000000-0000-0000-000
     current_setting('test.publish1')::jsonb || '{"created":false}'::jsonb,'successful publish replays before revision check');
 select is((select image_key from publications where artwork_id = '20000000-0000-0000-0000-000000000001'),null::text,'legacy publisher accepts an absent image');
 select is(get_public_exhibition('10000000-0000-0000-0000-000000000001')->>'start_time','09:30','publication snapshots its start time');
+select is(get_public_exhibition('10000000-0000-0000-0000-000000000001')->'poster'->>'kind','poster',
+    'actual publish captures the poster');
+reset role;
+update exhibitions set poster_material_id=null where id='10000000-0000-0000-0000-000000000001';
+set local role authenticated;
+select throws_ok($$select delete_material('70000000-0000-0000-0000-000000000001',1)$$,
+    'P1021','Material is in use','published poster remains in use after draft detachment');
 reset role;
 update exhibitions set start_time='10:00' where id='10000000-0000-0000-0000-000000000001';
 set local role service_role;
@@ -121,6 +134,11 @@ select is(publish('00000000-0000-0000-0000-000000000001','10000000-0000-0000-000
 set local role authenticated;
 select is(get_public_artwork('10000000-0000-0000-0000-000000000001','20000000-0000-0000-0000-000000000001')->>'publication_id',
     current_setting('test.publish1')::jsonb#>>'{publications,0,publicationId}','metadata-only publication preserves active version');
+select is(get_public_exhibition('10000000-0000-0000-0000-000000000001')->'poster','null'::jsonb,
+    'explicit republication applies the removed poster');
+select is(delete_material('70000000-0000-0000-0000-000000000001',1)->>'state','revoked',
+    'poster can be deleted after explicit republication without it');
+
 
 set local role authenticated;
 select set_config('test.impact_before',get_revoke_impact(current_setting('test.evidence1')::uuid,1)->>'token',true);

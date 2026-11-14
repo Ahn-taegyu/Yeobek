@@ -27,7 +27,18 @@ select results_eq(
     ('get_public_artwork(uuid, uuid)', true, true, true, false),
     ('get_public_exhibition(uuid)', true, true, true, false),
 
+    ('get_approved_qa_for_publication(uuid, uuid, uuid, boolean)', false, false, true, false),
+
     -- authenticated
+    ('create_qa_correction_evidence(text, uuid, integer, uuid, text, text)', false, true, false, false),
+    ('get_preview_answer(uuid)', false, true, false, false),
+    ('get_qa_rewrite_job(uuid)', false, true, false, false),
+    ('get_training_batch(uuid)', false, true, false, false),
+    ('record_preview_evaluation(uuid, uuid, text)', false, true, false, false),
+    ('approve_qa_item(uuid, integer, jsonb)', false, true, false, false),
+    ('get_expected_qa_job(uuid)', false, true, false, false),
+    ('list_qa_items(uuid, uuid)', false, true, false, false),
+    ('withdraw_qa_item(uuid, integer)', false, true, false, false),
     ('advance_exhibition_step(uuid, integer, text)', false, true, false, false),
     ('create_artwork_draft(uuid, uuid, integer, text, text, text, text, text, jsonb, jsonb)', false, true, false, false),
     ('create_exhibition_draft(uuid, text, date, date, text, text, text, jsonb, jsonb)', false, true, false, false),
@@ -74,6 +85,17 @@ select results_eq(
     ('update_knowledge_document(text, uuid, integer, jsonb, jsonb)', false, true, true, false),
 
     -- service_role
+    ('claim_training_target(uuid, uuid, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('close_gap_recheck(uuid, uuid, uuid, boolean)', false, false, true, false),
+    ('complete_preview_answer(uuid, uuid, integer, jsonb)', false, false, true, false),
+    ('complete_qa_rewrite_job(uuid, uuid, integer, jsonb)', false, false, true, false),
+    ('create_training_batch(uuid, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('reserve_preview_answer(uuid, uuid, uuid, uuid, text, boolean)', false, false, true, false),
+    ('reserve_qa_rewrite_job(uuid, uuid, text, uuid, integer, text, jsonb, boolean)', false, false, true, false),
+    ('retry_qa_rewrite_job(uuid, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('complete_expected_qa_job(uuid, uuid, integer, jsonb)', false, false, true, false),
+    ('reserve_expected_qa_job(uuid, uuid, uuid, uuid, integer, integer, boolean)', false, false, true, false),
+    ('retry_expected_qa_job(uuid, uuid, uuid, integer, boolean)', false, false, true, false),
     ('consume_signup_budget(text, text, uuid, text)', false, false, true, false),
     ('get_signup_verification_identity(text, uuid)', false, false, true, false),
     ('acquire_notification_run(uuid, boolean)', false, false, true, false),

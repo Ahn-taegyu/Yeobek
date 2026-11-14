@@ -3,6 +3,7 @@
 export const AI_LIMITS = Object.freeze({
   question: 500, answer: 600, narration: 2000, narrationTarget: 600,
   evidenceCount: 12, evidenceChars: 8000,
+  expectedQaArtwork: 3, expectedQaExhibition: 5,
 });
 
 /** Seed values are provisional deployment settings, not measured capacity. */
@@ -13,6 +14,9 @@ export const DEFAULT_POLICIES = Object.freeze({
   visitor_audio_cache_requests_per_minute: 60,
   exhibition_requests_per_day: 1000,
   author_jobs_per_day: 100,
+  expected_qa_artwork_max: 3,
+  expected_qa_exhibition_max: 5,
+  training_batch_artworks_max: 30,
   gap_retention_days: 30,
   answer_ttl_seconds: 3600,
   job_retention_days: 30,
