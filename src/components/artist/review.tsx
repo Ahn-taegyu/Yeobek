@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { requestApi } from "@/lib/client";
 import { AI_LIMITS } from "@/lib/contracts/chat";
@@ -68,18 +69,26 @@ export function Learning({ id }: { id: string }) {
 
   const completed = batch?.targets.filter(item => item.status !== "queued" && item.status !== "running").length ?? 0;
   return <>
-
     {!result.data ? <Loading {...result} /> : <section className="artist-learning yeobek-appear">
-      <h2>{busy || batch?.status === "running" ? "여운이 정보를 학습하고 있어요" : "여운 학습시키기"}</h2>
-      <p>{batch?.artistName} {result.data.exhibition.title}</p>
+      <div className="artist-learning-names">
+        {batch?.artistName && <span>{batch.artistName}</span>}
+        <strong>{result.data.exhibition.title}</strong>
+        {result.data.works.slice(0, 3).map(work => <span key={work.id}>{work.title}</span>)}
+      </div>
+      <div className="artist-learning-art" aria-hidden="true">
+        {result.data.works.flatMap(work => work.imageMaterialId ? [work.imageMaterialId] : []).slice(0, 3).map(id =>
+          <PrivateImage key={id} materialId={id} alt="" className="artist-learning-image" />)}
+        <Image className="artist-learning-shadow" src="/yeobek/learning-shadow.svg" width={418} height={83} alt="" unoptimized />
+        <Image className="artist-learning-shadow-inner" src="/yeobek/learning-shadow-inner.svg" width={158} height={39} alt="" unoptimized />
+        <Image className="artist-learning-lens" src="/yeobek/learning-lens.svg" width={137} height={137} alt="" unoptimized />
+      </div>
+      <h2 role="status">{busy || batch?.status === "running" ? "여운이 정보를 학습하고 있어요" : "여운 학습시키기"}</h2>
       {result.data.works.length ? <>
-        {batch && <>
-          <progress aria-label="학습 진행" max={batch.targets.length || 1} value={completed} />
-        </>}
+        {batch && <progress aria-label="학습 진행" max={batch.targets.length || 1} value={completed} />}
         {batch?.status !== "completed" && <button className="artist-action" disabled={busy} onClick={() => void run()}>
           {busy ? "학습 중…" : batch ? "다시 시도" : "여운 학습시키기"}
         </button>}
-        <Link className="artist-action secondary" href={`${root(id)}/faq`}>자주하는 질문</Link>
+        {batch?.status === "completed" && <Link className="artist-action" href={`${root(id)}/faq`}>자주하는 질문</Link>}
       </> : <p>먼저 작품을 등록해주세요.</p>}
       {error && <p className="error" role="alert">{error}</p>}
     </section>}

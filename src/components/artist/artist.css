@@ -93,7 +93,28 @@ body:has(.artist-screen) > main { width: 100%; }
 .artist-date { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, .75fr); gap: 8px; }
 
 .artist-screen select { width: 100%; border: 1px solid var(--yeobek-line); border-radius: var(--yeobek-radius-field); background: var(--yeobek-field); padding: 10px 16px; color: inherit; font: inherit; }
-.artist-learning { display: grid; gap: 12px; }
+.artist-learning {
+  min-height: calc(100dvh - 44px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  background: linear-gradient(var(--yeobek-cream), var(--yeobek-field));
+  border-radius: var(--yeobek-radius-card);
+  padding: 24px 12px;
+}
+.artist-learning-names { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; }
+.artist-learning-names > * { background: white; padding: 6px 12px; border-radius: var(--yeobek-radius-pill); }
+.artist-learning-names strong { font-size: 20px; }
+.artist-learning-art { position: relative; display: flex; justify-content: center; align-items: flex-start; padding-top: 10px; width: min(100%, 350px); min-height: 285px; overflow: clip; }
+.artist-learning-image { width: 36%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--yeobek-radius-field); transform: rotate(-12deg); z-index: 1; }
+.artist-learning-image:nth-child(2) { margin-inline-start: -10%; transform: translateY(12px) rotate(10deg); }
+.artist-learning-image:nth-child(3) { margin-inline-start: -14%; transform: translateY(26px) rotate(-3deg); }
+.artist-learning-shadow, .artist-learning-shadow-inner { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); max-width: none; }
+.artist-learning-shadow-inner { bottom: 20px; }
+.artist-learning-lens { position: absolute; bottom: 34px; right: 8px; z-index: 2; }
 .artist-learning progress { width: 100%; accent-color: var(--yeobek-coffee); }
 .artist-preview { margin-block: 18px; display: grid; gap: 10px; }
 .artist-preview p { white-space: pre-wrap; color: var(--yeobek-ink); margin: 0; }
