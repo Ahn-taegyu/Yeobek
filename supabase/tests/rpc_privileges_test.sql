@@ -27,6 +27,8 @@ select results_eq(
     ('get_public_artwork(uuid, uuid)', true, true, true, false),
     ('get_public_exhibition(uuid)', true, true, true, false),
 
+    ('get_approved_qa_for_publication(uuid, uuid, uuid, boolean)', false, false, true, false),
+
     -- authenticated
     ('create_qa_correction_evidence(text, uuid, integer, uuid, text, text)', false, true, false, false),
     ('get_preview_answer(uuid)', false, true, false, false),
