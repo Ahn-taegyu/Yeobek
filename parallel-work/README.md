@@ -1,6 +1,6 @@
 # 마감 전 병렬 작업 계획 (2026-11-14 상태 갱신)
 
-마감: 2026-11-15(일) 아침. 남은 시간 약 18시간.
+마감: 2026-11-15(일) 아침. 아래 시간표는 최초 추정이며 현재 완료 상태는 PR 기준 표를 따른다.
 
 ## 최신 작업 상태·결정
 
@@ -9,9 +9,9 @@
 | 범위 | 확인한 상태 | 다음 완료 조건 |
 | --- | --- | --- |
 | W13·W10·W9 | GitHub 병합 확인: #16 `44bf7d3`·#15 `dadc23b`·#17 `de06460` | 기존 계약 재사용. W9 운영 SMTP·프런트·가입 ID 유실 복구는 별도 |
-| W11 | `feat/expected-qa-review` 로컬 구현과 검사 기록 있음. 최신 CI·병합 대기 | A의 작업별 수용 기준, B용 승인 Q&A 계약 및 인계 |
+| W11 | Draft #18 해당 head CI 성공, 미병합. 아래 SHA별 기록 참조 | A의 작업별 수용 기준, B용 승인 Q&A 계약 및 인계 |
 | W2 | Draft #13 `d276d9f`, 미병합 | W10 section·FK·만료 정합성, 최신 main 충돌 해소와 CI |
-| W12·W7 최종 인계 | 추적 문서상 W12 미착수, 시연 데이터·인계 문서 미구현 | B의 공개/관람 검사, 시연 데이터, 문서와 A→B 통합 |
+| W12·W7 최종 인계 | 인계 초안 #20 병합. 시연 #23·W12/점검표 #25 Draft, 최종 통합 미완료 | B의 공개/관람 검사, 시연 데이터, 문서와 A→B 통합 |
 
 - [Q&A 정책](../docs/references/user-expected-qa-policy.md): 생성 세트당 작품 최대 3개·전시 최대 5개, 근거 부족 시 일부/빈 세트 허용. 항목별 승인·철회, 미리보기 평가 횟수는 완료 기준이 아니다. 승인 Q&A는 생성 근거로 사용한다.
 - [수정·검수 결정](../docs/references/user-v3-review-decisions.md): 기본 작품 소개만 직접 수정, 나머지는 지시문으로 새 작업본 생성·재검수. 해설 검수/미리보기 별도 화면, 시험용 해설 운영 게시 금지.
@@ -19,6 +19,20 @@
 - 기존 축소 계획과 달리 전시 Q&A·학습 묶음 API는 W11 로컬에 이미 있다. 기존 구현을 삭제하지 않고 PR에서 포함/비활성·미인계 여부를 정한다. 아직 병합된 프런트 계약으로 취급하지 않는다.
 
 세부 완료 조건과 복사할 프롬프트는 [백엔드 A](backend-agent-a.md#완료-조건), [백엔드 B](backend-agent-b.md#완료-조건)에 함께 반영했다. 로컬 검증 기록은 [백엔드 작업 추적](../docs/specs/backend-completion.md)을 인용하며 이번 문서 수정에서 재실행한 앱 검사와 구분한다.
+
+### PR 기준 상태 확인 (2026-11-14, 아래 SHA 기준)
+
+| 범위 | 확인한 상태·증거 | 남은 일 |
+| --- | --- | --- |
+| W11 | [Draft #18](https://github.com/Ahn-taegyu/Yeobek/pull/18), head `a1df889`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43563566225)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43563566258) 성공, 미병합 | 최신 main 충돌 해소, 승인 Q&A 서비스 RPC와 B 인계. 로컬 후속 변경을 이 head 검증에 포함하지 않음 |
+| 프런트 인계 초안 | [#20](https://github.com/Ahn-taegyu/Yeobek/pull/20) 병합 `461d32f`, 검사 head `f0d49e9` App·Knowledge 성공 | W11/W12 계약과 최종 통합 인계 추가 |
+| 시연 데이터 | [Draft #23](https://github.com/Ahn-taegyu/Yeobek/pull/23), head `13fe1df`; [Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565179146) 성공, [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565179173) 진행 중 | 최종 CI·병합, A 연결 후 승인 Q&A 추가 |
+| W12·키 당일 점검표 | [Draft #25](https://github.com/Ahn-taegyu/Yeobek/pull/25), head `a69f324`; [Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565111664) 성공, [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565111722) 진행 중 | 이미지 선택·글 우선·공개 시각 snapshot 구현 중. 포스터·채팅 이미지·전시 문맥·Q&A snapshot·최종 통합 미완료 |
+
+CI 상태는 조회 시점 기록이다. 성공한 과거 head를 후속 변경의 검증으로 쓰지 않는다. W2 #13은 계속 Draft이며 파일 읽기·실제 키 검증은 완료 증거가 없다.
+
+- [SRC-055](../docs/references/user-visitor-tts-publication-policy.md): **승인 글로 먼저 게시하고 관람객이 음성을 켜면 답변 시 TTS를 생성한다.** 저장 음성·Q&A 개수·평가 횟수는 게시 필수가 아니다. 승인 Q&A는 생성 근거로만 사용한다.
+- STT 인식문은 확인 후 전송한다. 질문이 명확히 지칭한 작품/번호는 답변 대상과 상단 선택에 함께 반영하고, 잘못된 번호·모호한 지칭은 추측하지 않는다. 초안 번호 변경은 다음 명시적 게시부터 공개본에 적용한다.
 
 ## 누가 무엇을
 

@@ -1,21 +1,35 @@
 # 백엔드 에이전트 B — 공개·관람·인계
 
-**새 에이전트로 시작한다.** 별도 worktree에서 `main` 최신을 기준으로 한다. 아래 프롬프트만으로 시작할 수 있게 썼다.
+**진행 중인 B 작업을 이어간다.** 기존 worktree·PR과 아래 SHA별 상태를 확인하고 완료된 초안을 다시 만들지 않는다.
 
 ## 최신 상태와 결정 (2026-11-14 확인)
 
 - GitHub에서 W13 #16(`44bf7d3`)·W10 #15(`dadc23b`)·W9 #17(`de06460`)의 병합을 확인했다. 인계 기준은 이 계약이며 W9는 기본 off, 운영 SMTP·프런트는 미검증이다.
-- A의 W11은 로컬 구현·검증 기록이 있으나 최신 CI·병합은 아직 확인되지 않았다. 전시 Q&A·학습 묶음 API도 작성돼 있으므로 인계 시 병합된 계약과 제외 범위를 확인한다. B용 승인 Q&A 조회 RPC를 있다고 가정하지 않는다.
-- [작업 추적](../docs/specs/backend-completion.md)상 W12는 미착수, W7 최종 흐름·시연 데이터는 미구현이다. 이 checkout에 `frontend-handoff.md`·`key-day-checklist.md`는 아직 없다.
+- A의 W11은 Draft #18로 공유됐고 해당 head CI는 성공했지만 미병합이다. 승인 Q&A 조회 RPC의 최종 계약·병합을 확인한 뒤 연결한다.
+- 인계 초안은 #20으로 병합됐다. 시연 데이터 #23과 W12·키 당일 점검표 #25는 Draft이며 최종 통합은 미완료다. 아래 SHA별 상태 표를 따른다.
 - [SRC-050](../docs/references/user-expected-qa-policy.md)의 생성 세트 상한은 작품 3개·전시 5개다. 개별 승인·철회하며 승인 Q&A는 생성 근거로 사용한다. 기본 작품 소개의 승인 원고 직접 반환은 유지한다.
 - [SRC-052](../docs/references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청의 Q&A 전환은 제외한다. 요청 조회와 재게시 후 확인/종료는 유지하며 재게시만으로 자동 종료하지 않는다.
-- 이미지 없이 게시 허용, 모의 해설 운영 게시 차단, QR 제작 제외를 유지한다. 필수 Q&A·음성은 새 기준을 임의 확정하지 않고 기존 정책을 유지한다.
+- 이미지 없이 게시 허용, 모의 해설 운영 게시 차단, QR 제작 제외를 유지한다. 저장 음성과 Q&A 개수는 SRC-055에 따라 게시 필수에서 제외한다.
+
+### PR 기준 상태 확인 (2026-11-14, 아래 SHA 기준)
+
+| 범위 | 확인한 상태·증거 | 남은 일 |
+| --- | --- | --- |
+| W11 | [Draft #18](https://github.com/Ahn-taegyu/Yeobek/pull/18), head `a1df889`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43563566225)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43563566258) 성공, 미병합 | 최신 main 충돌 해소, 승인 Q&A 서비스 RPC와 B 인계. 로컬 후속 변경을 이 head 검증에 포함하지 않음 |
+| 프런트 인계 초안 | [#20](https://github.com/Ahn-taegyu/Yeobek/pull/20) 병합 `461d32f`, 검사 head `f0d49e9` App·Knowledge 성공 | W11/W12 계약과 최종 통합 인계 추가 |
+| 시연 데이터 | [Draft #23](https://github.com/Ahn-taegyu/Yeobek/pull/23), head `13fe1df`; [Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565179146) 성공, [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565179173) 진행 중 | 최종 CI·병합, A 연결 후 승인 Q&A 추가 |
+| W12·키 당일 점검표 | [Draft #25](https://github.com/Ahn-taegyu/Yeobek/pull/25), head `a69f324`; [Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565111664) 성공, [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565111722) 진행 중 | 이미지 선택·글 우선·공개 시각 snapshot 구현 중. 포스터·채팅 이미지·전시 문맥·Q&A snapshot·최종 통합 미완료 |
+
+CI 상태는 조회 시점 기록이다. 성공한 과거 head를 후속 변경의 검증으로 쓰지 않는다. W2 #13은 계속 Draft이며 파일 읽기·실제 키 검증은 완료 증거가 없다.
+
+- [SRC-055](../docs/references/user-visitor-tts-publication-policy.md): **승인 글로 먼저 게시하고 관람객이 음성을 켜면 답변 시 TTS를 생성한다.** 저장 음성·Q&A 개수·평가 횟수는 게시 필수가 아니다. 승인 Q&A는 생성 근거로만 사용한다.
+- STT 인식문은 확인 후 전송한다. 질문이 명확히 지칭한 작품/번호는 답변 대상과 상단 선택에 함께 반영하고, 잘못된 번호·모호한 지칭은 추측하지 않는다. 초안 번호 변경은 다음 명시적 게시부터 공개본에 적용한다.
 
 ## 계획
 
 | 순서 | 작업 | 예상 | 끝나는 기준 |
 | --- | --- | --- | --- |
-| 1 | **프런트 인계 문서 초안** `docs/specs/frontend-handoff.md` — SC-A01~A10·SC-V01~V06별 API·타입·상태·오류 코드·플래그. 기존 API와 병합된 W10(PR #15)·W9(PR #17) 계약 기준, 미구현은 "예정(W11/W12)"으로 표시. 공개 관람 주소 규칙 확정(제안 `/visit/[exhibitionId]`) | 0.5~1h | 문서 PR 병합(Knowledge CI) |
+| 1 | **프런트 인계 문서 초안** `docs/specs/frontend-handoff.md` — SC-A01~A10·SC-V01~V06별 API·타입·상태·오류 코드·플래그. 기존 API와 병합된 W10(PR #15)·W9(PR #17) 계약 기준, 미구현은 "예정(W11/W12)"으로 표시. 공개 관람 주소 `/exhibitions/{id}` 유지(`/visit` 구현 시 기존 주소 진입도 지원) | 0.5~1h | 문서 PR 병합(Knowledge CI) |
 | 2 | **시연 데이터** `npm run db:seed:demo` — 작가 계정, 전시 1개, 작품 3개, 승인 해설, 게시 상태. 로컬 개발 전용 | 1h | CI 또는 A 스택 여유 시 확인. 운영 환경에서 실행 거부 |
 | 3 | **W12 공개·관람 P0** — 게시 체크리스트(전시명·기간·장소·작품 1개 이상·번호 고유·승인 해설), 이미지 없이 게시 허용, 시험용 해설 운영 게시 차단(R2), 공개 응답에 포스터·작가 표시명·날짜·시간, 채팅 응답에 대상 작품 공개 이미지 참조, `exhibitionScopeChat`(미선택 시 전시 공통 근거) | 2~3h | 병합. 기존 응답·outputMode 의미 유지 |
 | 4 | **승인 Q&A 공개본 포함** — A의 W11a 서비스 RPC로 승인 Q&A를 versioned 공개 스냅샷에 넣고, 이전 schemaVersion 읽기 유지 | 0.5h | 병합 |
@@ -32,6 +46,8 @@
 - 승인 Q&A가 공개 스냅샷에 들어가고 이전 schemaVersion을 읽을 수 있다(A의 W11a가 늦으면 미완료로 적음).
 - `docs/specs/key-day-checklist.md`가 병합됐다.
 - `docs/specs/backend-completion.md`의 W12·W7 행과 `docs/log.md`가 실제 상태와 같다. 외부 AI·TTS 호출은 0회다.
+
+- SRC-055의 글 우선 게시·답변 시 TTS·작품 선택·다음 게시 번호 반영을 검사하고 프런트와 연결한다.
 
 ### 작업별 확인 기준
 
@@ -64,20 +80,20 @@ docs/specs/backend-completion.md(W12·W7 절), docs/specs/screen-spec.md(SC-A·S
 1. 프런트 인계 문서(0.5~1h): docs/specs/frontend-handoff.md를 만든다. 화면 ID(SC-A01~A10, SC-V01~V06)별로
    호출할 API, src/lib/contracts/의 타입 이름, 상태값, 오류 코드, 관련 플래그, 모의 모드 동작을 표로 적는다.
    main의 기존 API, 병합된 W10(PR #15: 온보딩·작품 세계·전시 단계 저장·작품 재정렬·사진/포스터·홈 집계)과
-   W9(PR #17: 가입·인증 코드·재발송·세션) 계약을 기준으로 하고, 아직 없는 것은 "예정(W11/W12)"으로 표시한다. 공개 관람 주소 규칙을 정해 적어라(제안 /visit/[exhibitionId],
-   기존 문서에 정해진 게 있으면 그걸 따름).
+   W9(PR #17: 가입·인증 코드·재발송·세션) 계약을 기준으로 하고, 아직 없는 것은 "예정(W11/W12)"으로 표시한다. 공개 주소는 /exhibitions/{id}를 유지한다. /visit 화면을 추가해도 기존 공개 주소로 진입할 수 있어야 한다.
    프런트가 이 문서를 보고 바로 붙이므로 짧고 정확하게. 먼저 병합해라.
 2. 시연 데이터(1h): npm run db:seed:demo. 작가 계정, 전시 1개, 작품 3개, 승인 해설, 게시 상태까지. 기존 RPC·API 경로로
-   만들고 DB를 직접 조작하는 우회는 피한다. 로컬 개발 환경에서만 동작하고 운영 URL이면 거부한다. 계정 정보는 예제 환경 파일에.
+   만들고 DB를 직접 조작하는 우회는 피한다. 로컬 개발 환경에서만 동작하고 운영 URL이면 거부한다. 생성 계정 정보는 Git 제외 .env.demo.local에만 저장하고 예제에는 비밀값을 넣지 않는다.
    A의 W11a가 병합되면 승인 Q&A 2~3개를 추가한다.
 3. W12 공개·관람 P0(2~3h):
    - 게시 체크리스트: 전시명·기간·장소·작품 1개 이상·번호 고유·승인 해설. 항목별 미충족 사유 반환. 이미지 없이 게시 허용(A3).
-     음성·필수 Q&A는 기존 voiceRequired·정책값 유지.
+     voiceRequired 기본 false. 저장 음성·Q&A 개수·평가 횟수는 게시 필수가 아니며 음성 출력은 답변 시 TTS로 생성한다.
    - 시험용(모의) 해설은 개발 시연만 허용하고 운영 게시는 차단한다(R2). 검사로 증명해라.
    - 공개 전시 응답에 포스터 참조·작가 표시명·시작/종료 날짜와 시간. 포스터도 공개 스냅샷과 공개 미디어 검사를 거친다.
    - 채팅 응답에 대상 작품의 공개 이미지 참조 필드 추가(기존 필드 의미 유지).
    - exhibitionScopeChat 플래그(기본 off): 작품 미선택 시 전시·작가 공통 승인 근거로 답한다. 작품 선택만으로
-     답변·음성을 만들지 않는다. STT는 인식문 확인 후 전송(기존 유지), 번호만 입력은 기존 동작 유지.
+     답변·음성을 만들지 않는다. STT는 인식문 확인 후 전송(기존 유지), 질문이 명확히 지칭한 작품은 답변과 상단 선택에 함께 반영한다. 모호한 지칭은 추측하지 않는다.
+     초안 번호 변경은 다음 명시적 게시에만 공개본에 반영한다.
      승인 답변 직접 반환은 하지 않고 생성 근거로만 쓴다.
    - 교체 게시·철회 때 근거·캐시·음성을 재검증하는 기존 동작을 깨지 마라.
 4. 승인 Q&A 공개본 포함(0.5h): A가 W11a PR에 적은 서비스 전용 RPC로 승인 Q&A를 versioned 공개 스냅샷에 넣는다.
@@ -104,6 +120,7 @@ W6 운영 집계, W8 잔여(예약 안내·문의 본문 물리 삭제·요약),
 - 실제 외부 AI·TTS 호출은 하지 않는다(모의 모드).
 
 ## 완료 조건 (모두 충족해야 끝)
+- 저장 음성·Q&A 없는 승인 글 게시, 음성 활성 시 답변 TTS, 명확한 작품 지칭/상단 선택·모호한 지칭 처리·다음 게시 번호 반영을 검사한다.
 - frontend-handoff.md 병합, 모든 SC-A·SC-V 화면에 API·타입·상태·오류·플래그 기재.
 - db:seed:demo가 게시된 시연 전시를 만들고 운영 URL에서는 거부한다.
 - W12 병합, 최신 head App·Knowledge CI 성공. 체크리스트 사유·이미지 없는 게시·시험용 해설 운영 게시 차단·기존 응답 호환을 검사로 증명.

@@ -5,12 +5,26 @@
 ## 최신 상태와 결정 (2026-11-14 확인)
 
 - W13·W10·W9는 각각 PR #16(`44bf7d3`)·#15(`dadc23b`)·#17(`de06460`)로 병합됐다. GitHub PR 상태와 로컬 이력을 대조했다. W9의 `signup`은 기본 off이며 운영 SMTP·프런트·가입 ID 유실 복구·비밀번호 재설정은 완료 범위 밖이다.
-- W11은 `feat/expected-qa-review`의 미커밋 구현이 있다. 예상 Q&A·검수·미리보기·재작성뿐 아니라 전시 Q&A·학습 묶음 API도 포함돼 있다. [작업 추적](../docs/specs/backend-completion.md)의 DB 91개·HTTP 계약 89개·모의 AI HTTP 6개 성공은 기존 작업자의 기록이며, 이번 문서 작업에서 재실행한 결과가 아니다. 최신 CI·병합과 B용 승인 Q&A 조회 계약은 아직 확인이 필요하다.
+- W11은 Draft PR #18로 공유됐다. 전시 Q&A·학습 묶음 API도 포함되며 해당 head CI는 성공했지만 아직 미병합이다. 세부 증거와 남은 인계는 아래 PR 상태 표를 따른다.
 - W2는 [Draft PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), head `d276d9f`, 미병합이다. W10 section·후보/이력 FK·만료 정합성과 최신 main 충돌 해소가 남았다.
 - [SRC-050](../docs/references/user-expected-qa-policy.md): 생성 세트당 **작품 최대 3개·전시 최대 5개**, 근거 부족 시 일부/빈 세트 허용. Q&A별 승인·철회, 평가 횟수는 완료 조건이 아니며 승인 Q&A는 관람 답변 생성의 근거로 사용한다.
 - [SRC-046](../docs/references/user-v3-review-decisions.md): 기본 작품 소개만 직접 편집하고 나머지는 지시문으로 새 작업본을 만든다. 해설 검수와 미리보기는 별도 화면이며 모의 해설의 운영 게시는 차단한다.
 - [SRC-052](../docs/references/user-gap-qa-exclusion.md): **관람 보완 요청→정정 근거/Q&A 전환은 이번 MVP 제외**. 작가 미리보기·기존 Q&A 재작성과 보완 요청 조회·재게시 후 확인/종료는 유지한다.
 - 기존 계획의 전시 Q&A·학습 묶음 API 제외와 현재 구현이 다르다. 이미 작성된 코드를 이 문서만 보고 삭제하지 않는다. 병합 범위와 프런트 사용 여부를 PR에서 명시하고, 제외하면 비활성·미인계로 기록한다.
+
+### PR 기준 상태 확인 (2026-11-14, 아래 SHA 기준)
+
+| 범위 | 확인한 상태·증거 | 남은 일 |
+| --- | --- | --- |
+| W11 | [Draft #18](https://github.com/Ahn-taegyu/Yeobek/pull/18), head `a1df889`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43563566225)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43563566258) 성공, 미병합 | 최신 main 충돌 해소, 승인 Q&A 서비스 RPC와 B 인계. 로컬 후속 변경을 이 head 검증에 포함하지 않음 |
+| 프런트 인계 초안 | [#20](https://github.com/Ahn-taegyu/Yeobek/pull/20) 병합 `461d32f`, 검사 head `f0d49e9` App·Knowledge 성공 | W11/W12 계약과 최종 통합 인계 추가 |
+| 시연 데이터 | [Draft #23](https://github.com/Ahn-taegyu/Yeobek/pull/23), head `13fe1df`; [Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565179146) 성공, [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565179173) 진행 중 | 최종 CI·병합, A 연결 후 승인 Q&A 추가 |
+| W12·키 당일 점검표 | [Draft #25](https://github.com/Ahn-taegyu/Yeobek/pull/25), head `a69f324`; [Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565111664) 성공, [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565111722) 진행 중 | 이미지 선택·글 우선·공개 시각 snapshot 구현 중. 포스터·채팅 이미지·전시 문맥·Q&A snapshot·최종 통합 미완료 |
+
+CI 상태는 조회 시점 기록이다. 성공한 과거 head를 후속 변경의 검증으로 쓰지 않는다. W2 #13은 계속 Draft이며 파일 읽기·실제 키 검증은 완료 증거가 없다.
+
+- [SRC-055](../docs/references/user-visitor-tts-publication-policy.md): **승인 글로 먼저 게시하고 관람객이 음성을 켜면 답변 시 TTS를 생성한다.** 저장 음성·Q&A 개수·평가 횟수는 게시 필수가 아니다. 승인 Q&A는 생성 근거로만 사용한다.
+- STT 인식문은 확인 후 전송한다. 질문이 명확히 지칭한 작품/번호는 답변 대상과 상단 선택에 함께 반영하고, 잘못된 번호·모호한 지칭은 추측하지 않는다. 초안 번호 변경은 다음 명시적 게시부터 공개본에 적용한다.
 
 ## 계획
 
@@ -102,6 +116,9 @@ W6·W8 잔여·Alt·브리핑. 시간이 남아도 먼저 나에게 묻는다.
 - 전체 lint·typecheck·test·build는 PR CI로 한 번 확인하고, 로컬은 고친 부분의 좁은 검사만 한다.
 - 별도 검토 에이전트는 SQL 권한·RLS·migration diff에만 쓴다.
 - 기획 문서는 해당 절만 찾아 읽는다. 실제 외부 AI 호출은 하지 않는다(모의 모드).
+
+## 최신 결정 적용
+SRC-055에 따라 Q&A 개수·평가 횟수와 저장 음성은 게시 필수가 아니다. 승인 Q&A의 생성 근거 사용은 유지한다.
 
 ## 완료 조건 (모두 충족해야 끝)
 - 2~4번의 수용 범위가 병합됐고 각 PR 최종 head App·Knowledge CI가 성공했다. 검사 head와 병합 SHA를 함께 적는다.
