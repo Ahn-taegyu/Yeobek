@@ -204,7 +204,7 @@ PR #28 main4f7faee에 병합됐으며 최종 head04facaa App·Knowledge CI가 �
 
 ## W12 글 우선 게시 계약
 
-최신 사용자 결정(SRC-055, A의 결정 기록)에 따라 저장 음성 사전 준비를 게시 필수에서 제외한다. 서버 기본값과 예제 환경은 voiceRequired=false이며 기존 배포의 명시 true는 유지된다. 이 기본값 변경만으로 이미지 없는 게시·전시 문맥·자동 TTS 화면 연결까지 완료한 것은 아니다. 음성을 켠 관람객의 답변 이후 speech 호출은 프런트 연결과 통합 검증이 필요하다.
+최신 사용자 결정(SRC-055, A의 결정 기록)에 따라 저장 음성 사전 준비를 게시 필수에서 제외한다. 이후 [SRC-071](../references/user-narration-audio-pregenerate.md)에 따라 게시 API가 게시 직전에 승인 해설 음성을 항상 먼저 만들어 묶는다. 실패해도 글 게시는 막지 않는다. 첫 게시는 음성 생성 시간만큼 길어질 수 있다. 서버 기본값과 예제 환경은 voiceRequired=false이며 기존 배포의 명시 true는 유지된다. 이 기본값 변경만으로 이미지 없는 게시·전시 문맥·자동 TTS 화면 연결까지 완료한 것은 아니다. 음성을 켠 관람객의 답변 이후 speech 호출은 프런트 연결과 통합 검증이 필요하다.
 
 W12 공개 시각 계약(PR #25): publicExhibitionResponse에 선택 필드 startTime/endTime(HH:mm 또는 null)을 추가한다. 게시 시점 값을 고정하며 초안 수정은 다음 게시 전까지 반영하지 않는다. 기존 공개본의 시간은 재게시 전 null이다. 포스터도 선택 필드 `poster: {id, kind:"poster"} | null`로 추가한다. id는 공개 publication ID이며 `GET /api/media/{id}?kind=poster`로 읽는다. Storage 경로·서명 URL은 노출하지 않는다. 초안 포스터 변경은 재게시 전 미반영, 삭제·게시 중지·철회·교체 시 이전 참조 전송을 거부한다. 이 계약의 배포 전 PR #25 병합 여부를 확인한다.
 
