@@ -53,8 +53,9 @@ test("email verification requires the originating signup and never logs in autom
   const accepted = { status: "verification_required", authenticated: false };
   const post = (path, body, expected = 202) => request(`/api/auth/${path}`, { method: "POST", body, expected, noCookies: true });
 
-  async function codeFor(address) {
-    for (let attempt = 0; attempt < 30; attempt++) {
+  // Newest mail first; `previous` waits for a mail carrying a different code.
+  async function codeFor(address, previous) {
+    for (let attempt = 0; attempt < 50; attempt++) {
       const list = await (await fetch(`${mailOrigin}/api/v1/messages?limit=100`)).json();
       const message = list.messages.find(item => item.To?.some(recipient => recipient.Address === address));
       if (message) {
@@ -63,12 +64,14 @@ test("email verification requires the originating signup and never logs in autom
         const match = full.HTML?.match(/<strong>\s*(\d{6})\s*<\/strong>/i);
         assert.ok(match, "configured signup mail contains a six-digit code");
         assert.ok(!full.HTML.includes("/auth/v1/verify"), "mail does not bypass the app with an auto-login URL");
-        return match[1];
+        if (match[1] !== previous) return match[1];
       }
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     assert.fail("local signup confirmation mail was not delivered");
   }
+  // Local Auth allows one confirmation mail per address per second (supabase/config.toml max_frequency).
+  const mailGap = () => new Promise(resolve => setTimeout(resolve, 1200));
 
   await post("signup", { ...input, password: "1234567", passwordConfirmation: "1234567" }, 400);
   await post("signup", { ...input, passwordConfirmation: "different" }, 400);
@@ -102,17 +105,28 @@ test("email verification requires the originating signup and never logs in autom
   await request("/api/auth/logout", { method: "POST", body: {} });
   await request("/api/auth/login", { method: "POST", body: { email, password: "Different123!" }, expected: 401 });
 
+  // A later signup for a still-unconfirmed address restarts verification: its password and
+  // request ID replace the earlier ones together and a new code is mailed.
   const pendingEmail = `pending-${randomUUID()}@example.invalid`;
-  const creatorId = randomUUID(), unrelatedId = randomUUID();
+  const creatorId = randomUUID(), restartId = randomUUID();
+  const restartPassword = "Bb123456";
   const pending = { email: pendingEmail, password, passwordConfirmation: password, requestId: creatorId };
   assert.deepEqual(await post("signup", pending), accepted);
-  const pendingCode = await codeFor(pendingEmail);
-  assert.deepEqual(await post("signup", { ...pending, requestId: unrelatedId }), accepted);
-  assert.deepEqual(await post("resend", { email: pendingEmail, signupRequestId: unrelatedId, requestId: randomUUID() }), accepted);
-  await post("verify", { email: pendingEmail, code: pendingCode, signupRequestId: unrelatedId, requestId: randomUUID() }, 400);
+  const firstCode = await codeFor(pendingEmail);
+  await mailGap();
+  assert.deepEqual(await post("signup", { ...pending, requestId: restartId, password: restartPassword,
+    passwordConfirmation: restartPassword }), accepted);
+  const restartCode = await codeFor(pendingEmail, firstCode);
+  // The earlier signup screen can no longer finish, and the replaced code is void.
+  await post("verify", { email: pendingEmail, code: restartCode, signupRequestId: creatorId, requestId: randomUUID() }, 400);
+  await post("verify", { email: pendingEmail, code: firstCode, signupRequestId: restartId, requestId: randomUUID() }, 400);
+  await mailGap();
+  assert.deepEqual(await post("resend", { email: pendingEmail, signupRequestId: creatorId, requestId: randomUUID() }), accepted);
+  await request("/api/auth/login", { method: "POST", body: { email: pendingEmail, password: restartPassword }, expected: 401 });
+  await post("verify", { email: pendingEmail, code: restartCode, signupRequestId: restartId, requestId: randomUUID() }, 200);
   await request("/api/auth/login", { method: "POST", body: { email: pendingEmail, password }, expected: 401 });
-  // Same originating request still has a valid code: a foreign signup cannot consume it.
-  await post("verify", { email: pendingEmail, code: pendingCode, signupRequestId: creatorId, requestId: randomUUID() }, 200);
+  await request("/api/auth/login", { method: "POST", body: { email: pendingEmail, password: restartPassword } });
+  await request("/api/auth/logout", { method: "POST", body: {} });
 
   // Resume a pending creation whose initial mail/response was lost, without creating a second account.
   const resumedEmail = `resend-${randomUUID()}@example.invalid`, resumedId = randomUUID();
