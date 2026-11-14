@@ -217,7 +217,8 @@ function ExhibitionMaterials({ exhibition, onChange, onBack }: {
     <div className="artist-actions">
       <button className="artist-action secondary" onClick={onBack}>이전</button>
       <Link className="artist-action" href={`/artist/exhibitions/${id}/learning`}>여운 학습시키기</Link>
-
+      <Link className="artist-action secondary" href={`/artist/exhibitions/${id}/review`}>기본 해설 검토</Link>
+      <Link className="artist-action secondary" href={`/artist/exhibitions/${id}/publication`}>전시 게시 관리</Link>
     </div>
   </section>;
 }

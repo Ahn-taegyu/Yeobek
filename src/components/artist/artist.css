@@ -93,6 +93,13 @@ body:has(.artist-screen) > main { width: 100%; }
 .artist-date { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, .75fr); gap: 8px; }
 
 .artist-screen select { width: 100%; border: 1px solid var(--yeobek-line); border-radius: var(--yeobek-radius-field); background: var(--yeobek-field); padding: 10px 16px; color: inherit; font: inherit; }
+.artist-workflow { display: grid; gap: 14px; }
+.artist-workflow .artist-workflow-text { white-space: pre-wrap; }
+.artist-workflow-list { display: grid; gap: 12px; list-style: none; padding: 0; }
+.artist-workflow-list > li { border-top: 1px solid var(--yeobek-line); padding-top: 8px; }
+.artist-workflow-choice { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.artist-screen .artist-workflow-choice input[type="checkbox"] { flex: 0 0 18px; width: 18px; height: 18px; accent-color: var(--artist-accent); }
+.artist-workflow-link { display: inline-flex; align-items: center; min-height: 44px; }
 .artist-learning {
   min-height: calc(100dvh - 44px);
   display: flex;

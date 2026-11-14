@@ -15,12 +15,15 @@ generated:
 source_priority: prerequisite
 proposed_phase: MVP
 decision_status: proposed
-work_status: not_started
+work_status: in_progress
 build_order: 6
 depends_on:
 - F-003
 - F-005
 sources:
+- id: api-rollout
+  resource: /references/user-api-rollout-publication.md
+  title: 최소 승인·게시 UI 구현 요청
 - id: user
   resource: /references/user-mvp.md
   title: 최신 사용자 MVP 우선순위
@@ -68,3 +71,7 @@ sources:
 [사용자 원안](../references/user-mvp.md) · [사용자 추가 결정](../references/user-answers.md) · [기능명세 전체](../specs/functional-spec.md)
 
 Notion F07은 공개 조건 확인과 안내, 공개·비공개 전환을 제공한다. F05 승인 해설·예상 Q&A·정정 답변 중 게시된 버전을 F08에서 사용한다. [D-017](../decisions/D-017-p0-feature-spec.md).
+
+# 현재 구현 범위
+
+게시·중지 API는 병합됐고, [최신 요청](../references/user-api-rollout-publication.md)으로 별도 기본 해설 검수와 게시 관리 최소 UI를 연결한다. 화면 검증과 CI 결과는 [작업 추적](../specs/backend-completion.md)에 기록한다. 실제 모델·음성·운영 공개는 별도 점검 대상이다.

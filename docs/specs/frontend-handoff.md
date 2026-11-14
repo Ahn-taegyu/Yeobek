@@ -11,6 +11,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-14T15:00:00+09:00'
 sources:
+- id: api-rollout
+  resource: /references/user-api-rollout-publication.md
+  title: API 적용 수정 계획과 최소 게시 UI 구현 요청
 - id: qa-contract
   resource: /specs/api-contract.md
   title: W11 작가 검수 HTTP 계약
@@ -218,3 +221,11 @@ SC-A06에서 `getPublicationChecklist` (`GET /api/admin/exhibitions/{id}/publica
 작품 버튼 선택 자체로 채팅·TTS API를 호출하지 않는다. STT 응답은 입력창에 표시하고 관람객 확인 후 `/api/chat`으로 전송한다. 음성이 켜졌으면 답변의 `answerId`로 `/api/speech`를 호출하고 음소거 시 재생/생성을 중단한다. 글 답변의 `outputMode:text`도 이후 명시적으로 speech를 요청할 수 있다는 기존 계약을 유지한다. 서버의 선택 참조 검증과 프런트 상단 표시·음소거 UI 검증은 구분한다.
 
 게시 체크리스트의 typed client 결과는 `{data, requestId}`이며 내부 목록은 `result.data`에서 읽는다. P0 전시는 artworks 단계/작성 필수 시각까지 검사한다. 개발용 모의 QA 공개본의 운영 전환은 [키 당일 점검표](key-day-checklist.md)의 선중지·전체 재게시 절차를 따른다.
+
+# 승인·게시 최소 UI 추가 인계 (SRC-058)
+
+[최신 요청](../references/user-api-rollout-publication.md)에 따라 별도의 기본 해설 검수에서 생성 결과 저장·근거 승인·해설 승인 후 서버 게시 점검표와 명시적 게시/중지를 연결한다. 질문형 미리보기는 별도 화면을 유지한다. 새 UI는 기존 reviewArtwork/saveNarration/upsertEvidence/approveArtwork/getPublicationChecklist/changePublication 계약을 소비하며 API/DB의 승인 의미를 변경하지 않는다. 이번 최소 UI는 기존 공개 소개의 승인 핀을 유지하며 작가가 명시적으로 항목별 제외할 수 있다. 새 소개 근거를 선택·교체하는 UI는 후속이다. 오래된 소개 때문에 게시가 막히면 해당 소개를 제외하고 다시 게시할 수 있다.
+
+유료 AI·TTS·메일, 운영 배포·스케줄·환경 변수 변경은 이번 수용 범위가 아니다. 파일 읽기는 후보 검수/적용 화면이 준비될 때까지 기본off다. 모의 검증을 실제 API 품질·응답 시간·비용 검증으로 기록하지 않는다.
+
+화면 경로는 `/artist/exhibitions/{id}/review`와 `/artist/exhibitions/{id}/publication`이다. 학습 완료에서 전달한 batch의 성공 해설은 원본 작업 ID와 함께 저장한다. 원고 저장은 별도 승인·게시를 실행하지 않는다. 버전 충돌이나 후속 조회 실패 후에는 최신 상태 확인을 요구하고, 다른 창에서 바뀐 저장 원고와 실제 미저장 수정이 겹치면 비교 후 선택한다. 번호 충돌은 다중 작품의 원자적 게시로 해결될 수 있으므로 최종 판단을 서버에 맡긴다.

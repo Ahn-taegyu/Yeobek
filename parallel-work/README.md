@@ -128,3 +128,7 @@ CI 성공은 위 검사 head에 한정한다. #25에는 A 파일 읽기 #28·최
 W11 #18(40564e6), W2 #13(9c6efbf), 파일 읽기 #28(4f7faee)이 병합됐다. #28 최종 head04facaa의 [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147499)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147654)가 성공했다. 직접 전진 적용·SQL 교차 검토·모의 HTTP·권한/출처·기본off 검증은 [완료 표](../docs/specs/backend-completion.md#a-최종-완료인계-2026-11-14)를 따른다. 위 시간표·복사 프롬프트의 작업 순서는 최초 계획이며 완료 묶음을 다시 만들지 않는다.
 
 materialExtraction 기본off. 파일 읽기는 W2 후보까지만 만들며 명시적 적용·승인·게시를 대체하지 않는다. 프런트 후보 검수 화면이 없으므로 사용자 화면의 파일 학습은 숨긴다. 실외부 AI/TTS/발송0회. B의 W12·최종 인계·실물 키 검증은 별도이며 완료로 합산하지 않는다.
+
+## API 적용 전 후속 준비
+
+PR #29(main03c36a3) 이후 [SRC-058](../docs/references/user-api-rollout-publication.md)에 따라 승인·게시 최소 UI와 인증된 purge GET을 먼저 준비한다. 이번 작업은 원격 설정/유료 호출을 포함하지 않는다. 현재 순서는 [백엔드 완성 작업 추적](../docs/specs/backend-completion.md)의 API 적용 전 준비 절을 따른다. 이 폴더와 과거 일정은 삭제하지 않고 인계와 이력으로 보존한다.

@@ -117,6 +117,7 @@ export function Learning({ id }: { id: string }) {
   const expired = batch?.targets.some(item => item.resultCode === "JOB_EXPIRED");
   const incomplete = batch?.status === "completed" && completed !== batch.targets.length;
   const hasQuestions = batch?.targets.some(item => item.kind === "expected_qa" && item.status === "succeeded");
+  const hasNarration = batch?.targets.some(item => item.kind === "narration" && item.status === "succeeded");
   return <>
     {!result.data ? <Loading {...result} /> : <section className="artist-learning yeobek-appear">
       <div className="artist-learning-names">
@@ -138,6 +139,9 @@ export function Learning({ id }: { id: string }) {
           {busy ? "학습 중…" : running ? "진행 확인" : batch ? "다시 시도" : "여운 학습시키기"}
         </button>}
         {incomplete && <p role="status">{needsMaterial ? "학습을 마치지 못했어요. 전시 자료를 확인해주세요." : "일부 학습을 마치지 못했어요. 다시 시도해주세요."}</p>}
+        {batch && hasNarration && <Link className="artist-action" href={`${root(id)}/review?batch=${batch.id}`}>
+          기본 해설 검토
+        </Link>}
         {batch?.status === "completed" && (!incomplete || hasQuestions) &&
           <Link className={`artist-action${incomplete ? " secondary" : ""}`} href={`${root(id)}/faq`}>
             {incomplete ? "생성된 질문 보기" : "자주하는 질문"}

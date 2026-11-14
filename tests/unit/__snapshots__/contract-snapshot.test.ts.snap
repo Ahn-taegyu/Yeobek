@@ -18026,6 +18026,120 @@ exports[`HTTP route contracts > snapshots purgeExpired 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots purgeExpiredScheduled 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": null,
+  "path": "/api/cron/purge",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "answers": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "audio": {
+            "additionalProperties": false,
+            "properties": {
+              "attempted": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "completed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "attempted",
+              "completed",
+            ],
+            "type": "object",
+          },
+          "gaps": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "jobs": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "materials": {
+            "additionalProperties": false,
+            "properties": {
+              "attempted": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "completed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "attempted",
+              "completed",
+            ],
+            "type": "object",
+          },
+          "visitorAudio": {
+            "additionalProperties": false,
+            "properties": {
+              "attempted": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "completed": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "attempted",
+              "completed",
+            ],
+            "type": "object",
+          },
+        },
+        "required": [
+          "answers",
+          "gaps",
+          "jobs",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots receiveChannelWebhook 1`] = `
 {
   "body": {
