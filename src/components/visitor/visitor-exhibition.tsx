@@ -239,24 +239,26 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
   const shown = exhibition.artworks.filter(work => `${work.number}. ${work.title}`.toLowerCase().includes(search.trim().toLowerCase()));
   const tooLong = codepoints(question.trim()) > AI_LIMITS.question;
   return <section data-visitor className={styles.chat} data-selected={Boolean(active)}>
-    <div className={styles.toolbar}>
+    {!picker && <div className={styles.toolbar}>
       <button className={styles.icon} aria-label={muted ? "음소거 해제" : "음소거"} aria-pressed={muted} onClick={() => {
         mutedNow.current = !muted;
         setMuted(!muted);
         if (!muted) stopAudio();
-      }}><Image src="/yeobek/visitor-sound.svg" alt="" width={24} height={24} />{muted && <span aria-hidden="true">×</span>}</button>
-      <span className={styles.brand}>{active ? `${active.number}. ${active.title}` : brand.name}</span>
+      }}><Image src="/yeobek/visitor-toolbar-sound.svg" alt="" width={25} height={25} />{muted && <span aria-hidden="true">×</span>}</button>
+      <span className={active ? styles.artworkTitle : styles.brand}>{active ? `${active.number}. ${active.title}` : brand.name}</span>
       <button className={styles.textButton} aria-expanded={picker !== null}
         onClick={() => transitionScreen(() => setPicker(picker ? null : "row"))}>{picker ? "닫기" : "작품 선택"}</button>
-    </div>
-    {picker && <section className={styles.picker} aria-label="작품 목록">
-      <div className={styles.pickerHeading}><h2>작품 목록</h2>
-        <button className={styles.textButton} onClick={() => transitionScreen(() => setPicker(picker === "grid" ? "row" : "grid"))}>
-          {picker === "grid" ? "한 줄로 보기" : "전체보기"}
+    </div>}
+    {picker && <section className={`${styles.picker} ${picker === "grid" ? styles.fullPicker : ""}`} aria-label="작품 목록">
+      <div className={styles.pickerHeading}><h2>{picker === "row"
+        ? <button type="button" className={styles.pickerTitle} onClick={() => setPicker(null)} aria-label="작품 목록 닫기">작품 목록 <Image src="/yeobek/visitor-more.svg" alt="" width={15} height={15} /></button>
+        : "작품 목록"}</h2>
+        <button className={styles.textButton} onClick={() => transitionScreen(() => setPicker(picker === "grid" ? null : "grid"))}>
+          {picker === "grid" ? "닫기" : "전체 보기"}
         </button></div>
       {picker === "grid" && <div className={styles.search}><input aria-label="작품 검색" type="search"
         placeholder="작품 검색" value={search} onChange={event => setSearch(event.target.value)} />
-        <Image src="/yeobek/visitor-search.svg" alt="" width={24} height={24} /></div>}
+        <Image src="/yeobek/visitor-picker-search.svg" alt="" width={26} height={26} /></div>}
 
       {exhibition.artworks.length === 0 && <p>{emptyArtworkMessage}</p>}
       {picker === "grid" && exhibition.artworks.length > 0 && !shown.length && <p>검색 결과가 없어요.</p>}
@@ -264,14 +266,15 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
         {(picker === "grid" ? shown : exhibition.artworks).map(work => <li key={work.id}>
           <button className={styles.tile} aria-pressed={selected === work.id} onClick={() => transitionScreen(() => select(work))}>
             <ArtImage ImageComponent={ImageComponent} artwork={work} className={styles.thumbnail} decorative />
-            <span>{work.number}. {work.title}</span>
+            <span className={picker === "grid" ? styles.visuallyHidden : undefined}>{work.number}. {work.title}</span>
           </button>
         </li>)}
       </ul>
     </section>}
-    <div className={styles.transcript} ref={transcript} aria-live="polite">
+    <div className={styles.transcript} ref={transcript} aria-live="polite" inert={picker === "grid"}>
       {!turns.length && <div className={styles.welcome}>
-        <h1>{exhibition.title}</h1>
+        <h1 className={styles.visuallyHidden}>{exhibition.title}</h1>
+        <Image className={styles.welcomeMark} src="/yeobek/visitor-yeoun.svg" width={171} height={155} alt="" />
         <p>전시에서 느낀 감동과 기억이 오래도록 남을 수 있도록,<br />작품에 담긴 이야기를 들려드릴게요.</p>
       </div>}
       {turns.map(({ question, reply, artwork }) => <article className={`${styles.turn} yeobek-appear`} key={reply.answerId}>
@@ -286,7 +289,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       </article>)}
       {busy === "chat" && <p role="status">답변을 준비하고 있어요.</p>}
     </div>
-    <div className={styles.composer}>
+    <div className={styles.composer} inert={picker === "grid"}>
       {error && <p role="alert">{error}</p>}
       {tooLong && <p role="alert">질문을 {AI_LIMITS.question}자 이내로 줄여주세요.</p>}
       {voiceDraft && !tooLong && <p role="status">인식된 문장을 확인하고 보내주세요.</p>}
