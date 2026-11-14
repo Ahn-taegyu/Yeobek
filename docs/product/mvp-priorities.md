@@ -13,6 +13,9 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: author-experience
+  resource: /references/user-author-experience-parallel.md
+  title: 작가 검수·체험 개선과 AI 인터뷰 병렬 구현 요청
 - id: v3-scope
   resource: /references/user-v3-decisions.md
   title: v3 온보딩·입력·화면 범위 결정
@@ -119,3 +122,7 @@ prerequisite는 최초 목록에 독립 이름이 없지만 필요한 전시/권
 [D-016](../decisions/D-016-artist-auth.md)에 따라 직접 회원가입과 로그인 선택을 MVP 흐름에 포함한다. 가입 후 자동 로그인 없이 직접 로그인한다. 기존 로그인은 구현되어 있으며 직접 가입의 구현·수용 검증은 후속이다. 사용자가 [마감 전 포함](../references/user-auth-signup-timing.md)을 결정했으므로 백엔드 계획의 '직접 가입은 마감 이후' 기준을 대체한다.
 
 현행 P0 및 Notion 기능 대응은 [기능명세](../specs/functional-spec.md#notion-p0-기능-연결)를 따른다. 기존 기능 ID와 원안 우선순위는 이력 및 상세 설계 참조로 사용한다.
+
+# 작가 체험 개선 추가 범위
+
+[2026-11-14 요청](../references/user-author-experience-parallel.md)과 [D-018](../decisions/D-018-author-experience.md)에 따라 근거 접기, 최근 학습 복원, Q&A 재작성·사용·중지, 관람 UI 기반 초안 체험 및 [F-024 글 인터뷰](../features/F-024-artwork-text-interview.md)를 구현한다. 기존 녹음 인터뷰 범위는 유지한다. 새 플래그는 기본 꺼짐이며 승인하지 않은 인터뷰와 미리보기는 비공개다.

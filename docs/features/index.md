@@ -27,3 +27,5 @@
 - [F-023 AI용 작가·전시·작품 연결 지식 저장](F-023-artist-knowledge.md) — 후속 요구 prerequisite, 현재 MVP. 사용자용 위키 편집기가 아닌 내부 지식 저장.
 
 현행 P0 및 Notion 기능 대응은 [기능명세](../specs/functional-spec.md#notion-p0-기능-연결)를 따른다. 기존 기능 ID와 원안 우선순위는 이력 및 상세 설계 참조로 사용한다.
+
+- [F-024 사진 기반 작품 글 인터뷰](F-024-artwork-text-interview.md) — MVP, 구현 중; 기본 꺼짐.

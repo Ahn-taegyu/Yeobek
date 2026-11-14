@@ -1,6 +1,6 @@
 ---
 type: Reference
-id: SRC-063
+id: SRC-064
 title: 반 고흐 입력 완성도·정보량 비교와 재게시 요청
 description: 작품 정보의 빈칸·입력 분량·1인칭 문체 효과를 비교하고 새 입력으로 검수·재게시한다.
 status: stable
