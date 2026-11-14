@@ -835,6 +835,9 @@ isOneToOne: false
 "get_ai_job":
 { Args: { "p_job_id": string }; Returns: Json
                            },
+"get_approved_qa_for_publication":
+{ Args: { "p_allow_mock"?: boolean,"p_artwork_id": string,"p_exhibition_id": string,"p_owner": string }; Returns: Json
+                           },
 "get_artist_profile":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },

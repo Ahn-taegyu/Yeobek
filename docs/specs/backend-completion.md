@@ -13,6 +13,12 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: parallel-author
+  resource: /references/user-backend-author-parallel-plan.md
+  title: 병렬 백엔드 A 범위
+- id: visitor-policy
+  resource: /references/user-visitor-tts-publication-policy.md
+  title: 자동 TTS와 관람 정책
 - id: gap-exclusion
   resource: /references/user-gap-qa-exclusion.md
   title: 관람 보완 요청의 Q&A 전환 제외
@@ -94,7 +100,7 @@ PR #11 head `6ca0cef`의 App checks `43549028404`·Knowledge checks `43549028410
 
 # 순서와 검증
 
-**완료된 D0 이후 W13 → W10 → W9 → W11 → W12 → W8 잔여 → W6 → W2 → Alt → 실패 분류·브리핑 → W7 최종 인계.** W7의 검증 근거는 각 묶음에서 누적한다. 완료 묶음을 다시 만들지 않고 변경 차이만 새 migration·추가 필드로 구현한다.
+**최신 병렬 계획(SRC-054): A는 W11 → W2 → 업로드 파일 읽기, B는 인계·시연 데이터 → W12 → 최종 점검을 맡는다. 이전 직렬 계획의 W6·W8 잔여·Alt·브리핑·평가 통계는 이번 범위에서 제외한다.** W7의 검증 근거는 각 묶음에서 누적한다. 완료 묶음을 다시 만들지 않고 변경 차이만 새 migration·추가 필드로 구현한다.
 
 각 묶음은 migration → RPC·pgTAP → 저장소 어댑터·플레이북 → HTTP·통합 검사 → API·개발 기반·작업 추적·로그 순으로 정리한다. 경로·표·RPC 이름은 제안이며 기존 관례를 따른다. 전체 lint·typecheck·단위/DB/HTTP·build·knowledge verify는 최신 head CI로 확인하고 로컬은 좁은 재현과 기존 DB 전진 적용 등만 한다. 위임 diff를 직접 대조하고 오류를 피드백한 뒤 영향 검사를 재검증한다.
 
@@ -364,3 +370,12 @@ W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 �
 
 
 W11 최종 교차검토 후194000으로 예약 시 생성 상한을 고정하고 잠금 대기 뒤 만료를 재확인했다. 실모델이 모의 이전 답변을 재작성하는 요청은 차단한다. SRC-052의 gap 전환 제외는 HTTP와 직접 RPC 모두 적용했다. 부모가194000 전진 적용·상한/모의/제외 DB42개와 최종 HTTP6개, 변경된 단위/계약101개를 직접 확인했다. 잠금 대기 중 만료의 실제 동시 실행 재현은 미수행이며 만료 후 콜백과 정적 잠금 순서를 검사했다. 최신 CI는 대기다.
+
+
+## 병렬 A 전환
+
+[SRC-054](../references/user-backend-author-parallel-plan.md)로 현재 목표가 바뀌었다. W11은 PR #18 a1df889로 커밋·공유됐고 App43563566225·Knowledge43563566258 전 단계가 성공했다. 목표 원문의 “미커밋/CI 미확인”과 다른 점이다. B용 서비스 승인QA 조회 RPC와 W11 인계를 보완한 최종 head로 다시 검증 후 병합한다. 이미 구현한 전시QA·학습묶음은 유지하고 기본off로 포함한다.
+
+A가 로컬 Supabase를 소유하고 전진 migration만 적용한다. B는 공개 게시/스냅샷/관람 채팅·frontend-handoff 전체·시연·키 당일 점검을 맡으며 A는 W11 절만 제공한다. 별도 검토 에이전트는 SQL/권한/migration만 담당한다. 최신 TTS/작품지칭 정책은 [SRC-055](../references/user-visitor-tts-publication-policy.md)에 기록해 B에게 전달했고 아직 현재 코드의 게시 음성 조건을 바꾼 것은 아니다.
+
+195000 서비스전용 승인QA 포트를 추가해 B에게 시그니처·반환형·같은 게시 트랜잭션 호출을 전달했다. 최신 main461d32f까지 확인했으며195000은 main 마지막181000보다 뒤다. 부모 전진 적용과 승인 조회 DB34개가 통과했고, 첫 fixture의 필수mock 누락을 바로잡았다. SQL/권한 독립 검토에 차단사항은 없었다. B 인계문서의 W11절을 추가하고 main461d32f를 합쳤다. 실제 게시 후 비공개 Q&A/미리보기의 관람 문맥·익명 응답 비노출과 게시 revision 변경 후 승인 거부를 포함한 DB24개가 통과했다. 최종 head CI·병합은 대기다.

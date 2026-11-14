@@ -79,7 +79,52 @@ select approve_evidence(current_setting('test.qa_pin')::uuid,1);
 select is(approve_qa_item(current_setting('test.qa_item')::uuid,1,
     jsonb_build_array(jsonb_build_object('id',current_setting('test.qa_pin'),'version',1)))->>'state','approved',
     'approval requires the exact approved document excerpt');
+select throws_ok($$ select get_approved_qa_for_publication(current_setting('test.qa_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,null,false) $$,'42501',null,'owner JWT cannot call snapshot port');
+set local role anon;
+select throws_ok($$ select get_approved_qa_for_publication(current_setting('test.qa_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,null,false) $$,'42501',null,'anonymous visitors cannot call snapshot port');
+set local role service_role;
+select is(jsonb_array_length(get_approved_qa_for_publication(current_setting('test.qa_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,null,false)),1,'worker receives only an approved scope-specific candidate');
+select ok(not (get_approved_qa_for_publication(current_setting('test.qa_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,null,false)->0 ?| array['citations','sourceJobId','ownerId','instruction']),
+    'publication port does not expose raw private provenance or preview instructions');
+select throws_ok($$ select get_approved_qa_for_publication(current_setting('test.qa_other_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,null,false) $$,'P0002','Subject not found','worker scope rejects owner mismatch');
+select is(jsonb_array_length(get_approved_qa_for_publication(current_setting('test.qa_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,current_setting('test.qa_artwork')::uuid,false)),0,'exhibition candidate stays out of artwork scope');
+reset role;
+update yeoback_private.qa_item_versions set mock=true where id=current_setting('test.qa_item')::uuid;
+set local role service_role;
+select is(jsonb_array_length(get_approved_qa_for_publication(current_setting('test.qa_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,null)),0,'default live snapshot excludes mock candidates');
+select is(jsonb_array_length(get_approved_qa_for_publication(current_setting('test.qa_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,null,true)),1,'explicit development policy can include mock candidates');
+reset role;
+update yeoback_private.qa_item_versions set mock=false where id=current_setting('test.qa_item')::uuid;
+insert into yeoback_private.qa_item_versions(id,version,owner_id,exhibition_id,artwork_id,origin,
+    source_job_id,source_attempt,question,answer,content_hash,source_fingerprint,citations,mock)
+select id,version+1,owner_id,exhibition_id,artwork_id,origin,source_job_id,source_attempt,question,answer,
+    content_hash,source_fingerprint,citations,mock from yeoback_private.qa_item_versions
+where id=current_setting('test.qa_item')::uuid and version=1;
+set local role service_role;
+select is(jsonb_array_length(get_approved_qa_for_publication(current_setting('test.qa_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,null,false)),0,'newer draft prevents selecting an older approved version for a new snapshot');
+reset role;
+delete from yeoback_private.qa_item_versions where id=current_setting('test.qa_item')::uuid and version=2;
+update public.evidence_items set state='withdrawn',withdrawn_at=now() where id=current_setting('test.qa_pin')::uuid;
+set local role service_role;
+select is(jsonb_array_length(get_approved_qa_for_publication(current_setting('test.qa_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,null,false)),0,'withdrawn evidence excludes approved Q&A');
+reset role;
+update public.evidence_items set state='approved',withdrawn_at=null where id=current_setting('test.qa_pin')::uuid;
+set local role authenticated;
 select is(withdraw_qa_item(current_setting('test.qa_item')::uuid,1)->>'state','withdrawn','owner can withdraw the pinned version');
+set local role service_role;
+select is(jsonb_array_length(get_approved_qa_for_publication(current_setting('test.qa_owner')::uuid,
+    current_setting('test.qa_exhibition')::uuid,null,false)),0,'withdrawn Q&A does not enter a new snapshot');
+set local role authenticated;
 select set_config('request.jwt.claim.sub',current_setting('test.qa_other_owner'),true);
 select throws_ok($$ select get_expected_qa_job(current_setting('test.qa_job')::uuid) $$,
     'P0002','Job not found','another artist cannot load a Q&A generation job');

@@ -11,6 +11,7 @@ insert into auth.users(id,email) values (current_setting('test.review_qa_owner')
 set local role authenticated;
 select set_config('request.jwt.claim.sub',current_setting('test.review_qa_owner'),true);
 select create_exhibition(current_setting('test.review_qa_exhibition')::uuid,'Review fixture',null,null,null,'[]','[]');
+select update_artist_profile(1,'Review artist',1,'[]','[]');
 select set_config('test.review_qa_source',upsert_evidence(current_setting('test.review_qa_exhibition')::uuid,null,
     'exhibition','Owner source','Artist chose mineral pigments.','{"kind":"direct"}',null,null)->>'id',true);
 select approve_evidence(current_setting('test.review_qa_source')::uuid,1);
@@ -71,9 +72,52 @@ select is(list_qa_items(current_setting('test.review_qa_exhibition')::uuid,null)
     'a rewritten answer enters the Q&A review as a draft');
 select is(list_qa_items(current_setting('test.review_qa_exhibition')::uuid,null)#>>'{0,citations,0,body}',
     'A mineral pigment was mixed with water.','private review returns the exact used excerpt');
-select is(approve_qa_item(current_setting('test.review_qa_item')::uuid,1,
-    jsonb_build_array(jsonb_build_object('id',current_setting('test.review_qa_correction'),'version',1)))->>'state','approved',
-    'rewritten draft requires its approved exact pin');
+-- A real publication must not absorb the adjacent private preview or Q&A draft.
+select set_config('test.review_public_artwork',gen_random_uuid()::text,true);
+select create_artwork(current_setting('test.review_public_artwork')::uuid,
+    current_setting('test.review_qa_exhibition')::uuid,1,'Public artwork',null,null,null,'[]','[]');
+select save_narration_draft(current_setting('test.review_public_artwork')::uuid,1,'Approved public narration.');
+select approve_narration(current_setting('test.review_public_artwork')::uuid,2,
+    jsonb_build_array(jsonb_build_object('id',current_setting('test.review_qa_source'),'version',1)));
+reset role;
+update app_features set enabled=false where key='voice_required';
+with image as (
+    insert into materials(id,owner_id,artwork_id,kind,state,storage_key,byte_size)
+    values(gen_random_uuid(),current_setting('test.review_qa_owner')::uuid,
+        current_setting('test.review_public_artwork')::uuid,'image','ready',
+        current_setting('test.review_qa_owner') || '/qa-public-test',100) returning id
+)
+update artworks set image_material_id=image.id from image
+where artworks.id=current_setting('test.review_public_artwork')::uuid;
+set local role service_role;
+select is(jsonb_array_length(get_approved_qa_for_publication(current_setting('test.review_qa_owner')::uuid,
+    current_setting('test.review_qa_exhibition')::uuid,null,false)),0,
+    'publication selector excludes the unapproved rewrite and rated preview');
+select publish(current_setting('test.review_qa_owner')::uuid,current_setting('test.review_qa_exhibition')::uuid,
+    gen_random_uuid(),1,jsonb_build_array(jsonb_build_object('artwork_id',current_setting('test.review_public_artwork'),
+        'expected_revision',2)), '{"bio":null,"introduction":null,"theme":null}',false);
+select set_config('test.review_public_context',load_publication_context(current_setting('test.review_qa_exhibition')::uuid,
+    current_setting('test.review_public_artwork')::uuid,null)::text,true);
+select ok(current_setting('test.review_public_context')::jsonb is not null,
+    'non-leak check uses a published visitor context, not an unavailable exhibition');
+select ok(position(current_setting('test.review_qa_item') in current_setting('test.review_public_context'))=0
+    and position(current_setting('test.review_qa_answer') in current_setting('test.review_public_context'))=0
+    and position('Mineral pigments.' in current_setting('test.review_public_context'))=0
+    and position('Mineral pigment mixed with water.' in current_setting('test.review_public_context'))=0,
+    'visitor generation context excludes draft Q&A and private preview answers');
+set local role anon;
+select ok(get_public_artwork(current_setting('test.review_qa_exhibition')::uuid,
+    current_setting('test.review_public_artwork')::uuid)::text like '%Approved public narration.%',
+    'anonymous artwork response contains the explicitly approved narration');
+select ok(position('Mineral pigments.' in get_public_artwork(current_setting('test.review_qa_exhibition')::uuid,
+    current_setting('test.review_public_artwork')::uuid)::text)=0
+    and position('Mineral pigment mixed with water.' in get_public_exhibition(
+        current_setting('test.review_qa_exhibition')::uuid)::text)=0,
+    'anonymous artwork and exhibition responses exclude private preview and draft Q&A text');
+set local role authenticated;
+select throws_ok($$select approve_qa_item(current_setting('test.review_qa_item')::uuid,1,
+    jsonb_build_array(jsonb_build_object('id',current_setting('test.review_qa_correction'),'version',1)))$$,
+    '40001','Q&A source revision conflict','publication revision change prevents stale rewrite approval');
 select throws_ok($$select create_qa_correction_evidence('gap',gen_random_uuid(),null,gen_random_uuid(),
     'Gap fact','Gap corrections are out of scope.')$$,'P0002','Gap Q&A conversion is unavailable',
     'an authenticated owner cannot convert a gap into correction evidence');

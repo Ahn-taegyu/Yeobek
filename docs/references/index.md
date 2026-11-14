@@ -82,3 +82,6 @@
 - [Figma 학습·미리보기 화면 직접 대조](figma-review-v3.md) — SRC-051, W11 화면4개.
 
 - [관람 보완 요청의 Q&A 전환 제외](user-gap-qa-exclusion.md) — SRC-052.
+
+- [병렬 백엔드 A 작가 흐름 목표](user-backend-author-parallel-plan.md) — SRC-054.
+- [답변 시 자동 TTS와 작품 지칭·게시 정책](user-visitor-tts-publication-policy.md) — SRC-055.
