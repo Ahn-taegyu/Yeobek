@@ -10,9 +10,9 @@ select ok(not has_function_privilege('anon','advance_exhibition_step(uuid,intege
 set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-4000-8000-000000140001';
 select throws_ok($$select create_exhibition('00000000-0000-4000-8000-000000140004',null,null,null,null,'[]','[]')$$,
-    '22023','Title is required','legacy creation still requires a title');
+    '23502','Title is required','legacy creation still requires a title');
 select throws_ok($$select create_exhibition('00000000-0000-4000-8000-000000140004','Legacy','2026-11-14',null,null,'[]','[]')$$,
-    '22023','Invalid exhibition period','legacy creation still requires paired dates');
+    '23514','Invalid exhibition period','legacy creation still requires paired dates');
 select set_config('test.p0_exhibition','00000000-0000-4000-8000-000000140003',true);
 select set_config('test.p0_first','00000000-0000-4000-8000-000000140005',true);
 select set_config('test.p0_second','00000000-0000-4000-8000-000000140006',true);
