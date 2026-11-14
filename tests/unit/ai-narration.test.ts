@@ -50,6 +50,35 @@ function setup(actorId = ids.owner, options?: Pick<Parameters<typeof createNarra
 afterEach(() => vi.useRealTimers());
 
 describe("artist narration candidate selection", () => {
+  it("accepts W10 sections from the owned artwork and its parent documents", async () => {
+    const s = setup();
+    s.context.sections = [
+      { id: "artwork_motivation", body: "산책에서 본 달입니다." },
+      { id: "artwork_elements", body: "파란 물감으로 그렸습니다." },
+      { id: "artwork_viewpoint", body: "달의 색에 주목해 주세요." },
+    ];
+    s.context.sourceRefs = [{ kind: "direct", sectionId: "artwork_motivation" }];
+    s.context.sources[0].ref = { kind: "direct", sectionId: "artwork_motivation" };
+    s.context.sources.push({
+      id: ids.other, ownerId: ids.owner, artistId: ids.owner, subjectType: "artist", subjectId: ids.owner,
+      exhibitionId: null, revision: 1, text: "종이와 색채를 연구합니다.",
+      ref: { kind: "document", sectionId: "description", sourceDocumentId: ids.owner,
+        sourceSectionId: "artist_education", sourceRevision: 1 },
+    });
+    s.context.sources.push({
+      ...s.context.sources[1], id: ids.publication, subjectType: "exhibition", subjectId: ids.exhibition,
+      exhibitionId: ids.exhibition, ref: { kind: "document", sectionId: "description",
+        sourceDocumentId: ids.exhibition, sourceSectionId: "exhibition_guidance", sourceRevision: 1 },
+    });
+    await expect(s.harness.draft({ ...request, strategy: "single" })).resolves.toMatchObject({ status: "selected" });
+    s.context.sources[2].exhibitionId = ids.other;
+    await expect(s.harness.draft({ ...request, strategy: "single" })).resolves.toMatchObject({ status: "abstained", reason: "invalid_context" });
+    s.context.sources[2].exhibitionId = ids.exhibition;
+    s.context.sources[1].ref = { kind: "document", sectionId: "description", sourceDocumentId: ids.owner,
+      sourceSectionId: "exhibition_guidance", sourceRevision: 1 };
+    await expect(s.harness.draft({ ...request, strategy: "single" })).resolves.toMatchObject({ status: "abstained", reason: "invalid_context" });
+  });
+
   it("does not dispatch the first store load when cancelled in the same turn", async () => {
     const s = setup(); const controller = new AbortController();
     const pending = s.harness.draft(request, controller.signal);
