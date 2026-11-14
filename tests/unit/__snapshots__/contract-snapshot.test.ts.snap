@@ -12318,6 +12318,14 @@ exports[`HTTP route contracts > snapshots getMedia 1`] = `
         ],
         "type": "string",
       },
+      "w": {
+        "enum": [
+          "320",
+          "640",
+          "960",
+        ],
+        "type": "string",
+      },
     },
     "required": [
       "kind",

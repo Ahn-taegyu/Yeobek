@@ -1,6 +1,6 @@
 import type { ChatRequestInput } from "@/lib/contracts/chat";
 
-export type ExperienceImageProps = { id: string; kind: "image" | "poster"; alt: string; className?: string; fallback?: string };
+export type ExperienceImageProps = { id: string; kind: "image" | "poster"; alt: string; className?: string; fallback?: string; thumbnail?: boolean };
 export type ExperienceArtwork = { id: string; number: number; title: string; image?: { id: string } | null };
 export type ExperienceExhibition = {
   id: string; title: string; artistDisplayName: string; place: string | null;

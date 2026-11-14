@@ -101,3 +101,6 @@
 - [반 고흐 입력 완성도·정보량 비교와 재게시](user-vangogh-input-quality.md) — SRC-064.
 - [GitHub main 병합 시 Vercel Preview 갱신](user-vercel-preview-main.md) — SRC-066.
 - [관람 질문의 과잉 보류와 평가 오판 수정](user-visitor-evidence-abstention.md) — SRC-067.
+- [작품 선택 시 기본 소개와 썸네일 압축](user-visitor-select-intro.md) — SRC-070.
+- [기본 소개 음성 항상 미리 생성](user-narration-audio-pregenerate.md) — SRC-071.
+- [AI 정보 검색 방식 점검과 관람 근거 선택 개선](user-visitor-evidence-selection.md) — SRC-072.

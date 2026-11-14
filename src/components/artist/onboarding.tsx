@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { transitionScreen } from "@/components/ui/motion";
-import { brand } from "@/components/ui/brand";
+import { AiStarLogo } from "@/components/ui/ai-star/ai-star-logo";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { requestApi } from "@/lib/client";
@@ -112,7 +111,7 @@ export function OnboardingSteps({ initial, previewStep }: { initial: Profile; pr
       {step === 1 && <>
         {profile.avatarMaterialId ? <PrivateImage key={profile.avatarMaterialId} className="artist-avatar artist-avatar-large"
           materialId={profile.avatarMaterialId} alt="프로필 사진" /> :
-          <Image className="artist-avatar" src={brand.artistAvatar} alt="" width={136} height={136} loading="eager" />}
+          <div className="artist-onboarding-star"><AiStarLogo state="idle" size={136} label="" /></div>}
         <Field label="프로필 사진"><input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy}
           onChange={event => {
             const file = event.target.files?.[0];
