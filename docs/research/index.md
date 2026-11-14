@@ -1,5 +1,7 @@
 # 기술 선택 재검토
 
+- [반 고흐 입력 완성도·정보량 실측](vangogh-input-quality.md) — 다섯 입력 조건, 과잉 보류와 평가 오판, 로컬 재게시 검증.
+
 - [Liner 모델·음성 실측](liner-docent-live-validation.md) — 공통 도슨트, 독립 평가, 추론 토큰·PCM 수정과 소량 비교의 한계.
 
 - [작가 참고 파일 읽기](material-reader.md) — 로컬 PDF·Liner 파일 입력·W2 검수와 비용 경계. 실제 호출0회.
