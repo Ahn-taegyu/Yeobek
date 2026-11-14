@@ -9,6 +9,7 @@ const variables = {
   signup: "FEATURE_SIGNUP",
   expectedQa: "FEATURE_EXPECTED_QA",
   exhibitionQa: "FEATURE_EXHIBITION_QA",
+  exhibitionScopeChat: "FEATURE_EXHIBITION_SCOPE_CHAT",
   previewChat: "FEATURE_PREVIEW_CHAT",
   qaRewrite: "FEATURE_QA_REWRITE",
 } as const;

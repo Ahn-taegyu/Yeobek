@@ -187,3 +187,5 @@ W12 공개 시각 계약(구현 중): publicExhibitionResponse에 선택 필드 
 W12 채팅 이미지 계약(구현 중): `visitorReplyResponse.image`는 선택 필드 `{id, kind:"image"} | null`이다. 선택된 공개본의 검증된 이미지 참조만 반환하고, 재시도 때도 현재 공개 상태로 다시 조회한다. 이미지 없음·조회 실패·대상 미선택은 null이며 답변과 기존 outputMode 의미를 유지한다. `GET /api/media/{id}?kind=image`로 읽는다.
 
 W12 승인 Q&A 공개 연결(구현 중): 신규 공개본은 schemaVersion 2의 `items`와 `approvedQa`에 승인 버전·해시·근거 pin을 고정한다. draft/철회/운영 모드의 mock 후보는 제외한다. 기존 v1 조회는 유지하며 Q&A는 생성 근거로만 쓰고 기본 해설을 대체하지 않는다. 공개 응답에는 내부 QA 목록을 노출하지 않는다. 생성 후보는 최신 승인 시각·ID 순 최대100개 QA와 기존 근거를 합쳐 검증한 뒤, 전체12개·8,000자 예산으로 선정한다. QA 또는 연결 근거 철회는 해당 공개본과 캐시 답변·음성을 무효화하며 재게시가 필요하다. Q&A 개수는 게시 필수가 아니다.
+
+W12 전시 공통 채팅(구현 중): `FEATURE_EXHIBITION_SCOPE_CHAT`/`exhibitionScopeChat`는 기본 false다. true일 때 작품 미선택의 일반 질문은 게시된 작가·전시 공통 근거만 사용한다. 응답 `publication.artworkId`는 null이고 image도 null이므로 작품을 임의로 선택하지 않는다. publicationId/version은 철회·캐시·음성 검사에 사용하되 작품 선택 ID로 쓰지 않는다. 명확한 작품 번호는 기존 작품 경로로 처리하며 모호한 번호·소개 요청은 선택 안내를 유지한다. 전시 공통 답변의 부족 근거는 특정 작품의 gap으로 기록하지 않는다.

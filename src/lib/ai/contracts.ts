@@ -57,14 +57,14 @@ export const approvedNarrationSchema = z.strictObject({
   text: boundedText(AI_LIMITS.narration), citations: z.array(id).min(1).max(AI_LIMITS.evidenceCount),
 });
 export const publicationContextSchema = z.strictObject({
-  ownerId: id, exhibitionId: id, artworkId: id, publicationId: id, version,
-  number: z.number().int().min(1).max(9999), title: boundedText(100),
+  ownerId: id, exhibitionId: id, artworkId: id.nullable(), publicationId: id, version,
+  number: z.number().int().min(1).max(9999).nullable(), title: boundedText(100),
   evidence: z.array(evidenceSchema).max(200),
   narration: approvedNarrationSchema.nullable(),
 });
 export type PublicationContext = z.infer<typeof publicationContextSchema>;
 export type PublicationRef = Pick<PublicationContext, "exhibitionId" | "artworkId" | "publicationId" | "version">;
-export type ArtworkSelector = { exhibitionId: string } & ({ artworkId: string } | { number: number });
+export type ArtworkSelector = { exhibitionId: string } & ({ artworkId: string | null } | { number: number });
 
 /** Server capability, never constructed from a browser-supplied snapshot.
  * load must enforce tenant/current publication/source revocation BEFORE reading

@@ -26,6 +26,38 @@ describe("docent harness offline evaluation (synthetic; no semantic quality clai
     expect(reply.source).toBe("generated");
     expect(reply.answer).not.toBe("기억 속 달의 색입니다.");
   });
+  it("answers an unselected exhibition question only with the explicit feature capability", async () => {
+    const s = setup();
+    const common = { ...s.publication, artworkId: null, number: null, narration: null, title: "전시",
+      evidence: s.publication.evidence.map(item => ({ ...item, artworkId: null, scope: "exhibition" as const })) };
+    const publications = { load: vi.fn(async () => common), isCurrent: vi.fn(async () => true) };
+    const request = syntheticRequest({ artworkId: null, question: "전시의 주제는 무엇인가요?", intent: "question" });
+    const disabled = createDocentHarness({ publications, text: s.text });
+    expect((await disabled.answer(request)).outcome).toBe("clarify");
+    expect(publications.load).not.toHaveBeenCalled();
+    const enabled = createDocentHarness({ publications, text: s.text, exhibitionScopeChat: true });
+    const reply = await enabled.answer(request);
+    expect(reply).toMatchObject({ source: "generated", publication: { artworkId: null }, outputMode: request.outputMode });
+    expect(publications.load).toHaveBeenCalledWith({ exhibitionId: ids.exhibition, artworkId: null }, undefined);
+    const prompt = s.text.generate.mock.calls[0] as unknown as [{ input: string }];
+    expect(JSON.parse(prompt[0].input)).toMatchObject({ exhibition: { title: "전시" } });
+    expect(JSON.parse(prompt[0].input)).not.toHaveProperty("artwork");
+  });
+  it("rejects artwork evidence smuggled into an exhibition context", async () => {
+    const s = setup();
+    const publications = { load: vi.fn(async () => ({ ...s.publication, artworkId: null, number: null, narration: null })),
+      isCurrent: vi.fn(async () => true) };
+    await expect(createDocentHarness({ publications, text: s.text, exhibitionScopeChat: true }).answer(
+      syntheticRequest({ artworkId: null, question: "전시 주제", intent: "question" }))).rejects.toMatchObject({ code: "invalid_context" });
+    expect(s.text.generate).not.toHaveBeenCalled();
+  });
+  it("keeps ambiguous numbers on the clarification path even with exhibition chat enabled", async () => {
+    const s = setup();
+    const reply = await createDocentHarness({ publications: s.publications, text: s.text, exhibitionScopeChat: true }).answer(
+      syntheticRequest({ artworkId: null, question: "18번과19번 비교해줘" }));
+    expect(reply.outcome).toBe("clarify");
+    expect(s.publications.load).not.toHaveBeenCalled();
+  });
   it("answers using only versioned evidence; binds result to the initiating context", async () => {
     const s = setup();
     const reply = await s.harness.answer(syntheticRequest());

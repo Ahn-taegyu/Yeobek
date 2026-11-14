@@ -19,6 +19,9 @@ export function validateContext(value: unknown, selector: ArtworkSelector): Publ
   if (context.exhibitionId !== selector.exhibitionId ||
     ("artworkId" in selector && context.artworkId !== selector.artworkId) ||
     ("number" in selector && context.number !== selector.number)) throw new HarnessError("invalid_context");
+  if (context.artworkId === null && (context.number !== null || context.narration !== null ||
+    context.evidence.some(item => item.scope === "artwork"))) throw new HarnessError("invalid_context");
+  if (context.artworkId !== null && context.number === null) throw new HarnessError("invalid_context");
   const seen = new Set<string>();
   for (const evidence of context.evidence) {
     if (seen.has(evidence.id) || evidence.ownerId !== context.ownerId ||

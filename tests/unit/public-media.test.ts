@@ -101,3 +101,9 @@ it("does not infer an image for a reply without an identified publication", asyn
   expect(await attachVisitorImage({ publication: null })).toEqual({ publication: null, image: null });
   expect(mocks.rpc).not.toHaveBeenCalled();
 });
+
+it("never assigns the dependency artwork image to an exhibition-scoped reply", async () => {
+  expect(await attachVisitorImage({ publication: { publicationId: id, artworkId: null } })).toEqual({
+    publication: { publicationId: id, artworkId: null }, image: null });
+  expect(mocks.rpc).not.toHaveBeenCalled();
+});

@@ -44,7 +44,7 @@ export function createConfiguredTranscriptionProvider(options?: AiProviderOption
 export function createDocentRuntime(publications: PublicationStore, answers: SpeechSourceStore, visitor?: VisitorLifecycle,
   onUsage?: (trace: AiProviderTrace) => void) {
   const mock = isMockMode();
-  const harness = createDocentHarness({ publications, visitor,
+  const harness = createDocentHarness({ publications, visitor, exhibitionScopeChat: getFeatures().exhibitionScopeChat,
     text: { generate: async input => {
       const result = await createConfiguredTextProvider("qa").generate(input);
       onUsage?.(result.trace); // Record a charged response even if later validation fails.

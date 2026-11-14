@@ -73,7 +73,7 @@ select ('80000000-0000-0000-0000-' || lpad(n::text,12,'0'))::uuid,1,
     'Why layered?', 'Layers preserve memory.',sha256('QA content'::bytea),'{}','[]',n=5,
     case when n=3 then 'draft' when n=4 then 'withdrawn' else 'approved' end,
     jsonb_build_array(jsonb_build_object('id',current_setting('test.evidence1'),'version',1)),
-    case when n<>3 then now() end,case when n=4 then now() end
+    case when n=2 then now()-interval '1 day' when n<>3 then now() end,case when n=4 then now() end
 from generate_series(1,105) n;
 set local role service_role;
 select set_config('test.publish1',publish('00000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001',
@@ -94,6 +94,12 @@ select ok(exists(select 1 from jsonb_array_elements(current_setting('test.contex
     and e->>'contentHash'=encode(sha256(convert_to(e->>'body','UTF8')),'hex')),'QA retrieval body has a verifiable content hash');
 select ok(not (get_public_artwork('10000000-0000-0000-0000-000000000001',
     '20000000-0000-0000-0000-000000000001') ? 'approvedQa'),'public artwork response does not dump QA provenance');
+
+-- More than 100 newer artwork QAs must not displace an approved common QA.
+select ok(exists(select 1 from jsonb_array_elements(load_publication_context(
+    '10000000-0000-0000-0000-000000000001',null,null)->'evidence') e
+    where e->>'id'='80000000-0000-0000-0000-000000000002'),
+    'common QA scope is filtered before the candidate limit');
 
 -- A newer draft changes the next publication candidate, not this frozen version.
 reset role;

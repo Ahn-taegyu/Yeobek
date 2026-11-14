@@ -40,7 +40,7 @@ async function assertCurrent(recheck: PublicationStore["isCurrent"], ref: Public
 
 /** One bounded text call. HTTP must bind visitor persistence; isolated model
  * evaluations may leave it unbound and record the skipped lifecycle explicitly. */
-export function createDocentHarness(deps: { publications: PublicationStore; text: AiTextProvider; visitor?: VisitorLifecycle }) {
+export function createDocentHarness(deps: { publications: PublicationStore; text: AiTextProvider; visitor?: VisitorLifecycle; exhibitionScopeChat?: boolean }) {
   const caps = capabilitiesFor("visitor-answer", { publications: deps.publications, visitor: deps.visitor });
   return {
     async answer(input: unknown, signal?: AbortSignal): Promise<DocentReply> {
@@ -64,7 +64,7 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
         const persist = async (reply: Omit<DocentReply, "steps">): Promise<DocentReply> => {
           if (caps["answer.store"]) await flow.step("answer.store", () => caps["answer.store"]!(reply));
           else flow.skip("answer.store", "request_unbound");
-          if (caps["gap.record"] && reply.publication && reply.outcome === "insufficient_evidence") {
+          if (caps["gap.record"] && reply.publication?.artworkId && reply.outcome === "insufficient_evidence") {
             await flow.step("gap.record", () => caps["gap.record"]!(request.question, reply));
           } else flow.skip("gap.record", "gap_not_applicable");
           return { ...reply, steps: flow.finish() };
@@ -77,7 +77,8 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
             (request.artworkNumber !== undefined && numbers.length === 1 && numbers[0] !== request.artworkNumber);
           const number = request.artworkNumber ?? numbers[0];
           const selector: ArtworkSelector | null = ambiguous ? null : number !== undefined ? { exhibitionId: request.exhibitionId, number }
-            : request.artworkId ? { exhibitionId: request.exhibitionId, artworkId: request.artworkId } : null;
+            : request.artworkId ? { exhibitionId: request.exhibitionId, artworkId: request.artworkId }
+            : deps.exhibitionScopeChat && intent === "question" ? { exhibitionId: request.exhibitionId, artworkId: null } : null;
           return { intent, selector, message: ambiguous ? DOCENT_COPY.chooseOne : DOCENT_COPY.chooseArtwork };
         });
         if (!resolved.selector) {
@@ -125,7 +126,9 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
         const generated = await flow.step("model.generate", async () => {
           assertNotCancelled(signal);
           const result = await deps.text.generate({ system: DOCENT_SYSTEM_PROMPT, schema: answerJsonSchema, signal,
-            input: JSON.stringify({ question: request.question, artwork: { number: context.number, title: context.title },
+            input: JSON.stringify({ question: request.question,
+              ...(context.artworkId === null ? { exhibition: { title: context.title } }
+                : { artwork: { number: context.number, title: context.title } }),
               evidence: evidence.map(item => ({ id: item.id, version: item.version, sourceLabel: item.sourceLabel, body: item.body })) }),
           });
           assertNotCancelled(signal);

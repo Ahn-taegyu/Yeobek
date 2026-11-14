@@ -52,8 +52,8 @@ export async function attachPublicMedia<T extends { publicationId: string }>(art
 
 /** Resolve optional answer media after loading/revalidating the saved reply.
  * A retry refreshes references instead of persisting a file pointer in answer history. */
-export async function attachVisitorImage<T extends { publication: { publicationId: string } | null }>(reply: T) {
-  if (!reply.publication) return { ...reply, image: null };
+export async function attachVisitorImage<T extends { publication: { publicationId: string; artworkId?: string | null } | null }>(reply: T) {
+  if (!reply.publication || reply.publication.artworkId === null) return { ...reply, image: null };
   const [media] = await attachPublicMedia([reply.publication]);
   return { ...reply, image: media.image };
 }

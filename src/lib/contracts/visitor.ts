@@ -7,7 +7,7 @@ const id = z.uuid().toLowerCase();
 export const visitorChatRequest = chatRequestSchema.extend({ requestId: id, exhibitionId: id, artworkId: id.nullable(),
   intent: z.enum(["question", "narration"]).optional() });
 export const publicationRefSchema = z.strictObject({
-  exhibitionId: id, artworkId: id, publicationId: id, version: z.number().int().positive().max(2147483647),
+  exhibitionId: id, artworkId: id.nullable(), publicationId: id, version: z.number().int().positive().max(2147483647),
 });
 export const savedVisitorReply = z.strictObject({
   answerId: id, requestId: id,
