@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createTrainingBatch, loadTrainingBatch, runTrainingTarget } from "@/lib/ai/training-service";
+import { createTrainingBatch, loadLatestTrainingBatch, loadTrainingBatch, runTrainingTarget } from "@/lib/ai/training-service";
 import type { DbClient } from "@/lib/api/db";
 import { ids } from "../fixtures/ai";
 
@@ -38,6 +38,15 @@ describe("exhibition training batch execution", () => {
       [worker, "create_training_batch", { p_owner: ids.owner, p_exhibition_id: ids.exhibition, p_request_id: ids.request,
         p_expected_revision: 2, p_include_exhibition_qa: false }], [db, "get_training_batch", { p_batch_id: batchId }],
     ]);
+    expect(runReservedNarration).not.toHaveBeenCalled();
+    expect(runExpectedQa).not.toHaveBeenCalled();
+  });
+
+  it("loads the latest persisted batch or an empty result without running models", async () => {
+    await expect(loadLatestTrainingBatch(db, ids.exhibition)).resolves.toEqual(batch);
+    rpc.mockResolvedValueOnce(null);
+    await expect(loadLatestTrainingBatch(db, ids.exhibition)).resolves.toBeNull();
+    expect(rpc.mock.calls).toEqual(Array(2).fill([db, "get_latest_training_batch", { p_exhibition_id: ids.exhibition }]));
     expect(runReservedNarration).not.toHaveBeenCalled();
     expect(runExpectedQa).not.toHaveBeenCalled();
   });

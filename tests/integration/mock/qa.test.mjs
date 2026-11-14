@@ -20,7 +20,7 @@ test("private Q&A generation, approval, preview, correction and training over HT
       const [key, ...parts] = value.split(";")[0].split("="); jar.set(key, parts.join("="));
     }
     const result = await response.json();
-    assert.match(response.headers.get("cache-control") || "", /no-store/);
+    assert.match(response.headers.get("cache-control") || "", /private, no-store/);
     assert.equal(response.status, expected, `${method} ${path}: ${JSON.stringify(result)}`);
     return result.data;
   }
@@ -28,8 +28,10 @@ test("private Q&A generation, approval, preview, correction and training over HT
     for (const path of [`/api/admin/exhibitions/${randomUUID()}/qa/generations`,
       `/api/admin/exhibitions/${randomUUID()}/preview/chat`, "/api/admin/qa/rewrite",
       `/api/admin/exhibitions/${randomUUID()}/training`]) await request(path, {}, { expected: 404 });
+    await request(`/api/admin/exhibitions/${randomUUID()}/training/latest`, undefined, { expected: 404 });
     return;
   }
+  await request(`/api/admin/exhibitions/${randomUUID()}/training/latest`, undefined, { expected: 401 });
   for (let user = 0; user < 2; user++) {
     const account = { email: `qa-${randomUUID()}@example.invalid`, password: randomUUID() + "A1!" };
     assert.equal((await admin.auth.admin.createUser({ ...account, email_confirm: true })).error, null);
@@ -44,6 +46,7 @@ test("private Q&A generation, approval, preview, correction and training over HT
   await request("/api/admin/qa/rewrite", { targetKind: "gap", targetId: randomUUID(), targetVersion: null,
     requestId: randomUUID(), instruction: "답해 주세요.", evidencePins: [{ id: randomUUID(), version: 1 }] }, { expected: 400 });
   const path = `/api/admin/exhibitions/${exhibition.id}`;
+  const latestPath = path + "/training/latest";
   const listPath = path + `/qa?artworkId=${artwork.id}`;
   const pin = evidence => ({ id: evidence.id, version: evidence.version });
   let candidate;
@@ -106,8 +109,12 @@ test("private Q&A generation, approval, preview, correction and training over HT
       evidencePins: [pin(corrected)] })).state, "approved");
   });
   await t.test("training creation and GET do no model work; each explicit run persists one target and replays safely", async () => {
+    assert.equal(await request(latestPath), null);
+    await request(latestPath, undefined, { user: 1, expected: 404 });
+    await request(`/api/admin/exhibitions/${randomUUID()}/training/latest`, undefined, { expected: 404 });
     const fresh = await request(path);
     const batch = await request(path + "/training", { requestId: randomUUID(), expectedRevision: fresh.revision });
+    assert.deepEqual(await request(latestPath), batch);
     assert.equal(batch.status, "queued"); assert.equal(batch.targets.length, 3);
     assert.ok(batch.targets.every(target => target.jobId === null));
     assert.deepEqual(await request(`/api/admin/training/${batch.id}`), batch);
@@ -121,6 +128,10 @@ test("private Q&A generation, approval, preview, correction and training over HT
       assert.deepEqual(await request(runPath, input), current);
     }
     assert.equal(current.status, "completed");
+    assert.deepEqual(await request(latestPath), current);
+    const newer = await request(path + "/training", { requestId: randomUUID(), expectedRevision: fresh.revision });
+    assert.notEqual(newer.id, batch.id);
+    assert.deepEqual(await request(latestPath), newer);
     assert.equal((await request(`/api/admin/artworks/${artwork.id}`)).narrationDraft, null);
   });
 });

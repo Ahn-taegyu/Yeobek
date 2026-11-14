@@ -26,6 +26,10 @@ export async function loadTrainingBatch(db: DbClient, batchId: string) {
   return decodeDatabase(trainingBatchResponse, await rpc(db, "get_training_batch", { p_batch_id: batchId }));
 }
 
+export async function loadLatestTrainingBatch(db: DbClient, exhibitionId: string) {
+  return decodeDatabase(trainingBatchResponse.nullable(), await rpc(db, "get_latest_training_batch", { p_exhibition_id: exhibitionId }));
+}
+
 export async function runTrainingTarget(db: DbClient, ownerId: string, batchId: string, targetId: string, input: RunTrainingTarget,
   allowExhibitionQa: boolean, signal?: AbortSignal) {
   const batch = await loadTrainingBatch(db, batchId);
