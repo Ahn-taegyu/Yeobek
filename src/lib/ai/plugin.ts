@@ -6,6 +6,9 @@ import type { PublicationStore } from "./contracts";
 import type { VisitorLifecycle } from "./visitor-lifecycle";
 import type { AudioRunResult, AuthorAudioStore } from "./audio-types";
 import type { VisitorVoiceStore } from "./visitor-voice-types";
+import type { ExpectedQaStore } from "./expected-qa";
+import type { PreviewStore } from "./preview";
+import type { QaRewriteStore } from "./qa-rewrite";
 import { yeobekPlugin } from "./plugin.generated";
 
 type Playbooks = typeof yeobekPlugin.playbooks;
@@ -39,6 +42,12 @@ type CapabilityMap<Id> = {
   "proposal.store": ArtistKnowledgeStore["storeProposal"];
   "proposal.read": ArtistKnowledgeStore["loadOwnedProposal"];
   "proposal.apply": ArtistKnowledgeStore["commitOwnedProposal"];
+  "qa.reserve": ExpectedQaStore["reserve"];
+  "qa.complete": ExpectedQaStore["complete"];
+  "preview.reserve": PreviewStore["reserve"];
+  "preview.complete": PreviewStore["complete"];
+  "rewrite.reserve": QaRewriteStore["reserve"];
+  "rewrite.complete": QaRewriteStore["complete"];
 };
 
 type PlaybookCapabilities = {
@@ -55,6 +64,9 @@ type CapabilityStores<Id> = {
   publications?: PublicationStore;
   author?: Pick<ArtistKnowledgeStore, "loadOwnedContext">;
   proposals?: Pick<ArtistKnowledgeStore, "storeProposal" | "loadOwnedProposal" | "commitOwnedProposal">;
+  expectedQa?: ExpectedQaStore;
+  preview?: PreviewStore;
+  qaRewrite?: QaRewriteStore;
 };
 
 function requireStore<Store>(store: Store | undefined): Store {
@@ -82,6 +94,12 @@ const bindCapability = {
   "proposal.store": ({ proposals }) => requireStore(proposals).storeProposal.bind(proposals),
   "proposal.read": ({ proposals }) => requireStore(proposals).loadOwnedProposal.bind(proposals),
   "proposal.apply": ({ proposals }) => requireStore(proposals).commitOwnedProposal.bind(proposals),
+  "qa.reserve": ({ expectedQa }) => requireStore(expectedQa).reserve.bind(expectedQa),
+  "qa.complete": ({ expectedQa }) => requireStore(expectedQa).complete.bind(expectedQa),
+  "preview.reserve": ({ preview }) => requireStore(preview).reserve.bind(preview),
+  "preview.complete": ({ preview }) => requireStore(preview).complete.bind(preview),
+  "rewrite.reserve": ({ qaRewrite }) => requireStore(qaRewrite).reserve.bind(qaRewrite),
+  "rewrite.complete": ({ qaRewrite }) => requireStore(qaRewrite).complete.bind(qaRewrite),
 } satisfies { [Tool in PluginTool]: (stores: CapabilityStores<PlaybookId>) => CapabilityMap<PlaybookId>[Tool] };
 
 /** Server workflows choose the playbook. Store ports enforce ownership and publication access. */
