@@ -579,3 +579,15 @@ P0 전시(`authoringStep` 비어 있지 않음)는 `artworks` 단계와 기존 �
 `GET /api/cron/purge`는 기존 `POST /api/cron/purge`와 같은 Bearer `CRON_SECRET` 인증, 만료 행/파일 정리 및 응답 envelope를 사용한다. 인증 실패 시 worker/DB/Storage 정리를 실행하지 않으며 응답을 캐시하지 않는다. 기존 POST 계약·호출자는 유지하고 typed contract에 purgeExpiredScheduled GET만 추가한다. GET은 서버 스케줄러용이며 작가/관람 클라이언트에 비밀값을 전달하지 않는다. HEAD/OPTIONS 등 부수 요청은 정리를 실행하면 안 된다.
 
 이번 변경은 실제 스케줄 등록이나 배포를 수행하지 않는다. 운영 연결 시 Vercel GET 호출·하루 1회 주기·실패 복구를 별도 점검한다. 자동화 발송 POST는 이 변경 대상이 아니다.
+
+## 작품 글 인터뷰 계약 (F-024)
+
+서버 기능 플래그 `FEATURE_ARTWORK_INTERVIEW`는 기본 꺼짐이다. 꺼진 상태에서 아래 인터뷰 경로는 실행할 수 없다. 인터뷰 기능을 켜더라도 인증된 소유 작가만 대상 작품에 접근하며, 타 계정의 조회·생성·답변 변경은 404다.
+
+| 작업 | 경로 | 동작 |
+| --- | --- | --- |
+| 인터뷰 조회 | `GET /api/admin/artworks/{id}/interview` | 작품의 인터뷰 질문 및 답변 상태를 소유 작가에게 조회한다. 생성하지 않는다. 성공 응답의 `data`는 `{exhibitionId,artworkTitle,imageReady,questions}`이며 질문은 `{id,slot,question,answer,status,version,evidenceId}`다. `status`는 `pending/answered/skipped/approved`; 질문 최대 5개, 질문 글자 수 최대 500, 답변 최대 2000이다. |
+| 질문 생성 | `POST /api/admin/artworks/{id}/interview/generations` | 요청 body `{requestId}`. 작품 사진·글 자료를 보고 자료에 답이 없는 질문을 최대 5개 생성한다. 기존 작업 원장·한도를 재사용한다. 성공 응답의 `data`는 `{job,questions}`이며 job은 `{id,attempt,status,resultCode}`다. 작업 status는 `running/succeeded/failed/cancelled/abstained`; 현재 세부 결과 코드 표는 구현 계약에 따른다. |
+| 답변 처리 | `PATCH /api/admin/artworks/{id}/interview/answers/{questionId}` | 저장은 `{action:"save",expectedVersion,answer}`, 건너뛰기는 `{action:"skip",expectedVersion}`, 승인은 `{action:"approve",expectedVersion}`를 보낸다. save는 공백 제거 후 비어 있지 않은 최대 2000자다. approve는 먼저 저장된 답변에 대해서만 가능하다. 성공 응답의 `data`는 GET과 같은 인터뷰 객체다. |
+
+각 인터뷰 질문은 슬롯 1~5에 저장되며 답변 초안은 작품 범위 근거 초안으로 동기화된다. 인터뷰 화면에서 명시 승인하고 기존 게시 절차를 통과하기 전에는 공개 응답·관람 답변 근거가 될 수 없다. 인터뷰 질문·미승인 답변은 공개 응답에서 제외한다. 타 계정·삭제 대상은 404, 비활성 기능도 404다. 세부 오류 코드 표는 별도 문서화 전까지 일반 API 오류 계약을 따른다. 질문과 답변은 `artwork_interview_questions`와 `artwork_interview_answers`에 저장하며 작업 실행은 기존 `ai_jobs`와 `ai_job_attempts`를 재사용한다. 계약 원본은 `src/lib/contracts/interview.ts`, 라우트 연결은 `src/lib/contracts/routes.ts`, 저장 구조·RPC는 `supabase/migrations/20261115010000_artwork_text_interview.sql`이다. 사진 분석 품질은 실제 사진 입력을 처리하는 모델 호출로만 평가하고 모의 계약 검증과 구별한다.

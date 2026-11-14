@@ -40,6 +40,12 @@ function keywords(question: string) {
 }
 
 function result(data: Record<string, unknown>, name: string) {
+  if (name === "yeobek_artwork_interview") {
+    const previous = Array.isArray(data.priorQuestions) ? data.priorQuestions : [];
+    const questions = ["이 작품을 만드는 데 어떤 재료를 선택하셨나요?", "작품에 사용한 색에는 어떤 의미가 있나요?",
+      "작품을 시작하게 된 계기는 무엇인가요?", "제작 중 가장 오래 고민한 부분은 무엇인가요?", "관람객이 눈여겨볼 부분은 어디인가요?"];
+    return { questions: questions.filter(question => !previous.includes(question)).slice(0, Number(data.maxQuestions)) };
+  }
   if (name === "yeobek_material_pages") {
     if (!Number.isInteger(data.pageCount) || Number(data.pageCount) < 1 || Number(data.pageCount) > 20) throw new AiError("invalid_input");
     return { pages: Array.from({ length: Number(data.pageCount) }, (_, index) => ({
