@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { transitionScreen } from "@/components/ui/motion";
 import { brand } from "@/components/ui/brand";
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState, type FormEvent } from "react";
 import { ApiClientError, requestApi } from "@/lib/client";
 import { AI_LIMITS, codepoints } from "@/lib/contracts/chat";
 import type { ChatRequestInput } from "@/lib/contracts/chat";
@@ -129,6 +129,7 @@ function Visit({ exhibition: initialExhibition, initialArtworkId, showWorks, onU
   const playingAnswer = useRef<string | null>(null);
   const retiredAnswerIds = useRef(new Set<string>());
   const currentTurns = useRef(turns);
+  const selectedNow = useRef(selected);
   const mutedNow = useRef(false);
   const transcript = useRef<HTMLDivElement>(null);
   const active = exhibition.artworks.find(work => work.id === selected);
@@ -140,9 +141,19 @@ function Visit({ exhibition: initialExhibition, initialArtworkId, showWorks, onU
   }, []);
 
   useEffect(() => {
+    selectedNow.current = selected;
+  }, [selected]);
+
+  useEffect(() => {
     currentTurns.current = turns;
     transcript.current?.scrollTo({ top: transcript.current.scrollHeight });
   }, [turns]);
+
+  // A paused artwork leaves the public list: drop it exactly like a manual deselection,
+  // cancelling its pending answer and narration so nothing late reappears.
+  const clearRemovedSelection = useEffectEvent((latest: Exhibition) => {
+    if (selectedNow.current && !latest.artworks.some(work => work.id === selectedNow.current)) clearSelection();
+  });
 
   useEffect(() => {
     if (!entered) return;
@@ -160,7 +171,7 @@ function Visit({ exhibition: initialExhibition, initialArtworkId, showWorks, onU
           return;
         }
         setExhibition(latest);
-        setSelected(previous => latest.artworks.some(work => work.id === previous) ? previous : null);
+        clearRemovedSelection(latest);
 
         const publishedTurns = currentTurns.current.flatMap(({ reply }) =>
           reply.publication && !retiredAnswerIds.current.has(reply.answerId) ? [{ answerId: reply.answerId, publication: reply.publication }] : []);
@@ -264,17 +275,26 @@ function Visit({ exhibition: initialExhibition, initialArtworkId, showWorks, onU
     transitionScreen(() => setPicker(picker ? null : "row"));
   }
 
+  function resetConversationContext() {
+    contextSequence.current += 1;
+    pendingChat.current = null;
+    operation.current?.abort();
+    operation.current = null;
+    stopAudio();
+    setBusy(null);
+    setError("");
+  }
+
+  function clearSelection() {
+    resetConversationContext();
+    selectedNow.current = null;
+    setSelected(null);
+  }
+
   function select(work: Artwork) {
     const nextId = selected === work.id ? null : work.id;
-    if (nextId !== selected) {
-      contextSequence.current += 1;
-      pendingChat.current = null;
-      operation.current?.abort();
-      operation.current = null;
-      stopAudio();
-      setBusy(null);
-      setError("");
-    }
+    if (nextId !== selected) resetConversationContext();
+    selectedNow.current = nextId;
     setSelected(nextId);
     if (nextId !== null) setPicker(null);
   }
