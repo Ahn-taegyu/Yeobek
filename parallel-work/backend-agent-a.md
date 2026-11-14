@@ -5,7 +5,7 @@
 ## 최신 상태와 결정 (2026-11-14 확인)
 
 - W13·W10·W9는 각각 PR #16(`44bf7d3`)·#15(`dadc23b`)·#17(`de06460`)로 병합됐다. GitHub PR 상태와 로컬 이력을 대조했다. W9의 `signup`은 기본 off이며 운영 SMTP·프런트·가입 ID 유실 복구·비밀번호 재설정은 완료 범위 밖이다.
-- W11은 Draft PR #18로 공유됐다. 전시 Q&A·학습 묶음 API도 포함되며 해당 head CI는 성공했지만 아직 미병합이다. 세부 증거와 남은 인계는 아래 PR 상태 표를 따른다.
+- W11은 Draft PR #18로 공유됐다. 전시 Q&A·학습 묶음 API도 포함되며 이전 head CI 성공 후 서비스 RPC를 추가했으며 최신 head CI·병합 대기다. 세부 증거와 남은 인계는 아래 PR 상태 표를 따른다.
 - W2는 [Draft PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), head `d276d9f`, 미병합이다. W10 section·후보/이력 FK·만료 정합성과 최신 main 충돌 해소가 남았다.
 - [SRC-050](../docs/references/user-expected-qa-policy.md): 생성 세트당 **작품 최대 3개·전시 최대 5개**, 근거 부족 시 일부/빈 세트 허용. Q&A별 승인·철회, 평가 횟수는 완료 조건이 아니며 승인 Q&A는 관람 답변 생성의 근거로 사용한다.
 - [SRC-046](../docs/references/user-v3-review-decisions.md): 기본 작품 소개만 직접 편집하고 나머지는 지시문으로 새 작업본을 만든다. 해설 검수와 미리보기는 별도 화면이며 모의 해설의 운영 게시는 차단한다.
@@ -16,7 +16,7 @@
 
 | 범위 | 확인한 상태·증거 | 남은 일 |
 | --- | --- | --- |
-| W11 | [Draft #18](https://github.com/Ahn-taegyu/Yeobek/pull/18), head `a1df889`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43563566225)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43563566258) 성공, 미병합 | 최신 main 충돌 해소, 승인 Q&A 서비스 RPC와 B 인계. 로컬 후속 변경을 이 head 검증에 포함하지 않음 |
+| W11 | [Draft #18](https://github.com/Ahn-taegyu/Yeobek/pull/18), head `1d596e1`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396278)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396325) 확인 대기, 미병합 | main 반영·서비스 RPC `get_approved_qa_for_publication`·W11 인계 절 추가됨. 최종 CI·병합 및 B의 같은 게시 트랜잭션 연결 필요 |
 | 프런트 인계 초안 | [#20](https://github.com/Ahn-taegyu/Yeobek/pull/20) 병합 `461d32f`, 검사 head `f0d49e9` App·Knowledge 성공 | W11/W12 계약과 최종 통합 인계 추가 |
 | 시연 데이터 | [Draft #23](https://github.com/Ahn-taegyu/Yeobek/pull/23), head `13fe1df`; [Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565179146) 성공, [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565179173) 진행 중 | 최종 CI·병합, A 연결 후 승인 Q&A 추가 |
 | W12·키 당일 점검표 | [Draft #25](https://github.com/Ahn-taegyu/Yeobek/pull/25), head `a69f324`; [Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565111664) 성공, [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565111722) 진행 중 | 이미지 선택·글 우선·공개 시각 snapshot 구현 중. 포스터·채팅 이미지·전시 문맥·Q&A snapshot·최종 통합 미완료 |

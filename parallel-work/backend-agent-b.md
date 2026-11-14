@@ -5,7 +5,7 @@
 ## 최신 상태와 결정 (2026-11-14 확인)
 
 - GitHub에서 W13 #16(`44bf7d3`)·W10 #15(`dadc23b`)·W9 #17(`de06460`)의 병합을 확인했다. 인계 기준은 이 계약이며 W9는 기본 off, 운영 SMTP·프런트는 미검증이다.
-- A의 W11은 Draft #18로 공유됐고 해당 head CI는 성공했지만 미병합이다. 승인 Q&A 조회 RPC의 최종 계약·병합을 확인한 뒤 연결한다.
+- A의 W11은 Draft #18로 공유됐고 이전 head CI 성공 후 서비스 RPC를 추가했으며 최신 head CI·병합 대기다. 승인 Q&A 조회 RPC의 최종 계약·병합을 확인한 뒤 연결한다.
 - 인계 초안은 #20으로 병합됐다. 시연 데이터 #23과 W12·키 당일 점검표 #25는 Draft이며 최종 통합은 미완료다. 아래 SHA별 상태 표를 따른다.
 - [SRC-050](../docs/references/user-expected-qa-policy.md)의 생성 세트 상한은 작품 3개·전시 5개다. 개별 승인·철회하며 승인 Q&A는 생성 근거로 사용한다. 기본 작품 소개의 승인 원고 직접 반환은 유지한다.
 - [SRC-052](../docs/references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청의 Q&A 전환은 제외한다. 요청 조회와 재게시 후 확인/종료는 유지하며 재게시만으로 자동 종료하지 않는다.
@@ -15,7 +15,7 @@
 
 | 범위 | 확인한 상태·증거 | 남은 일 |
 | --- | --- | --- |
-| W11 | [Draft #18](https://github.com/Ahn-taegyu/Yeobek/pull/18), head `a1df889`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43563566225)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43563566258) 성공, 미병합 | 최신 main 충돌 해소, 승인 Q&A 서비스 RPC와 B 인계. 로컬 후속 변경을 이 head 검증에 포함하지 않음 |
+| W11 | [Draft #18](https://github.com/Ahn-taegyu/Yeobek/pull/18), head `1d596e1`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396278)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396325) 확인 대기, 미병합 | main 반영·서비스 RPC `get_approved_qa_for_publication`·W11 인계 절 추가됨. 최종 CI·병합 및 B의 같은 게시 트랜잭션 연결 필요 |
 | 프런트 인계 초안 | [#20](https://github.com/Ahn-taegyu/Yeobek/pull/20) 병합 `461d32f`, 검사 head `f0d49e9` App·Knowledge 성공 | W11/W12 계약과 최종 통합 인계 추가 |
 | 시연 데이터 | [Draft #23](https://github.com/Ahn-taegyu/Yeobek/pull/23), head `13fe1df`; [Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565179146) 성공, [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565179173) 진행 중 | 최종 CI·병합, A 연결 후 승인 Q&A 추가 |
 | W12·키 당일 점검표 | [Draft #25](https://github.com/Ahn-taegyu/Yeobek/pull/25), head `a69f324`; [Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565111664) 성공, [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565111722) 진행 중 | 이미지 선택·글 우선·공개 시각 snapshot 구현 중. 포스터·채팅 이미지·전시 문맥·Q&A snapshot·최종 통합 미완료 |
