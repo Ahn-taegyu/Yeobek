@@ -193,8 +193,10 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
       });
       if (signal.aborted || reply.contextSequence !== contextSequence.current) return;
       pendingChat.current = null;
+      const resolved = exhibition.artworks.find(work => work.id === reply.publication?.artworkId);
+      if (resolved) setSelected(resolved.id);
       setTurns(previous => [...previous, {
-        question: text, reply, artwork: exhibition.artworks.find(work => work.id === reply.publication?.artworkId),
+        question: text, reply, artwork: resolved,
       }]);
       setQuestion("");
       setVoiceDraft(false);
@@ -204,7 +206,8 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
 
   if (!entered) return <section data-visitor className={styles.intro}>
     <div className={styles.brand}>{brand.name}</div>
-    <span className={styles.poster} aria-hidden="true" />
+    {exhibition.poster && <Image unoptimized className={styles.poster}
+      src={`/api/media/${exhibition.poster.id}?kind=poster`} width={233} height={392} alt={`${exhibition.title} 포스터`} />}
     <div>
       <h1>{exhibition.title}</h1>
       <p>{exhibition.artistDisplayName}</p>
@@ -256,7 +259,9 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
       </div>}
       {turns.map(({ question, reply, artwork }) => <article className={`${styles.turn} yeobek-appear`} key={reply.answerId}>
         <p className={styles.bubble}>{question}</p>
-        {artwork?.image && <ArtImage key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
+        {reply.image === undefined && artwork?.image && <ArtImage key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
+        {reply.image && <Image unoptimized className={styles.answerImage}
+          src={`/api/media/${reply.image.id}?kind=image`} width={352} height={180} alt={artwork?.title ?? "작품 이미지"} />}
         <p className={styles.answer}>{reply.answer}</p>
         {reply.notice && <p>{reply.notice}</p>}
         {!muted && <button className={styles.textButton} disabled={busy !== null}
