@@ -1,6 +1,6 @@
 {
   "id": "yeobek",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "instructions": "instructions.md",
   "messages": "messages.json",
   "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa", "read-material"],
@@ -113,11 +113,11 @@
     },
     "visitor-answer": {
       "skills": ["retrieve-wiki", "speak-docent"],
-      "tools": ["request.reserve", "publication.read", "publication.recheck", "answer.store", "gap.record"],
+      "tools": ["request.reserve", "publication.list", "publication.read", "publication.recheck", "answer.store", "gap.record"],
       "steps": [
         { "id": "request.validate" },
         { "id": "request.reserve", "tool": "request.reserve" },
-        { "id": "intent.resolve" },
+        { "id": "intent.resolve", "tool": "publication.list" },
         { "id": "publication.read", "tool": "publication.read" },
         { "id": "publication.recheck", "tool": "publication.recheck" },
         { "id": "evidence.select" },

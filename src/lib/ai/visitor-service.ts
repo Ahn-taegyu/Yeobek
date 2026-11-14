@@ -95,7 +95,7 @@ export async function answerVisitor(input: z.infer<typeof visitorChatRequest>, s
       if (error.reservation.status === "failed") persistedFailure(error.reservation);
       // A process may have stopped after answer.store but before gap.record.
       const saved = await store.load(error.reservation.id);
-      if (saved.outcome === "insufficient_evidence" && saved.publication && !saved.gapRecorded) {
+      if (saved.outcome === "insufficient_evidence" && saved.publication?.artworkId && !saved.gapRecorded) {
         try { await recordGap(); }
         catch { console.error("visitor_gap_failure", { requestId: input.requestId }); }
       }

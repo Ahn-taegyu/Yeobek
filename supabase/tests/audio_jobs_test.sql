@@ -33,6 +33,8 @@ select ok(not has_function_privilege('authenticated','complete_audio_cleanup(uui
 select ok(not has_function_privilege('authenticated','resume_with_audio_mode(uuid,uuid,integer,boolean,boolean,uuid)','EXECUTE'),
     'authenticated cannot override the server audio mode');
 
+reset role;
+update public.exhibitions set start_date='2026-11-14',end_date='2026-11-15',place='Test gallery';
 set local role service_role;
 select is(sync_audio_config(repeat('a',64),true),current_setting('test.voice_version')::integer,'registers server voice fingerprint');
 select throws_ok($$select sync_audio_config(repeat('b',64),true)$$,'P1003',

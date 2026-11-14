@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { publicMediaReferences } from "./media";
 import { AI_LIMITS, boundedText, chatRequestSchema, codepoints } from "./chat";
 
 const id = z.uuid().toLowerCase();
@@ -6,7 +7,7 @@ const id = z.uuid().toLowerCase();
 export const visitorChatRequest = chatRequestSchema.extend({ requestId: id, exhibitionId: id, artworkId: id.nullable(),
   intent: z.enum(["question", "narration"]).optional() });
 export const publicationRefSchema = z.strictObject({
-  exhibitionId: id, artworkId: id, publicationId: id, version: z.number().int().positive().max(2147483647),
+  exhibitionId: id, artworkId: id.nullable(), publicationId: id, version: z.number().int().positive().max(2147483647),
 });
 export const savedVisitorReply = z.strictObject({
   answerId: id, requestId: id,
@@ -17,7 +18,8 @@ export const savedVisitorReply = z.strictObject({
   publication: publicationRefSchema.nullable(), source: z.enum(["approved_narration", "generated", "fixed"]),
   mock: z.boolean(), gapRecorded: z.boolean().optional(),
 }).refine(value => value.source === "approved_narration" || codepoints(value.answer) <= AI_LIMITS.answer);
-export const visitorReplyResponse = savedVisitorReply.safeExtend({ notice: boundedText(200).optional() });
+export const visitorReplyResponse = savedVisitorReply.safeExtend({ notice: boundedText(200).optional(),
+  image: publicMediaReferences.shape.image.optional() });
 export type SavedVisitorReply = z.infer<typeof savedVisitorReply>;
 export const visitorReservation = z.strictObject({
   id, claimed: z.boolean(), status: z.enum(["running", "succeeded", "failed"]),

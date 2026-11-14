@@ -22,8 +22,8 @@ export function assertDemoEnvironment(origin, status, env) {
   if (env.NODE_ENV === "production" || env.VERCEL_ENV === "production") {
     throw new Error("Demo seeding is available only in local development/test.");
   }
-  if (env.AI_PROVIDER_MODE !== "mock" || env.FEATURE_VOICE_REQUIRED !== "false") {
-    throw new Error("Use a local mock server with FEATURE_VOICE_REQUIRED=false for the text demo.");
+  if (env.AI_PROVIDER_MODE !== "mock" || env.FEATURE_VOICE_REQUIRED !== "false" || env.FEATURE_EXPECTED_QA !== "true") {
+    throw new Error("Use a local mock server with FEATURE_VOICE_REQUIRED=false and FEATURE_EXPECTED_QA=true for the demo.");
   }
   const appOrigin = localOrigin(origin);
   const apiOrigin = localOrigin(status.API_URL);
@@ -53,7 +53,7 @@ function apiClient(origin) {
 }
 
 /** Creates only fictional local data through Auth, Storage and application APIs.
- * No SQL table writes, database resets, model calls or existing-account changes. */
+ * No SQL table writes, database resets, external model calls or existing-account changes. */
 export async function seedDemo({ origin, status, env = process.env, saved, onAccount }) {
   const base = assertDemoEnvironment(origin, status, env); // before any network call
   const request = apiClient(base);
@@ -61,6 +61,10 @@ export async function seedDemo({ origin, status, env = process.env, saved, onAcc
     await request("/api/auth/login", { email: saved.email, password: saved.password });
     const show = await request(`/api/public/exhibitions/${saved.exhibitionId}`);
     if (show.artworks.length !== 3) throw new Error("Existing demo changed; preserve it and choose a new DEMO_ENV_FILE.");
+    for (const work of show.artworks) {
+      const qa = await request(`/api/admin/exhibitions/${show.id}/qa?artworkId=${work.id}`);
+      if (!qa.some(item => item.state === "approved")) throw new Error("Existing demo lacks approved QA; preserve it and choose a new DEMO_ENV_FILE.");
+    }
     return { ...saved, path: `/exhibitions/${show.id}`, reused: true };
   }
   const credentials = { email: `demo-${randomUUID()}@example.invalid`, password: randomBytes(24).toString("base64url") };
@@ -116,6 +120,30 @@ export async function seedDemo({ origin, status, env = process.env, saved, onAcc
       await request(artPath + "/approvals", { kind: "evidence", evidenceId: introduction.id, version: introduction.version });
       intro = { id: introduction.id, version: introduction.version };
     }
+    // Generate one set in mock mode and approve one candidate per artwork (three total).
+    const fresh = await request(artPath);
+    const generated = await request(`/api/admin/exhibitions/${exhibitionId}/qa/generations`, {
+      requestId: randomUUID(), artworkId: work.id, expectedRevision: fresh.revision,
+      expectedDocumentRevision: fresh.document.revision,
+    });
+    if (generated.status !== "succeeded" || generated.mock !== true) throw new Error("Expected a successful mock QA generation.");
+    const candidates = await request(`/api/admin/exhibitions/${exhibitionId}/qa?artworkId=${work.id}`);
+    const candidate = candidates.find(item => generated.result.itemIds.includes(item.id));
+    if (!candidate) throw new Error("Mock QA generation did not return a candidate.");
+    const pins = [];
+    for (const source of candidate.citations) {
+      if (source.evidenceId) {
+        pins.push({ id: source.evidenceId, version: source.version });
+      } else {
+        const excerpt = await request(artPath + "/evidence", { scope: source.scope, sourceLabel: "시연 Q&A 출처",
+          body: source.body, source: { kind: "document", sourceDocumentId: source.sourceDocumentId,
+            sourceSectionId: source.sectionId, sourceRevision: source.version } });
+        await request(`/api/admin/evidence/${excerpt.id}/approve`, { version: excerpt.version });
+        pins.push({ id: excerpt.id, version: excerpt.version });
+      }
+    }
+    await request(`/api/admin/qa/${candidate.id}/approve`, { expectedVersion: candidate.version, evidencePins: pins });
+    work = await request(artPath);
     works.push({ artworkId: work.id, expectedRevision: work.revision });
   }
   await request(`/api/admin/exhibitions/${exhibitionId}/publication`, { action: "publish", requestId: randomUUID(),
@@ -144,11 +172,11 @@ async function main() {
     onAccount: account => writeFileSync(filename,
       `DEMO_EMAIL=${account.email}\nDEMO_PASSWORD=${account.password}\nDEMO_EXHIBITION_ID=${account.exhibitionId}\n`, { flag: "wx", mode: 0o600 }) });
   console.log(`${result.reused ? "Reused" : "Created"} local demo: ${localOrigin(origin)}${result.path}`);
-  console.log(`Local login details are in ignored ${filename}. No model/TTS calls were made.`);
+  console.log(`Local login details are in ignored ${filename}. Mock QA only; no external model/TTS calls were made.`);
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   main().catch(() => {
-    console.error("Demo seed failed. Check the local mock server, FEATURE_VOICE_REQUIRED=false and local stack. Existing data is preserved; credentials, if created, remain in the ignored demo file. For an incomplete demo choose a new DEMO_ENV_FILE.");
+    console.error("Demo seed failed. Check the local mock server, FEATURE_VOICE_REQUIRED=false, FEATURE_EXPECTED_QA=true and local stack. Existing data is preserved; credentials, if created, remain in the ignored demo file. For an incomplete demo choose a new DEMO_ENV_FILE.");
     process.exitCode = 1;
   });
 }

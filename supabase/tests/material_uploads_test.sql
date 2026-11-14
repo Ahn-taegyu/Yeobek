@@ -28,6 +28,8 @@ select ok(not has_function_privilege('authenticated','complete_material_cleanup(
     'browser cannot mark cleanup completed');
 select ok(not has_table_privilege('authenticated','materials','SELECT'),'artist material list hides raw table keys');
 
+reset role;
+update public.exhibitions set start_date='2026-11-14',end_date='2026-11-15',place='Test gallery';
 set local role service_role;
 select throws_ok($$select request_upload('00000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000001',
     'artwork','20000000-0000-0000-0000-000000000001','image','image.jpeg','image/jpeg',64)$$,
