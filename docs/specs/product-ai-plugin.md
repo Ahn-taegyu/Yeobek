@@ -4,7 +4,7 @@ id: SPEC-014
 title: Yeobek 제품 AI 플러그인과 품질 기준
 description: 공통 지침·업무 스킬·도구 권한·작가 정리 제안과 평가를 연결하는 실행 계약.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags: [yeobek, ai, plugin, quality]
 rag_include: true
 generated:
@@ -55,7 +55,7 @@ flowchart LR
 
 | 업무 절차 | 필요한 스킬 | 도구와 현재 실행 상태 |
 | --- | --- | --- |
-| visitor-answer | retrieve-wiki, speak-docent | publication.read/recheck; 관람 하네스가 실제 포트 호출에 사용. 실제 DB 어댑터는 후속 |
+| visitor-answer | retrieve-wiki, speak-docent; 답변·보류 검토에 review-visitor-evidence 추가 | 현재 공개 버전을 읽고 검증한다. 모델이 답하거나 보류한 경우 같은 공개 발췌로 한 번 더 검토한다. [실행 계약](ai-harness.md#실패와-평가) |
 | narration-draft | retrieve-wiki, speak-docent, draft-narration | author.read로 소유 작품 근거를 읽는 서버 후보 생성 경로. 실제 DB·HTTP·UI는 후속 |
 | narration-evaluate | evaluate-narration | author.read로 같은 근거와 후보를 평가하는 읽기 전용 서버 경로 |
 | artist-organize | organize-artist | author.read/proposal.store; 모델은 sourceIds만 선택하고 서버가 원문 전체를 복사 |

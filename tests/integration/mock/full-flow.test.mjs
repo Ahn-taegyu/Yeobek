@@ -115,7 +115,8 @@ test("mock acceptance: signup, verify, login, authoring, generation, review, pub
   const publicShow = await visitor(publicPath);
   assert.equal(publicShow.artistDisplayName, "통합 작가"); assert.equal(publicShow.artworks.length, 1);
   const publicWork = await visitor(publicPath + `/artworks/${work.id}`);
-  assert.equal(publicWork.image, null); assert.equal(publicWork.audio, null);
+  // Publishing prepares the intro audio first, so the published artwork already carries it.
+  assert.equal(publicWork.image, null); assert.equal(publicWork.audio?.kind, "audio");
   assert.equal(publicWork.narrationText, generated.result.selected.answer);
   const chat = { requestId: randomUUID(), exhibitionId: show.id, artworkId: null, question: "아침의 여백은 어떤 재료인가요?",
     contextSequence: 1, inputMode: "text", outputMode: "text" };

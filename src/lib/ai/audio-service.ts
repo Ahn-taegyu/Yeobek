@@ -139,3 +139,55 @@ export async function retryAudio(ownerId: string, id: string, input: RetryJob, s
     p_voice_fingerprint: fingerprint, p_mock: mock,
   }), signal);
 }
+
+export type NarrationAudioOutcome = "ready" | "no_approval" | "running" | "failed";
+const reviewAudio = z.object({
+  artwork: z.object({ revision: z.number().int().positive() }).passthrough(),
+  approval: z.object({ id: z.uuid() }).passthrough().nullable(),
+  audio: z.object({ approvalId: z.uuid(), state: z.enum(["pending", "ready", "failed", "revoked"]) }).passthrough().nullable(),
+}).passthrough();
+
+function stableRequestId(...parts: string[]) {
+  const h = sha256(parts.join(":"));
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-${(8 | (parseInt(h[16], 16) & 3)).toString(16)}${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+
+/**
+ * Prepare the basic intro audio for the current approved narration so visitors never wait for live TTS.
+ * Idempotent per approval and voice: concurrent callers share one job. Never throws; text publishing stays
+ * available when speech is not configured or fails (publication only attaches audio that is ready).
+ */
+export async function ensureNarrationAudio(db: DbClient, ownerId: string, artworkId: string,
+  { signal, waitMs = 0 }: { signal?: AbortSignal; waitMs?: number } = {}): Promise<NarrationAudioOutcome> {
+  try {
+    const read = async () => decodeDatabase(reviewAudio, await rpc(db, "get_review_bundle", { p_artwork_id: artworkId }));
+    const review = await read();
+    if (!review.approval) return "no_approval";
+    if (review.audio?.approvalId === review.approval.id && review.audio.state === "ready") return "ready";
+    let identity: ReturnType<typeof speechIdentity>;
+    try { identity = speechIdentity(); } catch { return "failed"; }
+    const input = { approvalId: review.approval.id, expectedRevision: review.artwork.revision };
+    const fresh = async () => (await generateAudio(db, ownerId, artworkId, { ...input, requestId: crypto.randomUUID() }, signal)).job;
+    let job: AudioJob;
+    try {
+      job = (await generateAudio(db, ownerId, artworkId, { ...input, requestId: stableRequestId("narration-audio",
+        input.approvalId, String(input.expectedRevision), identity.fingerprint, String(identity.mock)) }, signal)).job;
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      job = await fresh(); // The shared job expired or no longer matches; start one new attempt.
+    }
+    // A shared job that already failed is retried once with a fresh request.
+    if (job.status === "failed" || job.status === "cancelled") job = await fresh();
+    const until = Date.now() + waitMs;
+    while (job.status === "running" && Date.now() < until && !signal?.aborted) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const current = await read();
+      if (current.audio?.approvalId === input.approvalId && current.audio.state === "ready") return "ready";
+      if (current.audio?.approvalId === input.approvalId && current.audio.state === "failed") return "failed";
+    }
+    return job.status === "succeeded" ? "ready" : job.status === "running" ? "running" : "failed";
+  } catch {
+    console.error("narration_audio_prepare_failed", { artworkId });
+    return "failed";
+  }
+}

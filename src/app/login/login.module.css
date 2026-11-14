@@ -25,11 +25,9 @@
   position: relative;
 }
 
-.loginMark img {
+/* The AI star is wider than the 142px slot on purpose, like the old mark; it overflows evenly. */
+.loginMark > * {
   position: absolute;
-  width: 206px;
-  height: auto;
-  max-width: none;
 }
 
 .login h1 {

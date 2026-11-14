@@ -41,15 +41,13 @@ function PreviewImage({ id, alt, className, kind }: ExperienceImageProps) {
 }
 
 const previewTransport: ExperienceTransport = {
-  async getNarration(_exhibitionId, artworkId) {
-    const work = works.find(item => item.id === artworkId);
-    return work ? `[시연 기본 해설] ${work.title}. ${work.description}` : null;
-  },
   async ask(body) {
     const selected = works.find(work => work.id === body.artworkId);
     return {
       answerId: crypto.randomUUID(),
-      answer: selected
+      answer: selected && body.intent === "narration"
+        ? `[시연 기본 해설] ${selected.description}`
+        : selected
         ? `[시연 답변] ${selected.title} — ${selected.description} 작가명은 시연 작가입니다.`
         : "[시연 답변] 이 전시는 일상의 풍경과 기억을 다룹니다. 작품을 선택해 질문할 수도 있어요.",
       artworkId: selected?.id ?? null,

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { ApiClientError, requestApi } from "@/lib/client";
 import { forgetArtistPage, loadArtistPage } from "@/lib/client/artist-navigation";
 import { AI_LIMITS } from "@/lib/contracts/chat";
+import { AiStarLogo } from "@/components/ui/ai-star/ai-star-logo";
 
 import type { PreviewAnswer, QaRewriteJob } from "@/lib/contracts/qa";
 import { ArtistLink, errorMessage, Field, Header, Loading, PrivateImage, useArtistLoad } from "./ui";
@@ -134,7 +135,10 @@ export function Learning({ id }: { id: string }) {
       </div>
       <h2 role="status">{busy || running ? "여운이 정보를 학습하고 있어요" : "여운 학습시키기"}</h2>
       {result.data.works.length ? <>
-        {batch && <progress aria-label="최근 학습 진행" max={batch.targets.length || 1} value={completed} />}
+        {busy || running
+          ? <AiStarLogo className="artist-learning-star" state="thinking" size={72}
+            label={batch ? `학습 진행 ${completed}/${batch.targets.length}` : "학습 준비 중"} />
+          : batch && <progress aria-label="최근 학습 진행" max={batch.targets.length || 1} value={completed} />}
         {batch === undefined && <Loading {...latest} />}
         {batch !== undefined && (!batch || running || expired || batch.targets.some(canRunTarget)) && <button className="artist-action" disabled={busy} onClick={() => void run()}>
           {busy ? "학습 중…" : running ? "진행 확인" : batch ? "다시 시도" : "여운 학습시키기"}
