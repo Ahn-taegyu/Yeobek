@@ -1,6 +1,6 @@
 ---
 type: Reference
-id: SRC-064
+id: SRC-065
 title: 모든 분담 채팅의 난이도별 Terra·Luna 위임
 description: 주 채팅과 각 업무 채팅에서 난이도에 따라 Terra와 Luna 서브에이전트를 사용하라는 사용자 지시.
 status: stable

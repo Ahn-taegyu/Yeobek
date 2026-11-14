@@ -97,4 +97,5 @@
 
 - [SRC-063 작가 검수·체험 개선과 AI 인터뷰 병렬 구현 요청](user-author-experience-parallel.md).
 
-- [SRC-064 모든 분담 채팅의 난이도별 Terra·Luna 위임](user-terra-luna-delegation.md).
+- [SRC-065 모든 분담 채팅의 난이도별 Terra·Luna 위임](user-terra-luna-delegation.md).
+- [반 고흐 입력 완성도·정보량 비교와 재게시](user-vangogh-input-quality.md) — SRC-064.
