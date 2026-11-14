@@ -192,7 +192,7 @@ export function Faq({ id }: { id: string }) {
 }
 
 export function Preview({ id, initialArtworkId, qaId }: { id: string; initialArtworkId?: string; qaId?: string }) {
-  return qaId ? <SavedQa id={id} artworkId={initialArtworkId} qaId={qaId} /> :
+  return qaId ? <SavedQa key={`${id}:${initialArtworkId ?? ""}:${qaId}`} id={id} artworkId={initialArtworkId} qaId={qaId} /> :
     <GeneralPreview id={id} initialArtworkId={initialArtworkId} />;
 }
 
