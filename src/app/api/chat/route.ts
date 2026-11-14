@@ -4,6 +4,8 @@ import { visitorChatRequest } from "@/lib/contracts/visitor";
 import { answerVisitor } from "@/lib/ai/visitor-service";
 import { consumeVisitorNetworkBudget } from "@/lib/api/visitor-network";
 
+import { attachVisitorImage } from "@/lib/storage/public-media";
+
 export const runtime = "nodejs";
 export const maxDuration = 110;
 export function POST(request: Request) {
@@ -12,6 +14,6 @@ export function POST(request: Request) {
     const input = await readJson(request, visitorChatRequest);
     const session = await visitorSessionHash();
     await consumeVisitorNetworkBudget(request, session, input.exhibitionId, input.requestId, "question");
-    return answerVisitor(input, session, request.signal);
+    return attachVisitorImage(await answerVisitor(input, session, request.signal));
   });
 }

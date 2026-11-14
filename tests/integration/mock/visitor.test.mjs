@@ -78,6 +78,7 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
   assert.equal((await admin.from("materials").insert({
     id: imageId, owner_id: owner, artwork_id: artwork.id, kind: "image", state: "ready",
     storage_key: `${owner}/fixture/${imageId}.webp`, byte_size: 64,
+    content_type: "image/webp", content_hash: "\\x" + "ab".repeat(32),
   })).error, null);
   assert.equal((await admin.from("artworks").update({ image_material_id: imageId })
     .eq("id", artwork.id).eq("owner_id", owner)).error, null);
@@ -110,6 +111,7 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
     const reply = await visitor("/api/chat", open);
     assert.equal(reply.source, "approved_narration");
     assert.equal(reply.answer, narration);
+    assert.deepEqual(reply.image, { id: reply.publication.publicationId, kind: "image" });
     assert.equal(reply.inputMode, "voice");
     assert.equal(reply.outputMode, "text");
     assert.deepEqual(reply.citations, [evidence.id]);

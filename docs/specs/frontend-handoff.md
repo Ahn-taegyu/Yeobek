@@ -183,3 +183,5 @@ HTTP200/201도 job.status가failed/abstained일 수 있다. `resultCode`를 확�
 최신 사용자 결정(SRC-055, A의 결정 기록)에 따라 저장 음성 사전 준비를 게시 필수에서 제외한다. 서버 기본값과 예제 환경은 voiceRequired=false이며 기존 배포의 명시 true는 유지된다. 이 기본값 변경만으로 이미지 없는 게시·전시 문맥·자동 TTS 화면 연결까지 완료한 것은 아니다. 음성을 켠 관람객의 답변 이후 speech 호출은 프런트 연결과 통합 검증이 필요하다.
 
 W12 공개 시각 계약(구현 중): publicExhibitionResponse에 선택 필드 startTime/endTime(HH:mm 또는 null)을 추가한다. 게시 시점 값을 고정하며 초안 수정은 다음 게시 전까지 반영하지 않는다. 기존 공개본의 시간은 재게시 전 null이다. 포스터도 선택 필드 `poster: {id, kind:"poster"} | null`로 추가한다. id는 공개 publication ID이며 `GET /api/media/{id}?kind=poster`로 읽는다. Storage 경로·서명 URL은 노출하지 않는다. 초안 포스터 변경은 재게시 전 미반영, 삭제·게시 중지·철회·교체 시 이전 참조 전송을 거부한다. 이 계약은 Draft #25 구현 중이며 main 병합 완료가 아니다.
+
+W12 채팅 이미지 계약(구현 중): `visitorReplyResponse.image`는 선택 필드 `{id, kind:"image"} | null`이다. 선택된 공개본의 검증된 이미지 참조만 반환하고, 재시도 때도 현재 공개 상태로 다시 조회한다. 이미지 없음·조회 실패·대상 미선택은 null이며 답변과 기존 outputMode 의미를 유지한다. `GET /api/media/{id}?kind=image`로 읽는다.

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { publicMediaReferences } from "./media";
 import { AI_LIMITS, boundedText, chatRequestSchema, codepoints } from "./chat";
 
 const id = z.uuid().toLowerCase();
@@ -17,7 +18,8 @@ export const savedVisitorReply = z.strictObject({
   publication: publicationRefSchema.nullable(), source: z.enum(["approved_narration", "generated", "fixed"]),
   mock: z.boolean(), gapRecorded: z.boolean().optional(),
 }).refine(value => value.source === "approved_narration" || codepoints(value.answer) <= AI_LIMITS.answer);
-export const visitorReplyResponse = savedVisitorReply.safeExtend({ notice: boundedText(200).optional() });
+export const visitorReplyResponse = savedVisitorReply.safeExtend({ notice: boundedText(200).optional(),
+  image: publicMediaReferences.shape.image.optional() });
 export type SavedVisitorReply = z.infer<typeof savedVisitorReply>;
 export const visitorReservation = z.strictObject({
   id, claimed: z.boolean(), status: z.enum(["running", "succeeded", "failed"]),

@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({ rpc: vi.fn(), sign: vi.fn() }));
 vi.mock("@/lib/api/db", () => ({ rpc: mocks.rpc }));
 vi.mock("@/lib/api/publication", () => ({ decodeDatabase: (schema: { parse: (value: unknown) => unknown }, raw: unknown) => schema.parse(raw) }));
 vi.mock("@/lib/supabase/worker", () => ({ createWorkerSupabase: () => ({ storage: { from: () => ({ createSignedUrl: mocks.sign }) } }) }));
-import { attachPublicMedia, readPublicMedia } from "@/lib/storage/public-media";
+import { attachPublicMedia, attachVisitorImage, readPublicMedia } from "@/lib/storage/public-media";
 import { handleApi } from "@/lib/api/http";
 
 const id = "00000000-0000-4000-8000-000000000001";
@@ -88,4 +88,16 @@ it("serves a poster through the same hash and live-publication checks", async ()
 it("withholds poster bytes when the publication is revoked during download", async () => {
   mocks.rpc.mockResolvedValueOnce({ ...metadata, kind: "poster" }).mockResolvedValueOnce(null);
   await expect(readPublicMedia(id, "poster")).rejects.toMatchObject({ status: 404 });
+});
+
+it("refreshes the answer image from its publication and drops unavailable references", async () => {
+  const reply = { publication: { publicationId: id }, answer: "공개 답변", outputMode: "text" };
+  mocks.rpc.mockResolvedValueOnce([{ publicationId: id, image: { id, kind: "image" }, audio: null }]);
+  expect(await attachVisitorImage(reply)).toEqual({ ...reply, image: { id, kind: "image" } });
+  mocks.rpc.mockResolvedValueOnce([]);
+  expect(await attachVisitorImage(reply)).toEqual({ ...reply, image: null });
+});
+it("does not infer an image for a reply without an identified publication", async () => {
+  expect(await attachVisitorImage({ publication: null })).toEqual({ publication: null, image: null });
+  expect(mocks.rpc).not.toHaveBeenCalled();
 });

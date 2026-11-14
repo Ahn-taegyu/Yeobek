@@ -50,6 +50,14 @@ export async function attachPublicMedia<T extends { publicationId: string }>(art
     audio: refs.get(work.publicationId)?.audio ?? null }));
 }
 
+/** Resolve optional answer media after loading/revalidating the saved reply.
+ * A retry refreshes references instead of persisting a file pointer in answer history. */
+export async function attachVisitorImage<T extends { publication: { publicationId: string } | null }>(reply: T) {
+  if (!reply.publication) return { ...reply, image: null };
+  const [media] = await attachPublicMedia([reply.publication]);
+  return { ...reply, image: media.image };
+}
+
 /** No redirect or public signed URL: every delivery checks the current snapshot
  * before fetching bytes and immediately before returning them. */
 export async function readPublicMedia(id: string, kind: "image" | "audio" | "poster", signal?: AbortSignal) {
