@@ -213,7 +213,7 @@ function SavedQa({ id, artworkId, qaId }: { id: string; artworkId?: string; qaId
         (item.artworkId !== null || e.artworkId === null)) };
     } catch (error) {
       if (signal.aborted || error instanceof ApiClientError && error.status === 401) throw error;
-      return { item, evidence: [], approvedVersions };
+      return { item, evidence: [], approvedVersions, evidenceLoadFailed: true };
     }
   }, [id, artworkId, qaId]);
   const result = useArtistLoad(load);
@@ -281,13 +281,16 @@ function SavedQa({ id, artworkId, qaId }: { id: string; artworkId?: string; qaId
         <ul className="artist-workflow-list">{item.citations.map((citation, index) =>
           <li key={citation.id}>
             <strong>{citation.sourceLabel}</strong>
-            <p className="artist-note">{matches[index] ? "승인 근거 인용" : "승인 근거 확인 필요"}</p>
+            <p className="artist-note">{matches[index] ? "연결된 근거 · 현재 승인 상태 확인 필요" : "승인 근거 확인 필요"}</p>
             <details><summary>근거 보기</summary><p className="artist-workflow-text">{citation.body}</p></details>
           </li>)}</ul>
         <form onSubmit={rewrite} aria-busy={busy}>
           <Field label="수정할 내용·추가 정보"><textarea value={instruction} onChange={event => setInstruction(event.target.value)}
             maxLength={2000} required disabled={busy} /></Field>
-          {!pins.length && <p>인용 근거를 확인할 수 없어 지금 답변을 수정할 수 없어요. 승인되지 않았거나 변경된 근거는 서버에서 거절됩니다.</p>}
+          <p>새 사실은 근거로 추가해 승인한 뒤 답변에 반영할 수 있어요.</p>
+          {result.data.evidenceLoadFailed ? <div role="alert">현재 근거를 불러오지 못했어요.{" "}
+            <button type="button" className="artist-action secondary" disabled={busy} onClick={refresh}>다시 확인</button>
+          </div> : !pins.length && <p>지금 답변을 수정하려면 인용 근거를 먼저 승인해주세요.</p>}
           <button className="artist-action" disabled={busy || !pins.length}>답변 다시 쓰기</button>
         </form>
         {!completePins && <p>답변의 모든 인용 근거를 승인하고 최신 상태로 확인해야 사용할 수 있어요.</p>}
