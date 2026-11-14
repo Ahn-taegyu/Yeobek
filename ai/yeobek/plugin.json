@@ -3,7 +3,7 @@
   "version": "0.14.0",
   "instructions": "instructions.md",
   "messages": "messages.json",
-  "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa", "read-material"],
+  "skills": ["retrieve-wiki", "review-visitor-evidence", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa", "read-material"],
   "playbooks": {
     "material-read": {
       "skills": ["read-material"],
@@ -123,6 +123,7 @@
         { "id": "evidence.select" },
         { "id": "model.generate" },
         { "id": "output.validate" },
+        { "id": "evidence.review" },
         { "id": "publication.recheck.final", "tool": "publication.recheck" },
         { "id": "answer.store", "tool": "answer.store" },
         { "id": "gap.record", "tool": "gap.record" }

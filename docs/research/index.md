@@ -1,6 +1,7 @@
 # 기술 선택 재검토
 
 - [반 고흐 입력 완성도·정보량 실측](vangogh-input-quality.md) — 다섯 입력 조건, 과잉 보류와 평가 오판, 로컬 재게시 검증.
+- [관람 질문 보류 수정 전후 검증](visitor-evidence-abstention.md) — 동일 프롬프트 입력 비교, 후보별 평가 기준, 최종 게시 버전 4 글 응답 검증.
 
 - [Liner 모델·음성 실측](liner-docent-live-validation.md) — 공통 도슨트, 독립 평가, 추론 토큰·PCM 수정과 소량 비교의 한계.
 

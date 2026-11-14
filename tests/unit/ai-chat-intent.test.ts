@@ -70,7 +70,7 @@ describe("visitor chat intent and artwork selection", () => {
     const reply = await s.harness.answer(syntheticRequest({ question, artworkId: ids.other }));
     expect(s.publications.load).toHaveBeenCalledWith({ exhibitionId: ids.exhibition, number: 18 }, undefined);
     expect(reply.source).toBe("generated");
-    expect(s.text.generate).toHaveBeenCalledOnce();
+    expect(s.text.generate).toHaveBeenCalledTimes(2);
   });
 
   it("uses explicit narration intent and the button's artwork ID", async () => {

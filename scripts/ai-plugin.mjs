@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const root = new URL("../ai/yeobek/", import.meta.url);
 const target = new URL("../src/lib/ai/plugin.generated.ts", import.meta.url);
-const names = ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa", "read-material"];
+const names = ["retrieve-wiki", "review-visitor-evidence", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa", "read-material"];
 const tools = ["support.read", "status.read", "voice.read", "voice.store", "voice.reserve", "voice.complete", "audio.read", "audio.store", "request.reserve", "answer.store", "gap.record", "job.reserve", "job.complete", "publication.list", "publication.read", "publication.recheck", "author.read", "proposal.store", "proposal.read", "proposal.apply", "qa.reserve", "qa.complete", "preview.reserve", "preview.complete", "rewrite.reserve", "rewrite.complete"];
 const step = z.strictObject({
   id: z.string().regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$/),
