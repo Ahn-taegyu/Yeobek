@@ -106,6 +106,7 @@ jobs:
           npm run test:proposals
           npm run test:demo
           npm run test:qa
+          node --test tests/integration/mock/full-flow.test.mjs
           node --test tests/integration/mock/exhibition-chat.test.mjs
           kill "$mock_pid"
           wait "$mock_pid" || true
