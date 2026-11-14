@@ -4,7 +4,7 @@ id: D-011
 title: AI용 작가 지식 위키와 작가·관람객 필수 화면
 description: DB 원본의 내부 지식 연결과 작가 홈·전시 온보딩·작품 정보·채팅 대상 표시 요구를 반영한다.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags: [yeobek, knowledge, screens]
 rag_include: true
 generated:
@@ -43,3 +43,7 @@ decision_basis: user-confirmed
 # 연결과 상태
 
 [내부 지식 계약](../specs/artist-knowledge.md), [화면 명세](../specs/screen-spec.md), [기능명세](../specs/functional-spec.md), [F-023](../features/F-023-artist-knowledge.md)에 반영한다. 입력 폼을 구조화해서 저장하는 기능이며 새로운 AI 인터뷰·자동 OCR·위키 작성 에이전트를 P1으로 올리지 않는다. 현재 로그인·조회 화면 골격, DB·초안 저장 API는 일부 구현했다. 편집·검수·게시 화면과 제품 RAG·실제 관람 검증은 남아 있다. [실제 개발 범위](../specs/development-foundation.md)와 [재검토서](../reviews/mvp-foundation-2026-11-13.md)를 기준으로 구분한다.
+
+## 후속 P0 적용
+
+현행 전시 QR, 작품 목록과 관람 답변 출력 흐름은 [D-017](D-017-p0-feature-spec.md)을 따른다. 위 내용은 당시 결정 기록이다.

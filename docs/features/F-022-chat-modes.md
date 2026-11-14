@@ -4,7 +4,7 @@ id: F-022
 title: 통합 채팅·독립 입력/출력 모드
 description: 하나의 도슨트 채팅에서 해설·질문을 처리하고 텍스트/음성 입출력을 따로 선택한다.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 - feature
@@ -59,3 +59,5 @@ depends_on:
 - [F-021 승인 버전 게시](F-021-publication.md)
 
 상세 상태·문맥·예외는 [통합 채팅 명세](../specs/chat-interaction.md), 확정된 상호작용 방향은 [D-006](../decisions/D-006-interaction.md)을 따른다.
+
+현행 Notion F08은 글·음성 질문과 글 답변·TTS 음소거를 제공한다. 목록 선택·변경·해제에서 단일 채팅을 유지한다. 기존 독립 출력 UI는 이전 결정에 따른 설계 기록이다. [D-017](../decisions/D-017-p0-feature-spec.md).

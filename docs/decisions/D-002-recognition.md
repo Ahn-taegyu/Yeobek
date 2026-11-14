@@ -4,7 +4,7 @@ id: D-002
 title: 첫 MVP 인식은 QR·숫자
 description: 첫 MVP는 QR과 숫자이며 NFC·위치는 후속 검토다.
 status: stable
-updated: '2026-11-12'
+updated: '2026-11-14'
 tags:
 - mawd
 rag_include: true
@@ -43,3 +43,7 @@ NFC는 URL 태그 연결 후보이며 위치 인식은 정확도·장소·장치
 # 근거
 
 [사용자 원안](../references/user-mvp.md), [추가 응답](../references/user-answers.md), [Notion 초안](../references/notion-planning.md).
+
+## 후속 P0 적용
+
+현행 전시 QR, 작품 목록과 관람 답변 출력 흐름은 [D-017](D-017-p0-feature-spec.md)을 따른다. 위 내용은 당시 결정 기록이다.

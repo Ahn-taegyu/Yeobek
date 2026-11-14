@@ -4,7 +4,7 @@ id: F-004
 title: 작품별 글 해설 생성
 description: 현재 작품 자료와 관련 전시·작가 공통 자료로 한국어 해설 초안을 생성하는 제안이다. 공개 여부는 F-003과 별개다.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 - feature
@@ -70,3 +70,5 @@ sources:
 # 근거와 연결
 
 [사용자 원안](../references/user-mvp.md) · [사용자 추가 결정](../references/user-answers.md) · [기능명세 전체](../specs/functional-spec.md)
+
+Notion F04는 작품별 기본 해설과 예상 Q&A, 전시 전체 예상 Q&A를 각각 초안으로 만든다. 인터뷰 없이 실행하며 결과와 근거를 F05 검수에 넘긴다. [D-017](../decisions/D-017-p0-feature-spec.md).

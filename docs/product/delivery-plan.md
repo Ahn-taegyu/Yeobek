@@ -4,7 +4,7 @@ id: P-004
 title: 일요일 MVP 개발 순서와 팀 일정
 description: 사전 개발을 활용해 네 입출력 조합과 등록·검수·게시를 11/15 04:30까지 연결하는 계획.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 rag_include: true
@@ -12,6 +12,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: backend-v2
+  resource: /references/user-backend-plan-v2.md
+  title: 백엔드 완성 계획 v2
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -36,6 +39,9 @@ sources:
 - id: direction
   resource: /references/user-build-direction.md
   title: 사용자 사전 개발·키 확인과 기술 선택 위임
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 decision_status: proposed
 ---
 
@@ -67,6 +73,8 @@ decision_status: proposed
 | 3. 검수·게시 | 4시간 | 해설 생성 계약, 공개 근거 선택·수정·승인, 승인본 TTS, 게시/중지·QR | 새 입력으로 기본 해설을 실제 음성까지 준비하고 게시. 새 초안이 기존 공개본에 섞이지 않음 |
 | 4. 제품 검색·Liner | 4시간 | 현재 작품의 승인 근거 조회, OpenAI Q&A/인용 검증, Liner 초안 연결 | 근거 있는/없는 질문·작품 전환을 확인하고 Liner로 새 초안 생성 성공 |
 | 5. 검증·수정·시연 | 7~11시간 | 모드/오류·권한·휴대폰·두 번째 전시·리허설 | 필수 수용 기준 통과, 배포 주소·QR·발표 자료·백업 준비 |
+
+2단계의 작가 로그인은 기존 사전 생성 계정 기준으로 구현됐다. [D-016](../decisions/D-016-artist-auth.md)의 로그인·가입 선택과 직접 가입은 [사용자 결정](../references/user-auth-signup-timing.md)에 따라 마감 전 범위에 추가됐다. 위 예상 시간에는 포함되지 않았으므로 별도 작업 시간과 담당을 배정한다. 이메일 확인·비밀번호 정책(기능명세 Q-09)은 구현 착수 전에 정한다.
 
 실제 음성 시험을 첫 단계에 배치한다. 단일 채팅·글/음성 분리는 앱 전체에 영향을 주므로 마지막에 추가하지 않는다. STT와 TTS만 확인해도 근거 기반 Q&A 품질이나 Liner 초안 생성이 검증됐다는 뜻은 아니다.
 
@@ -127,3 +135,7 @@ decision_status: proposed
 
 [^direction]: [사용자 개발 조건](../references/user-build-direction.md).
 [^event]: [공식 행사 일정과 확인 한계](../references/hackathon.md).
+
+후속 개정의 구현 순서와 수용 기준은 Notion F14→F01→F02→F04→F05→F07→F08 흐름을 따른다. 위 일정과 이전 음성 모드 체크리스트는 작성 당시 계획이다. [D-017](../decisions/D-017-p0-feature-spec.md).
+
+백엔드 묶음의 실제 구현 순서와 축소 기준은 [v2 작업 추적](../specs/backend-completion.md)을 우선한다: D0 → W10 → W9 → W11 → W12 → W8 안내·요약 → W6 → W2 → Alt·분류·브리핑 → W7. 위 과거 일정의 음성·작품 QR 기준으로 새 P0를 되돌리지 않는다. 직접 가입은 이메일 인증 필수·비밀번호 최소 8자·확인 후 직접 로그인으로 구현하며 아직 미구현이다.

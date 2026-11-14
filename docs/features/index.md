@@ -9,7 +9,7 @@
 - [F-005 해설·채팅 답변 음성 출력](F-005-audio.md) — 원안 P1, 현재 MVP.
 - [F-006 승인 자료 기반 AI 질의응답](F-006-qa.md) — 원안 P1, 현재 MVP.
 - [F-007 숫자 라벨로 작품 선택](F-007-number-label.md) — 원안 P1, 현재 MVP.
-- [F-008 전시·작품 QR 배포](F-008-qr.md) — 원안 P1, 현재 MVP.
+- [F-008 전시 QR 배포](F-008-qr.md) — 원안 P1, 현재 MVP.
 - [F-009 NFC 태그로 작품 선택](F-009-nfc.md) — 원안 P1, 현재 Later.
 - [F-010 위치 기반 작품 선택](F-010-location.md) — 원안 P1, 현재 Hold.
 - [F-011 관람객 작품 목록·정보](F-011-artwork-list.md) — 원안 P1, 현재 MVP.
@@ -25,3 +25,5 @@
 - [F-021 승인 버전 게시·공개 중지](F-021-publication.md) — 원안 prerequisite, 현재 MVP.
 - [F-022 통합 채팅·독립 입력/출력 모드](F-022-chat-modes.md) — 추가 요구 구현 prerequisite, 현재 MVP.
 - [F-023 AI용 작가·전시·작품 연결 지식 저장](F-023-artist-knowledge.md) — 후속 요구 prerequisite, 현재 MVP. 사용자용 위키 편집기가 아닌 내부 지식 저장.
+
+현행 P0 및 Notion 기능 대응은 [기능명세](../specs/functional-spec.md#notion-p0-기능-연결)를 따른다. 기존 기능 ID와 원안 우선순위는 이력 및 상세 설계 참조로 사용한다.

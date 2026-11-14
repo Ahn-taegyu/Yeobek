@@ -4,7 +4,7 @@ id: D-006
 title: 하나의 도슨트 채팅과 독립 입출력
 description: 해설·질문을 한 채팅에서 처리하고 텍스트/음성 입력과 출력을 각각 선택한다.
 status: stable
-updated: '2026-11-12'
+updated: '2026-11-14'
 tags:
 - mawd
 rag_include: true
@@ -49,3 +49,7 @@ decision_status: accepted
 # 근거
 
 [사용자 통합 채팅 요구](../references/user-chat-interaction.md), [통합 채팅 명세](../specs/chat-interaction.md). 기존 문서보다 이번 사용자 요구를 우선한다.
+
+## 후속 P0 적용
+
+현행 전시 QR, 작품 목록과 관람 답변 출력 흐름은 [D-017](D-017-p0-feature-spec.md)을 따른다. 위 내용은 당시 결정 기록이다.

@@ -52,3 +52,13 @@
 - [CI 중심 검증 요청](user-ci-first-validation.md) — SRC-035, 전체 CI와 로컬 검증 중복 최소화.
 
 - [채널톡 문의 웹훅 인증 선택](user-channel-webhook-auth.md) — SRC-036, 기존 웹훅 URL 토큰 수신 선택.
+
+
+- [작가 가입·로그인 결정 전달](user-artist-auth.md) — SRC-039. [가입 후 직접 로그인 확정](user-auth-direct-login.md) — SRC-040.
+
+- [Notion P0 명세와 후속 보완](user-p0-feature-spec.md) — SRC-037.
+
+- [작가 직접 가입 마감 전 포함 결정](user-auth-signup-timing.md) — SRC-038, SRC-033의 가입 연기 문장을 대체.
+
+- [백엔드 완성 v2](user-backend-plan-v2.md) — SRC-041, D0와 W9~W12 및 새 순서.
+- [가입 보안 정책](user-signup-security.md) — SRC-042, 이메일 인증 필수·비밀번호 8자 이상.
