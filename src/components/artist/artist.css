@@ -133,6 +133,7 @@ body:has(.artist-screen) > main { width: 100%; }
 .artist-sheet::backdrop { background: #12121580; }
 .artist-sheet dd { white-space: pre-wrap; border-radius: 12px; background: var(--yeobek-field); padding: 8px 12px; margin: 0 0 10px; }
 .artist-avatar-large { display: block; width: 136px; height: 136px; }
+.artist-onboarding-star { display: flex; justify-content: center; margin: 10px 0 24px; }
 
 .artist-screen button, .artist-screen .artist-action, .artist-screen input, .artist-screen textarea {
   transition: background-color var(--yeobek-motion-fast), border-color var(--yeobek-motion-fast),

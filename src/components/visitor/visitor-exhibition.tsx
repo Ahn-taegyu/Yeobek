@@ -340,7 +340,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
     <div className={styles.transcript} ref={transcript} aria-live="polite" inert={picker === "grid"}>
       {!turns.length && !asking && <div className={styles.welcome}>
         <h1 className={styles.visuallyHidden}>{exhibition.title}</h1>
-        <Image className={styles.welcomeMark} src="/yeobek/visitor-yeoun.svg" width={171} height={155} alt="" />
+        <div className={styles.welcomeMark}><AiStarLogo state="idle" size={118} label="" /></div>
         <p>전시에서 느낀 감동과 기억이 오래도록 남을 수 있도록,<br />작품에 담긴 이야기를 들려드릴게요.</p>
       </div>}
       {/* One keyed list: the pending article becomes the answered turn in place, so the bubble never re-mounts. */}

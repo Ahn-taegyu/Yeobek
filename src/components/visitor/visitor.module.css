@@ -186,4 +186,4 @@ span.answerImage { display: none; }
 .search img { top: 8px; right: 16px; }
 .fullPicker > p, .picker > p { margin: 0 20px 16px; }
 .visuallyHidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.welcomeMark { width: 118px; height: auto; margin: 0 auto 22px; }
+.welcomeMark { display: flex; justify-content: center; margin: 0 auto 22px; }
