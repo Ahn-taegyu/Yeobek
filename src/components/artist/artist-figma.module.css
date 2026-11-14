@@ -1,0 +1,156 @@
+/* Local OFL fonts used by the confirmed artist frames. */
+@font-face {
+  font-family: "Artist Pretendard";
+  src: url("/yeobek/artist-confirmed/pretendard.woff2") format("woff2");
+  font-weight: 45 920;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Shadows Into Light Two";
+  src: url("/yeobek/artist-confirmed/shadows-into-light-two.ttf") format("truetype");
+  font-display: swap;
+}
+
+.formScreen, .homeScreen {
+  --artist-design-brown: #734120;
+  --artist-design-placeholder: #98989c;
+  color: #121215;
+  font-family: "Artist Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  min-height: 100dvh;
+  padding-inline: 20px;
+}
+
+:global(.artist-screen):has(> .formScreen),
+:global(.artist-screen):has(> .homeScreen) { padding: 0; }
+
+.formScreen { background: #fff; padding-block: 50px 54px; }
+.formScreen :global(.artist-header) { min-height: 64px; margin-bottom: 16px; }
+.formScreen :global(.artist-header h1) { font-size: 18px; font-weight: 600; }
+.formScreen :global(.artist-field) { gap: 8px; }
+.formScreen :global(.artist-field > span) { font-weight: 500; line-height: 19px; }
+.formScreen :global(.artist-field input),
+.formScreen :global(.artist-field textarea) {
+  border-color: #eaeaeb;
+  background: #f5f5f5;
+  border-radius: 16px;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 17px;
+}
+.formScreen :global(textarea::placeholder) { color: var(--artist-design-placeholder); opacity: 1; }
+.formScreen :global(.artist-action) { background: var(--artist-design-brown); min-height: 52px; }
+.formScreen :global(.artist-action.secondary) { background: #eaeaeb; color: #66666b; }
+.formScreen :global(.artist-note) {
+  text-align: center;
+  color: #77777c;
+  font-size: 12px;
+  line-height: 17px;
+  max-width: 205px;
+  margin: 4px auto 0;
+}
+.formScreen :global(.artist-actions) { margin-top: 7px; }
+.formScreen :global(.artist-actions) > * { flex-basis: 0; }
+
+.formScreen .history { gap: 26px; }
+.history textarea { min-height: 50px; height: 50px; }
+.history textarea[name="artist_exhibitions"] { min-height: 69px; }
+
+.formScreen .keywords { gap: 18px; }
+.keywords :global(.artist-chips) {
+  min-inline-size: 0;
+  gap: 10px 8px;
+  padding-bottom: 20px;
+}
+.keywords :global(.artist-chips:not(:last-of-type)) { position: relative; }
+.keywords :global(.artist-chips:not(:last-of-type))::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 1px;
+  width: min(348px, 100%);
+  height: 1px;
+  background: url("/yeobek/artist-confirmed/keywords-divider.svg") no-repeat left center;
+}
+.keywords :global(legend) { margin-bottom: 16px; }
+.keywords :global(.artist-chip) {
+  min-height: 35px;
+  padding: 0 13px;
+  border-color: #e7d8c7;
+  color: #89694f;
+  font-size: 14px;
+}
+.keywords :global(.artist-chip[aria-pressed="true"]) {
+  background: #fff3de;
+  color: var(--artist-design-brown);
+  border-color: #fff3de;
+}
+
+.formScreen .world { gap: 24px; }
+.world :global(.artist-field textarea) { min-height: 120px; border-radius: 20px; }
+.world :global(.artist-action) { margin-top: 25px; }
+
+.homeScreen { padding-block: 65px 40px; background: linear-gradient(#fff3de 114px, white 693px); }
+.homeScreen :global(.artist-dashboard) { gap: 20px; }
+.wordmark { text-align: center; font: 30px/35px "Shadows Into Light Two", cursive; }
+.homeScreen :global(.artist-card) { background: #fff; border-radius: 20px; padding: 15px 9px; }
+.homeScreen :global(.artist-profile) { margin-inline: 10px; gap: 14px; }
+.homeScreen :global(.artist-profile .artist-avatar) {
+  flex: 0 0 67px;
+  width: 67px;
+  height: 67px;
+  border: 0;
+  margin: 0;
+  background: #eaeaeb;
+}
+.homeScreen :global(.artist-profile h2) { margin: 0 0 3px; line-height: 24px; }
+.homeScreen :global(.artist-profile p) { color: inherit; font-size: 14px; }
+.profileLink { display: grid; place-items: center; width: 44px; height: 44px; margin-left: auto; flex: 0 0 44px; }
+.homeScreen :global(.artist-counts) { margin-block: 8px 12px; line-height: 1.4; }
+.homeScreen :global(.artist-counts dt) { font-size: 12px; }
+.homeScreen :global(.artist-card .artist-actions) { margin: 0; gap: 7px; }
+.homeScreen :global(.artist-action) { background: var(--artist-design-brown); color: #fff; }
+.homeScreen :global(.artist-card .artist-action) {
+  flex-basis: 0;
+  min-height: 40px;
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 6px;
+}
+.exhibitions :global(h2) { margin-bottom: 12px; }
+.exhibitions :global(.artist-chips) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid #eaeaeb;
+  border-radius: 100px;
+  background: white;
+  gap: 0;
+  padding: 1px;
+}
+.exhibitions :global(.artist-chip) {
+  min-height: 30px;
+  border: 0;
+  font-size: 12px;
+  color: #67676d;
+  padding: 2px 4px;
+}
+.exhibitions :global(.artist-chip[aria-pressed="true"]) {
+  background: var(--artist-design-brown);
+  color: white;
+}
+.exhibitions :global(.artist-gallery) {
+  gap: 10px clamp(12px, 10.25vw, 40px);
+  margin-block: 20px 0;
+}
+.exhibitionDetails { padding-inline: 7px; font-size: 14px; line-height: 1.3; }
+.exhibitionDetails strong { display: block; font-weight: 500; }
+.exhibitionDetails small { margin-block: 2px; font-size: 11px; }
+.exhibitionDetails .status {
+  display: inline-block;
+  border-radius: 100px;
+  background: #e8e8e8;
+  color: #59595e;
+  font-size: 9px;
+  padding: 2px 7px;
+}
+.exhibitionDetails .status[data-status="ongoing"] { background: #237a37; color: #fff; }
