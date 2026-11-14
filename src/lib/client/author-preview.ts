@@ -29,7 +29,8 @@ export function createAuthorPreviewTransport(exhibition: ExperienceExhibition): 
       if (number && !numbered) throw new ApiClientError(404, "NOT_FOUND", "해당 번호의 작품을 찾을 수 없어요.");
       const artworkId = numbered?.id ?? input.artworkId;
       const { data } = await requestApi("previewChat", { params: { id: exhibition.id },
-        body: { requestId: input.requestId, artworkId, question: numbered ? "이 작품을 소개해 주세요." : input.question }, signal });
+        body: { requestId: input.requestId, artworkId,
+          question: numbered || input.intent === "narration" ? "이 작품을 소개해 주세요." : input.question }, signal });
       if (data.status === "running") throw new ApiClientError(409, "REQUEST_IN_PROGRESS", "답변을 준비하고 있어요.", true);
       if (data.status === "failed" || data.status === "cancelled") {
         throw new ApiClientError(502, data.resultCode ?? "AI_GENERATION_FAILED", "답변을 준비하지 못했어요. 다시 질문해 주세요.");

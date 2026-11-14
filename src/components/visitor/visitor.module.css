@@ -27,7 +27,18 @@
 .intro h1 { font-size: clamp(26px, 8vw, 36px); margin: 10px 0 2px; font-weight: 700; }
 .intro p { color: #46454c; margin: 0; font-size: 14px; }
 .intro .description { margin-top: 14px; white-space: pre-wrap; }
-.poster { width: min(233px, 70%); aspect-ratio: 233 / 392; height: auto; object-fit: cover; border-radius: 100vmax; background: #eee9dc; }
+/* The intro never grows past the screen: the poster shrinks and the description scrolls in a fixed box. */
+.intro { height: 100dvh; min-height: 0; overflow: hidden; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 16px; }
+.intro > div { width: 100%; min-height: 0; }
+.intro .description {
+  --fade: 2.4em;
+  height: clamp(4.8em, 16dvh, 9.6em);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: var(--fade);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--fade)), transparent);
+}
+.poster { width: auto; max-width: 70%; height: 100%; max-height: 392px; min-height: 0; align-self: center; aspect-ratio: 233 / 392; object-fit: cover; border-radius: 100vmax; background: #eee9dc; }
 .primary { border-radius: var(--yeobek-radius-pill); justify-content: center; background: var(--yeobek-warm); min-width: 185px; min-height: 52px; }
 .state h1 { font-size: 28px; margin: 0; }
 
@@ -166,7 +177,16 @@ span.answerImage { display: none; }
 .toolbar .icon { justify-self: start; position: relative; margin-left: -10px; }
 .toolbar .icon span { position: absolute; right: 2px; top: 4px; }
 .toolbar .textButton, .pickerHeading .textButton { font-size: 14px; text-decoration: none; justify-self: end; }
-.artworkTitle { font-size: 18px; font-weight: 600; overflow-wrap: anywhere; }
+.artworkTitle { font-size: 18px; font-weight: 600; }
+/* Long artwork names stay on one line and fade out at the right edge instead of wrapping. */
+.artworkTitle, .tileName {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  mask-image: linear-gradient(to right, #000 calc(100% - 1.5em), transparent);
+}
 .picker { padding: env(safe-area-inset-top) 0 18px; background: #fff3de; max-height: none; overflow: visible; }
 .pickerHeading { display: grid; grid-template-columns: 76px minmax(0,1fr) 76px; align-items: center; min-height: 84px; padding: 0 20px; text-align: center; }
 .pickerHeading h2 { grid-column: 2; margin: 0; font-size: 18px; font-weight: 600; }
@@ -187,3 +207,6 @@ span.answerImage { display: none; }
 .fullPicker > p, .picker > p { margin: 0 20px 16px; }
 .visuallyHidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .welcomeMark { display: flex; justify-content: center; margin: 0 auto 22px; }
+.intro .description { scrollbar-width: none; }
+.intro .description::-webkit-scrollbar { display: none; }
+.tileName { width: 100%; text-align: center; }
