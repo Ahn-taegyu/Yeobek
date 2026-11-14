@@ -26,7 +26,7 @@ npm run dev
 
 ## AI 연결 준비
 
-`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 앱 생성·음성 제공사의 실호출 검증과 별도로, [Bivia 검색 실험](docs/research/bivia-retrieval-experiment.md)은 무료 API 실측을 완료했습니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증과 [PR #5 CI](https://github.com/Ahn-taegyu/Yeobek/pull/5)를 통과해 병합됐습니다. 글 승인·게시 API는 PR #6 CI를 통과해 병합됐으며 관람 글 채팅 HTTP도 연결했습니다. 키를 넣어도 관람 화면이 활성화되지는 않습니다.
+`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 경로별 실측 범위를 확인해야 합니다. [Bivia 후속 비교](docs/research/bivia-answer-comparison.md)에서는 같은 Liner QA 모델의 합성60문항 답변과 별도 모델 평가를 실행했습니다. 앱 생성·음성 제공사의 실호출 검증과 별도로, [Bivia 검색 실험](docs/research/bivia-retrieval-experiment.md)은 무료 API 실측을 완료했습니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증과 [PR #5 CI](https://github.com/Ahn-taegyu/Yeobek/pull/5)를 통과해 병합됐습니다. 글 승인·게시 API는 PR #6 CI를 통과해 병합됐으며 관람 글 채팅 HTTP도 연결했습니다. 키를 넣어도 관람 화면이 활성화되지는 않습니다.
 
 1. `.env.example`의 AI 항목을 기존 `.env.local`에 추가하고 `LINER_API_KEY`를 서버에 설정합니다. 키에 `NEXT_PUBLIC_`를 붙이지 않습니다.
 2. `AI_ROUTE_DRAFT`, `AI_ROUTE_ORGANIZE`, `AI_ROUTE_JUDGE`, `AI_ROUTE_QA`, `AI_ROUTE_STT`, `AI_ROUTE_TTS`는 `제공사:모델` 형식으로 선택합니다. Liner TTS는 계정에서 확인한 고정 모델을 `AI_ROUTE_TTS` 또는 `LINER_TTS_MODEL`에, 음성을 `LINER_TTS_VOICE`에 지정해야 합니다. 평가 모델은 초안과 다른 인식 가능한 계열이어야 합니다.

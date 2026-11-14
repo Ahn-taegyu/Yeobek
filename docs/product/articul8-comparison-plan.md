@@ -56,7 +56,7 @@ sources:
 
 # 목적과 현재 상태
 
-**11/14 후속:** [SRC-064](../references/user-bivia-answer-recomparison.md)에 따라 병렬화·보류 보존과 최종 답변 비교를 진행한다. Bivia는 무료288회 이내이며 Liner 생성·평가는 후속 사용자 승인 크레딧을 사용한다. 실행 범위와 결과는 [RES-011](../research/bivia-answer-comparison.md)을 따른다. 아래 초기 계획의 3회 반복·사람 검수·Numa 범위는 완료된 것으로 간주하지 않는다.
+**11/14 후속:** [SRC-064](../references/user-bivia-answer-recomparison.md)에 따라 병렬화·보류 보존과 최종 답변 비교를 완료했다. 자동 품질 통과는 A56/60·C2 59/60이며 접촉 금지 안내1건이 악화되어 현재 검색 유지를 권고한다. Bivia는 무료288회 이내이며 Liner 생성·평가는 후속 사용자 승인 크레딧을 사용한다. 실행 범위와 결과는 [RES-011](../research/bivia-answer-comparison.md)을 따른다. 아래 초기 계획의 3회 반복·사람 검수·Numa 범위는 완료된 것으로 간주하지 않는다.
 
 [사용자 요청](../references/user-articul8-comparison.md)에 따라 **도입 효과를 확인한 뒤 채택 여부를 판단**한다. 이 문서는 실행 계획이며 벤더 도입 결정·실험 결과가 아니다. 실제 작가 자료·API 키·계정 식별자를 이 기획 검색 번들에 저장하지 않는다.
 
@@ -70,7 +70,7 @@ sources:
 | 현재 관람 검색 코드 | `src/lib/ai/context.ts`의 `selectEvidence`가 허용된 근거를 키워드로 정렬하고 개수·문자 예산 안에서 선택한다. `harness.ts`의 생성·인용 검증과 분리되어 있다. docs의 BM25 기획 검색은 비교 대상이 아니다. |
 | 이전 턴 Numa UI 시험 | 플랫폼 잔액 0에서 가상 TXT 1개 업로드, 활성 파일 1개, 문서 1·페이지 1·블록 2와 관계 4개를 확인했다. 페이지 노드에서 한국어 원문·출처 연결을 읽었다. 의미 개체·관계 추출 품질은 미검증이다. Arty는 `Input Tokens limit reached.`로 차단됐다. |
 | Numa API 조사 | 고객용 문서에 ingest·상태·그래프 조회가 있다. 검색·문서 블록·export는 내부 팀용 문서에 있으므로 계정의 지원 계약을 별도로 확인한다. API 키와 필수 tenant/user 헤더를 갖춘 서버 요청은 미검증이다. 주소창 직접 GET의 not-found 응답은 성공 증거가 아니다. |
-| Bivia | 11/14 `/score` 무료 API 연결과 합성 근거의 A/C 검색을 실측했다([RES-010](../research/bivia-retrieval-experiment.md)). 실제 작가 자료·최종 답변 정확도와 반환 확률 보정 상태는 미검증이다. 무료 토큰 표시를 모든 기능의 사용 가능성으로 해석하지 않는다. |
+| Bivia | 11/14 `/score` 무료 API 연결과 합성 근거의 A/C 검색을 실측했다([RES-010](../research/bivia-retrieval-experiment.md)). 합성 최종 답변 비교는 RES-011에 기록하며 실제 작가 자료·사람 평가·반환 확률 보정 상태는 미검증이다. 무료 토큰 표시를 모든 기능의 사용 가능성으로 해석하지 않는다. |
 
 # 비교하는 세 안
 
