@@ -28,7 +28,14 @@ function unavailable(error: unknown) {
 }
 
 function message(error: unknown) {
+  if (error instanceof ApiClientError && error.code === "REQUEST_IN_PROGRESS") {
+    return "답변을 준비하고 있어요. 잠시 후 다시 눌러주세요.";
+  }
   return error instanceof ApiClientError ? error.message : "요청을 완료하지 못했어요. 다시 시도해주세요.";
+}
+
+function responseMayBePending(error: unknown) {
+  return error instanceof ApiClientError && ["NETWORK_ERROR", "REQUEST_IN_PROGRESS"].includes(error.code);
 }
 
 function ArtImage({ artwork, className, decorative = false }: { artwork: Artwork; className?: string; decorative?: boolean }) {
@@ -81,6 +88,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
   const [busy, setBusy] = useState<"chat" | "transcribe" | "speech" | null>(null);
   const [error, setError] = useState("");
   const operation = useRef<AbortController | null>(null);
+  const pendingChat = useRef<{ key: string; requestId: string } | null>(null);
   const contextSequence = useRef(0);
   const audio = useRef<HTMLAudioElement | null>(null);
   const audioUrl = useRef<string | null>(null);
@@ -155,6 +163,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
     const nextId = work.id;
     if (nextId !== selected) {
       contextSequence.current += 1;
+      pendingChat.current = null;
       operation.current?.abort();
       operation.current = null;
       stopAudio();
@@ -170,12 +179,20 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
     const text = question.trim();
     if (!text || codepoints(text) > AI_LIMITS.question || recording.state !== "idle") return;
     void run("chat", async signal => {
-      const reply = await askQuestion({
-        requestId: crypto.randomUUID(), exhibitionId: exhibition.id, artworkId: selected,
+      const input = {
+        exhibitionId: exhibition.id, artworkId: selected,
         question: text, contextSequence: contextSequence.current,
         inputMode: voiceDraft ? "voice" : "text", outputMode: mutedNow.current ? "text" : "voice",
-      }, signal);
+      } satisfies Omit<ChatRequestInput, "requestId">;
+      const key = JSON.stringify(input);
+      const requestId = pendingChat.current?.key === key ? pendingChat.current.requestId : crypto.randomUUID();
+      pendingChat.current = { key, requestId };
+      const reply = await askQuestion({ ...input, requestId }, signal).catch(error => {
+        if (pendingChat.current?.requestId === requestId && !responseMayBePending(error)) pendingChat.current = null;
+        throw error;
+      });
       if (signal.aborted || reply.contextSequence !== contextSequence.current) return;
+      pendingChat.current = null;
       setTurns(previous => [...previous, {
         question: text, reply, artwork: exhibition.artworks.find(work => work.id === reply.publication?.artworkId),
       }]);
