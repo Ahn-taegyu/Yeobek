@@ -1,5 +1,7 @@
 # 기술 선택 재검토
 
+- [Liner 모델·음성 실측](liner-docent-live-validation.md) — 공통 도슨트, 독립 평가, 추론 토큰·PCM 수정과 소량 비교의 한계.
+
 - [작가 참고 파일 읽기](material-reader.md) — 로컬 PDF·Liner 파일 입력·W2 검수와 비용 경계. 실제 호출0회.
 
 - [W9 이메일 가입·직접 로그인 경계](signup-auth-contract.md) — 서버 전용 가입, 최초 요청 연결, OTP/비밀번호 세션 구별과 로컬 검증.

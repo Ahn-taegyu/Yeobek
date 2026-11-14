@@ -21,6 +21,19 @@ const completion = (content: string) => Response.json({
 const notConfigured = expect.objectContaining({ code: "not_configured" });
 
 describe("AI capability routes", () => {
+  it("uses one docent model for drafts and all QA consumers and rejects stale conflicting aliases", () => {
+    for (const env of [{}, { AI_ROUTE_DOCENT: "liner:google/gemini-3.8-flash" },
+      { AI_ROUTE_QA: "liner:openai/gpt-6-luna" }, { AI_ROUTE_DRAFT: "liner:openai/gpt-6-luna" },
+      { LINER_DRAFT_MODEL: "openai/gpt-6-luna" }]) {
+      expect(resolveAiRoute("draft", env)).toEqual(resolveAiRoute("qa", env));
+    }
+    for (const capability of ["qa", "draft"] as const) {
+      expect(() => resolveAiRoute(capability, { AI_ROUTE_DRAFT: "liner:openai/gpt-6.1-sol", AI_ROUTE_QA: "liner:openai/gpt-6-luna" })).toThrow(notConfigured);
+      expect(() => resolveAiRoute(capability, { AI_ROUTE_DOCENT: "liner:google/gemini-3.8-flash", AI_ROUTE_QA: "liner:openai/gpt-6-luna" })).toThrow(notConfigured);
+    }
+    expect(() => assertIndependentJudge({ AI_ROUTE_DOCENT: "liner:google/gemini-3.8-flash",
+      AI_ROUTE_JUDGE: "liner:google/gemini-3.7-flash" })).toThrow(notConfigured);
+  });
   it("defaults to partner routes and requires a catalog model and voice for speech", () => {
     for (const route of ["draft", "organize", "automation", "judge", "qa", "stt"] as const) {
       expect(resolveAiRoute(route, {}).provider).toBe("liner");

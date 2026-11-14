@@ -33,7 +33,7 @@ function localCheck() {
       configured(capability, env);
       return [capability, { configured: true, provider: route.provider }] as const;
     } catch {
-      return [capability, { configured: false, check: `AI_ROUTE_${capability.toUpperCase()}, selected provider key` +
+      return [capability, { configured: false, check: `${capability === "qa" || capability === "draft" ? "AI_ROUTE_DOCENT (or matching AI_ROUTE_DRAFT/AI_ROUTE_QA aliases)" : `AI_ROUTE_${capability.toUpperCase()}`}, selected provider key` +
         (capability === "tts" ? ", selected provider voice (Liner: LINER_TTS_VOICE and explicit model)" : "") +
         (capability === "judge" ? ", independent draft family" : "") }] as const;
     }
@@ -55,7 +55,7 @@ it("checks a local AI configuration or explicitly smokes one capability", async 
     if (task === "qa" || task === "draft" || task === "exaone") {
       const qa = task !== "draft";
       const provider = createConfiguredTextProvider(qa ? "qa" : "draft", undefined, task === "exaone"
-        ? { ...process.env, AI_ROUTE_QA: `exaone:${AI_MODELS.exaone}` } : process.env);
+        ? { ...process.env, AI_ROUTE_DOCENT: `exaone:${AI_MODELS.exaone}`, AI_ROUTE_DRAFT: "", AI_ROUTE_QA: "" } : process.env);
       const result = await provider.generate({ system: qa ? DOCENT_SYSTEM_PROMPT : NARRATION_SYSTEM_PROMPT,
         input: JSON.stringify(qa ? { question: "작품에 사용한 재료를 알려주세요.",
           evidence: evidence.map(({ id, version, sourceLabel, body }) => ({ id, version, sourceLabel, body })) }
