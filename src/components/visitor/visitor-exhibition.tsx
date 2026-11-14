@@ -14,6 +14,7 @@ type Exhibition = Awaited<ReturnType<typeof loadExhibition>>;
 type Artwork = Exhibition["artworks"][number];
 type Reply = Awaited<ReturnType<typeof askQuestion>>;
 type Turn = { question: string; reply: Reply; artwork?: Artwork };
+const yeounMark = "/yeobek/visitor-yeoun.svg";
 
 async function loadExhibition(id: string, signal: AbortSignal) {
   return (await requestApi("getPublicExhibition", { params: { id }, signal })).data;
@@ -38,12 +39,16 @@ function responseMayBePending(error: unknown) {
   return error instanceof ApiClientError && ["NETWORK_ERROR", "REQUEST_IN_PROGRESS"].includes(error.code);
 }
 
-function ArtImage({ artwork, className, decorative = false }: { artwork: Artwork; className?: string; decorative?: boolean }) {
+function ArtImage({ artwork, className, decorative = false, picker = false }: {
+  artwork: Artwork; className?: string; decorative?: boolean; picker?: boolean;
+}) {
   const [failed, setFailed] = useState(false);
   return artwork.image && !failed
     ? <Image unoptimized className={className} src={`/api/media/${artwork.image.id}?kind=image`} width={352} height={180}
         alt={decorative ? "" : artwork.title} onError={() => setFailed(true)} />
-    : <span className={className} aria-hidden="true">{artwork.number}</span>;
+    : <span className={className} aria-hidden="true">
+        {picker ? <Image src={yeounMark} width={171} height={155} alt="" /> : artwork.number}
+      </span>;
 }
 
 function OptionalImage({ id, kind, className, alt }: { id: string; kind: "poster" | "image"; className: string; alt: string }) {
@@ -346,42 +351,50 @@ function Visit({ exhibition: initialExhibition, initialArtworkId, showWorks, onU
 
   const shown = exhibition.artworks.filter(work => `${work.number}. ${work.title}`.toLowerCase().includes(search.trim().toLowerCase()));
   const tooLong = codepoints(question.trim()) > AI_LIMITS.question;
-  return <section data-visitor className={styles.chat} data-selected={Boolean(active)}>
-    <div className={styles.toolbar}>
+  return <section data-visitor className={styles.chat}>
+    {!picker && <div className={styles.toolbar}>
       <button className={styles.icon} aria-label={muted ? "음소거 해제" : "음소거"} aria-pressed={muted} onClick={() => {
         mutedNow.current = !muted;
         setMuted(!muted);
         if (!muted) stopAudio();
-      }}><Image src="/yeobek/visitor-sound.svg" alt="" width={24} height={24} />{muted && <span aria-hidden="true">×</span>}</button>
+      }}><Image src="/yeobek/visitor-toolbar-sound.svg" alt="" width={25} height={25} />{muted && <span aria-hidden="true">×</span>}</button>
       {active
         ? <button type="button" className={styles.artworkTitle} aria-expanded={picker !== null}
             onClick={togglePicker}>{active.number}. {active.title}</button>
         : <span className={styles.brand}>{brand.name}</span>}
-      <button type="button" className={styles.textButton} aria-expanded={picker !== null}
-        onClick={togglePicker}>{picker ? "닫기" : "작품 선택"}</button>
-    </div>
-    {picker && <section className={styles.picker} aria-label="작품 목록">
-      <div className={styles.pickerHeading}><h2>작품 목록</h2>
-        <button className={styles.textButton} onClick={() => transitionScreen(() => setPicker(picker === "grid" ? "row" : "grid"))}>
-          {picker === "grid" ? "한 줄로 보기" : "전체보기"}
-        </button></div>
+      <button type="button" className={styles.textButton} aria-expanded={false}
+        onClick={togglePicker}>작품 선택</button>
+    </div>}
+    {picker && <section className={`${styles.picker} ${picker === "grid" ? styles.fullPicker : ""}`} aria-label="작품 목록">
+      <div className={styles.pickerHeading}>
+        <h2>{picker === "row"
+          ? <button type="button" className={styles.pickerTitle} aria-label="작품 목록 닫기" onClick={togglePicker}>
+              작품 목록 <Image src="/yeobek/visitor-more.svg" alt="" width={15} height={15} />
+            </button>
+          : "작품 목록"}</h2>
+        <button type="button" className={styles.textButton}
+          onClick={picker === "grid" ? togglePicker : () => transitionScreen(() => setPicker("grid"))}>
+          {picker === "grid" ? "닫기" : "전체 보기"}
+        </button>
+      </div>
       {picker === "grid" && <div className={styles.search}><input aria-label="작품 검색" type="search"
         placeholder="작품 검색" value={search} onChange={event => setSearch(event.target.value)} />
-        <Image src="/yeobek/visitor-search.svg" alt="" width={24} height={24} /></div>}
+        <Image src="/yeobek/visitor-picker-search.svg" alt="" width={26} height={26} /></div>}
 
       {picker === "grid" && !shown.length && <p>검색 결과가 없어요. 전시장에 있는 작품 중 온라인 안내가 제공되지 않는 작품도 있어요.</p>}
       <ul className={picker === "grid" ? styles.grid : styles.strip}>
         {(picker === "grid" ? shown : exhibition.artworks).map(work => <li key={work.id}>
           <button className={styles.tile} aria-pressed={active?.id === work.id} onClick={() => transitionScreen(() => select(work))}>
-            <ArtImage artwork={work} className={styles.thumbnail} decorative />
-            <span>{work.number}. {work.title}</span>
+            <ArtImage key={work.image?.id} artwork={work} className={styles.thumbnail} decorative picker />
+            <span className={picker === "grid" ? styles.visuallyHidden : undefined}>{work.number}. {work.title}</span>
           </button>
         </li>)}
       </ul>
     </section>}
-    <div className={styles.transcript} ref={transcript} aria-live="polite">
+    <div className={styles.transcript} ref={transcript} aria-live="polite" inert={picker === "grid"}>
       {!turns.length && <div className={styles.welcome}>
-        <h1>{exhibition.title}</h1>
+        <h1 className={styles.visuallyHidden}>{exhibition.title}</h1>
+        <Image className={styles.welcomeMark} src={yeounMark} alt="" width={171} height={155} />
         <p>전시에서 느낀 감동과 기억이 오래도록 남을 수 있도록,<br />작품에 담긴 이야기를 들려드릴게요.</p>
       </div>}
       {turns.map(({ question, reply, artwork }) => <article className={`${styles.turn} yeobek-appear`} key={reply.answerId}>
@@ -398,7 +411,7 @@ function Visit({ exhibition: initialExhibition, initialArtworkId, showWorks, onU
       </article>)}
       {busy === "chat" && <p role="status">답변을 준비하고 있어요.</p>}
     </div>
-    <div className={styles.composer}>
+    <div className={styles.composer} inert={picker === "grid"}>
       {error && <p role="alert">{error}</p>}
       {tooLong && <p role="alert">질문을 {AI_LIMITS.question}자 이내로 줄여주세요.</p>}
       {voiceDraft && !tooLong && <p role="status">인식된 문장을 확인하고 보내주세요.</p>}
