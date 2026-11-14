@@ -10397,6 +10397,46 @@ exports[`HTTP route contracts > snapshots getPublicExhibition 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots getSession 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": null,
+  "path": "/api/auth/session",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "authenticated": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "authenticated",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots health 1`] = `
 {
   "body": null,
@@ -14179,6 +14219,76 @@ exports[`HTTP route contracts > snapshots requestUpload 1`] = `
   "statuses": [
     200,
     201,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots resendSignup 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "email": {
+        "type": "string",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "signupRequestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "email",
+      "requestId",
+      "signupRequestId",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": null,
+  "path": "/api/auth/resend",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "authenticated": {
+            "const": false,
+            "type": "boolean",
+          },
+          "status": {
+            "const": "verification_required",
+            "type": "string",
+          },
+        },
+        "required": [
+          "status",
+          "authenticated",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    202,
   ],
 }
 `;
@@ -19546,6 +19656,78 @@ exports[`HTTP route contracts > snapshots setSupportBinding 1`] = `
   },
   "statuses": [
     200,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots signup 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "email": {
+        "type": "string",
+      },
+      "password": {
+        "type": "string",
+      },
+      "passwordConfirmation": {
+        "type": "string",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "email",
+      "requestId",
+      "password",
+      "passwordConfirmation",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": null,
+  "path": "/api/auth/signup",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "authenticated": {
+            "const": false,
+            "type": "boolean",
+          },
+          "status": {
+            "const": "verification_required",
+            "type": "string",
+          },
+        },
+        "required": [
+          "status",
+          "authenticated",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    202,
   ],
 }
 `;
@@ -26238,6 +26420,81 @@ exports[`HTTP route contracts > snapshots upsertEvidence 1`] = `
   },
   "statuses": [
     201,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots verifySignup 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "code": {
+        "pattern": "^[0-9]{6}$",
+        "type": "string",
+      },
+      "email": {
+        "type": "string",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "signupRequestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "email",
+      "requestId",
+      "signupRequestId",
+      "code",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": null,
+  "path": "/api/auth/verify",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "authenticated": {
+            "const": false,
+            "type": "boolean",
+          },
+          "status": {
+            "const": "verified",
+            "type": "string",
+          },
+        },
+        "required": [
+          "status",
+          "authenticated",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
   ],
 }
 `;

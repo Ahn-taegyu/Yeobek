@@ -2,6 +2,7 @@ import { createExhibitionBody, updateExhibitionBody, createArtworkBody, updateAr
   advanceExhibitionSchema, advanceExhibitionResponse, reorderArtworksSchema, reorderArtworksResponse } from "./authoring";
 import { z } from "zod";
 import { setOnboardingMediaSchema, updateOnboardingSchema } from "./onboarding";
+import { authSessionResponse, resendSignupSchema, signupPendingResponse, signupSchema, signupVerifiedResponse, verifySignupSchema } from "./signup";
 import { channelWebhookSchema, channelWebhookResponse, supportBindingSchema, supportBindingResponse } from "./support";
 import { consentListResponse, consentResponse, updateConsentSchema, decideOutboxSchema, outboxResponse, outboxPageResponse, outboxQuery, notificationRunResponse } from "./automation";
 import { mediaBinary, mediaQuery } from "./media";
@@ -83,6 +84,10 @@ export const routes = {
   health: { method: "GET", path: "/api/health", response: successEnvelope(z.object({ status: z.literal("ok") })), statuses: [200] },
   login: { method: "POST", path: "/api/auth/login", body: loginSchema, response: successEnvelope(z.object({ authenticated: z.literal(true) })), statuses: [200] },
   logout: { method: "POST", path: "/api/auth/logout", body: emptySchema, response: successEnvelope(z.object({ authenticated: z.literal(false) })), statuses: [200] },
+  signup: { method: "POST", path: "/api/auth/signup", body: signupSchema, response: successEnvelope(signupPendingResponse), statuses: [202] },
+  resendSignup: { method: "POST", path: "/api/auth/resend", body: resendSignupSchema, response: successEnvelope(signupPendingResponse), statuses: [202] },
+  verifySignup: { method: "POST", path: "/api/auth/verify", body: verifySignupSchema, response: successEnvelope(signupVerifiedResponse), statuses: [200] },
+  getSession: { method: "GET", path: "/api/auth/session", response: successEnvelope(authSessionResponse), statuses: [200] },
   getProfile: { method: "GET", path: "/api/admin/profile", response: successEnvelope(accountProfileResponse), statuses: [200] },
   updateProfile: { method: "PATCH", path: "/api/admin/profile", body: profileSchema, response: successEnvelope(profileResponse), statuses: [200] },
   updateOnboarding: { method: "PATCH", path: "/api/admin/profile/onboarding", body: updateOnboardingSchema, response: successEnvelope(profileResponse), statuses: [200] },

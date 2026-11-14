@@ -23,13 +23,14 @@ describe("application policies", () => {
 describe("server feature settings", () => {
   it("isolates optional features and rejects disabled routes", () => {
     const features = getFeatures({ FEATURE_GAPS: "false", FEATURE_VOICE_REQUIRED: "false" });
-    expect(features).toEqual({ gaps: false, voiceRequired: false, followUpQuestions: true, opsAggregation: false });
+    expect(features).toEqual({ gaps: false, voiceRequired: false, followUpQuestions: true, opsAggregation: false, signup: false });
     expect(() => requireFeature("gaps", features)).toThrowError(expect.objectContaining({ status: 404 }));
     expect(() => requireFeature("followUpQuestions", features)).not.toThrow();
   });
   it("does not collect visitor questions or aggregate by default", () => {
-    expect(getFeatures({})).toEqual({ gaps: false, voiceRequired: true, followUpQuestions: true, opsAggregation: false });
-    expect(getFeatures({ FEATURE_GAPS: "true", FEATURE_OPS_AGGREGATION: "true" })).toMatchObject({ gaps: true, opsAggregation: true });
+    expect(getFeatures({})).toEqual({ gaps: false, voiceRequired: true, followUpQuestions: true, opsAggregation: false, signup: false });
+    expect(getFeatures({ FEATURE_GAPS: "true", FEATURE_OPS_AGGREGATION: "true", FEATURE_SIGNUP: "true" }))
+      .toMatchObject({ gaps: true, opsAggregation: true, signup: true });
   });
   it("rejects misspelled flags rather than silently exposing a disabled feature", () => {
     for (const value of ["flase", "", "   "]) {

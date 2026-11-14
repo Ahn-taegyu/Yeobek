@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: signup-contract
+  resource: /research/signup-auth-contract.md
+  title: W9 이메일 가입과 직접 로그인 경계
 - id: figma-authoring
   resource: /references/figma-authoring-v3.md
   title: Figma 작가 입력 화면 직접 대조
@@ -68,9 +71,9 @@ sources:
 | W8 | in_progress, PR #11의 진행 안내·문의 범위 병합 | 예약 안내·Alt·요약·분류·브리핑·물리 삭제 등 잔여 |
 | W2 | in_progress, [Draft PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), `d276d9f`, 미병합 | W10 section 적용과 이력/만료 정합성 후 v3 순서에서 재개 |
 | D0 | done, PR #14 | main 861d27a, App·Knowledge CI 성공 |
-| W10 | in_progress, Draft PR #15 | v2 입력 계약 보존·회귀 수정, v3 추가 범위는 W13 뒤 |
+| W10 | done, PR #15, main dadc23b | v3 온보딩·사진/포스터·홈 상태, 전체 CI 성공 |
 | W13 | done, PR #16, main44bf7d3 | 리스크1·5·6·8·9 및 기한 반영, App·Knowledge CI 성공. 운영 적용은 W7 |
-| W9 | not_started | 직접 가입, 이메일 인증 필수·최소 8자 확정 |
+| W9 | in_progress | 직접 가입, 이메일 인증 필수·최소 8자 확정 |
 | W11 | not_started | 예상 Q&A·검수·미리보기 |
 | W12 | not_started | 공개 체크리스트·접속 URL·관람 P0 (QR 제외) |
 | W6 | not_started | 운영 및 가입→전시→게시 집계 |
@@ -316,3 +319,17 @@ Figma 작가 화면 8개를 직접 읽어 SRC-049에 문구·선택지와 차이
 부모가 Sol 구현의 실제 diff와 기존 SQL/HTTP를 대조하고 별도 Sol이 권한·동시성·호환성을 교차 검토했다. 검토에서 찾은 DATE→timestamp 초과 범위 오류를 날짜/시각 tuple 비교로 고쳤으며 두 극단 날짜 회귀를 추가했다. 새 counts는 이전 서버 읽기를 위해 optional로 선언했다. 170000/171000을 소유 로컬 DB에 전진 적용했고 DB 검사 147개, 단위/계약 78개, 기존 P0 HTTP 5개와 새 온보딩/실제 PNG Storage HTTP 1개가 통과했다. HTTP 최초 동시 실행에서는 Next 개발 manifest가 비어 500을 반환했으며 실패한 새 테스트만 단독 재실행해 통과했다. 전체 production HTTP와 타입 drift는 CI에서 확인한다.
 
 로컬 DB에는 W2 보존 migration이 있으므로 생성 타입에서 정확한 W2 차이만 제외했다. 새 DB 전체 RPC 109개 권한 대조·타입 drift·전체 회귀는 최신 PR #15 CI 대기다. 새 제품 플래그를 켜지 않았고 gaps/opsAggregation 기본 off는 유지한다. 실제 외부 AI/발송 0회, 운영 배포 미수행. 이름/메일 확인, 업로드 복합 FK와 삭제 잠금, 새 section을 모르는 구형 클라이언트의 동시 배포/새로고침 경계를 PR 사람 검토 지점으로 남긴다.
+
+
+## W10 병합과 W9 착수
+
+PR #15 head2852ab9의 App43558293735·Knowledge43558293909가 모두 성공했다. 전체 권한 목록·타입 drift·빌드·production HTTP·mock AI 회귀와 문서 verify를 확인하고 차단 리뷰 없이 main dadc23b로 squash 병합했다. W10 입력 계약은 완료, 프런트와 W11/W12 범위는 별도다. W9는 feat/artist-email-signup에서 이메일 방식으로 진행한다. BR-16·SC-A08/A09·UC20~23·P0 데이터/RAG 원문을 다시 읽었다. 공식 계약과 새 보안 경계는 [가입 조사](../research/signup-auth-contract.md)에 기록한다.
+
+
+## W9 구현·직접 검증 (CI 대기)
+
+서버 전용 미인증 계정 생성, 코드 재발송/확인, 세션 조회와 기본off signup 플래그를 연결했다. 공유 원문의 서버 전용 가입 조건 때문에 Auth enable_signup:false를 유지한다. min8·OTP6·코드 전용 메일은 설정파일에 명시했고 기존 로컬 데이터를 보존한 재시작으로 확인했다.
+
+Sol SQL/API 실제 diff를 부모가 기존 코드·원문과 대조하고 서로 교차검토했다. 초기 설계의 pending 사전등록 계정 활성화 위험을 발견해 최초 요청 nonce를 서버 app_metadata에 묶었다. 직접 Supabase OTP 토큰도 관리자 권한을 열지 못하도록 신규 가입 계정의 password AMR을 HTTP/RPC/RLS에서 검사한다. 기존 계정·익명 관람 계약은 유지한다. 개인정보/비밀번호를 운영 원장에 넣지 않는다.
+
+부모가 migration180000/181000 전진 적용, DB43+23개, 단위/계약89개, 실제 Auth·Mailpit·쿠키·동시 한도 통합1개를 확인했다. pgTAP 첫 실행의 잘못된 공개 근거 fixture는 현재 schema-v1 형식으로 고쳐 해당 파일만 재실행했다. 새 DB 타입 drift·111개 public RPC 권한 대조·전체 lint/type/DB/HTTP/build·knowledge verify는 CI 대기다. 운영 메일/배포/프런트 화면 미검증, 외부 AI/업무 발송0회. 신규 플래그 기본off·CI 명시on, off HTTP도 별도 실행해 가입/재발송/확인 404와 로그인·세션 유지가 통과했다. 최초 실행은 로컬 네트워크 sandbox 접근 거부였으며 동일 서버/검사를 허용 환경에서 실행했다. 비밀번호 추가 강도·재설정·세션 수명은 기존대로이며 최초 가입ID 유실 복구는 남았다.

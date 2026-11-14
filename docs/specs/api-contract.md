@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: signup-contract
+  resource: /research/signup-auth-contract.md
+  title: W9 이메일 가입과 직접 로그인 경계
 - id: figma-authoring
   resource: /references/figma-authoring-v3.md
   title: Figma 작가 입력 화면 직접 대조
@@ -429,3 +432,25 @@ v3 추가 경로/필드는 W13→W10→W9→W11→W12 순서로 확정한다. �
 사진·포스터는 기존 image 업로드를 각각 artist/exhibition 범위로 예약·전송·완료한 뒤 연결한다. ready/소유권/범위/해시/3MiB 및 더 낮은 정책 상한을 검사하며, 연결된 자료 삭제는 409 MATERIAL_IN_USE다. 해제 후 기존 삭제 API를 사용한다. 타인 또는 잘못된 범위는 404, CAS 충돌은 409다. W10은 소유자 비공개 경로이며 공개 포스터 snapshot/조회는 W12에서 연결한다.
 
 호환·배포: 새 응답 필드는 optional로 선언하여 새 클라이언트가 이전 서버를 읽게 하되 새 서버는 항상 반환한다. DB migration→서버→같은 section 카탈로그의 프런트 배포/새로고침 순서다. 기존 section ID는 유지하지만 새 ID를 모르는 구형 클라이언트는 새 section 응답을 거부할 수 있어 이 MVP에서는 동시 갱신이 필요하다. 기존 문서 저장은 전체 대체이며 생략된 section을 서버가 임의 보존하지 않는다. 배포 롤백도 이미 저장된 새 section을 읽을 수 있는 계약을 유지하고 DB 삭제/리셋은 하지 않는다.
+
+
+## W9 이메일 가입 계약 (검증 중)
+
+[공식 계약과 로컬 조사](../research/signup-auth-contract.md)를 따른다. FEATURE_SIGNUP은 기본 false이고 가입·재발송·코드 확인은 off일 때 같은 출처 요청에 404다. 로그인·로그아웃·세션 조회는 계속 제공한다. CI는 true를 명시하고 off 회귀도 별도로 검사한다. 브라우저의 직접 Supabase 계정 생성은 계속 금지한다.
+
+| 경로 | 입력/결과 |
+| --- | --- |
+| POST /api/auth/signup | `{email,password,passwordConfirmation,requestId}` → 202 `{status:"verification_required",authenticated:false}`. 이메일 trim/lowercase, 비밀번호 8 Unicode 문자 이상·72 UTF-8 bytes 이하, 일치 확인. 기존 로그인 스키마는 유지 |
+| POST /api/auth/resend | `{email,signupRequestId,requestId}` → 같은 202. 원래 가입 요청 ID와 미인증 계정이 일치할 때만 메일 전송 |
+| POST /api/auth/verify | `{email,code,signupRequestId,requestId}` → 200 `{status:"verified",authenticated:false}`. 숫자 6자리 코드; 올바르지 않음/만료/다른 가입시도는 400 INVALID_VERIFICATION_CODE |
+| GET /api/auth/session | `{authenticated:boolean}`. 실제 인증 장애는 429/503, 비로그인만 false. 프로필 지연 생성 없음 |
+
+공통: CSRF 같은 출처 검사, private/no-store, 검증 전 호출 한도, 오류 정제. 제공사 장애/결과 불명은 503 SIGNUP_UNAVAILABLE, 한도는 429 RATE_LIMITED와 Retry-After:60(복구 보장이 아닌 재시도 안내)이다. 정상 202 본문은 신규/중복/존재하지 않는 재발송을 구별하지 않으며 계정 생성 성공/메일 도착을 뜻하지 않는다. 응답 시간과 SMTP 실패까지 같다는 보장은 없다.
+
+signupRequestId는 최초 가입 입력의 requestId다. 생성 요청의 응답 유실 때 같은 입력과 같은 ID로 재시도하고, 이후 재발송·코드 확인에는 새 requestId와 원래 signupRequestId를 각각 사용한다. 새 ID로 원래 미인증 가입을 대신 확인할 수 없다. 최초 ID를 잃은 계정의 재설정/복구는 미구현이며 코드 입력만 반복하게 안내하지 않는다. 비밀번호는 확인 대기 단계로 갈 때 지우고 requestId는 복구에 필요한 동안 유지한다.
+
+이메일 확인 응답은 쿠키·토큰을 만들지 않는다. 제공사가 내부 생성한 확인 세션만 local scope로 폐기한다. 확인 이후 폐기/응답 실패 시 인증이 이미 완료됐을 수 있으므로 직접 로그인으로 확인한다. 신규 가입 계정의 관리자 API/RPC/RLS는 password AMR도 요구하여 OTP-only 토큰의 직접 접근을 차단한다. 기존 사전 발급 계정은 추가 AMR 조건을 적용하지 않는다. 사용자 입력의 user_metadata로 이 조건을 바꿀 수 없다.
+
+초기 구현 정책(사용자 확정 수치 아님): 네트워크 가입·재발송 합계10/분·60/시간, 인증60/분·300/시간; 이메일 가입·재발송5/시간, 인증10/시간. 같은 요청 ID도 한도에 포함한다. DB에는 HMAC 해시·UUID·kind·시각만 남기고48시간 후 최대1000개씩 purge한다. 원본 이메일/비밀번호/코드는 기록하지 않는다. 스케줄 실제 연결은 W7이며 정리 완료로 간주하지 않는다. 공개 Supabase 재발송은 제공사 자체 한도를 따르므로 앱 원장으로 모두 통제한다고 주장하지 않는다.
+
+배포 순서: 신규 migration180000/181000→Auth 설정(enable_signup:false,confirmations:true,min password8,OTP6,confirmation 코드 템플릿/SMTP)→서버→가입 플래그 활성화. 클라우드 Auth 설정은 이 커밋에서 원격 변경하지 않는다. 새 정책은 [키 당일 점검 대상](../research/signup-auth-contract.md)이다. 가입/선택/코드 입력 프런트는 이 백엔드 API와 별도 인계한다.

@@ -24,6 +24,7 @@ jobs:
       FEATURE_OPS_AGGREGATION: "false"
       FEATURE_FOLLOW_UP_QUESTIONS: "true"
       FEATURE_VOICE_REQUIRED: "true"
+      FEATURE_SIGNUP: "true"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -97,7 +98,7 @@ jobs:
           npm run test:support
           kill "$mock_pid"
           wait "$mock_pid" || true
-          FEATURE_GAPS=false node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-gaps-off.log 2>&1 &
+          FEATURE_GAPS=false FEATURE_SIGNUP=false node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-gaps-off.log 2>&1 &
           mock_pid=$!
           for attempt in {1..60}; do
             if curl --silent --fail http://localhost:3001/api/health > /dev/null; then
@@ -110,6 +111,7 @@ jobs:
             sleep 1
           done
           TEST_GAPS_DISABLED_ONLY=true npm run test:visitor
+          TEST_SIGNUP_DISABLED_ONLY=true node --test tests/integration/signup.test.mjs
       - name: Stop the disposable stack
         if: always()
         run: npm run db:stop

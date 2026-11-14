@@ -74,6 +74,8 @@ select results_eq(
     ('update_knowledge_document(text, uuid, integer, jsonb, jsonb)', false, true, true, false),
 
     -- service_role
+    ('consume_signup_budget(text, text, uuid, text)', false, false, true, false),
+    ('get_signup_verification_identity(text, uuid)', false, false, true, false),
     ('acquire_notification_run(uuid, boolean)', false, false, true, false),
     ('check_notification_dispatch(uuid, uuid, boolean, uuid)', false, false, true, false),
     ('check_outbound_dispatch(uuid, uuid, boolean)', false, false, true, false),
