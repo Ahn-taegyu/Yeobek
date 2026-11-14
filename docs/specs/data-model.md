@@ -13,6 +13,15 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: gap-exclusion
+  resource: /references/user-gap-qa-exclusion.md
+  title: 관람 보완 요청의 Q&A 전환 제외
+- id: qa-policy
+  resource: /references/user-expected-qa-policy.md
+  title: 예상 Q&A 생성·검수 정책
+- id: figma-review
+  resource: /references/figma-review-v3.md
+  title: Figma W11 화면 직접 대조
 - id: signup-contract
   resource: /research/signup-auth-contract.md
   title: W9 이메일 가입과 직접 로그인 경계
@@ -139,3 +148,15 @@ R1 설계(미구현): 서비스 역할 전용 RPC가 권한 확인된 삭제 요
 가입 계정/비밀번호/확인 코드는 Supabase Auth가 관리한다. 서버 app_metadata의 yeobek_signup_request_id는 최초 가입 UUID이며 공개 user_metadata로 대체하지 않는다. 별도 이메일·비밀번호 업무 테이블을 만들지 않는다. private signup_attempts는 HMAC network/email 해시, 요청UUID, kind, attempted_at만 보관한다. 서비스 RPC가 두 식별자 잠금을 순서대로 잡아 한도를 확인·차감한다.48시간 이후1000행 단위 정리는 기존 purge_expired 응답 형식을 유지한다.
 
 181000은 신규 가입 표시가 있는 JWT에 password AMR을 요구한다. 소유자·운영자 RPC 및 기존6개 소유자 SELECT 정책에 제한을 더하며, 기존 계정·서비스 역할·익명 공개 관람 의미는 유지한다. Auth 계정 생성만으로 작가 프로필을 만들지 않는다. 기존 lazy 생성과 계정별 unique 제약을 사용한다.
+
+
+## W11 비공개 Q&A와 배치
+
+190000~193000은 private qa_item_versions, qa_job_requests, qa_preview_evaluations, qa_correction_evidence, training_batches/targets를 추가한다. ai_jobs에는 전시 대상과 작업 종류를 확장하고 기존 job의 shape를 보존한다. 후보는 question/answer와 exact citation body·원문 위치/버전/해시, 생성시도, mock 여부를 고정한다. 소유자 RPC만 접근하며 모델은 소유자 판정이나 승인 상태 변경을 수행하지 못한다.
+
+후보 승인에서 원대상·문서 revision과 인용↔승인근거의 출처/본문해시를 확인한다. 생성 이후 같은 원문을 새 근거로 승인하는 정상 흐름은 허용하되 다른 범위의 같은 문장은 거부한다. 재작성은 새 후보 버전을 만들고 기존 승인/공개본을 교체하지 않는다. 평가 accurate도 승인으로 변환하지 않는다. 보완 요청은 원 공개본과 open 상태를 유지하고 recheck_publication_id에 새 공개본을 기록한 뒤 CAS 확인으로 dismissed 처리한다.
+
+일괄 생성은 최대30작품, 요청 UUID별 고정 manifest와 자식 작업 연결을 저장한다. 공통 owner AI 한도/잠금과 lease를 재사용하며 개별 retry도 형제 동시 실행을 차단한다. 만료 manifest 정리는 purge_expired에 연결했지만 운영 스케줄·물리 삭제 확인은 W7이다. 상세 HTTP와 배포 순서는 [W11 계약](api-contract.md#w11-예상-qa미리보기전시-일괄-생성)을 따른다.
+
+
+W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.

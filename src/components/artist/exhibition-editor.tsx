@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { transitionScreen } from "@/components/ui/motion";
+import Link from "next/link";
 import { useCallback, useRef, useState, type FormEvent } from "react";
 import { requestApi } from "@/lib/client";
 import { sectionDefinitions } from "@/lib/contracts/knowledge-sections";
@@ -91,7 +93,7 @@ function ExhibitionSteps({ initial }: { initial: Exhibition | null }) {
           return;
         }
       }
-      setStep(step + 1);
+      transitionScreen(() => setStep(step + 1));
     } catch (error) {
       setStatus({ error: errorMessage(error) });
     } finally { setBusy(false); }
@@ -119,12 +121,12 @@ function ExhibitionSteps({ initial }: { initial: Exhibition | null }) {
       {status.error && <p role="alert" className="error">{status.error}</p>}
       {status.notice && <p role="status">{status.notice}</p>}
       <div className="artist-actions">
-        {step > 1 && <button className="artist-action secondary" type="button" disabled={busy} onClick={() => setStep(step - 1)}>이전</button>}
+        {step > 1 && <button className="artist-action secondary" type="button" disabled={busy} onClick={() => transitionScreen(() => setStep(step - 1))}>이전</button>}
         <button className="artist-action secondary" value="draft" disabled={busy}>임시 저장</button>
         <button className="artist-action" value="next" disabled={busy}>{busy ? "저장 중…" : "다음"}</button>
       </div>
     </form>}
-    {step === 3 && saved && <ExhibitionMaterials exhibition={saved} onChange={setSaved} onBack={() => setStep(2)} />}
+    {step === 3 && saved && <ExhibitionMaterials exhibition={saved} onChange={setSaved} onBack={() => transitionScreen(() => setStep(2))} />}
   </>;
 }
 
@@ -183,7 +185,7 @@ function ExhibitionMaterials({ exhibition, onChange, onBack }: {
       event.target.value = "";
       if (file) void upload(file, "pdf");
     }} /></Field>
-    <p className="artist-note">업로드 파일은 참고 자료로 보관되고, AI는 입력한 답변을 바탕으로 답해요.</p>
+
     {result.data.materials.filter(item => item.kind === "pdf" && item.state === "ready")
       .map(item => <p key={item.id}>{item.filename}</p>)}
     <Field label="전시 포스터"><input type="file" accept={images} disabled={busy} onChange={event => {
@@ -211,7 +213,8 @@ function ExhibitionMaterials({ exhibition, onChange, onBack }: {
     {error && <p className="error" role="alert">{error}</p>}
     <div className="artist-actions">
       <button className="artist-action secondary" onClick={onBack}>이전</button>
-      <a className="artist-action" href="/artist">등록 내용 저장하고 나가기</a>
+      <Link className="artist-action" href={`/artist/exhibitions/${id}/learning`}>여운 학습시키기</Link>
+
     </div>
   </section>;
 }

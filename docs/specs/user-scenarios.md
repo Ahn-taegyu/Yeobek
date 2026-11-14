@@ -15,6 +15,15 @@ generated:
   at: '2026-11-12T14:49:23+09:00'
 decision_status: proposed
 sources:
+- id: gap-exclusion
+  resource: /references/user-gap-qa-exclusion.md
+  title: 관람 보완 요청의 Q&A 전환 제외
+- id: qa-policy
+  resource: /references/user-expected-qa-policy.md
+  title: 예상 Q&A 생성·검수 정책
+- id: figma-review
+  resource: /references/figma-review-v3.md
+  title: Figma W11 화면 직접 대조
 - id: signup-contract
   resource: /research/signup-auth-contract.md
   title: W9 이메일 가입과 직접 로그인 경계
@@ -450,3 +459,6 @@ W10 추가 확인: 기존 작품 세계를 저장한 작가가 온보딩 이름�
 
 
 W9 서버 수용 검증: 로컬 Mailpit을 통한 신규 가입·인증 전 로그인 거부·코드 확인 후 세션 부재·수동 로그인·로그아웃, 기존 계정 중복 불변, 최초 요청이 다른 pending 인증 거부, 원래 요청으로 재발송 복구를 직접 확인했다. 실제 제공사 OTP 토큰으로 소유자 RPC·RLS·HTTP 접근이 거부됐으며 이메일별 동시7개 예약은5개 허용/2개 차단됐다. 만료 오류는 모의 제공사 검사이며 운영 메일 도달과 UI 상태 전환 검증은 남았다.
+
+
+W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.

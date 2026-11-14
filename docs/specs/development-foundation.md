@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: gap-exclusion
+  resource: /references/user-gap-qa-exclusion.md
+  title: 관람 보완 요청의 Q&A 전환 제외
 - id: signup-contract
   resource: /research/signup-auth-contract.md
   title: W9 이메일 가입과 직접 로그인 경계
@@ -221,3 +224,8 @@ v3 전환: main은 861d27a, W10 v2 입력 계약은 Draft PR #15 b950557에 보�
 ## W9 서버 인증 경계
 
 이메일 가입·최초 요청 ID 기반 재발송/코드 확인·세션 조회 API와 신규 계정의 password AMR 권한 검사를 구현했다. FEATURE_SIGNUP 기본off이고 별도 클라우드 Auth/SMTP 설정이 필요하다. 로컬 실물 Auth·Mailpit 검증은 통과했으며 운영 메일과 프런트 가입 화면은 후속이다. [W9 API](api-contract.md#w9-이메일-가입-계약-검증-중), [직접 검증/CI](backend-completion.md#w9-구현직접-검증-ci-대기)를 구분한다.
+
+
+W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.
+
+현재 W9는 PR #17로 병합됐으며 W11은 [작업 추적](backend-completion.md)의 검증 단계다. 비공개 예상QA·미리보기·정정·일괄 생성 API와 기본off 플래그가 추가되었다. 실제 외부 모델 호출·프런트·W12 공개/관람은 완료 범위가 아니다.
