@@ -4,7 +4,7 @@ id: F-024
 title: 사진 기반 작품 글 인터뷰
 description: 작품 사진과 글의 빈 정보를 질문하고 작가 답변을 승인 가능한 근거 초안으로 저장한다.
 status: draft
-updated: '2026-11-14'
+updated: '2026-11-15'
 tags: [yeobek, author-experience]
 rag_include: true
 generated:
@@ -30,7 +30,7 @@ sources:
 
 ## 구현 계약
 
-- 작가 화면 경로: `/artist/exhibitions/[id]/artworks/[artworkId]/interview`.
+- 작가 화면 경로: `/artist/exhibitions/[id]/artworks/[artworkId]/interview`. 학습 완료 뒤 학습 화면에서 작품별로 진입하고 학습 화면으로 돌아간다([작성 순서](../decisions/D-018-author-experience.md#작성-순서-2026-11-15)).
 - 서버 기능 플래그 `FEATURE_ARTWORK_INTERVIEW`는 기본 꺼짐이며, 꺼져 있을 때 생성·조회·변경 API는 사용할 수 없다.
 - `GET /api/admin/artworks/{id}/interview`는 해당 작품의 인터뷰 질문과 저장된 답변 상태를 소유 작가에게 반환한다. 조회로 생성이나 공개를 수행하지 않는다.
 - `POST /api/admin/artworks/{id}/interview/generations`는 작품 사진·글 자료를 바탕으로 답이 자료에 없는 질문을 최대 5개 생성한다. 기존 작업 원장과 한도를 재사용한다.

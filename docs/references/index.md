@@ -101,3 +101,4 @@
 - [반 고흐 입력 완성도·정보량 비교와 재게시](user-vangogh-input-quality.md) — SRC-064.
 - [GitHub main 병합 시 Vercel Preview 갱신](user-vercel-preview-main.md) — SRC-066.
 - [관람 질문의 과잉 보류와 평가 오판 수정](user-visitor-evidence-abstention.md) — SRC-067.
+- [학습 후 AI 인터뷰와 검증 순서](user-training-interview-review-order.md) — SRC-068.
