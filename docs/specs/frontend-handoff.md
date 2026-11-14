@@ -185,3 +185,5 @@ HTTP200/201도 job.status가failed/abstained일 수 있다. `resultCode`를 확�
 W12 공개 시각 계약(구현 중): publicExhibitionResponse에 선택 필드 startTime/endTime(HH:mm 또는 null)을 추가한다. 게시 시점 값을 고정하며 초안 수정은 다음 게시 전까지 반영하지 않는다. 기존 공개본의 시간은 재게시 전 null이다. 포스터도 선택 필드 `poster: {id, kind:"poster"} | null`로 추가한다. id는 공개 publication ID이며 `GET /api/media/{id}?kind=poster`로 읽는다. Storage 경로·서명 URL은 노출하지 않는다. 초안 포스터 변경은 재게시 전 미반영, 삭제·게시 중지·철회·교체 시 이전 참조 전송을 거부한다. 이 계약은 Draft #25 구현 중이며 main 병합 완료가 아니다.
 
 W12 채팅 이미지 계약(구현 중): `visitorReplyResponse.image`는 선택 필드 `{id, kind:"image"} | null`이다. 선택된 공개본의 검증된 이미지 참조만 반환하고, 재시도 때도 현재 공개 상태로 다시 조회한다. 이미지 없음·조회 실패·대상 미선택은 null이며 답변과 기존 outputMode 의미를 유지한다. `GET /api/media/{id}?kind=image`로 읽는다.
+
+W12 승인 Q&A 공개 연결(구현 중): 신규 공개본은 schemaVersion 2의 `items`와 `approvedQa`에 승인 버전·해시·근거 pin을 고정한다. draft/철회/운영 모드의 mock 후보는 제외한다. 기존 v1 조회는 유지하며 Q&A는 생성 근거로만 쓰고 기본 해설을 대체하지 않는다. 공개 응답에는 내부 QA 목록을 노출하지 않는다. 생성 후보는 최신 승인 시각·ID 순 최대100개 QA와 기존 근거를 합쳐 검증한 뒤, 전체12개·8,000자 예산으로 선정한다. QA 또는 연결 근거 철회는 해당 공개본과 캐시 답변·음성을 무효화하며 재게시가 필요하다. Q&A 개수는 게시 필수가 아니다.

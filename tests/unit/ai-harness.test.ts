@@ -17,6 +17,15 @@ function setup() {
 }
 
 describe("docent harness offline evaluation (synthetic; no semantic quality claim)", () => {
+  it("generates from approved QA evidence rather than replaying its answer directly", async () => {
+    const s = setup();
+    const body = "질문: 왜 파란색인가요?\n답변: 기억 속 달의 색입니다.";
+    s.publication.evidence[0] = { ...s.publication.evidence[0], sourceLabel: "승인 예상 Q&A", body, contentHash: hash(body) };
+    const reply = await s.harness.answer(syntheticRequest({ question: "왜 파란색인가요?", intent: "question" }));
+    expect(s.text.generate).toHaveBeenCalledOnce();
+    expect(reply.source).toBe("generated");
+    expect(reply.answer).not.toBe("기억 속 달의 색입니다.");
+  });
   it("answers using only versioned evidence; binds result to the initiating context", async () => {
     const s = setup();
     const reply = await s.harness.answer(syntheticRequest());

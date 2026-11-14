@@ -59,7 +59,7 @@ export const approvedNarrationSchema = z.strictObject({
 export const publicationContextSchema = z.strictObject({
   ownerId: id, exhibitionId: id, artworkId: id, publicationId: id, version,
   number: z.number().int().min(1).max(9999), title: boundedText(100),
-  evidence: z.array(evidenceSchema).max(100),
+  evidence: z.array(evidenceSchema).max(200),
   narration: approvedNarrationSchema.nullable(),
 });
 export type PublicationContext = z.infer<typeof publicationContextSchema>;
