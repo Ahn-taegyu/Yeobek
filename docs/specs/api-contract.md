@@ -497,3 +497,10 @@ signupRequestId는 최초 가입 입력의 requestId다. 생성 요청의 응답
 W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.
 
 플래그는 기능 제공 범위이며 권한 경계를 대신하지 않는다. 전시QA 플래그를 꺼도 기존 전시 후보의 검수·철회는 가능하다. previewChat을 꺼도 이미 생성된 미리보기에서 정정/재작성을 할 수 있다. 실제 소유권·현재 근거 검증은 DB RPC에서 수행한다.
+
+
+## B용 승인 Q&A 게시 포트
+
+`get_approved_qa_for_publication(p_owner uuid,p_exhibition_id uuid,p_artwork_id uuid,p_allow_mock boolean default false)`는 service_role 전용이며 HTTP/일반 소유자에게 노출하지 않는다. artworkId=null은 전시 항목만, UUID는 그 작품 항목만 조회한다. 최신 버전이 approved이고 모든 evidencePins가 현재 유효한 항목만 반환한다. 최신 draft/withdrawn이면 이전 승인 버전을 새 게시 후보로 되돌려 쓰지 않는다. 기존 공개본의 유지·철회는 B 공개 계약이 별도로 처리한다.
+
+반환은 `[{id,version,exhibitionId,artworkId,scope,question,answer,contentHash,evidencePins:[{id,version}],mock,approvedAt}]`다. 소유자 ID·생성 원문 citations·이전 미리보기 답변·지시문은 포함하지 않는다. 기본은 mock 제외이고 개발 게시 여부는 신뢰된 서버 정책으로만 전달한다. 게시 SQL의 같은 트랜잭션에서 호출해야 작가별 게시 잠금과 검증이 스냅샷 쓰기까지 유지된다. 별도 HTTP에서 먼저 조회한 뒤 나중에 쓰는 방식은 금지한다. B가 공개 시 정확한 버전·핀을 보존하고 관람/미디어에서 철회를 재검사하며 모델 전달량12근거/8,000자 상한도 적용한다.
