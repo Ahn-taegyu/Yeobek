@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: questionnaire
+  resource: /references/user-artist-questionnaire.md
+  title: 작가 기본 작품 세계 세부 질문지
 - id: v2
   resource: /references/user-backend-plan-v2.md
   title: 백엔드 완성 계획 v2
@@ -49,8 +52,8 @@ sources:
 | W5 | done, PR #7·10 | P0 전시 문맥·출력 전환은 W12 |
 | W8 | in_progress, PR #11의 진행 안내·문의 범위 병합 | 예약 안내·Alt·요약·분류·브리핑·물리 삭제 등 잔여 |
 | W2 | in_progress, [Draft PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), `4252478`, 미병합 | W10 section 적용과 이력/만료 정합성 후 v2 순서에서 재개 |
-| D0 | in_progress | 문서 통합·ID 충돌 해소·v2 갱신, 최신 CI 후 병합 |
-| W10 | not_started | 입력 계약과 작성 단계 |
+| D0 | done, PR #14 (`861d27a`) | App·Knowledge CI 성공·교차 검토 후 병합, 제품 기능 구현과 구분 |
+| W10 | in_progress | SRC-043 작가 질문지 반영, 입력 계약과 작성 단계 구현 중 |
 | W9 | not_started | 직접 가입, 이메일 인증 필수·최소 8자 확정 |
 | W11 | not_started | 예상 Q&A·검수·미리보기 |
 | W12 | not_started | 공개 체크리스트·전시 QR·관람 P0 |
@@ -75,7 +78,7 @@ PR #12가 병합된 문서 브랜치를 main에 통합하고 ID 충돌·목차·
 
 ## W10 입력 계약
 
-주체별 section ID·라벨·필수 여부·길이를 `src/lib/contracts/`의 단일 선언에서 파생시킨다. 기존 ID를 유지하며 전시 1단계 선택 3개·2단계 선택 6개, 작품 안내 질문 6개와 작가 공통 작품 세계를 원문대로 연결한다. 작가 입력 질문의 세부 항목이 원문에서 확정되지 않았다면 임의 필수 항목을 추가하지 않는다.
+주체별 section ID·라벨·필수 여부·길이를 `src/lib/contracts/`의 단일 선언에서 파생시킨다. 기존 ID를 유지하며 전시 1단계 선택 3개·2단계 선택 6개, 작품 안내 질문 6개와 작가 공통 작품 세계를 원문대로 연결한다. 작가 질문 7개는 SRC-043을 반영하며 임의 필수 항목을 추가하지 않는다.
 
 전시 필수값이 비어도 임시저장하고 날짜·시간·작성 단계를 공개 상태와 분리한다. 1단계 다음/최종 완료에서 전시명·시작/종료 날짜와 시간·장소·기간 순서를 검증하고 조건별 사유를 반환한다. 2단계 선택 답변은 모두 비어도 통과한다. 작품은 부분 저장·임시 제목·크기 단위·초안 정렬을 제공하고 재정렬은 원자적으로 번호를 갱신한다. 활성 공개 번호는 게시 전까지 유지한다. PATCH 전체 값 저장/생략 null 계약은 유지한다. 홈은 작성 단계·작품 세계 등록 상태를 반환하고 W8 상태 조회 및 W12 미완성 게시 차단과 연결한다.
 
@@ -234,3 +237,14 @@ PR #11 head `514e104`의 App checks `43545439379`와 Knowledge checks `435454393
 # W8 문의 자동화 진행
 
 [사용자 선택](../references/user-channel-webhook-auth.md)에 따라 기존 채널톡 웹훅 URL 토큰으로 수신하고 AppStore Native API로 발신한다. 명시적 계정 연결, 고정된 chat 대상, 근거 기반 답변과 발송 전 재확인을 추가했다. 부모가 로컬 문의 pgTAP 31개와 관련 단위·계약 107개를 확인했다. 로컬 인증·실제 DB와 모의 답변을 사용한 HTTP 통합 1개는 통과했으며 실제 외부 호출은 미검증이고 물리 보존 삭제와 운영 로그 쿼리 제거 확인은 남았다. 문의 변경 전 SHA `8f80bd4`의 App·Knowledge CI는 성공했으나 현재 문의 변경의 최신 head CI는 대기 중이다. W2·W6·W7과 나머지 W8은 미완료다.
+
+
+# W10 착수와 선행 검증
+
+D0 PR #14 head `5b82df1`에서 Knowledge `43551559157`·App `43551559186` 모두 성공하고 차단 리뷰가 없음을 확인해 `861d27a`로 병합했다. W2 Draft #13의 테스트 타입 오류는 `d276d9f`에서 수정했고 Knowledge `43551643125`·App `43551642854` 모두 성공했다. W2는 새 section/만료 정책 선행 때문에 계속 미병합이다.
+
+사용자는 W10의 작가 세부 질문 선택에 기존 자유 입력 유지 대신 질문지 전달을 선택했다. SRC-043의 7개 질문을 카탈로그에 추가하고 전시·작품 P0 원문과 함께 읽었다. 단계/부분 저장과 공개 번호 예약의 호환성을 검토 중이며 아직 W10 DB/HTTP 검증이나 병합을 완료하지 않았다.
+
+W10 구현을 직접 확인했다: catalog check, 단위/계약 70개, 기존 DB forward migration, pgTAP 35개, 실제 로컬 Auth·DB HTTP 5개 통과. SQL CASE 구문 오류를 최초 적용 rollback 후 수정했다. 입력은 draft:true opt-in, 기존 기본 플래그는 유지한다. 전체 CI·새 DB 타입 drift·최종 교차 검토와 병합은 대기다. 공개 번호 반영과 QR/관람 변경은 W12, 직접 가입은 W9 순서로 이어간다.
+
+사용자가 v3 변경분을 전달해 W10 진행분을 먼저 커밋·Draft PR로 보존하고 W13을 선행한다. 이 기록의 W10은 v2 범위이며 v3 온보딩·프로필·포스터·홈 집계까지 완료한 것이 아니다.

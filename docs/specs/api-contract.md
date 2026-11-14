@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: artist-questionnaire
+  resource: /references/user-artist-questionnaire.md
+  title: 작가 기본 작품 세계 세부 질문지
 - id: v2
   resource: /references/user-backend-plan-v2.md
   title: 백엔드 완성 계획 v2
@@ -75,6 +78,8 @@ sources:
 - 입력은 서버에서 타입·길이·관계·UUID를 검사한다. 요청 크기와 횟수 제한을 적용한다. 관람 글 요청은 세션 전체 분 6회·전시 일일 1,000회를 DB 정책으로 원자 적용하며 인식·합성도 같은 한도를 공유한다. 녹음 30초/3MB, 질문 500자 등 상세 값은 [초기 상한](technology-stack.md#초기-상한과-실패-처리)을 따른다. 실제 한도와 오류 정책은 구현 시 검증한다.
 
 # W1 해설 작업 경로 (PR #5 병합)
+
+W10의 추가 입력 계약은 아래 별도 절을 적용한다. 기존 생성·수정 본문은 그대로 지원한다.
 
 | 경로 | 요청과 동작 |
 | --- | --- |
@@ -353,3 +358,24 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 [작업 추적](backend-completion.md)의 D0 → W10 → W9 → W11 → W12 순서를 적용한다. 기존 W8 진행 안내·채널톡 문의는 PR #11 (`2d7bea1`)로 최신 App/Knowledge CI 성공 후 병합됐으며 실제 외부 호출과 물리 보존 삭제 등 잔여는 미검증이다. 기존의 CI 대기 표현은 당시 기록이다. W2 후보·이력은 Draft PR #13에만 보존되어 main 계약으로 제공하지 않는다.
 
 OP-23 가입의 확정 정책은 이메일 인증 필수·비밀번호 최소 8자·확인 후 직접 로그인이다. 기존 계정 로그인에 새 가입 강도를 소급 적용하지 않는다. signup/session 경로, 확인·재발송 상세와 Supabase 연동은 W9 구현 전 공식 문서로 검증한다. 가입·미리보기·예상 Q&A·새 공개/관람 계약은 아직 미구현이며 현재 HTTP와 구분한다. D0는 새 제품 플래그를 활성화하지 않는다.
+
+# W10 P0 입력 계약 (검증 중)
+
+[질문지 SRC-043](../references/user-artist-questionnaire.md)를 반영했다. `src/lib/contracts/knowledge-sections.ts`가 주체별 ID·라벨·안내 질문·선택 여부·최대 길이의 원본이다. 기존 6개 section을 유지하고 작가 7개·전시 9개·작품 6개를 추가한다. 각 본문은 앞뒤 공백 제외 5,000 Unicode 코드 포인트, 출처 참조는 24개 이내다. 주체에 맞지 않는 section과 중복 ID는 DB에서 거부한다. `npm run knowledge:sections`는 신규 migration용 seed를 출력하고 `knowledge:sections:check`는 최신 seed와 선언의 불일치를 차단한다. 적용된 migration은 수정하지 않는다.
+
+인증을 먼저 확인하는 프로필·전시·작품·지식 저장 경로의 JSON 한도는 1MiB다. 기본 요청 한도는 64KiB를 유지한다. 실제 수신 바이트도 검사한다.
+
+| 경로/입력 | 추가 계약 |
+| --- | --- |
+| 기존 전시 POST/PATCH + `draft: true` | 제목·기간·장소가 비거나 날짜가 역순이어도 형식이 유효하면 저장. `startTime`·`endTime`은 HH:mm 또는 null |
+| `POST /api/admin/exhibitions/{id}/advance` | `{expectedRevision, step: "world" 또는 "artworks"}`. basic→world→artworks 순서, 필요한 값이 빠지면 200 `{advanced:false, exhibition, blockers:[{code,field}]}`. 성공은 advanced:true, 버전/단계 충돌은 409 |
+| 기존 작품 POST/PATCH + `draft: true` | 제목·크기·기법·자료를 부분 저장. `dimensionsUnit` 추가. 생성 number 생략 시 서버 할당, 수정 number 생략/null은 현재 초안 번호 유지 |
+| `POST /api/admin/exhibitions/{id}/artworks/reorder` | `{items:[{id,expectedRevision}]}`에 모든 활성 작품을 원하는 순서로 전달. 전체 ID·소유권·버전을 한 트랜잭션에서 검사하고 `{items:[작품]}` 반환. 누락/오래된 버전 409, 타인 전시 404 |
+
+전시 응답은 `draftTitle`, `startTime`, `endTime`, `authoringStep`을 추가한다. 기존 `title`은 문자열 표시값(비면 “제목 없는 전시”)이며 편집과 완료 검증은 `draftTitle`을 사용한다. 기존 전시는 authoringStep:null, P0 전시는 basic/world/artworks다. 기존 전시를 draft:true로 변환하는 경로는 아직 없고 409를 반환한다.
+
+작품 응답은 실제 `draftTitle`, `dimensionsUnit`, `draftNumber`를 추가하고 `title` 표시값은 유지한다. `draftNumber`가 null이면 기존 number를 초안 번호로 쓴다. 목록은 유효 초안 번호 순서다. 재정렬은 `draftNumber`만 바꾸며 기존 number·활성 공개본은 유지한다. 게시 시 초안 번호 반영은 W12에서 연결한다. 공통 응답 타입의 새 필드는 이전 서버와 호환을 위해 optional이며 새 DB serializer는 항상 반환한다.
+
+작가 응답의 `artWorldRegistered`는 practice 또는 새 작가 질문 중 하나라도 비어 있지 않으면 true다. bio만 작성했거나 프로필이 존재하는 것만으로 true가 되지 않는다. 승인 여부나 모든 문항 완료를 뜻하지 않는다.
+
+전이에는 전시명·시작/종료 날짜와 시간·장소·기간 순서를 검사한다. 선택 질문이 모두 비어도 다음 단계로 갈 수 있다. 초안 저장은 문서/정형 정보 CAS를 원자 적용하고 생략한 선택 텍스트는 null로 덮어쓰는 기존 계약을 유지한다. 작품 번호 생략은 위의 서버 할당 예외다. 미완성 P0 전시의 게시 snapshot 쓰기는 차단하며 자세한 공개 체크리스트·새 번호 적용·전시 QR는 W12 범위다. 전시 생성 안내는 P0 world→artworks 완료에서 한 번 예약하고 임시저장 단계에서는 예약하지 않는다.

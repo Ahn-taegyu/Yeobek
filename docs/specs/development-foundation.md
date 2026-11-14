@@ -102,7 +102,7 @@ sources:
 
 기존 계정 삭제 FK 제한과 논리 삭제된 작품의 번호 예약은 유지했다. 자동 cascade나 부분 unique 변경은 하지 않았으며 탈퇴·삭제·게시 기능에서 공개 차단 및 번호 예약 정책과 함께 구현한다.
 
-[API 계약](api-contract.md)의 초기 경로를 구현한다. 요청 JSON은 최대 64KiB이며 실제 수신 바이트도 검사한다. owner·state 등 정의 밖 필드는 거부한다. 변경 요청은 Origin을 검사하며 운영 환경에서는 `APP_ORIGIN`을 실제 앱 주소로 지정한다. 인증 서비스 장애 503, 요청 제한 429, 로그인 필요 401을 구별한다. 잘못되거나 운영에서 누락된 `APP_ORIGIN`은 503 `SERVER_CONFIGURATION_ERROR`이며 재시도 불가로 표시한다. 오류에는 `retryable`과 선택적 `retryAfter`를 반환한다. 프로필 조회는 `accountEmail`을 포함하고 전시 목록은 삭제되지 않은 작품 수 `artworkCount`와 최근 수정순을 제공한다. 세션 쿠키는 HttpOnly/Lax이며 HTTPS 앱에서 Secure로 설정한다.
+[API 계약](api-contract.md)의 초기 경로를 구현한다. 기본 요청 JSON은 최대 64KiB이며 W10의 인증된 입력 저장 경로는 1MiB다. 실제 수신 바이트도 검사한다. owner·state 등 정의 밖 필드는 거부한다. 변경 요청은 Origin을 검사하며 운영 환경에서는 `APP_ORIGIN`을 실제 앱 주소로 지정한다. 인증 서비스 장애 503, 요청 제한 429, 로그인 필요 401을 구별한다. 잘못되거나 운영에서 누락된 `APP_ORIGIN`은 503 `SERVER_CONFIGURATION_ERROR`이며 재시도 불가로 표시한다. 오류에는 `retryable`과 선택적 `retryAfter`를 반환한다. 프로필 조회는 `accountEmail`을 포함하고 전시 목록은 삭제되지 않은 작품 수 `artworkCount`와 최근 수정순을 제공한다. 세션 쿠키는 HttpOnly/Lax이며 HTTPS 앱에서 Secure로 설정한다.
 
 공개 전시/작품 RPC는 현재 전시와 작품이 게시 상태이고 활성 publication이 철회되지 않은 경우에만 명시된 공개 필드를 반환한다. 전시는 적격 작품이 최소 하나 있어야 한다. 작품의 publications 행은 불변성 제약이 있지만 전시의 public_*는 별도 가변 컬럼이며 버전 이력 테이블이 아니다. 내부 문서, 비공개 파일 경로, PDF 원본은 반환하지 않고 이미지·음성 전달은 PR #10의 별도 미디어 경로에서 현재 공개 상태를 검사한다. W4 글 게시 API는 로컬 DB·HTTP와 PR #6 CI를 통과해 병합됐다. 유효한 공개본이 없으면 404다. 공개·관리자 응답은 모두 no-store다.
 
@@ -176,3 +176,11 @@ Sol의 SQL·HTTP 테스트를 부모가 읽고 직접 실행했으며 별도 Sol
 [작업 추적](backend-completion.md)의 D0 → W10 → W9 → W11 → W12 순서를 적용한다. 기존 W8 진행 안내·채널톡 문의는 PR #11 (`2d7bea1`)로 최신 App/Knowledge CI 성공 후 병합됐으며 실제 외부 호출과 물리 보존 삭제 등 잔여는 미검증이다. 기존의 CI 대기 표현은 당시 기록이다. W2 후보·이력은 Draft PR #13에만 보존되어 main 계약으로 제공하지 않는다.
 
 OP-23 가입의 확정 정책은 이메일 인증 필수·비밀번호 최소 8자·확인 후 직접 로그인이다. 기존 계정 로그인에 새 가입 강도를 소급 적용하지 않는다. signup/session 경로, 확인·재발송 상세와 Supabase 연동은 W9 구현 전 공식 문서로 검증한다. 가입·미리보기·예상 Q&A·새 공개/관람 계약은 아직 미구현이며 현재 HTTP와 구분한다. D0는 새 제품 플래그를 활성화하지 않는다.
+
+# W10 구현 및 직접 검증
+
+SRC-043 질문지, 부분 저장, 작성 단계 전이, 초안 번호 재정렬을 `feat/p0-authoring-contracts`에 구현했다. 새 migration `20261114140000_p0_authoring.sql`은 nullable 초안 제목·시간·작성 단계·크기 단위·초안 번호·비공개 section 카탈로그를 추가한다. 기존 RPC는 제목/기간 검증을 유지한다. 자세한 HTTP 추가 필드와 미연결 W12 범위는 [API 계약](api-contract.md#w10-p0-입력-계약-검증-중)에 있다. 기능 플래그 기본값은 바꾸지 않았으며 P0 입력은 요청의 `draft:true`로 명시한다.
+
+직접 수행: 카탈로그 일치 확인, 집중 단위/계약 70개(새 snapshot 2개, 변경 17개), 기존 로컬 DB에 forward 적용, W10 pgTAP 35개, 실제 로컬 Auth·DB의 HTTP 5개 통과. 첫 적용에서 CASE 비교 괄호 누락이 재현돼 transaction rollback 후 수정했고, 수정본만 적용됐다. HTTP는 64KiB를 넘는 한글 입력, 부분/역순 기간 저장과 전이 차단, 번호 재정렬, 문서 버전 충돌 시 원자적 거부, 타인 404를 확인했다. 외부 AI/발송 호출은 0회다.
+
+로컬 DB에는 보존 중인 W2 migration도 있으므로 타입 생성 뒤 W2 전용 차이를 제외했다. CI의 새 DB에서 재생성한 타입과 비교해 W10만의 정확성을 확인해야 한다. 전체 lint·타입·단위·DB/HTTP·빌드·문서 verify는 CI 대기이며 아직 병합 완료가 아니다.

@@ -11,6 +11,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-13T02:37:18+00:00'
 sources:
+- id: questionnaire
+  resource: /references/user-artist-questionnaire.md
+  title: 작가 기본 작품 세계 세부 질문지
 - id: plugin
   resource: /specs/product-ai-plugin.md
   title: 작가 자료 정리 스킬·비공개 후보·검토 후 적용
@@ -87,3 +90,10 @@ decision_status: proposed
 # 완료 기준
 
 [F-023](../features/F-023-artist-knowledge.md), [UC-17](user-scenarios.md)의 동일 작가 두 전시 재사용·수정·철회·타인 접근을 확인한다. UI는 [SC-A02~A05](screen-spec.md)를 사용한다. DB와 초안 저장·조회·출처 검사 API는 일부 구현했으며 [개발 기반 현황](development-foundation.md)에 실제 검사를 기록한다. 편집 UI·승인/철회·제품 RAG와 전체 관람 시나리오는 미완료다. API·DB 검사 통과가 UC-17 전체 완료를 뜻하지 않는다.
+
+
+# W10 질문 항목 연결
+
+[작가 질문지 SRC-043](../references/user-artist-questionnaire.md)에 따라 작가 공통 답변 7개를 별도 section으로 보관한다. 같은 이름인 표현 방식/선택 이유도 고유 ID를 사용한다. 기존 작가 bio/practice, 전시 introduction/theme, 작품 description/notes는 보존한다. 전시 기본 선택 3개·작품 세계 선택 6개, 작품 이야기 선택 6개도 해당 주체의 문서에 연결한다.
+
+단일 선언 `src/lib/contracts/knowledge-sections.ts`에서 ID·라벨·질문·필수 여부·길이를 파생한다. 새 카탈로그에 따라 TS와 DB 검증을 함께 확장하며 출처·승인·전시 격리 규칙은 유지한다. 기본 작품 세계 등록 상태는 기존 practice 또는 새 작가 답변 중 비어 있지 않은 항목의 존재를 나타내며, 공개 승인이나 모든 질문 완료를 뜻하지 않는다. 이 절은 W10 진행 설계이고 실제 DB/HTTP 검증 완료 보고가 아니다.

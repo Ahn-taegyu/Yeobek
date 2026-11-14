@@ -36,7 +36,7 @@ export function databaseError(error: { code?: string; message?: string }): ApiEr
     case "P1002": return new ApiError(400, "SOURCE_UNAVAILABLE", "새로 연결한 출처를 사용할 수 없습니다.", { sourceRefs: ["출처와 공개 가능 범위를 확인해 주세요."] });
     case "23505": {
       if (error.message?.includes('"artworks_exhibition_id_number_key"') ||
-        error.message?.includes('"artworks_active_number_key"') || error.message === "Public artwork number is reserved") {
+        error.message?.includes('"artworks_active_number_key"') || error.message?.includes('"artworks_active_draft_number_key"') || error.message === "Public artwork number is reserved") {
         return new ApiError(409, "DUPLICATE_NUMBER", "같은 전시에 사용 중인 작품 번호입니다.", { number: ["다른 번호를 입력해 주세요."] });
       }
       if (error.message === "Exhibition creation ID already used with different input" || error.message === "Artwork creation ID already used with different input") {

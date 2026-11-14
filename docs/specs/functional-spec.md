@@ -14,6 +14,9 @@ generated:
   at: '2026-11-12T14:49:23+09:00'
 decision_status: proposed
 sources:
+- id: questionnaire
+  resource: /references/user-artist-questionnaire.md
+  title: 작가 기본 작품 세계 세부 질문지
 - id: review-implementation
   resource: /references/user-review-implementation.md
   title: MVP 기반 리뷰 반영 요청
@@ -129,6 +132,10 @@ Notion F06(독립 음성 해설 생성)·F09(독립 작품별 해설 제공)는 
 ## F14 작가 홈
 
 유효 세션으로 자기 홈에 진입한다. 기본 작품 세계 등록 전/완료 상태와 편집 진입을 제공하며 미등록 상태에서도 전시 생성이 가능하다. 내 전시만 조회하고 전시명·기간·장소·공개 상태와 관리 진입을 표시한다. 로딩·오류·빈 목록을 구분하고 재시도와 첫 전시 생성 경로를 제공한다. 저장 후 돌아오면 새 상태를 반영한다. 카드/리스트·정렬·검색·상태 명칭·삭제·복제는 미확정이다.
+
+### 작가 공통 작품 세계 입력
+
+[사용자가 전달한 질문지](../references/user-artist-questionnaire.md)의 7개 답변을 별도 항목으로 저장한다. 작업 계기, 핵심 관심사, 예술관 및 철학, 사용하는 표현 방식, 그 표현 방식을 선택한 이유, 영감의 원천, 관람객과의 소통이다. 두 표현 방식 질문은 서로 다른 ID를 쓴다. 기존 소개·작품 세계 자유 입력 자료를 삭제하거나 새 항목으로 자동 추정하지 않는다. 미등록이어도 전시를 만들 수 있고 새로운 필수 조건은 추가하지 않는다.
 
 ## F01 전시 생성
 

@@ -41,11 +41,13 @@ export const documentResponse = z.object({
 const resource = {
   id, revision, createdAt: timestamp, updatedAt: timestamp, document: documentResponse,
 };
-export const profileResponse = z.object({ ...resource, displayName: nullableText });
+export const profileResponse = z.object({ ...resource, displayName: nullableText, artWorldRegistered: z.boolean().optional() });
 export const accountProfileResponse = profileResponse.extend({ accountEmail: nullableText });
 
 export const exhibitionResponse = z.object({
   ...resource, ...dateRange, artistId: id, title: z.string(), state,
+  draftTitle: nullableText.optional(), startTime: nullableText.optional(), endTime: nullableText.optional(),
+  authoringStep: z.enum(["basic", "world", "artworks"]).nullable().optional(),
 });
 export const exhibitionListResponse = z.object({
   items: z.array(exhibitionResponse.extend({ artworkCount: z.number().int().nonnegative() })),
@@ -55,7 +57,8 @@ const artwork = {
   id, number, title: z.string(), creationYear: nullableText, medium: nullableText, dimensions: nullableText,
 };
 export const artworkResponse = z.object({
-  ...resource, ...artwork, exhibitionId: id, state, imageMaterialId: id.nullable(), narrationDraft: narrationText.nullable(),
+  ...resource, ...artwork, exhibitionId: id, state, draftTitle: nullableText.optional(),
+  dimensionsUnit: nullableText.optional(), draftNumber: number.optional(), imageMaterialId: id.nullable(), narrationDraft: narrationText.nullable(),
 });
 export const artworkListResponse = z.object({ items: z.array(artworkResponse) });
 

@@ -15,6 +15,9 @@ generated:
   at: '2026-11-12T14:49:23+09:00'
 decision_status: proposed
 sources:
+- id: questionnaire
+  resource: /references/user-artist-questionnaire.md
+  title: 작가 기본 작품 세계 세부 질문지
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -302,4 +305,4 @@ sources:
 
 ## SC-A10 기본 작품 세계 등록·수정
 
-SC-A02에서 진입하여 기존 작가 공통 자료를 불러와 수정한다. 저장 후 홈의 등록 상태를 새로 조회한다. 입력 항목의 세부 설계는 [내부 지식](artist-knowledge.md)을 따른다.
+SC-A02에서 진입하여 기존 작가 공통 자료를 불러와 수정한다. 저장 후 홈의 등록 상태를 새로 조회한다. [작가 질문지](../references/user-artist-questionnaire.md)의 7개 질문을 개별 답변으로 표시한다. 기존 소개/작품 세계 자료는 보존하고 두 표현 방식 질문을 합치지 않는다. 입력·저장 연결은 [내부 지식](artist-knowledge.md)을 따른다.

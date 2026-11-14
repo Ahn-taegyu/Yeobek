@@ -25,12 +25,12 @@ export function assertSameOrigin(request: Request) {
   }
 }
 
-export async function readJson<T>(request: Request, schema: z.ZodType<T>): Promise<T> {
+export async function readJson<T>(request: Request, schema: z.ZodType<T>, maxBytes = MAX_JSON_BYTES): Promise<T> {
   if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") {
     throw new ApiError(415, "UNSUPPORTED_MEDIA_TYPE", "JSON 형식으로 요청해 주세요.");
   }
   const declaredSize = Number(request.headers.get("content-length") || 0);
-  if (declaredSize > MAX_JSON_BYTES) throw new ApiError(413, "TOO_LARGE", "입력 내용이 너무 큽니다.");
+  if (declaredSize > maxBytes) throw new ApiError(413, "TOO_LARGE", "입력 내용이 너무 큽니다.");
   const reader = request.body?.getReader();
   if (!reader) throw new ApiError(400, "INVALID_INPUT", "입력 내용이 필요합니다.");
   const chunks: Uint8Array[] = [];
@@ -47,7 +47,7 @@ export async function readJson<T>(request: Request, schema: z.ZodType<T>): Promi
       active();
       if (done) break;
       size += value.byteLength;
-      if (size > MAX_JSON_BYTES) {
+      if (size > maxBytes) {
         await reader.cancel();
         throw new ApiError(413, "TOO_LARGE", "입력 내용이 너무 큽니다.");
       }

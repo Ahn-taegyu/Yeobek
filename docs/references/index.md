@@ -62,3 +62,5 @@
 
 - [백엔드 완성 v2](user-backend-plan-v2.md) — SRC-041, D0와 W9~W12 및 새 순서.
 - [가입 보안 정책](user-signup-security.md) — SRC-042, 이메일 인증 필수·비밀번호 8자 이상.
+
+- [작가 기본 작품 세계 질문지](user-artist-questionnaire.md) — SRC-043, 작가 7개 질문 및 전시·작품 질문 원문.

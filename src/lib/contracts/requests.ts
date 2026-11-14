@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_SECTIONS, SECTION_IDS, sectionById } from "./knowledge-sections";
 
 export const uuid = z.uuid();
 export const revision = z.number().int().positive().max(2147483647);
@@ -8,10 +9,13 @@ const visibleText = (value: string) => /[^\s\p{Cc}\p{Cf}\p{Default_Ignorable_Cod
 const title = text().trim().min(1).max(100).refine(visibleText, "보이는 글자를 입력해 주세요.");
 const date = z.iso.date().refine(v => !v.startsWith("0000-"), "연도는 1년 이상이어야 합니다.");
 export const section = z.strictObject({
-  id: z.enum(["bio", "practice", "introduction", "theme", "description", "notes"]),
+  id: z.enum(SECTION_IDS),
   // Validate normalized length; SQL stores the normalized body. Keeping raw input
   // here also preserves creation replay fingerprints from older clients.
-  body: text().refine(v => Array.from(v.trim()).length <= 5000, "본문은 앞뒤 공백을 제외하고 5,000자 이내로 입력해 주세요."),
+  body: text(),
+}).superRefine((value, context) => {
+  const max = sectionById.get(value.id)!.maxLength;
+  if (Array.from(value.body.trim()).length > max) context.addIssue({ code: "custom", path: ["body"], message: `본문은 앞뒤 공백을 제외하고 ${max.toLocaleString("ko-KR")}자 이내로 입력해 주세요.` });
 });
 const commonRef = { sectionId: section.shape.id };
 export const sourceRefSchema = (id: typeof uuid | ReturnType<typeof z.guid>) => z.discriminatedUnion("kind", [
@@ -22,7 +26,7 @@ export const sourceRefSchema = (id: typeof uuid | ReturnType<typeof z.guid>) => 
     sourceSectionId: section.shape.id, sourceRevision: revision }),
 ]);
 export const sourceRef = sourceRefSchema(uuid);
-const knowledge = { sections: z.array(section).max(2), sourceRefs: z.array(sourceRef).max(24) };
+export const knowledge = { sections: z.array(section).max(MAX_SECTIONS), sourceRefs: z.array(sourceRef).max(24) };
 export const revisions = { expectedRevision: revision, expectedDocumentRevision: revision };
 export const loginSchema = z.strictObject({ email: z.email().max(254), password: text().min(1).max(1024) });
 export const emptySchema = z.strictObject({});
