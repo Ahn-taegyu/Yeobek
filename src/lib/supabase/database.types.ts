@@ -745,6 +745,9 @@ isOneToOne: false
 "complete_visitor_voice":
 { Args: { "p_failure_code"?: string,"p_id": string,"p_result": Json,"p_session_hash": string }; Returns: Json
                            },
+"consume_visitor_network_budget":
+{ Args: { "p_exhibition_id": string,"p_kind": string,"p_network_hash": string,"p_request_id": string,"p_session_hash": string }; Returns: undefined
+                           },
 "create_artwork":
 { Args: { "p_creation_year": string,"p_dimensions": string,"p_exhibition_id": string,"p_id": string,"p_medium": string,"p_number": number,"p_sections": Json,"p_source_refs": Json,"p_title": string }; Returns: Json
                            },

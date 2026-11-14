@@ -4,7 +4,7 @@ import { uuid } from "@/lib/contracts/requests";
 import { generateNarrationSchema } from "@/lib/contracts/jobs";
 import { generateNarration } from "@/lib/ai/author-service";
 
-export const maxDuration = 180;
+export const maxDuration = 150;
 export function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   return handleApi(async () => {
     assertSameOrigin(request);

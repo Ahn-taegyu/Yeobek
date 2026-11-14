@@ -13,6 +13,15 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: v3-answers
+  resource: /references/user-v3-decisions.md
+  title: v3 범위와 Vercel Hobby 답변
+- id: review-answers
+  resource: /references/user-v3-review-decisions.md
+  title: 해설 수정·검수 화면·모의 게시 정책
+- id: v3
+  resource: /references/user-backend-plan-v3.md
+  title: 백엔드 v3 화면·리스크 보강
 - id: pr2-review
   resource: /references/user-ai-pr2-review.md
   title: AI 하네스 PR2 검토와 수정 요청
@@ -96,3 +105,15 @@ MVP 관람객 계정, 결제·주문·재고, 실시간 그룹 방, 추적용 �
 
 AI 초안의 논리 단위는 작품 해설, 작품 Q&A, 전시 공통 Q&A 및 작가 미리보기에서 정정한 Q&A다. 작업본과 승인 버전에 각각 대상, 질문(해당 시), 답변/해설, 근거와 기준 버전, 승인 상태를 연결한다. 공개 묶음에는 승인 버전 참조만 지정한다. 정정 시 새 작업본을 만들고 기존 공개 묶음은 교체 게시나 철회에서 바뀐다. 이 계약의 저장표와 API는 후속 설계다.
  [D-017](../decisions/D-017-p0-feature-spec.md).
+
+
+# v3 변경분 연결
+
+v3에서 프로필의 이름·작가명·키워드/온보딩 상태·사진, 활동 이력 section, 전시 포스터·기간 상태, 지시문/이전 답변/새 작업본 연결, 보완 요청 재확인 상태를 추가 설계한다. 이름·이메일·성별은 운영 집계·자동화 본문·운영 AI 입력에서 제외한다. 이름·작가명·이메일은 필수, 나머지 온보딩은 선택이며 성별은 기본에 따라 수집하지 않는다. 사진·포스터는 공개 snapshot/권한/해시 검사를 거친다. R1은 행을 보존하고 본문·근거를 지우는 서비스 전용 RPC 설계만 문서화하는 것으로 확정됐으며 아직 삭제 RPC 구현이 아니다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md), [진행 계획](backend-completion.md)을 따른다.
+
+
+## W13 네트워크 원장과 R1 삭제 설계
+
+160000의 private 네트워크 원장은 network_hash·session_hash(각32바이트), request UUID, 전시 UUID, kind, 예약시각만 저장한다. 원본 IP/질문은 없다. 네트워크 advisory lock과 service-only RPC로 합산을 직렬화한다. purge는 전 UTC일 시작 이전 행을 최대1000개씩 정리하므로 대상이 되기까지24~48시간이고 배치 적체/cron 미연결이면 더 오래 남는다. 스케줄은 W7에서 연결하며 현재 삭제 완료로 보지 않는다.
+
+R1 설계(미구현): 서비스 역할 전용 RPC가 권한 확인된 삭제 요청 ID와 대상/예상 버전을 받고 현재 공개 연결을 먼저 끊은 뒤 publication의 본문·근거·파생 답변/미디어 참조를 비운다. 식별자·버전·삭제시각·최소 감사 이력은 남긴다. 현재 불변 trigger를 우회하는 일반 UPDATE 권한은 주지 않고 전용 경로에서만 비우며 동일 요청은 멱등 처리한다. 관련 원자료·캐시·Storage의 실제 삭제와 보존 의무 범위는 별도 검증 후 구현한다. 이 설계로 현재 삭제 요청 처리가 가능해졌다고 주장하지 않는다.

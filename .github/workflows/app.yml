@@ -19,6 +19,11 @@ jobs:
     timeout-minutes: 25
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      VISITOR_IP_HASH_SECRET: local-ci-only-network-hmac-secret-0123456789
+      FEATURE_GAPS: "false"
+      FEATURE_OPS_AGGREGATION: "false"
+      FEATURE_FOLLOW_UP_QUESTIONS: "true"
+      FEATURE_VOICE_REQUIRED: "true"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -59,6 +64,8 @@ jobs:
       - name: Verify mock AI jobs in development mode
         env:
           AI_PROVIDER_MODE: mock
+          # Local tests emulate Vercel's trusted edge with stable fixture IPs.
+          VERCEL: "1"
           FEATURE_VOICE_REQUIRED: "false"
           FEATURE_GAPS: "true"
           CRON_SECRET: local-integration-only-0123456789abcdef

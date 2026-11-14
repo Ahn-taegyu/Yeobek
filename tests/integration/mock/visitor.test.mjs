@@ -12,12 +12,13 @@ for (const base of [origin, disabledOrigin].filter(Boolean)) {
   assert.ok(["localhost", "127.0.0.1"].includes(new URL(base).hostname));
 }
 
-function browser(base) {
+function browser(base, networkIp) {
   const jar = new Map();
+  const fixtureIp = networkIp ?? "2001:db8:" + randomUUID().replaceAll("-", "").match(/.{4}/g).slice(0, 6).join(":");
   return async function request(path, body, { method = body === undefined ? "GET" : "POST", expected = 200, binary = false } = {}) {
     const multipart = body instanceof FormData;
     const response = await fetch(base + path, { method, headers: {
-      Origin: base, ...(multipart ? {} : { "Content-Type": "application/json" }),
+      "x-forwarded-for": fixtureIp, Origin: base, ...(multipart ? {} : { "Content-Type": "application/json" }),
       Cookie: [...jar].map(([key, value]) => `${key}=${value}`).join("; "),
     }, body: body === undefined ? undefined : multipart ? body : JSON.stringify(body) });
     for (const value of response.headers.getSetCookie()) {
@@ -247,6 +248,29 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
       assert.equal((await browser(origin)("/api/chat", first)).source, "approved_narration");
     } finally {
       await setLimit(current.data.value);
+    }
+  });
+
+  await t.test("new cookies cannot evade the network budget and approved text stays readable at both caps", async () => {
+    const keys = ["visitor_network_requests_per_minute", "exhibition_requests_per_day"];
+    const current = await admin.from("app_policies").select("key,value").in("key", keys);
+    assert.equal(current.error, null);
+    const set = async (key, value) => assert.equal((await admin.from("app_policies").update({ value }).eq("key", key)).error, null);
+    const ip = "2001:db8:" + randomUUID().replaceAll("-", "").match(/.{4}/g).slice(0, 6).join(":");
+    try {
+      await set(keys[0], 1);
+      const request = payload({ question: "18" });
+      const original = browser(origin, ip);
+      const reply = await original("/api/chat", request);
+      assert.deepEqual(await original("/api/chat", request), reply);
+      const denied = await browser(origin, ip)("/api/chat", request, { expected: 429 });
+      assert.equal(denied.code, "VISITOR_REQUEST_LIMIT");
+      assert.deepEqual(denied.fields.fallback, ["approved_narration", "published_audio"]);
+      await set(keys[1], 1);
+      const approved = await browser(origin, ip)(`/api/public/exhibitions/${exhibition.id}/artworks/${artwork.id}`);
+      assert.equal(approved.narrationText, narration);
+    } finally {
+      for (const row of current.data) await set(row.key, row.value);
     }
   });
 

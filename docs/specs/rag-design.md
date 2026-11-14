@@ -13,6 +13,15 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: v3-answers
+  resource: /references/user-v3-decisions.md
+  title: v3 범위와 Vercel Hobby 답변
+- id: review-answers
+  resource: /references/user-v3-review-decisions.md
+  title: 해설 수정·검수 화면·모의 게시 정책
+- id: v3
+  resource: /references/user-backend-plan-v3.md
+  title: 백엔드 v3 화면·리스크 보강
 - id: harness
   resource: /specs/ai-harness.md
   title: 제품 AI 실행 하네스 준비 범위
@@ -104,3 +113,15 @@ F04 해설과 작품별·전시 전체 예상 Q&A 및 F05 정정 답변은 편�
 
 새 편집본은 기존 활성 공개본과 별도다. 승인 후에도 게시 전에는 관람에 사용하지 않는다. 교체 게시·철회 시 활성 버전 검증과 캐시/낭독 재검사로 이전 항목 사용을 막는다. 승인 답변의 직접 반환과 근거로 활용하는 경우의 일치 기준·인용 표현은 구현 전에 정한다.
  [D-017](../decisions/D-017-p0-feature-spec.md).
+
+
+# v3 변경분 연결
+
+v3 지시문 재작성에서 작가의 수정 지시문은 승인 근거로 취급하지 않는다. 이전 답변과 승인 근거로 재작성하고 범위를 벗어나면 거부한다. “정확해요” 평가는 승인·게시와 분리한다. 제품 AI는 작가가 제공한 작품 세계·활동 이력을 근거로 사용하되 이름·이메일·성별은 운영 자동화 프롬프트에 넣지 않는다. 해당 기능은 W11 후속이며 현재 구현 완료가 아니다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md), [진행 계획](backend-completion.md)을 따른다.
+
+
+## 후속 확정: 직접 수정과 작가 정정
+
+기본 미리 생성 작품 소개만 직접 편집하고, 나머지 답변은 지시문으로 수정한다. 기본 해설 원고 검수와 AI 미리보기는 별도 화면이며 명시적 승인·게시는 유지한다. 시험용 해설은 개발 시연만 허용하고 운영 게시를 차단한다. [후속 답변](../references/user-v3-review-decisions.md).
+
+구현 제안: 문체/분량 지시와 작가의 새 사실 정정을 구분한다. “그 이유가 아니라 … 때문이다”라는 정정은 작가 작성 원문과 대상 질문/작품·기존 답변 버전을 보존한 근거 후보로 만들고, 작가 검수 후 승인 근거로 연결한다. 명령문 자체를 즉시 승인 사실로 쓰거나 기존 공개 근거를 덮어쓰지 않는다. 승인된 정정이 없는 재작성은 기존 승인 근거 범위만 사용한다. W11에서 이 검수 경로를 구현·검증하기 전에는 동작 완료로 보지 않는다.
