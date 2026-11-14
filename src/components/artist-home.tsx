@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { brand } from "@/components/ui/brand";
 import Link from "next/link";
 import { useState } from "react";
 import { requestApi } from "@/lib/client";
@@ -39,7 +40,7 @@ export function ArtistHome() {
     <section className="artist-card" aria-label="작가 프로필">
       <div className="artist-profile">
         {profile.avatarMaterialId ? <PrivateImage key={profile.avatarMaterialId} className="artist-avatar" materialId={profile.avatarMaterialId} alt="" /> :
-          <Image className="artist-avatar" src="/yeobek/artist-avatar.png" width={82} height={82} alt="" loading="eager" />}
+          <Image className="artist-avatar" src={brand.artistAvatar} width={82} height={82} alt="" loading="eager" />}
         <div>
           <h2>{profile.displayName ? `${profile.displayName} 작가` : "작가 프로필"}</h2>
           {profile.keywords?.fields.length ? <p>{profile.keywords.fields.join(" · ")}</p> : null}
