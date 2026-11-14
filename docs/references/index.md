@@ -102,3 +102,4 @@
 - [GitHub main 병합 시 Vercel Preview 갱신](user-vercel-preview-main.md) — SRC-066.
 - [관람 질문의 과잉 보류와 평가 오판 수정](user-visitor-evidence-abstention.md) — SRC-067.
 - [학습 후 AI 인터뷰와 검증 순서](user-training-interview-review-order.md) — SRC-068.
+- [정보·학습, 인터뷰, 검토 화면 분리](user-separate-flow-screens.md) — SRC-069.

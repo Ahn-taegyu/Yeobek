@@ -9,7 +9,6 @@ import { sectionDefinitions } from "@/lib/contracts/knowledge-sections";
 import { ArtistLink, errorMessage, Field, Header, Loading, PrivateImage, Questions, sectionsFrom, Steps, useArtistLoad } from "./ui";
 import { artworkListKey, exhibitionKey, loadExhibition, loadExhibitionMaterials, loadExhibitionOverview, materialsKey, overviewKey } from "./navigation-data";
 import { uploadMaterial } from "./upload";
-import { TrainedVerificationLinks } from "./verification-links";
 
 type Exhibition = Awaited<ReturnType<typeof requestApi<"getExhibition">>>["data"];
 type Work = Awaited<ReturnType<typeof requestApi<"getArtwork">>>["data"];
@@ -222,7 +221,6 @@ function ExhibitionMaterials({ exhibition, onChange, onBack }: {
       <ArtistLink className="artist-action secondary" href={`/artist/exhibitions/${id}/publication`}
         prepare={() => import("./publication").then(({ preparePublication }) => preparePublication(id))}>전시 게시 관리</ArtistLink>
     </div>
-    <TrainedVerificationLinks id={id} />
   </section>;
 }
 

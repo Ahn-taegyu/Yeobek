@@ -1,10 +1,16 @@
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import InterviewPage from "@/app/artist/exhibitions/[id]/interview/page";
 import LearningPage from "@/app/artist/exhibitions/[id]/learning/page";
+import VerificationPage from "@/app/artist/exhibitions/[id]/verification/page";
+import { InterviewHub, VerificationHub } from "@/components/artist/flow";
 import { Learning } from "@/components/artist/review";
 import { VerificationLinks, type TrainingBatch } from "@/components/artist/verification-links";
 vi.mock("server-only", () => ({}));
 vi.mock("@/components/artist/review", () => ({ Learning: () => null }));
+vi.mock("@/components/artist/flow", () => ({ InterviewHub: () => null, VerificationHub: () => null }));
+const redirect = vi.hoisted(() => vi.fn((url: string) => { throw new Error(`redirect:${url}`); }));
+vi.mock("next/navigation", () => ({ redirect }));
 afterEach(() => vi.unstubAllEnvs());
 
 const id = "00000000-0000-4000-8000-000000000001";
@@ -24,7 +30,7 @@ function links(value: NonNullable<TrainingBatch>) {
   });
 }
 
-describe("training → interview → review order", () => {
+describe("separate information/training, interview and review screens", () => {
   it("hides every review link until the latest training batch has completed", () => {
     expect(links(batch("queued"))).toBeNull();
     expect(links(batch("running"))).toBeNull();
@@ -43,11 +49,28 @@ describe("training → interview → review order", () => {
       [`/artist/exhibitions/${id}/preview`, "학습된 여운 체험하기"],
     ]);
   });
-  it("passes the interview flag to the training screen", async () => {
+  it("keeps training as its own screen and only reflects interview answers when the flag is on", async () => {
+    const learning = (next?: string) => LearningPage({ params: Promise.resolve({ id }), searchParams: Promise.resolve({ next }) });
+    vi.stubEnv("FEATURE_ARTWORK_INTERVIEW", "true");
+    expect((await learning()).type).toBe(Learning);
+    expect((await learning()).props).toEqual({ id, interviewEnabled: true, reflect: false });
+    expect((await learning("review")).props).toEqual({ id, interviewEnabled: true, reflect: true });
+    vi.stubEnv("FEATURE_ARTWORK_INTERVIEW", "false");
+    expect((await learning("review")).props).toEqual({ id, interviewEnabled: false, reflect: false });
+  });
+  it("opens the interview screen only with the flag, otherwise goes straight to review", async () => {
+    vi.stubEnv("FEATURE_ARTWORK_INTERVIEW", "true");
+    const page = await InterviewPage({ params: Promise.resolve({ id }) });
+    expect(page.type).toBe(InterviewHub);
+    expect(page.props).toEqual({ id });
+    vi.stubEnv("FEATURE_ARTWORK_INTERVIEW", "false");
+    await expect(InterviewPage({ params: Promise.resolve({ id }) })).rejects.toThrow(`redirect:/artist/exhibitions/${id}/verification`);
+  });
+  it("renders review as its own screen with the interview flag for its back link", async () => {
     for (const flag of ["true", "false"]) {
       vi.stubEnv("FEATURE_ARTWORK_INTERVIEW", flag);
-      const page = await LearningPage({ params: Promise.resolve({ id }) });
-      expect(page.type).toBe(Learning);
+      const page = await VerificationPage({ params: Promise.resolve({ id }) });
+      expect(page.type).toBe(VerificationHub);
       expect(page.props).toEqual({ id, interviewEnabled: flag === "true" });
     }
   });

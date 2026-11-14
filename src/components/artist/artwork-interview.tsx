@@ -71,7 +71,7 @@ export function ArtworkInterview({ artworkId, initial }: { artworkId: string; in
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 px-4 py-8">
-      <Link className="text-sm underline underline-offset-4" href={`/artist/exhibitions/${interview.exhibitionId}/learning`}>학습 화면으로 돌아가기</Link>
+      <Link className="text-sm underline underline-offset-4" href={`/artist/exhibitions/${interview.exhibitionId}/interview`}>인터뷰 목록으로 돌아가기</Link>
       <div className="space-y-2">
         <p className="text-sm">{interview.artworkTitle}</p>
         <h1 className="text-2xl font-semibold">작품 인터뷰</h1>

@@ -9,7 +9,7 @@ import { AI_LIMITS } from "@/lib/contracts/chat";
 import type { PreviewAnswer, QaRewriteJob } from "@/lib/contracts/qa";
 import { ArtistLink, errorMessage, Field, Header, Loading, PrivateImage, useArtistLoad } from "./ui";
 import { artworkListKey, exhibitionKey, loadArtworkList, loadExhibitionOverview, overviewKey } from "./navigation-data";
-import { VerificationLinks } from "./verification-links";
+import { FlowSteps } from "./flow-steps";
 
 type Batch = Awaited<ReturnType<typeof requestApi<"getTrainingBatch">>>["data"];
 type Target = Batch["targets"][number];
@@ -40,7 +40,8 @@ function useReviewData(id: string) {
   });
 }
 
-export function Learning({ id, interviewEnabled = false }: { id: string; interviewEnabled?: boolean }) {
+/** Step 1 ends here: training only. `reflect` comes from the interview screen to retrain with approved answers. */
+export function Learning({ id, interviewEnabled = false, reflect = false }: { id: string; interviewEnabled?: boolean; reflect?: boolean }) {
   const result = useReviewData(id);
   const loadLatest = useCallback(async (signal: AbortSignal) =>
     (await requestApi("getLatestTrainingBatch", { params: { id }, signal })).data, [id]);
@@ -49,6 +50,7 @@ export function Learning({ id, interviewEnabled = false }: { id: string; intervi
   const batch = updatedBatch === undefined ? latest.data : updatedBatch;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [retrainFrom, setRetrainFrom] = useState<string>();
   const operation = useRef<AbortController | null>(null);
   const creationId = useRef<string | null>(null);
   const targetRequests = useRef(new Map<string, { requestId: string; expectedAttempt: number }>());
@@ -117,7 +119,13 @@ export function Learning({ id, interviewEnabled = false }: { id: string; intervi
   const needsMaterial = batch?.targets.some(item => item.status === "abstained");
   const expired = batch?.targets.some(item => item.resultCode === "JOB_EXPIRED");
   const incomplete = batch?.status === "completed" && completed !== batch.targets.length;
+  const done = batch?.status === "completed" && !busy;
+  // A reflection retrain counts only once a new batch replaced the one shown on arrival.
+  const reflected = !reflect || (retrainFrom !== undefined && batch?.id !== retrainFrom);
+  const next = interviewEnabled && !reflect ? "interview" : "verification";
   return <>
+    <Header title="여운 학습" back={root(id)} />
+    <FlowSteps current={1} interviewEnabled={interviewEnabled} />
     {!result.data ? <Loading {...result} /> : <section className="artist-learning yeobek-appear">
       <div className="artist-learning-names">
         {batch?.artistName && <span>{batch.artistName}</span>}
@@ -139,45 +147,25 @@ export function Learning({ id, interviewEnabled = false }: { id: string; intervi
           {busy ? "학습 중…" : running ? "진행 확인" : batch ? "다시 시도" : "여운 학습시키기"}
         </button>}
         {incomplete && <p role="status">{needsMaterial ? "학습을 마치지 못했어요. 전시 자료를 확인해주세요." : "일부 학습을 마치지 못했어요. 다시 시도해주세요."}</p>}
-        {batch?.status === "completed" && !expired && <button className="artist-action secondary" disabled={busy}
-          onClick={() => void run(true)}>새로 학습시키기</button>}
-        {batch?.status === "completed" && <>
-          {interviewEnabled && <InterviewStep id={id} works={result.data.works} busy={busy} onRetrain={() => void run(true)} />}
-          <h3>{interviewEnabled ? "3. 학습 결과 검증" : "학습 결과 검증"}</h3>
-          <VerificationLinks id={id} batch={batch} prepareFaq={() => loadArtistPage(faqKey(id), signal => loadFaq(id, signal))} />
+        {done && !reflected && <>
+          <p>인터뷰에서 승인한 답변을 해설과 예상 질문에 반영하려면 다시 학습해야 해요.</p>
+          <div className="artist-flow-actions">
+            <button className="artist-action" onClick={() => { setRetrainFrom(batch.id); void run(true); }}>답변 반영해 학습시키기</button>
+            <ArtistLink className="artist-action secondary" href={`${root(id)}/verification`}>반영 없이 검토로</ArtistLink>
+          </div>
         </>}
+        {done && reflected && <div className="artist-actions">
+          {!expired && !reflect && <button className="artist-action secondary" onClick={() => void run(true)}>새로 학습시키기</button>}
+          <ArtistLink className="artist-action" href={`${root(id)}/${next}`}>{next === "interview" ? "다음: AI 인터뷰" : "다음: 검토"}</ArtistLink>
+        </div>}
       </> : <p>먼저 작품을 등록해주세요.</p>}
       {error && <p className="error" role="alert">{error}</p>}
     </section>}
   </>;
 }
 
-/** Between training and review: interview answers enter narration and Q&A only on the next training. */
-function InterviewStep({ id, works, busy, onRetrain }: {
-  id: string; works: { id: string; title: string }[]; busy: boolean; onRetrain: () => void;
-}) {
-  const load = useCallback(async (signal: AbortSignal) => Promise.all(works.map(async work => {
-    const { data } = await requestApi("getArtworkInterview", { params: { id: work.id }, signal });
-    return { id: work.id, title: work.title, asked: data.questions.length,
-      approved: data.questions.filter(question => question.status === "approved").length };
-  })), [works]);
-  const result = useArtistLoad(load);
-  const approved = result.data?.reduce((sum, work) => sum + work.approved, 0) ?? 0;
-  return <section aria-labelledby="interview-step">
-    <h3 id="interview-step">2. AI 인터뷰</h3>
-    <p>여운이 학습한 자료로 답하지 못한 내용을 작품별로 물어봐요. 승인한 답변은 다시 학습해야 해설과 질문에 반영돼요.</p>
-    {!result.data ? <Loading {...result} /> : <ul className="artist-workflow-list">{result.data.map(work => <li key={work.id}>
-      <strong>{work.title}</strong>
-      <p className="artist-note">{work.asked ? `질문 ${work.asked}개 · 승인 ${work.approved}개` : "아직 인터뷰하지 않았어요"}</p>
-      <ArtistLink className="artist-action secondary" href={`${root(id)}/artworks/${work.id}/interview`}>
-        {work.asked ? "인터뷰 이어하기" : "인터뷰 시작"}
-      </ArtistLink>
-    </li>)}</ul>}
-    {approved > 0 && <button className="artist-action" disabled={busy} onClick={onRetrain}>인터뷰 답변 반영해 다시 학습</button>}
-  </section>;
-}
-
 const faqKey = (id: string) => `faq:${id}`;
+export const prepareFaq = (id: string) => loadArtistPage(faqKey(id), signal => loadFaq(id, signal));
 
 async function loadFaq(id: string, signal: AbortSignal) {
   const params = { id };
@@ -197,7 +185,7 @@ export function Faq({ id }: { id: string }) {
   const result = useArtistLoad(load, faqKey(id), () => forgetArtistPage(artworkListKey(id)));
   const preparePreview = () => loadArtistPage(overviewKey(id), signal => loadExhibitionOverview(id, signal));
   return <div className="artist-faq yeobek-appear">
-    <Header title="자주하는 질문" back={root(id)} />
+    <Header title="자주하는 질문" back={`${root(id)}/verification`} />
     {result.data ? <>
       {result.data.length ? <ul>{result.data.map(item => {
         const params = new URLSearchParams({ qa: item.id });

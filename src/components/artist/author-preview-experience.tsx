@@ -29,7 +29,7 @@ export function AuthorPreviewExperience({ id, initialArtworkId }: { id: string; 
   }, [id, initialArtworkId, attempt]);
   return <div className={styles.preview}>
     <div className={styles.notice}>
-      <Link href={`/artist/exhibitions/${id}`}>전시 편집으로</Link>
+      <Link href={`/artist/exhibitions/${id}/verification`}>검토로 돌아가기</Link>
       <strong>작가 전용 초안 체험</strong>
       <p>저장된 초안 자료로 답하며 관람객에게 공개되지 않아요. 음성을 켜거나 녹음하면 음성 처리 비용이 발생할 수 있어요.</p>
     </div>
