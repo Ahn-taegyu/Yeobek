@@ -5,7 +5,7 @@ export interface AiUsage {
 }
 
 export interface AiProviderTrace {
-  provider: "openai" | "liner" | "typecast" | "exaone" | "mock";
+  provider: "openai" | "liner" | "typecast" | "exaone" | "gemini" | "groq" | "mock";
   mock?: true;
   model: string;
   usage?: AiUsage;

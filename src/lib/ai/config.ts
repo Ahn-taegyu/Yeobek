@@ -5,6 +5,8 @@ import { AiError } from "./errors";
 export const AI_MODELS = {
   qa: "gpt-6-luna",
   exaone: "k-exaone_v2.5",
+  gemini: "gemini-3.5-flash-lite",
+  groq: "openai/gpt-oss-120b",
   draft: "openai/gpt-6.1-sol",
   transcription: "gpt-transcribe",
   typecastSpeech: "ssfm-v31",

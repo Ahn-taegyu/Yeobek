@@ -56,18 +56,25 @@ export function providerTrace(
   config: { model: string; apiKey: string },
   response?: Record<string, unknown>,
 ): AiProviderTrace {
-  const reportedModel = response?.model;
+  const reportedModel = provider === "gemini" ? response?.modelVersion : response?.model;
   const model = typeof reportedModel === "string" &&
     /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(reportedModel) &&
     !reportedModel.includes(config.apiKey)
     ? reportedModel
     : config.model;
   const trace: AiProviderTrace = { provider, model };
-  const tokens = objectValue(response?.usage);
+  const gemini = provider === "gemini";
+  const chatCompletion = provider === "liner" || provider === "exaone" || provider === "groq";
+  const tokens = objectValue(gemini ? response?.usageMetadata : response?.usage);
   const usage: AiUsage = {};
-  const input = tokenCount((provider === "liner" || provider === "exaone") ? tokens?.prompt_tokens : tokens?.input_tokens);
-  const output = tokenCount((provider === "liner" || provider === "exaone") ? tokens?.completion_tokens : tokens?.output_tokens);
-  const total = tokenCount(tokens?.total_tokens);
+  const input = tokenCount(gemini ? tokens?.promptTokenCount : chatCompletion ? tokens?.prompt_tokens : tokens?.input_tokens);
+  let output = tokenCount(gemini ? tokens?.candidatesTokenCount : chatCompletion ? tokens?.completion_tokens : tokens?.output_tokens);
+  if (gemini && output !== undefined && tokens?.thoughtsTokenCount !== undefined) {
+    // Gemini reports thought tokens separately from visible candidate tokens.
+    const thoughts = tokenCount(tokens.thoughtsTokenCount);
+    output = thoughts === undefined ? undefined : tokenCount(output + thoughts);
+  }
+  const total = tokenCount(gemini ? tokens?.totalTokenCount : tokens?.total_tokens);
   if (input !== undefined) usage.inputTokens = input;
   if (output !== undefined) usage.outputTokens = output;
   if (total !== undefined) usage.totalTokens = total;

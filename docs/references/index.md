@@ -90,3 +90,5 @@
 
 - [API 적용 수정 계획과 승인·게시 UI 및 cron GET 구현 요청](user-api-rollout-publication.md) — SRC-058, 실호출 전 준비와 원격 설정 변경 제외.
 - [Preview 가입 인증 메일을 스티비로 발송](user-stibee-signup.md) — SRC-059.
+
+- [무료 AI 제공사 시험 요청](user-free-ai-providers.md) — SRC-060.

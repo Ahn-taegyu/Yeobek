@@ -46,6 +46,8 @@ npm run ai:smoke -- tts
 npm run ai:smoke -- stt --audio=path/to/test.webm
 ```
 
+Gemini 생성과 Groq 평가를 선택적으로 시험할 수 있습니다. 무료 계정·청구 상태 확인과 합성 자료 사용 등 선행 조건은 [무료 텍스트 시험 절차](docs/specs/key-day-checklist.md#무료-텍스트-제공사-선택-시험)를 따르세요. 음성·자료·자동화는 해당 범위가 아닙니다.
+
 `ai:check`는 설정을 검사하며 키를 출력하거나 접속하지 않습니다. `ai:smoke`는 `AI_PROVIDER_MODE=live`가 필요하며 `typecast-tts`, `openai-tts`, `exaone`도 선택할 수 있습니다. 시험은 응답 계약을 확인하며 한국어 품질·근거 충실도와 행사 키 권한은 별도 실측이 필요합니다.
 
 기존 인증·작가 CRUD와 공개 조회의 경로는 `src/lib/contracts/`에 계약을 두고 프런트에서 `requestApi`를 `@/lib/client`로 가져와 사용합니다. 글 게시와 관람 채팅·보완 요청 HTTP도 같은 계약과 클라이언트로 호출합니다.

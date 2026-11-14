@@ -8,6 +8,8 @@ import { createOpenAiSpeechProvider, createOpenAiTextProvider, createOpenAiTrans
 import { createLinerSpeechProvider, createLinerTextProvider, createLinerTranscriptionProvider } from "./providers/liner";
 import { createTypecastSpeechProvider } from "./providers/typecast";
 import { createExaoneTextProvider } from "./providers/exaone";
+import { createGeminiTextProvider } from "./providers/gemini";
+import { createGroqTextProvider } from "./providers/groq";
 import { createMockSpeechProvider, createMockTextProvider, createMockTranscriptionProvider } from "./providers/mock";
 import type { AiProviderOptions, AiProviderTrace, AiSpeechProvider, AiTextProvider, AiTranscriptionProvider } from "./providers/types";
 import { createArtistKnowledgeHarness, type ArtistKnowledgeStore, type KnowledgeOrganizationResult } from "./artist-knowledge";
@@ -22,6 +24,8 @@ export function createConfiguredTextProvider(capability: TextCapability, options
   const config = getRoutedModelConfig(route, env);
   if (route.provider === "liner") return createLinerTextProvider(config, options);
   if (route.provider === "exaone") return createExaoneTextProvider(config, options);
+  if (route.provider === "gemini") return createGeminiTextProvider(config, options);
+  if (route.provider === "groq") return createGroqTextProvider(config, options);
   return createOpenAiTextProvider(config, options);
 }
 

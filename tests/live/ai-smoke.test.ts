@@ -7,7 +7,7 @@ import { createOpenAiSpeechProvider } from "../../src/lib/ai/providers/openai";
 import { createTypecastSpeechProvider } from "../../src/lib/ai/providers/typecast";
 import { createConfiguredSpeechProvider, createConfiguredTextProvider, createConfiguredTranscriptionProvider } from "../../src/lib/ai/runtime";
 import { AI_CAPABILITIES, isMockMode, resolveAiRoute, type AiCapability } from "../../src/lib/ai/routing";
-import { AI_MODELS } from "../../src/lib/ai/config";
+import { AI_MODELS, type AiEnvironment } from "../../src/lib/ai/config";
 import { AiError } from "../../src/lib/ai/errors";
 import { validateAnswer, validateNarrationDraft } from "../../src/lib/ai/harness";
 import { answerJsonSchema, narrationDraftJsonSchema } from "../../src/lib/ai/contracts";
@@ -15,18 +15,22 @@ import { DOCENT_SYSTEM_PROMPT, NARRATION_SYSTEM_PROMPT } from "../../src/lib/ai/
 import { organizationJsonSchema } from "../../src/lib/ai/artist-knowledge";
 import { ids, syntheticPublication } from "../fixtures/ai";
 
-function configured(capability: AiCapability) {
-  if (capability === "stt") return createConfiguredTranscriptionProvider();
-  if (capability === "tts") return createConfiguredSpeechProvider();
-  return createConfiguredTextProvider(capability);
+function configured(capability: AiCapability, env: AiEnvironment) {
+  if (capability === "stt") return createConfiguredTranscriptionProvider(undefined, env);
+  if (capability === "tts") return createConfiguredSpeechProvider(undefined, env);
+  return createConfiguredTextProvider(capability, undefined, env);
 }
 
 function localCheck() {
   // Never emit configured model/voice values. This command does not use fetch.
-  const checks = AI_CAPABILITIES.map(capability => {
+  const textOnly = process.env.AI_CHECK_SCOPE === "text";
+  // Text preflight validates live credentials even while the app stays in mock mode.
+  const env = textOnly ? { ...process.env, AI_PROVIDER_MODE: "live" } : process.env;
+  const selected: AiCapability[] = textOnly ? ["qa", "draft", "organize", "judge"] : AI_CAPABILITIES;
+  const checks = selected.map(capability => {
     try {
-      const route = resolveAiRoute(capability);
-      configured(capability);
+      const route = resolveAiRoute(capability, env);
+      configured(capability, env);
       return [capability, { configured: true, provider: route.provider }] as const;
     } catch {
       return [capability, { configured: false, check: `AI_ROUTE_${capability.toUpperCase()}, selected provider key` +
@@ -35,7 +39,9 @@ function localCheck() {
     }
   });
   const capabilities = Object.fromEntries(checks);
-  process.stdout.write(JSON.stringify({ check: "local-configuration-only", networkCalls: 0, accountAccessVerified: false, capabilities }, null, 2) + "\n");
+  process.stdout.write(JSON.stringify({ check: "local-configuration-only", scope: textOnly ? "text" : "all",
+    mode: isMockMode(env) ? "mock" : "live", networkCalls: 0, accountAccessVerified: false,
+    billingTierVerified: false, capabilities }, null, 2) + "\n");
   expect(checks.every(([, value]) => value.configured)).toBe(true);
 }
 

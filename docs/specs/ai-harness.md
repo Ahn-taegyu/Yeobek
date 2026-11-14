@@ -4,7 +4,7 @@ id: SPEC-013
 title: 제품 AI 어댑터와 실행 하네스
 description: 승인된 공개 문맥, 제공사 어댑터, 검증 및 실패 처리의 구현 설계와 통합 경계.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags: [yeobek, ai, harness, rag]
 rag_include: true
 generated:
@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: free-providers
+  resource: /references/user-free-ai-providers.md
+  title: 무료 AI 제공사 시험 요청
 - id: playbooks-plan
   resource: /references/user-harness-playbooks-plan.md
   title: AI 하네스 수정·발전 계획 요청 원문
@@ -74,6 +77,8 @@ sources:
 
 Liner는 `POST https://platform.liner.com/api/v1/chat/completions`에 서버 인증과 `model`, `messages`를 보내고 비스트리밍 응답의 `choices[0].message.content`를 읽는다. JSON Schema 응답 형식을 지원하더라도 서버 검증을 생략하지 않는다. 모델 목록 등재는 행사 키의 접근 권한 확인이 아니다. 제공사에 내장된 외부 검색·도구 호출을 허용하지 않는다.
 
+선택적으로 텍스트 QA/DRAFT/ORGANIZE에 Gemini, JUDGE에 Groq를 직접 지정할 수 있다. 기본 Liner 경로와 음성·자료·자동화 경로는 변경하지 않는다. 무료 계정·과금 상태는 코드가 보증하지 않으며, 합성 자료만 사용하는 사전 확인과 제한된 시험 절차는 [키 당일 점검표](key-day-checklist.md#무료-텍스트-제공사-선택-시험)를 따른다. CLI smoke는 DB 없이 실행하며 앱에서 이 제공사를 사용하려면 제공사 추적값을 허용하는 신규 migration을 먼저 적용해야 한다. 실제 호출과 품질은 미검증이다.
+
 # 실행 계약
 
 1. 요청 ID, context sequence, 전시와 선택 작품 또는 번호, 필수 질문과 독립적인 입력·출력 모드를 받는다. 선택적 `intent`는 `narration`·`question`, `artworkNumber`는 1~9999 정수다. 해설 버튼은 `narration`과 `artworkId`, 숫자 입력은 `narration`과 `artworkNumber`를 보낸다. `question`은 Q&A를 강제하며 구조화 번호와 명백한 텍스트 번호가 충돌하면 확인한다. 번호는 요청된 전시 안에서 해석한다. 레거시 입력은 보수적 패턴으로 판별하며 `이번`, `붓질이 번졌나요`, `천 번을 봐도 좋네요`의 횟수와 지시어를 작품 번호로 보지 않는다. `-1`도 1번으로 보지 않고 쉼표로 구분되거나 인접한 두 번호는 확인을 요청한다. `19번 작품도 설명해줘`처럼 안전하게 식별된 기본 해설 요청에는 승인된 해설을 재사용한다. 부위를 가리키는 제한된 고정 표현은 되묻는다. 그 밖의 모호함은 모델 의미 평가가 필요하며 시각 관찰 기능은 없다. [PR2 검토](../reviews/ai-harness-fix-review.md)에 수정 후 검사 결과를 기록했다. 기본값 적용 전에 명시 여부를 보존하여 생략 시 번호만 입력과 해설 표현을 판별한다. 이전 내부 `auto` 값은 제거했으며 공개 HTTP는 아직 없으므로 향후 호출자는 값을 생략하거나 두 의도 중 하나를 보낸다.
@@ -96,7 +101,7 @@ Liner는 `POST https://platform.liner.com/api/v1/chat/completions`에 서버 인
 
 | 명령 | 범위 |
 | --- | --- |
-| `npm run ai:check` | 로컬 설정 존재 여부만 검사, 네트워크 호출 없음; 필수 설정 누락 시 종료 코드 1 |
+| `npm run ai:check` | 로컬 설정 검사, 네트워크 호출 없음; `-- --text`는 mock 앱 설정에서도 텍스트 네 경로의 live 설정을 검사 |
 | `npm run ai:eval` | 하네스·제공사·제품 플러그인의 모의 제공사 오프라인 계약 검사. 실제 모델의 지시 주입 저항 검증 아님 |
 | `npm run ai:compare -- --mode=mock` | 합성 사례 오프라인 비교; 명시적 live 옵션의 호출 예산과 출력은 [비교 명세](narration-evaluation.md) 참고 |
 | `npm run ai:review -- .ai-eval/run-ID` | 사람이 작성한 라벨로 검토 요약 생성 |

@@ -11,6 +11,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-14T15:05:00+09:00'
 sources:
+- id: free-providers
+  resource: /references/user-free-ai-providers.md
+  title: 무료 AI 제공사 시험 요청
 - id: api-rollout
   resource: /references/user-api-rollout-publication.md
   title: API 적용 수정 계획과 실행 제외 범위
@@ -39,6 +42,32 @@ sources:
 2. `npm run ai:smoke -- tts`, `npm run ai:smoke -- stt --audio=권리확인한파일경로`로 음성을 확인한다. 전사 파일은 30초·3MiB 이내다. SMTP·6자리 코드·직접 로그인을 별도로 확인한다.
 3. 예상 Q&A → 미리보기 → 지시문 재작성 플래그를 각각 켜고 검증한 다음 최종 설정으로 가입부터 관람 음성까지 한 번 이어서 확인한다. 파일 읽기는 동의·후보 검수/적용 화면 준비 후 활성화한다.
 4. 정리 스케줄 연결, 마지막으로 미사용 코드/브랜치를 정리한다. 작업 일일 100회는 비용 상한이 아니며 직접 adapter를 호출하는 smoke에 작가 HTTP 작업 한도가 자동 적용된다고 가정하지 않는다. 제공사별 요청 수·토큰·실제 청구 사용량을 확인한다.
+
+# 무료 텍스트 제공사 선택 시험
+
+[무료 제공사 요청](../references/user-free-ai-providers.md)에 따른 선택 경로다. 이 작업에서는 실제 호출을 하지 않았다. 기존 Liner 기본 경로는 유지하며 음성, 자료 추출, 자동화는 이 시험 범위가 아니다. 해당 기능은 비활성 상태를 유지하고 호출하지 않는다. 전체 앱이 무료라는 뜻이 아니다.
+
+1. [Google AI Studio](https://aistudio.google.com/api-keys)에서 결제가 연결되지 않은 프로젝트의 `GEMINI_API_KEY`를 발급하고, [Groq 콘솔](https://console.groq.com/keys)에서 Free plan의 `GROQ_API_KEY`를 발급한다. 유료 플랜으로 업그레이드하지 않는다. **실행 직전** 계정의 결제 상태, 모델 접근, 현재 무료 제공량과 잔여 한도를 각 콘솔에서 확인한다. 코드는 계정의 무료 등급이나 과금 상태를 증명하거나 보장하지 못한다. 확인할 수 없으면 실호출을 중단한다.
+2. 비밀값은 서버 전용 로컬 환경에만 넣고 저장소·로그·화면에 노출하지 않는다. `.env.example`의 주석 예시처럼 QA/DRAFT/ORGANIZE는 `gemini:gemini-3.5-flash-lite`, JUDGE는 `groq:openai/gpt-oss-120b`로 명시한다. 기존 같은 이름 설정을 교체하며 중복하지 않는다. 로컬 앱 시험 준비 중에는 공유 예시의 `live` 값을 `AI_PROVIDER_MODE=mock`으로 바꾼다. 무료 Gemini 입력은 제품 개선에 사용될 수 있으므로 합성 자료만 쓴다.
+3. `npm run ai:check -- --text`로 QA/DRAFT/JUDGE/ORGANIZE의 실제 live 설정을 네트워크 없이 검사한다. 출력의 QA/DRAFT/ORGANIZE 제공사가 `gemini`, JUDGE가 `groq`인지 확인한다. 이 명령은 다른 유료 경로의 설정도 검사할 수 있는 범용 도구이며, 키 접근·무료 상태·모델 품질은 확인하지 않는다. 오류를 해결하고 다시 계정 상태를 확인한다.
+4. CLI smoke는 DB가 필요하지 않다. 앱에서 이 제공사를 사용하려면 `20261114235000_free_text_provider_usage.sql`을 먼저 전진 적용한다. 관람·자료 정리의 사용량 저장 함수에서 두 제공사를 허용하며 기존 권한·입력 제한을 유지한다. 이 작업의 로컬 검증은 트랜잭션 적용 후 롤백한 리허설이며 원격 DB에는 적용하지 않았다.
+5. 실호출이 승인된 경우에만 별도 시험 프로세스에서 `AI_PROVIDER_MODE=live`를 명시하고 `npm run ai:smoke -- qa`, `npm run ai:smoke -- draft`, `npm run ai:smoke -- judge`를 각각 실행한다. 명령 하나당 제공사 요청은 최대 1회다. 이후 필요하면 `npm run ai:compare -- --mode=live --cases=grounded --repeats=1 --max-calls=8`을 실행한다. 전체 예산은 최대 8회다. 자동 유료 fallback은 없다. 한도·사용량·청구 상태를 확인하고 결과는 사람 검토한다.
+
+[Gemini 가격](https://aistudio.google.com/docs/pricing#gemini-3.5-flash-lite)과 [Groq 한도](https://console.groq.com/docs/rate-limits)는 변경될 수 있으며 계정 콘솔이 적용 한도의 기준이다. 각 호출은 무료 상태 확인 후에도 제공사 정책과 실제 계정 조건을 따른다.
+
+키 설정 예시는 다음과 같다. 기존 `.env.local`의 같은 항목을 교체하고 Supabase·다른 키는 보존한다. 현재 어댑터는 아래 두 모델만 허용한다. 음성·파일 읽기·자동화는 별도 제공사와 설정이 필요하다.
+
+```dotenv
+AI_PROVIDER_MODE=mock
+GEMINI_API_KEY=발급받은_Gemini_키
+GROQ_API_KEY=발급받은_Groq_키
+AI_ROUTE_QA=gemini:gemini-3.5-flash-lite
+AI_ROUTE_DRAFT=gemini:gemini-3.5-flash-lite
+AI_ROUTE_ORGANIZE=gemini:gemini-3.5-flash-lite
+AI_ROUTE_JUDGE=groq:openai/gpt-oss-120b
+```
+
+무료 상태 확인 후 **별도 PowerShell 터미널**에서만 `$env:AI_PROVIDER_MODE='live'`로 설정하고 위 smoke 명령을 실행한다. 끝나면 터미널을 닫는다. `.env.local`은 mock을 유지하며, 셸 환경값이 파일값보다 우선한다. API 호출은 이번 구현·검증에서 실행하지 않았다. 무료 할당량을 넘으면 오류를 보고하고 자동 재시도·유료 경로 전환은 하지 않는다. 후보 비교는 최대 8회 호출이므로 1회 smoke 성공 후 잔여 요청·토큰 한도를 다시 확인한다.
 
 # Auth와 기본 배포
 
