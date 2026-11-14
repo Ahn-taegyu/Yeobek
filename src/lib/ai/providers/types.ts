@@ -17,6 +17,8 @@ export interface AiTextRequest {
   schema: { name: string; definition: Record<string, unknown> };
   signal?: AbortSignal;
   maxOutputTokens?: number;
+  /** Server-owned bytes only. Never accept a model-selected URL or file ID. */
+  media?: { contentType: "application/pdf" | "image/jpeg" | "image/png" | "image/webp"; data: Uint8Array };
 }
 
 export interface AiTextResponse {

@@ -508,7 +508,7 @@ W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 �
 
 # W2 작가 자료 정리 후보·이력
 
-PR #13의 구현 계약이며 최종 CI·병합 전에는 main에서 호출 가능하다고 가정하지 않는다. 원자료를 새 문장으로 요약하지 않고 모델이 선택한 source ID의 원문을 서버가 복사한다. W10 주체별 질문·활동 이력 카탈로그를 사용하며 선택하지 않은 section과 출처는 보존한다. 자료 생성은 원본 수정·근거 승인·게시가 아니다.
+PR #13은 최종 head351156f의 App·Knowledge 성공 후 main9c6efbf로 병합됐다. 원자료를 새 문장으로 요약하지 않고 모델이 선택한 source ID의 원문을 서버가 복사한다. W10 주체별 질문·활동 이력 카탈로그를 사용하며 선택하지 않은 section과 출처는 보존한다. 자료 생성은 원본 수정·근거 승인·게시가 아니다.
 
 | requestApi | 경로·요청 | 응답·경계 |
 | --- | --- | --- |
@@ -521,3 +521,18 @@ PR #13의 구현 계약이며 최종 CI·병합 전에는 main에서 호출 가�
 인증·같은 출처가 필요하고 다른 작가의 문서·후보·이력은404다. 미검수 적용400, 원자료 변경409, 만료 미적용 후보410 `PROPOSAL_EXPIRED`, 일일 작업 한도429다. 생성은 기존 author_jobs_per_day에 W11과 합산된다. 입력 근거는 최대12개/8,000자이고 전체 문서는 별도 보존된다. 자료가 많으면 선택되지 않은 항목까지 처리됐다고 표시하지 않는다.
 
 220000은 공유한130000/131000을 보존하는 후속 migration이다. 작업 원장 만료와 후보 보존을 분리하고 mock을 후보에 보관한다. 적용된 후보·이력은 작업 정리 후에도 보존한다. 만료된 미적용 후보는 cron 호출당 최대1000개 본문/이전본문/출처를 비우고 최소 식별·만료 tombstone을 남겨410을 유지한다. 운영 cron 연결은 별도 점검이며 삭제 완료 시각을 보장하지 않는다. 정리 후보는 비공개이며 적용 후에도 별도 근거 승인·게시를 거친다.
+
+# 파일 읽기와 W2 후보
+
+feat/material-extraction의 구현 계약이며 최신 CI·병합 전이다. [요청 SRC-054](../references/user-backend-author-parallel-plan.md), [제공사 조사](../research/material-reader.md)가 근거다. 생성 결과의 자동 적용·승인·게시는 없다.
+
+| requestApi | 경로·요청 | 응답 |
+| --- | --- | --- |
+| extractMaterial | POST `/api/admin/materials/{id}/extract`, `{requestId,documentId,expectedVersion,expectedDocumentRevision,consentToRead:true}` | HTTP200 `{read,proposalJob}`. 자료와 문서는 같은 소유자·같은 주체여야 한다. `materialExtraction` 기본off이면404 |
+| getMaterialRead | GET `/api/admin/material-reads/{id}`; **id는 POST의 requestId** | `read` 상태만 반환. 내부 read.id는 해시 캐시 식별자이며 조회 경로에 사용하지 않는다. GET은 실행·재시도·후보 생성을 하지 않는다 |
+
+read는 `{id,status,mock,pageCount,chunkCount,method,resultCode}`다. status=running/succeeded/failed/purged, method=text_pdf/vision/null. 실패 resultCode=READ_FAILED/SOURCE_CHANGED/EXPIRED이며 원문 오류는 숨긴다. EMPTY는 정상 빈 결과다. succeeded이고 chunkCount>0이면 기존 W2 정리 작업을 예약해 proposalJob을 반환한다. 후보 생성은 별도 quota이며 quota/문서 충돌 오류 뒤에도 완료된 파일 캐시는 유지된다. 같은 입력·requestId로 POST를 재전송하면 파일을 다시 읽지 않고 후속 단계를 복구한다. 대기 중인 동일 해시 요청은 running+proposalJob:null일 수 있어 GET 확인 후 같은 POST로 후속 후보를 요청한다.
+
+401 인증,404 타 계정·삭제·비활성 생성,400 미동의·부적합 자료/쪽수,409 requestId/버전 충돌,429 작가 일일 한도다. 참조 이미지와 PDF만 허용하고 작품 이미지·avatar·poster는 제외한다. 텍스트 PDF는 로컬 추출, 스캔/이미지는 명시적 요청 때 제공사에 전송한다. 파일3MiB/6MiB와 정책 기본20쪽을 유지한다.
+
+230000·231000 신규 migration은 비공개 hash cache/request/link, 서비스 전용 reserve/complete, 소유자 전용 get, 기존 W2 sourceRef/12근거·8,000자 예산 연결을 추가한다. 원본 파일·추출 본문은 로그/원장 요약에 저장하지 않는다. 모의 추출만 선택된 실모드 W2 생성은 거부하고, 같은 파일의 실추출이 있으면 우선한다. 추출 중 문서 수정은 파일 캐시를 폐기하지 않지만 후속 W2 revision 확인에서 충돌한다.

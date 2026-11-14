@@ -1,10 +1,20 @@
 {
   "id": "yeobek",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "instructions": "instructions.md",
   "messages": "messages.json",
-  "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa"],
+  "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa", "read-material"],
   "playbooks": {
+    "material-read": {
+      "skills": ["read-material"],
+      "tools": [],
+      "steps": [
+        { "id": "context.validate" },
+        { "id": "document.read" },
+        { "id": "model.generate" },
+        { "id": "output.validate" }
+      ]
+    },
     "artist-preview": {
       "skills": ["author-qa"],
       "tools": ["preview.reserve", "preview.complete"],
