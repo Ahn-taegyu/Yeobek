@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [병렬 백엔드 완료 조건·최신 상태 반영 요청](user-parallel-backend-completion.md) — SRC-053, 작업별 완료 증거와 결정 동기화.
+
 - [AI 하네스 PR3 재검토 요청 원문](user-pr3-rereview.md) — 3~4단계 범위 설명과 PR 재검토 요청.
 
 - [Claude AI 하네스 PR2 검토 메모 원문](claude-ai-harness-review-notes.md) — 과거 재현·pstack 대응의 원자료.
