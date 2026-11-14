@@ -15,6 +15,15 @@ generated:
   at: '2026-11-12T14:49:23+09:00'
 decision_status: proposed
 sources:
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
+- id: questionnaire
+  resource: /references/user-artist-questionnaire.md
+  title: 작가 기본 작품 세계 세부 질문지
 - id: v3-scope
   resource: /references/user-v3-decisions.md
   title: v3 온보딩·입력·화면 범위 결정
@@ -311,9 +320,11 @@ SC-A05는 기본 해설 원고 검수와 작가 전용 AI 미리보기의 두 �
 
 ## SC-A10 기본 작품 세계 등록·수정
 
-SC-A02에서 진입하여 기존 작가 공통 자료를 불러와 수정한다. 저장 후 홈의 등록 상태를 새로 조회한다. 입력 항목의 세부 설계는 [내부 지식](artist-knowledge.md)을 따른다.
-
+SC-A02에서 진입하여 기존 작가 공통 자료를 불러와 수정한다. 저장 후 홈의 등록 상태를 새로 조회한다. [작가 질문지](../references/user-artist-questionnaire.md)의 7개 질문을 개별 답변으로 표시한다. 기존 소개/작품 세계 자료는 보존하고 두 표현 방식 질문을 합치지 않는다. 입력·저장 연결은 [내부 지식](artist-knowledge.md)을 따른다.
 
 # v3 변경분 연결
 
-v3 화면 대조는 작가 Figma 176:331·관람객 165:616을 해당 묶음 재개 시 직접 확인한다. 로그인 후 온보딩의 이름·작가명·이메일은 필수다. 나머지는 건너뛸 수 있고 성별은 기본 수집하지 않는다. 홈은 준비중(미공개 또는 시작 전), 진행중(공개·기간 내), 종료(종료 시각 경과)를 표시한다. 상태가 겹칠 때의 탭 우선순위는 미결정이다. 별도 도슨트 여운 화면과 QR 제작은 MVP에서 제외하고 관람 서버 계약은 유지한다. 세부 화면 구성은 프런트에서 결정한다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md) · [범위 결정 SRC-045](../references/user-v3-decisions.md) · [후속 결정 SRC-046](../references/user-v3-review-decisions.md).
+v3 화면 대조는 작가 Figma 176:331·관람객 165:616을 해당 묶음 재개 시 직접 확인한다. 로그인 후 온보딩의 이름·작가명·이메일은 필수다. 나머지는 건너뛸 수 있고 성별은 기본 수집하지 않는다. 홈은 준비중(미공개 또는 시작 전), 진행중(공개·기간 내), 종료(종료 시각 경과)를 표시한다. 미공개 상태는 종료 시각 경과보다 우선하여 준비중에 둔다(SRC-048). 별도 도슨트 여운 화면과 QR 제작은 MVP에서 제외하고 관람 서버 계약은 유지한다. 세부 화면 구성은 프런트에서 결정한다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md) · [범위 결정 SRC-045](../references/user-v3-decisions.md) · [후속 결정 SRC-046](../references/user-v3-review-decisions.md).
+
+
+W10에서 작가 화면 8개의 문구와 이미지를 직접 확인했다([SRC-049](../references/figma-authoring-v3.md)). 온보딩 기본 정보는 이름·작가명·읽기 전용 계정 이메일, 활동 이력 5개와 키워드 3종은 건너뛰기 가능하다. 사진·전시 포스터는 선택이며 비공개 업로드 후 연결한다. 이 변경은 API/계약 구현이고 Figma 화면 자체를 구현·시각 검증했다는 뜻은 아니다. 관람객·학습/미리보기 화면은 W11·W12 시작 시 별도로 확인한다.

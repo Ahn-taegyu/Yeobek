@@ -14,6 +14,15 @@ generated:
   at: '2026-11-12T14:49:23+09:00'
 decision_status: proposed
 sources:
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
+- id: questionnaire
+  resource: /references/user-artist-questionnaire.md
+  title: 작가 기본 작품 세계 세부 질문지
 - id: v3-scope
   resource: /references/user-v3-decisions.md
   title: v3 온보딩·입력·화면 범위 결정
@@ -139,7 +148,11 @@ Notion F06(독립 음성 해설 생성)·F09(독립 작품별 해설 제공)는 
 
 유효 세션으로 자기 홈에 진입한다. 기본 작품 세계 등록 전/완료 상태와 편집 진입을 제공하며 미등록 상태에서도 전시 생성이 가능하다. 내 전시만 조회하고 전시명·기간·장소·공개 상태와 관리 진입을 표시한다. 로딩·오류·빈 목록을 구분하고 재시도와 첫 전시 생성 경로를 제공한다. 저장 후 돌아오면 새 상태를 반영한다. 카드/리스트·정렬·검색·삭제·복제의 세부는 미확정이다. 홈 상태 명칭과 기준은 아래 v3 결정을 따른다.
 
-로그인 후 작가 온보딩에서는 이름·작가명·이메일이 필수다. 나머지는 건너뛸 수 있고 성별은 기본 수집하지 않는다. 인증 이메일을 다시 입력받을지는 구현 전에 정리한다. 홈의 준비중은 미공개 또는 시작 전, 진행중은 공개·기간 내, 종료는 종료 시각 경과다. 미공개이면서 종료된 전시의 탭 우선순위는 미결정이다. [v3 범위 결정](../references/user-v3-decisions.md).
+로그인 후 작가 온보딩에서는 이름·작가명·이메일이 필수다. 나머지는 건너뛸 수 있고 성별은 기본 수집하지 않는다. 인증 이메일을 다시 입력받을지는 구현 전에 정리한다. 홈의 준비중은 미공개 또는 시작 전, 진행중은 공개·기간 내, 종료는 종료 시각 경과다. 미공개이면서 종료된 전시의 탭은 준비중이 우선이다(SRC-048). [v3 범위 결정](../references/user-v3-decisions.md).
+
+### 작가 공통 작품 세계 입력
+
+[사용자가 전달한 질문지](../references/user-artist-questionnaire.md)의 7개 답변을 별도 항목으로 저장한다. 작업 계기, 핵심 관심사, 예술관 및 철학, 사용하는 표현 방식, 그 표현 방식을 선택한 이유, 영감의 원천, 관람객과의 소통이다. 두 표현 방식 질문은 서로 다른 ID를 쓴다. 기존 소개·작품 세계 자유 입력 자료를 삭제하거나 새 항목으로 자동 추정하지 않는다. 미등록이어도 전시를 만들 수 있고 새로운 필수 조건은 추가하지 않는다.
 
 ## F01 전시 생성
 
@@ -478,3 +491,5 @@ OP는 **업무 식별자**이며 완성된 엔드포인트 명세가 아니다. 
 # v3 변경분 연결
 
 v3 추가 범위는 로그인 후 작가 온보딩과 프로필·포스터(W10), 일괄 학습·지시문 재작성·평가(W11), 공개 포스터·이미지(W12)다. 이메일 인증 방식을 유지한다. QR 제작과 별도 도슨트 여운 화면 후보는 MVP에서 제외한다. 관람 서버 계약은 유지하고 세부 화면 구성은 프런트에서 결정한다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md) · [범위 결정 SRC-045](../references/user-v3-decisions.md) · [후속 결정 SRC-046](../references/user-v3-review-decisions.md) · [진행 계획](backend-completion.md).
+
+W10의 이름·작가명·인증된 계정 이메일 필수 조건은 작가 온보딩 완료에 적용한다. 기존 로그인·문서 저장 계약은 유지하며 활동 이력·키워드·사진·포스터는 선택이다. 완료는 승인/게시를 의미하지 않는다. [구현 계약](api-contract.md#w10-v3-온보딩사진홈-계약), [Figma 대조](../references/figma-authoring-v3.md)를 참고한다.

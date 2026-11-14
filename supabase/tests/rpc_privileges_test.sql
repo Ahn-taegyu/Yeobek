@@ -28,6 +28,15 @@ select results_eq(
     ('get_public_exhibition(uuid)', true, true, true, false),
 
     -- authenticated
+    ('advance_exhibition_step(uuid, integer, text)', false, true, false, false),
+    ('create_artwork_draft(uuid, uuid, integer, text, text, text, text, text, jsonb, jsonb)', false, true, false, false),
+    ('create_exhibition_draft(uuid, text, date, date, text, text, text, jsonb, jsonb)', false, true, false, false),
+    ('reorder_artworks(uuid, jsonb)', false, true, false, false),
+    ('set_artist_avatar(integer, uuid)', false, true, false, false),
+    ('set_exhibition_poster(uuid, integer, uuid)', false, true, false, false),
+    ('update_artist_onboarding(integer, text, text, jsonb, boolean)', false, true, false, false),
+    ('update_artwork_draft(uuid, integer, integer, text, text, text, text, text, integer, jsonb, jsonb)', false, true, false, false),
+    ('update_exhibition_draft(uuid, integer, text, date, date, text, text, text, integer, jsonb, jsonb)', false, true, false, false),
     ('approve_evidence(uuid, integer)', false, true, false, false),
     ('approve_narration(uuid, integer, jsonb)', false, true, false, false),
     ('decide_outbox(uuid, integer, boolean)', false, true, false, false),

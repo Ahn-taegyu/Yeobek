@@ -1,6 +1,8 @@
+import { updateExhibitionBody } from "@/lib/contracts/authoring";
+import { AUTHORING_JSON_BYTES } from "@/lib/contracts/knowledge-sections";
 import { authenticatedDb, rpc } from "@/lib/api/db";
 import { handleApi, assertSameOrigin, readJson } from "@/lib/api/http";
-import { updateExhibitionSchema, uuid, rpcArgs } from "@/lib/api/schemas";
+import { uuid, rpcArgs } from "@/lib/api/schemas";
 
 type Context = { params: Promise<{ id: string }> };
 export function GET(_request: Request, context: Context) {
@@ -14,6 +16,12 @@ export function PATCH(request: Request, context: Context) {
     assertSameOrigin(request);
     const db = await authenticatedDb();
     const id = uuid.parse((await context.params).id);
-    return rpc(db, "update_exhibition", rpcArgs({ id, ...await readJson(request, updateExhibitionSchema) }));
+    const input = await readJson(request, updateExhibitionBody, AUTHORING_JSON_BYTES);
+    if ("draft" in input) {
+      const { draft, ...values } = input;
+      void draft;
+      return rpc(db, "update_exhibition_draft", rpcArgs({ id, ...values }));
+    }
+    return rpc(db, "update_exhibition", rpcArgs({ id, ...input }));
   });
 }

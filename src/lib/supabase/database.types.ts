@@ -119,28 +119,34 @@ isOneToOne: false
                   ]
                 },"artist_profiles": {
                   Row: {
-                    "created_at": string,"display_name": string | null,"id": string,"owner_id": string,"revision": number,"updated_at": string
+                    "avatar_material_id": string | null,"created_at": string,"display_name": string | null,"full_name": string | null,"id": string,"keywords": NonNullable<Json>,"onboarding_completed_at": string | null,"owner_id": string,"revision": number,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"display_name"?: string | null,"id"?: string,"owner_id": string,"revision"?: number,"updated_at"?: string
+                    "avatar_material_id"?: string | null,"created_at"?: string,"display_name"?: string | null,"full_name"?: string | null,"id"?: string,"keywords"?: NonNullable<Json>,"onboarding_completed_at"?: string | null,"owner_id": string,"revision"?: number,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"display_name"?: string | null,"id"?: string,"owner_id"?: string,"revision"?: number,"updated_at"?: string
+                    "avatar_material_id"?: string | null,"created_at"?: string,"display_name"?: string | null,"full_name"?: string | null,"id"?: string,"keywords"?: NonNullable<Json>,"onboarding_completed_at"?: string | null,"owner_id"?: string,"revision"?: number,"updated_at"?: string
                   }
                   Relationships: [
-
+                    {
+      foreignKeyName: "artist_profiles_avatar_material_fk"
+      columns: ["owner_id","id","avatar_material_id"]
+isOneToOne: false
+      referencedRelation: "materials"
+      referencedColumns: ["owner_id","artist_id","id"]
+    }
                   ]
                 },"artworks": {
                   Row: {
-                    "active_publication_id": string | null,"create_fingerprint": string,"created_at": string,"creation_year": string | null,"deleted_at": string | null,"dimensions": string | null,"exhibition_id": string,"id": string,"image_material_id": string | null,"medium": string | null,"narration_draft": string | null,"number": number,"owner_id": string,"revision": number,"state": string,"title": string,"updated_at": string
+                    "active_draft_number": number | null,"active_publication_id": string | null,"create_fingerprint": string,"created_at": string,"creation_year": string | null,"deleted_at": string | null,"dimensions": string | null,"dimensions_unit": string | null,"draft_number": number | null,"exhibition_id": string,"id": string,"image_material_id": string | null,"medium": string | null,"narration_draft": string | null,"number": number,"owner_id": string,"revision": number,"state": string,"title": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "active_publication_id"?: string | null,"create_fingerprint": string,"created_at"?: string,"creation_year"?: string | null,"deleted_at"?: string | null,"dimensions"?: string | null,"exhibition_id": string,"id": string,"image_material_id"?: string | null,"medium"?: string | null,"narration_draft"?: string | null,"number": number,"owner_id": string,"revision"?: number,"state"?: string,"title": string,"updated_at"?: string
+                    "active_draft_number"?: never,"active_publication_id"?: string | null,"create_fingerprint": string,"created_at"?: string,"creation_year"?: string | null,"deleted_at"?: string | null,"dimensions"?: string | null,"dimensions_unit"?: string | null,"draft_number"?: number | null,"exhibition_id": string,"id": string,"image_material_id"?: string | null,"medium"?: string | null,"narration_draft"?: string | null,"number": number,"owner_id": string,"revision"?: number,"state"?: string,"title"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "active_publication_id"?: string | null,"create_fingerprint"?: string,"created_at"?: string,"creation_year"?: string | null,"deleted_at"?: string | null,"dimensions"?: string | null,"exhibition_id"?: string,"id"?: string,"image_material_id"?: string | null,"medium"?: string | null,"narration_draft"?: string | null,"number"?: number,"owner_id"?: string,"revision"?: number,"state"?: string,"title"?: string,"updated_at"?: string
+                    "active_draft_number"?: never,"active_publication_id"?: string | null,"create_fingerprint"?: string,"created_at"?: string,"creation_year"?: string | null,"deleted_at"?: string | null,"dimensions"?: string | null,"dimensions_unit"?: string | null,"draft_number"?: number | null,"exhibition_id"?: string,"id"?: string,"image_material_id"?: string | null,"medium"?: string | null,"narration_draft"?: string | null,"number"?: number,"owner_id"?: string,"revision"?: number,"state"?: string,"title"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -311,14 +317,14 @@ isOneToOne: false
                   ]
                 },"exhibitions": {
                   Row: {
-                    "artist_id": string,"create_fingerprint": string,"created_at": string,"deleted_at": string | null,"end_date": string | null,"id": string,"intro_evidence": NonNullable<Json>,"owner_id": string,"place": string | null,"public_artist_bio": string | null,"public_artist_display_name": string | null,"public_end_date": string | null,"public_introduction": string | null,"public_place": string | null,"public_start_date": string | null,"public_theme": string | null,"public_title": string | null,"revision": number,"start_date": string | null,"state": string,"title": string,"updated_at": string
+                    "artist_id": string,"authoring_step": string | null,"create_fingerprint": string,"created_at": string,"deleted_at": string | null,"end_date": string | null,"end_time": string | null,"id": string,"intro_evidence": NonNullable<Json>,"owner_id": string,"place": string | null,"poster_material_id": string | null,"public_artist_bio": string | null,"public_artist_display_name": string | null,"public_end_date": string | null,"public_introduction": string | null,"public_place": string | null,"public_start_date": string | null,"public_theme": string | null,"public_title": string | null,"revision": number,"start_date": string | null,"start_time": string | null,"state": string,"title": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "artist_id": string,"create_fingerprint": string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"id": string,"intro_evidence"?: NonNullable<Json>,"owner_id": string,"place"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_start_date"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"state"?: string,"title": string,"updated_at"?: string
+                    "artist_id": string,"authoring_step"?: string | null,"create_fingerprint": string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"end_time"?: string | null,"id": string,"intro_evidence"?: NonNullable<Json>,"owner_id": string,"place"?: string | null,"poster_material_id"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_start_date"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"start_time"?: string | null,"state"?: string,"title"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "artist_id"?: string,"create_fingerprint"?: string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"id"?: string,"intro_evidence"?: NonNullable<Json>,"owner_id"?: string,"place"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_start_date"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"state"?: string,"title"?: string,"updated_at"?: string
+                    "artist_id"?: string,"authoring_step"?: string | null,"create_fingerprint"?: string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"end_time"?: string | null,"id"?: string,"intro_evidence"?: NonNullable<Json>,"owner_id"?: string,"place"?: string | null,"poster_material_id"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_start_date"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"start_time"?: string | null,"state"?: string,"title"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -327,6 +333,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "artist_profiles"
       referencedColumns: ["owner_id","id"]
+    },{
+      foreignKeyName: "exhibitions_poster_material_fk"
+      columns: ["owner_id","id","poster_material_id"]
+isOneToOne: false
+      referencedRelation: "materials"
+      referencedColumns: ["owner_id","exhibition_id","id"]
     }
                   ]
                 },"help_articles": {
@@ -664,6 +676,9 @@ isOneToOne: false
             "acquire_notification_run":
 { Args: { "p_mock": boolean,"p_token": string }; Returns: Json
                            },
+"advance_exhibition_step":
+{ Args: { "p_expected_revision": number,"p_id": string,"p_step": string }; Returns: Json
+                           },
 "approve_evidence":
 { Args: { "p_evidence_id": string,"p_version": number }; Returns: Json
                            },
@@ -748,8 +763,14 @@ isOneToOne: false
 "create_artwork":
 { Args: { "p_creation_year": string,"p_dimensions": string,"p_exhibition_id": string,"p_id": string,"p_medium": string,"p_number": number,"p_sections": Json,"p_source_refs": Json,"p_title": string }; Returns: Json
                            },
+"create_artwork_draft":
+{ Args: { "p_creation_year": string,"p_dimensions": string,"p_dimensions_unit": string,"p_exhibition_id": string,"p_id": string,"p_medium": string,"p_number": number,"p_sections": Json,"p_source_refs": Json,"p_title": string }; Returns: Json
+                           },
 "create_exhibition":
 { Args: { "p_end_date": string,"p_id": string,"p_place": string,"p_sections": Json,"p_source_refs": Json,"p_start_date": string,"p_title": string }; Returns: Json
+                           },
+"create_exhibition_draft":
+{ Args: { "p_end_date": string,"p_end_time": string,"p_id": string,"p_place": string,"p_sections": Json,"p_source_refs": Json,"p_start_date": string,"p_start_time": string,"p_title": string }; Returns: Json
                            },
 "decide_outbox":
 { Args: { "p_approve": boolean,"p_expected_revision": number,"p_id": string }; Returns: Json
@@ -889,6 +910,9 @@ isOneToOne: false
 "release_notification_run":
 { Args: { "p_mock": boolean,"p_token": string }; Returns: undefined
                            },
+"reorder_artworks":
+{ Args: { "p_exhibition_id": string,"p_items": Json }; Returns: Json
+                           },
 "request_upload":
 { Args: { "p_byte_size": number,"p_content_type": string,"p_filename": string,"p_id": string,"p_kind": string,"p_owner": string,"p_subject_id": string,"p_subject_type": string }; Returns: Json
                            },
@@ -932,11 +956,17 @@ isOneToOne: false
 "schedule_automation_notifications":
 { Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
                            },
+"set_artist_avatar":
+{ Args: { "p_expected_revision": number,"p_material_id": string }; Returns: Json
+                           },
 "set_artwork_image":
 { Args: { "p_artwork_id": string,"p_expected_revision": number,"p_material_id": string }; Returns: Json
                            },
 "set_contact_consent":
 { Args: { "p_category": string,"p_expected_revision": number,"p_granted": boolean }; Returns: Json
+                           },
+"set_exhibition_poster":
+{ Args: { "p_expected_revision": number,"p_id": string,"p_material_id": string }; Returns: Json
                            },
 "set_support_binding":
 { Args: { "p_channel_id": string,"p_enabled": boolean,"p_expected_revision": number,"p_owner": string,"p_user_id": string }; Returns: Json
@@ -944,14 +974,23 @@ isOneToOne: false
 "sync_audio_config":
 { Args: { "p_fingerprint": string,"p_mock": boolean }; Returns: number
                            },
+"update_artist_onboarding":
+{ Args: { "p_complete": boolean,"p_display_name": string,"p_expected_revision": number,"p_full_name": string,"p_keywords": Json }; Returns: Json
+                           },
 "update_artist_profile":
 { Args: { "p_display_name": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_sections": Json,"p_source_refs": Json }; Returns: Json
                            },
 "update_artwork":
 { Args: { "p_creation_year": string,"p_dimensions": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_id": string,"p_medium": string,"p_number": number,"p_sections": Json,"p_source_refs": Json,"p_title": string }; Returns: Json
                            },
+"update_artwork_draft":
+{ Args: { "p_creation_year": string,"p_dimensions": string,"p_dimensions_unit": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_id": string,"p_medium": string,"p_number": number,"p_sections": Json,"p_source_refs": Json,"p_title": string }; Returns: Json
+                           },
 "update_exhibition":
 { Args: { "p_end_date": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_id": string,"p_place": string,"p_sections": Json,"p_source_refs": Json,"p_start_date": string,"p_title": string }; Returns: Json
+                           },
+"update_exhibition_draft":
+{ Args: { "p_end_date": string,"p_end_time": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_id": string,"p_place": string,"p_sections": Json,"p_source_refs": Json,"p_start_date": string,"p_start_time": string,"p_title": string }; Returns: Json
                            },
 "update_knowledge_document":
 { Args: { "p_expected_revision": number,"p_sections": Json,"p_source_refs": Json,"p_subject_id": string,"p_subject_type": string }; Returns: Json

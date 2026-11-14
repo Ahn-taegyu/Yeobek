@@ -13,6 +13,12 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
 - id: v3-answers
   resource: /references/user-v3-decisions.md
   title: v3 범위와 Vercel Hobby 답변
@@ -125,3 +131,6 @@ v3 지시문 재작성에서 작가의 수정 지시문은 승인 근거로 취�
 기본 미리 생성 작품 소개만 직접 편집하고, 나머지 답변은 지시문으로 수정한다. 기본 해설 원고 검수와 AI 미리보기는 별도 화면이며 명시적 승인·게시는 유지한다. 시험용 해설은 개발 시연만 허용하고 운영 게시를 차단한다. [후속 답변](../references/user-v3-review-decisions.md).
 
 구현 제안: 문체/분량 지시와 작가의 새 사실 정정을 구분한다. “그 이유가 아니라 … 때문이다”라는 정정은 작가 작성 원문과 대상 질문/작품·기존 답변 버전을 보존한 근거 후보로 만들고, 작가 검수 후 승인 근거로 연결한다. 명령문 자체를 즉시 승인 사실로 쓰거나 기존 공개 근거를 덮어쓰지 않는다. 승인된 정정이 없는 재작성은 기존 승인 근거 범위만 사용한다. W11에서 이 검수 경로를 구현·검증하기 전에는 동작 완료로 보지 않는다.
+
+
+W10 활동 이력 5개는 기존 작가 knowledge_documents에 저장되어 승인 전 원자료로 관리한다. 온보딩 fullName·Auth email·keywords·avatar는 별도 정형 필드이며 문서 근거로 자동 변환하지 않는다. 프로필 사진이나 전시 포스터를 연결하는 행위도 게시 승인이나 이미지 해석 근거 승인을 뜻하지 않는다.

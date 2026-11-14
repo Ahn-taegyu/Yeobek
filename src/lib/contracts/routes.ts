@@ -1,4 +1,7 @@
+import { createExhibitionBody, updateExhibitionBody, createArtworkBody, updateArtworkBody,
+  advanceExhibitionSchema, advanceExhibitionResponse, reorderArtworksSchema, reorderArtworksResponse } from "./authoring";
 import { z } from "zod";
+import { setOnboardingMediaSchema, updateOnboardingSchema } from "./onboarding";
 import { channelWebhookSchema, channelWebhookResponse, supportBindingSchema, supportBindingResponse } from "./support";
 import { consentListResponse, consentResponse, updateConsentSchema, decideOutboxSchema, outboxResponse, outboxPageResponse, outboxQuery, notificationRunResponse } from "./automation";
 import { mediaBinary, mediaQuery } from "./media";
@@ -12,8 +15,8 @@ import { approvalSchema, approvalResponse, evidenceImpactSchema, evidenceRespons
   publicationSchema, publicationResponse, reviewResponse, revokeEvidenceSchema, revokeImpactResponse,
   upsertEvidenceSchema } from "./publication";
 import {
-  createArtworkSchema, createExhibitionSchema, emptySchema, loginSchema, profileSchema,
-  updateArtworkSchema, updateExhibitionSchema, updateKnowledgeSchema, uuid,
+  emptySchema, loginSchema, profileSchema,
+  updateKnowledgeSchema, uuid,
 } from "./requests";
 import {
   accountProfileResponse, artworkListResponse, artworkResponse, documentResponse,
@@ -40,6 +43,8 @@ const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  advanceExhibition: { method: "POST", path: "/api/admin/exhibitions/{id}/advance", params: byId, body: advanceExhibitionSchema, response: successEnvelope(advanceExhibitionResponse), statuses: [200] },
+  reorderArtworks: { method: "POST", path: "/api/admin/exhibitions/{id}/artworks/reorder", params: byId, body: reorderArtworksSchema, response: successEnvelope(reorderArtworksResponse), statuses: [200] },
   runAutomation: { method: "POST", path: "/api/cron/automation", response: successEnvelope(notificationRunResponse), statuses: [200] },
   receiveChannelWebhook: { method: "POST", path: "/api/webhooks/channeltalk", query: z.object({ token: z.string() }), body: channelWebhookSchema, response: successEnvelope(channelWebhookResponse), statuses: [200] },
   setSupportBinding: { method: "POST", path: "/api/ops/support/bindings", body: supportBindingSchema, response: successEnvelope(supportBindingResponse), statuses: [200] },
@@ -80,14 +85,17 @@ export const routes = {
   logout: { method: "POST", path: "/api/auth/logout", body: emptySchema, response: successEnvelope(z.object({ authenticated: z.literal(false) })), statuses: [200] },
   getProfile: { method: "GET", path: "/api/admin/profile", response: successEnvelope(accountProfileResponse), statuses: [200] },
   updateProfile: { method: "PATCH", path: "/api/admin/profile", body: profileSchema, response: successEnvelope(profileResponse), statuses: [200] },
+  updateOnboarding: { method: "PATCH", path: "/api/admin/profile/onboarding", body: updateOnboardingSchema, response: successEnvelope(profileResponse), statuses: [200] },
+  setArtistAvatar: { method: "PATCH", path: "/api/admin/profile/avatar", body: setOnboardingMediaSchema, response: successEnvelope(profileResponse), statuses: [200] },
   listExhibitions: { method: "GET", path: "/api/admin/exhibitions", response: successEnvelope(exhibitionListResponse), statuses: [200] },
-  createExhibition: { method: "POST", path: "/api/admin/exhibitions", body: createExhibitionSchema, response: successEnvelope(exhibitionResponse), statuses: [200, 201] },
+  createExhibition: { method: "POST", path: "/api/admin/exhibitions", body: createExhibitionBody, response: successEnvelope(exhibitionResponse), statuses: [200, 201] },
   getExhibition: { method: "GET", path: "/api/admin/exhibitions/{id}", params: byId, response: successEnvelope(exhibitionResponse), statuses: [200] },
-  updateExhibition: { method: "PATCH", path: "/api/admin/exhibitions/{id}", params: byId, body: updateExhibitionSchema, response: successEnvelope(exhibitionResponse), statuses: [200] },
+  updateExhibition: { method: "PATCH", path: "/api/admin/exhibitions/{id}", params: byId, body: updateExhibitionBody, response: successEnvelope(exhibitionResponse), statuses: [200] },
+  setExhibitionPoster: { method: "PATCH", path: "/api/admin/exhibitions/{id}/poster", params: byId, body: setOnboardingMediaSchema, response: successEnvelope(exhibitionResponse), statuses: [200] },
   listArtworks: { method: "GET", path: "/api/admin/exhibitions/{id}/artworks", params: byId, response: successEnvelope(artworkListResponse), statuses: [200] },
-  createArtwork: { method: "POST", path: "/api/admin/exhibitions/{id}/artworks", params: byId, body: createArtworkSchema, response: successEnvelope(artworkResponse), statuses: [200, 201] },
+  createArtwork: { method: "POST", path: "/api/admin/exhibitions/{id}/artworks", params: byId, body: createArtworkBody, response: successEnvelope(artworkResponse), statuses: [200, 201] },
   getArtwork: { method: "GET", path: "/api/admin/artworks/{id}", params: byId, response: successEnvelope(artworkResponse), statuses: [200] },
-  updateArtwork: { method: "PATCH", path: "/api/admin/artworks/{id}", params: byId, body: updateArtworkSchema, response: successEnvelope(artworkResponse), statuses: [200] },
+  updateArtwork: { method: "PATCH", path: "/api/admin/artworks/{id}", params: byId, body: updateArtworkBody, response: successEnvelope(artworkResponse), statuses: [200] },
   getKnowledge: { method: "GET", path: "/api/admin/knowledge/{id}", params: byId, response: successEnvelope(documentResponse), statuses: [200] },
   updateKnowledge: { method: "PATCH", path: "/api/admin/knowledge/{id}", params: byId, body: updateKnowledgeSchema, response: successEnvelope(documentResponse), statuses: [200] },
   getPublicExhibition: { method: "GET", path: "/api/public/exhibitions/{id}", params: byId, response: successEnvelope(publicExhibitionResponse), statuses: [200] },

@@ -63,7 +63,12 @@
 - [백엔드 완성 v2](user-backend-plan-v2.md) — SRC-041, D0와 W9~W12 및 새 순서.
 - [가입 보안 정책](user-signup-security.md) — SRC-042, 이메일 인증 필수·비밀번호 8자 이상.
 
+- [작가 기본 작품 세계 질문지](user-artist-questionnaire.md) — SRC-043, 작가 7개 질문 및 전시·작품 질문 원문.
+
 - [백엔드 v3·Figma·리스크 보강 요청](user-backend-plan-v3.md) — SRC-044, W13 선행·A1 이메일 유지·미결정 구분.
 - [v3 범위와 배포 답변](user-v3-decisions.md) — SRC-045, 온보딩·입력·QR·서버 계약·Vercel Hobby.
 - [v3 검수·미리보기·시험용 해설의 후속 결정](user-v3-review-decisions.md) — SRC-046.
 - [서브에이전트 추론 강도 조정 지시](user-agent-reasoning-levels.md) — SRC-047.
+
+- [미공개 전시 준비중 우선](user-dashboard-status-precedence.md) — SRC-048.
+- [Figma 작가 입력 화면 직접 대조](figma-authoring-v3.md) — SRC-049, W10 개별 화면8개와 키워드/질문.

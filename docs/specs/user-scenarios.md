@@ -15,6 +15,12 @@ generated:
   at: '2026-11-12T14:49:23+09:00'
 decision_status: proposed
 sources:
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
 - id: v3-scope
   resource: /references/user-v3-decisions.md
   title: v3 온보딩·입력·화면 범위 결정
@@ -436,3 +442,5 @@ sources:
 실행할 때 `AC ID / 기기·환경 / 실제·모의 API 구분 / 수행 입력 / 기대 결과 / 관찰 결과 / 통과·실패·미실행 / 관련 요청 ID / 남은 조치`를 기록한다. 비밀번호·키·원음·불필요한 개인 자료를 기획 위키에 붙이지 않는다.
 
 이번 문서 작성 단계의 AC-01~23은 모두 **미실행**이다. 문서의 링크·메타데이터 검사 통과는 제품 시나리오 통과와 다르다. 출시 판정은 실제 구현 후 필수 시나리오 결과로 하며, 와이어프레임 리뷰만으로 서버 권한/버전/한도를 검증했다고 처리하지 않는다.
+
+W10 추가 확인: 기존 작품 세계를 저장한 작가가 온보딩 이름·키워드를 수정해도 문서는 보존한다. 비공개 사진을 업로드·연결한 뒤에는 먼저 연결 해제해야 삭제할 수 있다. 종료일이 지난 미공개 전시는 준비중에 남고 공개/기간 상태를 따로 반환한다. 이 API 흐름은 로컬에서 검증했으며 실제 화면 검증은 아니다.
