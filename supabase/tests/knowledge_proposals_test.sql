@@ -141,5 +141,33 @@ select throws_ok($$select retry_organize_job('00000000-0000-4000-8000-0000001300
     'P1005','Request ID already used with different input','replayed retry is bound to mock mode');
 
 reset role;
+
+-- Exercise the real cleanup chain against applied and expired pending proposals.
+reset role;
+update ai_jobs set expires_at=statement_timestamp()-interval '1 second'
+where owner_id='00000000-0000-4000-8000-000000130001';
+set local role service_role;
+select lives_ok($$select purge_expired()$$,'proposal history no longer blocks the shared job cleanup');
+reset role;
+select is((select count(*) from ai_jobs where owner_id='00000000-0000-4000-8000-000000130001'),0::bigint,
+    'expired organize jobs are actually removed');
+select is((select count(*) from knowledge_document_history where document_id=current_setting('test.organize_doc')::uuid),1::bigint,
+    'cleanup preserves applied document history');
+select ok((select proposal='{}' and before_sections='[]' and before_source_refs='[]' and payload_purged_at is not null
+    from knowledge_proposals where id=(current_setting('test.organize_expired')::jsonb#>>'{job,id}')::uuid),
+    'expired unapplied private payload is cleared while its tombstone remains');
+set local role authenticated;
+select is(load_proposal(current_setting('test.organize_job')::uuid)->>'mock','true',
+    'applied proposal retains mock provenance after its job expires');
+select is(commit_proposal(current_setting('test.organize_job')::uuid,true)->>'documentRevision','2',
+    'applied proposal replay survives job cleanup');
+select throws_ok($$select load_proposal((current_setting('test.organize_expired')::jsonb#>>'{job,id}')::uuid)$$,
+    'P1008','Knowledge proposal expired','expired lookup keeps its error after payload cleanup');
+select throws_ok($$select commit_proposal((current_setting('test.organize_expired')::jsonb#>>'{job,id}')::uuid,true)$$,
+    'P1008','Knowledge proposal expired','cleared expired proposal remains inapplicable');
+set local request.jwt.claim.sub='00000000-0000-4000-8000-000000130002';
+select throws_ok($$select load_proposal(current_setting('test.organize_job')::uuid)$$,
+    'P0002','Knowledge proposal not found','retained applied proposal remains owner-only');
+
 select * from finish();
 rollback;

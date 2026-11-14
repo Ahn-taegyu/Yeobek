@@ -84,12 +84,12 @@ sources:
 | W4 | done, PR #6·9 | P0 공개 계약 변경은 W12 |
 | W5 | done, PR #7·10 | P0 전시 문맥·출력 전환은 W12 |
 | W8 | in_progress, PR #11의 진행 안내·문의 범위 병합 | 예약 안내·Alt·요약·분류·브리핑·물리 삭제 등 잔여 |
-| W2 | in_progress, [Draft PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), `d276d9f`, 미병합 | W10 section 적용과 이력/만료 정합성 후 v3 순서에서 재개 |
+| W2 | in_progress, [Draft PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), 최신 main 통합·보완 중 | W10 section·이력/만료 보완 전진 적용 및 영향 검사 성공, 최종 CI 대기 |
 | D0 | done, PR #14 | main 861d27a, App·Knowledge CI 성공 |
 | W10 | done, PR #15, main dadc23b | v3 온보딩·사진/포스터·홈 상태, 전체 CI 성공 |
 | W13 | done, PR #16, main44bf7d3 | 리스크1·5·6·8·9 및 기한 반영, App·Knowledge CI 성공. 운영 적용은 W7 |
 | W9 | done, PR #17 | 직접 가입, 이메일 인증 필수·최소 8자 확정 |
-| W11 | in_progress | 예상 Q&A·검수·미리보기 |
+| W11 | done, PR #18, main40564e6 | 예상 Q&A·검수·미리보기·B용 승인 조회, 최종 App/Knowledge 성공; 공개 연결은 B |
 | W12 | not_started | 공개 체크리스트·접속 URL·관람 P0 (QR 제외) |
 | W6 | not_started | 운영 및 가입→전시→게시 집계 |
 | W7 | in_progress (기존 묶음 검사 누적) | 새 전체 흐름·시연 데이터·최종 인계는 미구현 |
@@ -388,3 +388,12 @@ W11 최종 교차검토 후194000으로 예약 시 생성 상한을 고정하고
 A가 로컬 Supabase를 소유하고 전진 migration만 적용한다. B는 공개 게시/스냅샷/관람 채팅·frontend-handoff 전체·시연·키 당일 점검을 맡으며 A는 W11 절만 제공한다. 별도 검토 에이전트는 SQL/권한/migration만 담당한다. 최신 TTS/작품지칭 정책은 [SRC-055](../references/user-visitor-tts-publication-policy.md)에 기록해 B에게 전달했고 아직 현재 코드의 게시 음성 조건을 바꾼 것은 아니다.
 
 195000 서비스전용 승인QA 포트를 추가해 B에게 시그니처·반환형·같은 게시 트랜잭션 호출을 전달했다. 최신 main461d32f까지 확인했으며195000은 main 마지막181000보다 뒤다. 부모 전진 적용과 승인 조회 DB34개가 통과했고, 첫 fixture의 필수mock 누락을 바로잡았다. SQL/권한 독립 검토에 차단사항은 없었다. B 인계문서의 W11절을 추가하고 main461d32f를 합쳤다. 실제 게시 후 비공개 Q&A/미리보기의 관람 문맥·익명 응답 비노출과 게시 revision 변경 후 승인 거부를 포함한 DB24개가 통과했다. 최종 head CI·병합은 대기다.
+
+
+# W11 병합·W2 병렬 계획 재개
+
+W11 PR #18 검사 head1d596e18d102198c3fd830177bb1c21746f3ab5a의 [App43565396278](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396278)·[Knowledge43565396325](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396325) 성공과 차단 리뷰 없음 확인 후 main40564e6c5367402d898dbf4f1fb9a18fbf1477c6으로 병합했다. 앞의 대기 문장은 당시 기록이다. B에 서비스 승인 Q&A 포트·W11 인계·SRC-055 최신 음성 결정을 전달했다. 네 신규 플래그 기본off, 외부 AI/TTS0회. B의 공개 snapshot 연결은 W11 완료에 포함하지 않는다.
+
+W2 PR #13에 main40564e6을 합치고 양쪽 API/CI/문서 충돌을 보존해 해결했다. 신규220000으로 W10 catalog 기반 원문 선택, mock snapshot, 후보의 job FK 분리, 적용 이력 보존, 만료 미적용 본문 정리/tombstone, W2+W11 공통 작업 한도를 보완했다. 이미 공유·적용한130000/131000은 수정하지 않았다. Sol의 SQL 독립 검토에서 발견한 지역 변수 함수명 참조 오류는 적용 전에 v_section_id로 수정했고 다시 읽어 차단 해소를 확인했다.
+
+부모 직접 기존 데이터 보존 전진 적용, 후보/만료·이력·권한 DB56개, W10 생성·적용·이력/공통 한도 DB11개가 성공했다. 영향 단위28개와 계약93개가 성공했고 플러그인0.12.0 갱신 뒤 버전 기대를 고쳐 플러그인22개를 재확인했다(중복 합산 금지). W10 HTTP 회귀를 추가했으며 전체 lint/type/unit/DB/HTTP/build·문서 verify는 최종 head CI 대기다. 외부 AI 호출0회, 운영 cron·실물 품질·프런트 후보 검수 화면 미검증. 파일 추출은 다음 단계이며 업로드가 학습 완료를 뜻하지 않는다.

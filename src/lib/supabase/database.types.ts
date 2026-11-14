@@ -427,14 +427,14 @@ isOneToOne: false
                   ]
                 },"knowledge_proposals": {
                   Row: {
-                    "applied_revision": number | null,"before_sections": NonNullable<Json>,"before_source_refs": NonNullable<Json>,"context_fingerprint": string,"created_at": string,"document_id": string,"expires_at": string,"id": string,"owner_id": string,"proposal": NonNullable<Json>,"target_revision": number
+                    "applied_revision": number | null,"before_sections": NonNullable<Json>,"before_source_refs": NonNullable<Json>,"context_fingerprint": string,"created_at": string,"document_id": string,"expires_at": string,"id": string,"mock": boolean,"owner_id": string,"payload_purged_at": string | null,"proposal": NonNullable<Json>,"target_revision": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "applied_revision"?: number | null,"before_sections": NonNullable<Json>,"before_source_refs": NonNullable<Json>,"context_fingerprint": string,"created_at"?: string,"document_id": string,"expires_at": string,"id": string,"owner_id": string,"proposal": NonNullable<Json>,"target_revision": number
+                    "applied_revision"?: number | null,"before_sections": NonNullable<Json>,"before_source_refs": NonNullable<Json>,"context_fingerprint": string,"created_at"?: string,"document_id": string,"expires_at": string,"id": string,"mock": boolean,"owner_id": string,"payload_purged_at"?: string | null,"proposal": NonNullable<Json>,"target_revision": number
                   }
                   Update: {
-                    "applied_revision"?: number | null,"before_sections"?: NonNullable<Json>,"before_source_refs"?: NonNullable<Json>,"context_fingerprint"?: string,"created_at"?: string,"document_id"?: string,"expires_at"?: string,"id"?: string,"owner_id"?: string,"proposal"?: NonNullable<Json>,"target_revision"?: number
+                    "applied_revision"?: number | null,"before_sections"?: NonNullable<Json>,"before_source_refs"?: NonNullable<Json>,"context_fingerprint"?: string,"created_at"?: string,"document_id"?: string,"expires_at"?: string,"id"?: string,"mock"?: boolean,"owner_id"?: string,"payload_purged_at"?: string | null,"proposal"?: NonNullable<Json>,"target_revision"?: number
                   }
                   Relationships: [
                     {
@@ -442,12 +442,6 @@ isOneToOne: false
       columns: ["document_id"]
 isOneToOne: false
       referencedRelation: "knowledge_documents"
-      referencedColumns: ["id"]
-    },{
-      foreignKeyName: "knowledge_proposals_id_fkey"
-      columns: ["id"]
-isOneToOne: true
-      referencedRelation: "ai_jobs"
       referencedColumns: ["id"]
     }
                   ]

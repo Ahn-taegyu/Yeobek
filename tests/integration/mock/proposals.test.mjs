@@ -105,4 +105,23 @@ test("author organization proposals retain reviewed history through actual HTTP 
     assert.equal(result.data.status, "succeeded", JSON.stringify(result));
     assert.deepEqual((await request(`/api/admin/jobs/${id}/retry`, retry)).data, result.data);
   });
+  await t.test("W10 sections survive proposal HTTP review, apply and history", async () => {
+    const sections = ["artwork_motivation", "artwork_meaning", "artwork_process"].map((id, index) => ({ id, body: `작품 원자료 ${index}` }));
+    const created = await request(`/api/admin/exhibitions/${exhibition.id}/artworks`, {
+      id: randomUUID(), number: 19, title: "세 항목 작품", sections,
+      sourceRefs: sections.map(section => ({ kind: "direct", sectionId: section.id })),
+    });
+    assert.equal(created.status, 201, JSON.stringify(created));
+    const document = created.data.document;
+    const path = `/api/admin/knowledge/${document.id}`;
+    const generated = await request(path + "/proposals", { requestId: randomUUID(), expectedDocumentRevision: document.revision });
+    assert.equal(generated.data.status, "succeeded", JSON.stringify(generated));
+    const id = generated.data.result.proposalId;
+    const reviewed = await request(`/api/admin/proposals/${id}`);
+    assert.equal(reviewed.status, 200, JSON.stringify(reviewed));
+    assert.deepEqual(reviewed.data.before.sections, sections);
+    for (const section of sections) assert.deepEqual(reviewed.data.proposed.sections.find(row => row.id === section.id), section);
+    assert.equal((await request(`/api/admin/proposals/${id}/apply`, { reviewed: true })).status, 200);
+    assert.deepEqual((await request(path + "/history")).data.items[0].sections, sections);
+  });
 });

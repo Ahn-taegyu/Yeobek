@@ -12536,7 +12536,7 @@ exports[`HTTP route contracts > snapshots getProposal 1`] = `
                   ],
                   "type": "object",
                 },
-                "maxItems": 2,
+                "maxItems": 14,
                 "type": "array",
               },
               "sourceRefs": {
@@ -12840,7 +12840,7 @@ exports[`HTTP route contracts > snapshots getProposal 1`] = `
               ],
               "type": "object",
             },
-            "maxItems": 2,
+            "maxItems": 14,
             "type": "array",
           },
           "documentId": {
@@ -12916,7 +12916,7 @@ exports[`HTTP route contracts > snapshots getProposal 1`] = `
                   ],
                   "type": "object",
                 },
-                "maxItems": 2,
+                "maxItems": 14,
                 "type": "array",
               },
               "sourceRefs": {
@@ -14945,7 +14945,7 @@ exports[`HTTP route contracts > snapshots listDocumentHistory 1`] = `
                     ],
                     "type": "object",
                   },
-                  "maxItems": 2,
+                  "maxItems": 14,
                   "type": "array",
                 },
                 "sourceRefs": {

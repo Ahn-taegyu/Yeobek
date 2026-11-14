@@ -34,7 +34,7 @@ function artistSetup() {
 }
 describe("product plugin boundaries", () => {
   it("selects only skills for the declared server task", () => {
-    expect(PLUGIN_VERSION).toMatch(/^yeobek@0\.11\.0:[a-f0-9]{12}$/);
+    expect(PLUGIN_VERSION).toMatch(/^yeobek@0\.12\.0:[a-f0-9]{12}$/);
     expect(playbookPrompt("visitor-answer")).toContain("차분한 존댓말");
     expect(playbookPrompt("visitor-answer")).not.toContain("출력은 sections 배열");
     expect(playbookPrompt("artist-organize")).not.toContain("기본 말투는 차분한 존댓말");
@@ -57,6 +57,23 @@ describe("product plugin boundaries", () => {
 });
 
 describe("artist organization proposals", () => {
+  it("organizes three W10 sections and preserves untouched content through read and apply", async () => {
+    const s = artistSetup();
+    const sections = ["artist_motivation", "artist_methods", "artist_activities"] as const;
+    s.context.sources = sections.map((sectionId, index) => ({ ...s.context.sources[0],
+      id: `20000000-0000-4000-8000-00000000000${index}`, text: `원자료 ${index}`,
+      ref: { kind: "direct" as const, sectionId } }));
+    s.text.generate.mockResolvedValue({ output: { sections: sections.map((id, index) => ({
+      id, sourceIds: [s.context.sources[index].id],
+    })) }, trace: { provider: "liner", model: "fake" } });
+    const { proposal } = await s.harness.propose({ documentId: ids.artwork, expectedRevision: 2 });
+    expect(proposal?.sections).toEqual([...s.context.sections,
+      ...sections.map((id, index) => ({ id, body: `원자료 ${index}` }))]);
+    expect(proposal?.sourceRefs).toEqual([...s.context.sourceRefs,
+      ...sections.map(sectionId => ({ kind: "direct", sectionId }))]);
+    expect(await s.harness.apply({ proposalId: proposal!.id, reviewed: true })).toMatchObject({ documentRevision: 3 });
+  });
+
   it("records proposal assembly failure without replacing the original exception", async () => {
     const s = artistSetup(); const error = new Error("clock unavailable");
     const harness = createArtistKnowledgeHarness(ids.owner, { store: s.store, text: s.text, now: () => { throw error; } });

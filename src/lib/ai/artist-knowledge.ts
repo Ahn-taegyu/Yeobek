@@ -7,7 +7,7 @@ import { abortable, createDeadline } from "./deadline";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { section, sourceRef } from "../api/schemas";
-import { MAX_SECTIONS, sectionsFor } from "../contracts/knowledge-sections";
+import { MAX_SECTIONS, SECTION_IDS, sectionsFor } from "../contracts/knowledge-sections";
 import { assertNotCancelled, textHash } from "./context";
 import { codepoints } from "./contracts";
 import { capabilitiesFor, PLUGIN_VERSION, playbookPrompt } from "./plugin";
@@ -17,7 +17,6 @@ import type { AiProviderTrace, AiTextProvider } from "./providers/types";
 const uuid = z.uuid();
 const revision = z.number().int().positive().max(2147483647);
 const subject = z.enum(["artist", "exhibition", "artwork"]);
-const sectionIds = { artist: ["bio", "practice"], exhibition: ["introduction", "theme"], artwork: ["description", "notes"] } as const;
 const sourceSchema = z.strictObject({ id: uuid, ownerId: uuid, artistId: uuid, subjectType: subject, subjectId: uuid,
   exhibitionId: uuid.nullable(), revision, text: z.string().min(1).refine(v => codepoints(v) <= 5000 && !v.includes("\u0000")), ref: sourceRef });
 const contextSchema = z.strictObject({ documentId: uuid, ownerId: uuid, artistId: uuid, subjectId: uuid,
@@ -26,11 +25,11 @@ const contextSchema = z.strictObject({ documentId: uuid, ownerId: uuid, artistId
 export type ArtistKnowledgeContext = z.infer<typeof contextSchema>;
 const selectionSchema = z.strictObject({ sections: z.array(z.strictObject({
   id: section.shape.id, sourceIds: z.array(uuid).min(1).max(12),
-})).max(2) });
+})).max(MAX_SECTIONS) });
 export const organizationJsonSchema = { name: "yeobek_knowledge_organization", definition: {
   type: "object", additionalProperties: false, required: ["sections"], properties: { sections: { type: "array", items: {
     type: "object", additionalProperties: false, required: ["id", "sourceIds"], properties: {
-      id: { type: "string", enum: ["bio", "practice", "introduction", "theme", "description", "notes"] },
+      id: { type: "string", enum: [...SECTION_IDS] },
       sourceIds: { type: "array", items: { type: "string" } },
     },
   } } },
@@ -39,7 +38,7 @@ const pinSchema = z.strictObject({ id: uuid, revision, hash: z.string().regex(/^
 const proposalSchema = z.strictObject({ id: uuid, ownerId: uuid, documentId: uuid, targetRevision: revision,
   pluginVersion: z.string().min(1), expiresAt: z.number().int().positive(),
   selection: selectionSchema, sourcePins: z.array(pinSchema).max(12),
-  sections: z.array(section).max(2), sourceRefs: z.array(sourceRef).max(24), appliedRevision: revision.nullable() });
+  sections: z.array(section).max(MAX_SECTIONS), sourceRefs: z.array(sourceRef).max(24), appliedRevision: revision.nullable() });
 export type KnowledgeProposal = z.infer<typeof proposalSchema>;
 /** Execution records stay outside the immutable proposal and public HTTP body. */
 export type KnowledgeOrganizationResult = {
@@ -103,7 +102,7 @@ function planSelection(output: unknown, context: ArtistKnowledgeContext) {
   const parsed = selectionSchema.safeParse(output);
   if (!parsed.success) throw new KnowledgeError("invalid_output");
   const selection = parsed.data;
-  const allowed: readonly string[] = sectionIds[context.subjectType];
+  const allowed: readonly string[] = sectionsFor(context.subjectType).map(section => section.id);
   const used = new Set<string>();
   const sections = [...context.sections];
   let refs = [...context.sourceRefs];
@@ -192,7 +191,9 @@ export function createArtistKnowledgeHarness(actorId: string, deps: {
         const generated = await flow.step("model.generate", async () => {
           const result = await abortable(deadline.signal, active => deps.text.generate({
             system: playbookPrompt("artist-organize"), schema: organizationJsonSchema, signal: active, maxOutputTokens: 4096,
-            input: JSON.stringify({ subjectType: context.subjectType, sources: context.sources.map(({ id, text }) => ({ id, text })) }),
+            input: JSON.stringify({ subjectType: context.subjectType,
+              allowedSections: sectionsFor(context.subjectType).map(({ id, prompt }) => ({ id, prompt })),
+              sources: context.sources.map(({ id, text }) => ({ id, text })) }),
           }));
           usage.push(result.trace);
           return result;
