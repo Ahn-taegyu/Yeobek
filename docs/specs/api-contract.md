@@ -455,7 +455,7 @@ v3 추가 경로/필드는 W13→W10→W9→W11→W12 순서로 확정한다. �
 
 | 경로 | 입력/결과 |
 | --- | --- |
-| POST /api/auth/signup | `{email,password,passwordConfirmation,requestId,profile?:{fullName,displayName}}` → 202 `{status:"verification_required",authenticated:false}`. 이메일 trim/lowercase, 비밀번호 8 Unicode 문자 이상·72 UTF-8 bytes 이하, 일치 확인. 작가 가입 화면은 이름과 작가명을 필수로 받으며 API는 이전 호출자에 대해 profile 생략을 허용한다. |
+| POST /api/auth/signup | `{email,password,passwordConfirmation,requestId,profile?:{fullName,displayName}}` → 202 `{status:"verification_required",authenticated:false}`. 이메일 trim/lowercase, 비밀번호 8 Unicode 문자 이상·72 UTF-8 bytes 이하, 일치 확인. 작가 가입 화면은 이름과 작가명을 필수로 받으며 API는 이전 호출자에 대해 profile 생략을 허용한다. 같은 이메일에 이전 가입 시도로 만든 미인증 계정이 있으면 새 비밀번호·requestId·profile로 함께 교체하고 새 코드를 보낸다. 이후 확인·재발송은 이 새 requestId로만 된다. 인증을 마친 계정이면 메일을 보내지 않고 같은 202를 반환한다. |
 | POST /api/auth/resend | `{email,signupRequestId,requestId}` → 같은 202. 원래 가입 요청 ID와 미인증 계정이 일치할 때만 메일 전송 |
 | POST /api/auth/verify | `{email,code,signupRequestId,requestId}` → 200 `{status:"verified",authenticated:false}`. 숫자 6자리 코드; 올바르지 않음/만료/다른 가입시도는 400 INVALID_VERIFICATION_CODE |
 | GET /api/auth/session | `{authenticated:boolean}`. 실제 인증 장애는 429/503, 비로그인만 false. 프로필 지연 생성 없음 |

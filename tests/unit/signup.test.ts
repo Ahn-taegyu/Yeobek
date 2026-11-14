@@ -33,6 +33,8 @@ function request(path: string, body: object, origin = appOrigin) {
 
 const budgetPath = "/rest/v1/rpc/consume_signup_budget";
 const identityPath = "/rest/v1/rpc/get_signup_verification_identity";
+const pendingPath = "/rest/v1/rpc/get_pending_signup_user";
+const updatePath = `/auth/v1/admin/users/${userId}`;
 const createPath = "/auth/v1/admin/users";
 const resendPath = "/auth/v1/resend";
 const verifyPath = "/auth/v1/verify";
@@ -41,6 +43,7 @@ const revokePath = "/auth/v1/logout?scope=local";
 const providerResponses: Record<string, () => Response> = {
   [budgetPath]: () => new Response(null, { status: 204 }),
   [identityPath]: () => Response.json(userId),
+  [pendingPath]: () => Response.json(userId),
   [createPath]: () => Response.json({ ...user, email_confirmed_at: null }),
   [resendPath]: () => Response.json({}),
   [verifyPath]: () => Response.json({ access_token: accessToken, refresh_token: refreshToken, expires_in: 3600, user }),
@@ -60,7 +63,8 @@ function mockProvider(overrides: typeof providerResponses = {}) {
 function calls() {
   return providerFetch.mock.calls.map(([input, init]) => {
     const url = new URL(input instanceof Request ? input.url : input);
-    return { path: url.pathname + url.search, headers: new Headers(init?.headers), body: init?.body ? JSON.parse(String(init.body)) : null };
+    return { path: url.pathname + url.search, method: init?.method ?? "GET", headers: new Headers(init?.headers),
+      body: init?.body ? JSON.parse(String(init.body)) : null };
   });
 }
 
@@ -140,12 +144,17 @@ describe("artist email signup", () => {
     expect(mail.headers.get("apikey")).toBe("publishable-test-key");
   });
 
-  it("preserves a duplicate account and only resumes email confirmation for its original request", async () => {
-    mockProvider({ [createPath]: () => providerError(422, "email_exists"), [identityPath]: () => Response.json(null) });
+  it("sends nothing for a confirmed duplicate and resumes the original request without changes", async () => {
+    mockProvider({
+      [createPath]: () => providerError(422, "email_exists"),
+      [identityPath]: () => Response.json(null),
+      [pendingPath]: () => Response.json(null),
+    });
     const duplicate = await signup(request("signup", signupBody));
     expect(duplicate.status).toBe(202);
     expect((await duplicate.json()).data).toEqual(pending);
-    expect(calls().map(call => call.path)).toEqual([budgetPath, createPath, identityPath]);
+    expect(calls().map(call => call.path)).toEqual([budgetPath, createPath, identityPath, pendingPath]);
+    expect(calls()[3].body).toEqual({ p_email: email });
 
     mockProvider({ [createPath]: () => providerError(422, "email_exists") });
     const resumed = await signup(request("signup", signupBody));
@@ -156,6 +165,57 @@ describe("artist email signup", () => {
     expect(budgets).toHaveLength(2);
     expect(budgets[0].body).toEqual(budgets[1].body);
     expect(calls().at(-1)?.path).toBe(resendPath);
+    // Only the first (unmatched) attempt looks up a pending account; the matching retry changes nothing.
+    expect(calls().filter(call => call.path === pendingPath)).toHaveLength(1);
+    expect(calls().some(call => call.path === updatePath)).toBe(false);
+  });
+
+  it("restarts verification for an unconfirmed account from an earlier signup with a new password and code", async () => {
+    let identityLookups = 0;
+    mockProvider({
+      [createPath]: () => providerError(422, "email_exists"),
+      [identityPath]: () => Response.json(identityLookups++ === 0 ? null : userId),
+      [updatePath]: () => Response.json({ ...user, email_confirmed_at: null }),
+    });
+    const profile = { fullName: "새 이름", displayName: "새 작가명" };
+    const restarted = await signup(request("signup", { ...signupBody, profile }));
+    expect(restarted.status).toBe(202);
+    expect(restarted.headers.get("set-cookie")).toBeNull();
+    expect((await restarted.json()).data).toEqual(pending);
+    expect(calls().map(call => call.path)).toEqual([budgetPath, createPath, identityPath, pendingPath, updatePath, identityPath, resendPath]);
+    const update = calls()[4];
+    expect(update.method).toBe("PUT");
+    expect(update.headers.get("apikey")).toBe("worker-test-key");
+    expect(update.body).toEqual({
+      password, app_metadata: { yeobek_signup_request_id: requestId, yeobek_signup_profile: profile },
+    });
+    expect(calls()[5].body).toEqual({ p_email: email, p_signup_request_id: requestId });
+    expect(calls()[6].body).toMatchObject({ email, type: "signup" });
+
+    providerFetch.mockClear();
+    identityLookups = 0;
+    await signup(request("signup", signupBody));
+    expect(calls()[4].body).toEqual({
+      password, app_metadata: { yeobek_signup_request_id: requestId, yeobek_signup_profile: null },
+    });
+  });
+
+  it("does not send a code when a restarted account cannot be confirmed as the latest request", async () => {
+    mockProvider({
+      [createPath]: () => providerError(422, "email_exists"),
+      [identityPath]: () => Response.json(null),
+      [updatePath]: () => Response.json({ ...user, email_confirmed_at: null }),
+    });
+    const failed = await signup(request("signup", signupBody));
+    expect(failed.status).toBe(503);
+    expect(calls().map(call => call.path)).not.toContain(resendPath);
+
+    providerFetch.mockClear();
+    mockProvider({ [createPath]: () => providerError(422, "email_exists"), [identityPath]: () => Response.json(null),
+      [updatePath]: () => providerError(500) });
+    const providerDown = await signup(request("signup", signupBody));
+    expect(providerDown.status).toBe(503);
+    expect(calls().map(call => call.path)).not.toContain(resendPath);
   });
 
   it("keeps unknown and confirmed resend results generic and requires a matching attempt to verify", async () => {
