@@ -279,3 +279,6 @@ PR #15 후속 60f1113의 Knowledge 43554593053·App 43554593044가 모두 성공
 - 실행 시간: Vercel Hobby+Fluid 선택. vercel.json의 fluid=true, 작가 생성 150초<임대180초, 관람 글110초<임대120초, 음성90초<임대120초. 내부 업무 기한은 각각120/75/60초다. 배포 실제 실행 시간 확인은 W7에 남는다.
 
 부모가 Sol의 실제 SQL·Storage diff를 읽고 범위/호환성을 대조했다. 별도 Sol 검토에서 찾은 음성 예약 전 취소 재확인·RPC abort 전달·scoped IPv6 정규화 오류를 보완했다. 직접 로컬 전진 migration, 네트워크 pgTAP 15개, 실제 Storage HTTP 6개, mock 관람 HTTP 7개, 관련 단위/계약 검사를 확인했다(마지막 IPv6 경계 포함 네트워크 단위 4개 통과). 전체 권한 검사는 W2/W10 RPC가 추가된 로컬 DB 대신 깨끗한 CI DB에서 확인한다. 전체 lint/type/unit/DB/HTTP/build/knowledge CI는 아직 대기다. 외부 AI·발송 호출은 0회, 운영 배포/스케줄도 미확인이다.
+
+
+W13 최초 head771766f의 Knowledge43556303790은 성공했고 App43556303720은 lint/type/unit 이후 RPC 권한 pgTAP의 반환 문자열 collation 오류로 중단됐다. 실제·기대 SELECT 열 모두 COLLATE C로 고쳤다. 부모가 실패 파일만 로컬 실행해 비교가 정상 수행됨을 확인했으며 로컬에는 W10의 advance_exhibition_step 등 추가 RPC가 있어 기대대로 목록 불일치로 실패한다. 권한 기대 목록을 약화하지 않고 새 head의 깨끗한 CI DB에서 전체 일치를 확인한다.

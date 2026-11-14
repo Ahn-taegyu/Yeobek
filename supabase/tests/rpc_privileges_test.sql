@@ -8,7 +8,7 @@ select plan(1);
 -- every RPC migration. Early CRUD grants retain service_role from defaults.
 select results_eq(
     $actual$
-    select p.proname || '(' || oidvectortypes(p.proargtypes) || ')' as signature,
+    select (p.proname || '(' || oidvectortypes(p.proargtypes) || ')') collate "C" as signature,
         has_function_privilege('anon', p.oid, 'EXECUTE') as anon_execute,
         has_function_privilege('authenticated', p.oid, 'EXECUTE') as authenticated_execute,
         has_function_privilege('service_role', p.oid, 'EXECUTE') as service_execute,
@@ -18,10 +18,11 @@ select results_eq(
         ) as public_execute
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
-    order by (p.proname || '(' || oidvectortypes(p.proargtypes) || ')') collate "C"
+    order by signature
     $actual$,
     $expected$
-    select * from (values
+    select signature collate "C" as signature, anon_execute, authenticated_execute, service_execute, public_execute
+    from (values
     -- anon, authenticated, service_role
     ('get_public_artwork(uuid, uuid)', true, true, true, false),
     ('get_public_exhibition(uuid)', true, true, true, false),
@@ -130,7 +131,7 @@ select results_eq(
     ('schedule_automation_notifications(integer, boolean)', false, false, true, false),
     ('sync_audio_config(text, boolean)', false, false, true, false)
     ) as expected(signature, anon_execute, authenticated_execute, service_execute, public_execute)
-    order by signature collate "C"
+    order by signature
     $expected$,
     'public routine signatures and effective EXECUTE privileges match the reviewed inventory'
 );
