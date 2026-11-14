@@ -134,7 +134,7 @@ W10의 추가 입력 계약은 아래 별도 절을 적용한다. 기존 생성�
 | `POST /api/admin/artworks/{id}/evidence` | `scope`, `sourceLabel`, `body`, `source`, 선택적 `evidenceId`·`expectedVersion`으로 근거 생성/수정 |
 | `GET /api/admin/artworks/{id}/review` | 작품·근거·해설 승인·음성·공개본·차단 사유와 소개 근거 핀 조회 |
 | `POST /api/admin/artworks/{id}/approvals` | `kind=evidence`의 `evidenceId,version` 또는 `kind=narration`의 `expectedRevision,citations`로 각각 승인 |
-| `POST /api/admin/exhibitions/{id}/publication` | `publish`는 `requestId,expectedRevision,artworks,intro`로 선택 작품과 소개 근거 버전을 원자적으로 게시; `pause/resume`은 `expectedRevision,artworkId?` 사용 |
+| `POST /api/admin/exhibitions/{id}/publication` | `publish`는 `requestId,expectedRevision,artworks,intro`로 선택 작품과 소개 근거 버전을 원자적으로 게시; `pause/resume`은 `expectedRevision,artworkId?` 사용. `publish`는 게시 전에 선택 작품의 현재 승인 해설 음성을 준비해 공개본에 묶는다(SRC-071, 작품별 병렬, 최대 약 90초 대기, 같은 승인·음성 설정은 한 작업 공유). 준비하지 못한 작품은 글만 게시한다 |
 | `GET /api/admin/exhibitions/{id}/labels` | 공개 경로·작품 번호와 제목 조회 |
 | `POST /api/admin/evidence/{id}/impact` | `expectedVersion`으로 다른 전시까지 포함한 철회 영향과 token 조회 |
 | `POST /api/admin/evidence/{id}/revoke` | `expectedVersion,impactToken`으로 영향 재검사 후 철회 |
