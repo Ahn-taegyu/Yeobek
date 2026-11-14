@@ -86,3 +86,4 @@
 - [병렬 백엔드 A 작가 흐름 목표](user-backend-author-parallel-plan.md) — SRC-054.
 - [답변 시 자동 TTS와 작품 지칭·게시 정책](user-visitor-tts-publication-policy.md) — SRC-055.
 - [프런트 디자인과 모션·스타일 변경 기준](user-frontend-design-fidelity.md) — SRC-056.
+- [진행 중 전시 진입과 가입 시 작가 프로필](user-artist-signup-exhibition.md) — SRC-057.

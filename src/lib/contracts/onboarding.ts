@@ -18,16 +18,15 @@ export const onboardingKeywordsSchema = z.strictObject({
   topics: keywordSelection(onboardingKeywordOptions.topics),
 });
 
-const name = z.string().trim()
+export const artistName = z.string().trim()
   .refine(value => [...value].length <= 100, "100자 이내로 입력해 주세요.")
   .refine(value => !value.includes("\u0000") &&
-    /[^\s\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}]/u.test(value), "보이는 글자를 입력해 주세요.")
-  .nullable();
+    /[^\s\p{Cc}\p{Cf}\p{Default_Ignorable_Code_Point}]/u.test(value), "보이는 글자를 입력해 주세요.");
 
 export const updateOnboardingSchema = z.strictObject({
   expectedRevision: revision,
-  fullName: name,
-  displayName: name,
+  fullName: artistName.nullable(),
+  displayName: artistName.nullable(),
   keywords: onboardingKeywordsSchema,
   complete: z.boolean(),
 }).superRefine((input, ctx) => {

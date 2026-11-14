@@ -13,6 +13,9 @@ generated:
 decision_status: accepted
 decision_basis: user-confirmed
 sources:
+- id: signup-profile
+  resource: /references/user-artist-signup-exhibition.md
+  title: 진행 중 전시 진입과 가입 시 작가 프로필
 - id: v3
   resource: /references/user-backend-plan-v3.md
   title: 백엔드 v3 화면·리스크 보강
@@ -44,6 +47,8 @@ sources:
 [사용자 전달](../references/user-artist-auth.md)에 따라 모바일 웹 비로그인 작가는 로그인 또는 회원가입을 선택하고 직접 가입할 수 있다. 기존 또는 신규 계정으로 로그인한 작가는 자기 작가 홈에 진입하고 자기 전시만 관리한다. 관람객은 QR로 로그인 없이 이용한다.
 
 [후속 확정](../references/user-auth-direct-login.md)에 따라 이메일·비밀번호·확인값으로 가입하며, 가입 완료 후 자동 로그인하지 않고 로그인 화면에서 직접 로그인한다. 가입 시 작가 소개와 작품 세계를 받지 않는다.
+
+[후속 요청](../references/user-artist-signup-exhibition.md)에 따라 가입 화면에서 이름과 작가명을 함께 받는다. 직접 로그인 후 처음 불러온 프로필에 가입 때 입력한 이름이 표시된다.
 
 [가입 인증 결정](../references/user-signup-security.md)에 따라 이메일 인증은 필수이고 가입 비밀번호는 8자 이상이다. 이메일 인증을 마친 작가는 로그인 화면에서 직접 로그인한다. 이메일 인증만으로 관리자 세션을 열 수 없으며, 기존 계정 로그인에는 신규 가입의 최소 길이나 추가 강도 규칙을 적용하지 않는다.
 
