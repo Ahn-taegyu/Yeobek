@@ -68,6 +68,18 @@ describe("typed fetch client", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it("reads the publication checklist through the typed client envelope", async () => {
+    const data = { exhibitionId: requestId, revision: 1,
+      exhibitionBlockingCodes: ["PLACE_REQUIRED"],
+      artworks: [{ artworkId: requestId, revision: 2, blockingCodes: ["NARRATION_REQUIRED"] }] };
+    const fetch = vi.fn().mockResolvedValue(Response.json({ data, requestId }));
+    vi.stubGlobal("fetch", fetch);
+    await expect(requestApi("getPublicationChecklist", { params: { id: requestId } }))
+      .resolves.toEqual({ data, requestId });
+    expect(fetch).toHaveBeenCalledWith(`/api/admin/exhibitions/${requestId}/publication`,
+      expect.objectContaining({ method: "GET" }));
+  });
+
   it("preserves structured API errors and rejects invalid success data", async () => {
     const error = { code: "NOT_FOUND", message: "자료를 찾을 수 없습니다.", retryable: false };
     const fetch = vi.fn().mockResolvedValueOnce(Response.json({ error, requestId }, { status: 404 }))
