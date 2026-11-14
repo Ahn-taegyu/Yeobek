@@ -1,0 +1,282 @@
+{
+  "schemaVersion": 1,
+  "scope": "retrieval only; synthetic gold authored by agent, not independently human-reviewed; no final answer quality measurement",
+  "sourceBaseSha": "e647c479f69617a545b3d00f569bae6424096441",
+  "sourceWasDirty": true,
+  "completedAt": "2026-11-14T12:48:01.064Z",
+  "sourceFingerprints": {
+    "src/lib/ai/context.ts": "9ff92beb259eb6242c399d689a3a07fec95ea61f74576a79636845ebb98114c7",
+    "src/lib/policy.ts": "a71bec039f53cf05a0a9ba018849ce10e640a0d33f2286ebf3601c539989dede",
+    "scripts/experiments/bivia-retrieval.ts": "b6fae820e97971cb880752cc67b1305011a4cdf63b72c5529509c5f0fcbef42e",
+    "scripts/experiments/bivia-free-budget.ts": "5eddbc8a0d554fe41932eb3b7f6e06f345565c8bc3a96e75935aec4d328b2980",
+    "tests/evaluation/retrieval-cases.ts": "f2654e39a7a768fe048bc8f6ed1ab890ddb7b091deaebd2d23e7b8e9bb3918c7",
+    "tests/evaluation/bivia-compare.test.ts": "75fa5da9876e8684f49917d554c6ec450a3675528bc07fe563402c4b33df62f7"
+  },
+  "corpusHash": "ecc1526922dad9d0f731ba1cea96fecc8ef518762dea88078012ef89030a25a9",
+  "promptHash": "ca010fc7fa4a632874350cfc6775c51d98bcfce9ef5591c38b3427b77feb14fc",
+  "privateReportSha256": "f94064401c2b8516ee08d2d9c5409a4dd473ed1034060fbddc88713d42270430",
+  "options": {
+    "mode": "live-free",
+    "split": "eval",
+    "repeats": 1,
+    "maxCalls": 1440
+  },
+  "baseline": {
+    "completed": 60,
+    "failed": 0,
+    "answerable": 50,
+    "allGroupsFound": 45,
+    "allGroupsRate": 0.9,
+    "groupRecall": 0.93,
+    "precision": 0.08833333333333333,
+    "unanswerableNotScored": 10,
+    "elapsedMs": {
+      "p50": 0.33580000000074506,
+      "p95": 0.6658000000170432
+    }
+  },
+  "bivia": {
+    "completed": 60,
+    "failed": 0,
+    "answerable": 50,
+    "allGroupsFound": 49,
+    "allGroupsRate": 0.98,
+    "groupRecall": 0.98,
+    "precision": 0.095,
+    "unanswerableNotScored": 10,
+    "elapsedMs": {
+      "p50": 8328.469700000016,
+      "p95": 9877.770099999965
+    }
+  },
+  "pairedAnswerable": 50,
+  "pairedAllGroupsDelta": 0.08,
+  "byCategory": {
+    "direct": {
+      "A": {
+        "completed": 18,
+        "failed": 0,
+        "answerable": 18,
+        "allGroupsFound": 18,
+        "allGroupsRate": 1,
+        "groupRecall": 1,
+        "precision": 0.08333333333333331,
+        "unanswerableNotScored": 0,
+        "elapsedMs": {
+          "p50": 0.2923999999766238,
+          "p95": 2.949400000001333
+        }
+      },
+      "C": {
+        "completed": 18,
+        "failed": 0,
+        "answerable": 18,
+        "allGroupsFound": 18,
+        "allGroupsRate": 1,
+        "groupRecall": 1,
+        "precision": 0.08333333333333331,
+        "unanswerableNotScored": 0,
+        "elapsedMs": {
+          "p50": 8294.933500000014,
+          "p95": 11306.317799999999
+        }
+      }
+    },
+    "paraphrase": {
+      "A": {
+        "completed": 10,
+        "failed": 0,
+        "answerable": 10,
+        "allGroupsFound": 9,
+        "allGroupsRate": 0.9,
+        "groupRecall": 0.9,
+        "precision": 0.075,
+        "unanswerableNotScored": 0,
+        "elapsedMs": {
+          "p50": 0.30190000000584405,
+          "p95": 0.5563999999976659
+        }
+      },
+      "C": {
+        "completed": 10,
+        "failed": 0,
+        "answerable": 10,
+        "allGroupsFound": 10,
+        "allGroupsRate": 1,
+        "groupRecall": 1,
+        "precision": 0.08333333333333334,
+        "unanswerableNotScored": 0,
+        "elapsedMs": {
+          "p50": 8258.050700000022,
+          "p95": 9626.092399999994
+        }
+      }
+    },
+    "multi": {
+      "A": {
+        "completed": 8,
+        "failed": 0,
+        "answerable": 8,
+        "allGroupsFound": 5,
+        "allGroupsRate": 0.625,
+        "groupRecall": 0.8125,
+        "precision": 0.13541666666666666,
+        "unanswerableNotScored": 0,
+        "elapsedMs": {
+          "p50": 0.3779999999969732,
+          "p95": 0.5992000000042026
+        }
+      },
+      "C": {
+        "completed": 8,
+        "failed": 0,
+        "answerable": 8,
+        "allGroupsFound": 8,
+        "allGroupsRate": 1,
+        "groupRecall": 1,
+        "precision": 0.16666666666666666,
+        "unanswerableNotScored": 0,
+        "elapsedMs": {
+          "p50": 8041.782499999972,
+          "p95": 9749.204200000007
+        }
+      }
+    },
+    "unanswerable": {
+      "A": {
+        "completed": 10,
+        "failed": 0,
+        "answerable": 0,
+        "allGroupsFound": 0,
+        "allGroupsRate": null,
+        "groupRecall": null,
+        "precision": null,
+        "unanswerableNotScored": 10,
+        "elapsedMs": {
+          "p50": 0.3403000000107568,
+          "p95": 0.8349999999627471
+        }
+      },
+      "C": {
+        "completed": 10,
+        "failed": 0,
+        "answerable": 0,
+        "allGroupsFound": 0,
+        "allGroupsRate": null,
+        "groupRecall": null,
+        "precision": null,
+        "unanswerableNotScored": 10,
+        "elapsedMs": {
+          "p50": 8609.351599999995,
+          "p95": 9877.770099999965
+        }
+      }
+    },
+    "scope": {
+      "A": {
+        "completed": 8,
+        "failed": 0,
+        "answerable": 8,
+        "allGroupsFound": 8,
+        "allGroupsRate": 1,
+        "groupRecall": 1,
+        "precision": 0.08333333333333333,
+        "unanswerableNotScored": 0,
+        "elapsedMs": {
+          "p50": 0.3446999999869149,
+          "p95": 0.49590000000898726
+        }
+      },
+      "C": {
+        "completed": 8,
+        "failed": 0,
+        "answerable": 8,
+        "allGroupsFound": 7,
+        "allGroupsRate": 0.875,
+        "groupRecall": 0.875,
+        "precision": 0.07291666666666666,
+        "unanswerableNotScored": 0,
+        "elapsedMs": {
+          "p50": 8328.469700000016,
+          "p95": 9887.391199999998
+        }
+      }
+    },
+    "document": {
+      "A": {
+        "completed": 6,
+        "failed": 0,
+        "answerable": 6,
+        "allGroupsFound": 5,
+        "allGroupsRate": 0.8333333333333334,
+        "groupRecall": 0.8333333333333334,
+        "precision": 0.06944444444444443,
+        "unanswerableNotScored": 0,
+        "elapsedMs": {
+          "p50": 0.31010000000242144,
+          "p95": 0.36489999998593703
+        }
+      },
+      "C": {
+        "completed": 6,
+        "failed": 0,
+        "answerable": 6,
+        "allGroupsFound": 6,
+        "allGroupsRate": 1,
+        "groupRecall": 1,
+        "precision": 0.08333333333333333,
+        "unanswerableNotScored": 0,
+        "elapsedMs": {
+          "p50": 8613.859100000001,
+          "p95": 9593.767700000026
+        }
+      }
+    }
+  },
+  "evaluationUsage": {
+    "calls": 1440,
+    "billableTokens": 1440000,
+    "usageUnknownCalls": 0,
+    "reservedTokens": 7665472
+  },
+  "developmentSmoke": {
+    "runs": 2,
+    "questionsPerRun": 1,
+    "calls": 48,
+    "billableTokens": 48000
+  },
+  "totalExternalCalls": 1488,
+  "totalBillableTokens": 1488000,
+  "generationCalls": 0,
+  "modelIds": [
+    "dec-1"
+  ],
+  "scoreAbstentions": 286,
+  "improved": [
+    "eval-6-table",
+    "eval-7-multi",
+    "eval-8-paraphrase",
+    "eval-9-multi",
+    "eval-12-multi"
+  ],
+  "regressed": [
+    "eval-5-version"
+  ],
+  "accountAfterRun": {
+    "observedAt": "2026-11-14T12:51:35.918Z",
+    "source": "https://app.articul8.ai/plan",
+    "freeTokensRoundedDisplay": "999M / 1.0B",
+    "requestsRoundedDisplay": "1.5K / 6.0K",
+    "inputTokensRoundedDisplay": "1.5M",
+    "platformCreditSpend": 0,
+    "platformCreditBalance": 0,
+    "autoRecharge": "payment setup required",
+    "paidCalls": 0
+  },
+  "limits": [
+    "Synthetic agent-authored gold; independent human review pending.",
+    "One evaluation repeat; shared question templates.",
+    "Retrieval only; no answer quality or visitor-level abstention measurement.",
+    "Sequential per-candidate HTTP scoring; not end-to-end service latency."
+  ]
+}
