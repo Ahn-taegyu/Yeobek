@@ -3,17 +3,32 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { requestApi } from "@/lib/client";
+import { ApiClientError, requestApi } from "@/lib/client";
 import { AI_LIMITS } from "@/lib/contracts/chat";
 
 import type { PreviewAnswer, QaRewriteJob } from "@/lib/contracts/qa";
 import { errorMessage, Field, Header, Loading, PrivateImage, useArtistLoad } from "./ui";
 
 type Batch = Awaited<ReturnType<typeof requestApi<"getTrainingBatch">>>["data"];
+type Target = Batch["targets"][number];
 type QaItem = Awaited<ReturnType<typeof requestApi<"listQaItems">>>["data"][number];
 
 const statuses = { queued: "대기 중", running: "학습 중", succeeded: "완료", abstained: "자료 확인 필요", failed: "실패", cancelled: "취소됨" };
 const root = (id: string) => `/artist/exhibitions/${id}`;
+
+function canRunTarget(target: Target) {
+  return target.status === "queued" || target.attempt !== null && target.resultCode !== "JOB_EXPIRED" &&
+    (target.status === "failed" || target.status === "cancelled");
+}
+
+function latestVisibleQaItems(items: QaItem[]) {
+  const latest = new Map<string, QaItem>();
+  for (const item of items) {
+    const previous = latest.get(item.id);
+    if (!previous || item.version > previous.version) latest.set(item.id, item);
+  }
+  return [...latest.values()].filter(item => item.state !== "withdrawn");
+}
 
 function useReviewData(id: string) {
   return useArtistLoad(useCallback(async (signal: AbortSignal) => {
@@ -32,7 +47,7 @@ export function Learning({ id }: { id: string }) {
   const [error, setError] = useState("");
   const operation = useRef<AbortController | null>(null);
   const creationId = useRef<string | null>(null);
-  const targetIds = useRef(new Map<string, string>());
+  const targetRequests = useRef(new Map<string, { requestId: string; expectedAttempt: number }>());
   useEffect(() => () => operation.current?.abort(), []);
 
   async function run() {
@@ -42,32 +57,66 @@ export function Learning({ id }: { id: string }) {
     setBusy(true);
     setError("");
     try {
+      const restart = batch?.status === "completed" &&
+        batch.targets.some(target => target.resultCode === "JOB_EXPIRED");
+      if (restart) {
+        creationId.current = null;
+        targetRequests.current.clear();
+        setBatch(null);
+      }
       creationId.current ??= crypto.randomUUID();
-      let next = batch
+      let next = batch && !restart
         ? (await requestApi("getTrainingBatch", { params: { id: batch.id }, signal: controller.signal })).data
         : (await requestApi("createTrainingBatch", { params: { id },
           body: { requestId: creationId.current, expectedRevision: result.data.exhibition.revision }, signal: controller.signal })).data;
       setBatch(next);
-      for (const target of next.targets) {
-        if (target.status !== "queued") continue;
-        const requestId = targetIds.current.get(target.id) ?? crypto.randomUUID();
-        targetIds.current.set(target.id, requestId);
-        const { data } = await requestApi("runTrainingTarget", {
-          params: { id: next.id, targetId: target.id }, signal: controller.signal,
-          body: { requestId, expectedAttempt: target.attempt ?? 0 },
-        });
-        next = data;
+      const runningTarget = next.targets.find(target => target.status === "running");
+      const targetIds = next.targets.map(target => target.id).filter(id => id !== runningTarget?.id);
+      if (runningTarget) targetIds.unshift(runningTarget.id);
+      for (const targetId of targetIds) {
+        const target = next.targets.find(item => item.id === targetId);
+        if (!target) continue;
+        const expectedAttempt = target.attempt ?? 0;
+        const pending = targetRequests.current.get(target.id);
+        const running = next.targets.find(item => item.status === "running");
+        if (running && running.id !== target.id) break;
+        // Running work can only replay its original claim, whose input preceded the stored attempt.
+        const replay = pending && pending.expectedAttempt ===
+          (target.status === "running" ? expectedAttempt - 1 : expectedAttempt);
+        if (!canRunTarget(target) && !(target.status === "running" && replay)) continue;
+        const body = replay ? pending : { requestId: crypto.randomUUID(), expectedAttempt };
+        targetRequests.current.set(target.id, body);
+        next = (await requestApi("runTrainingTarget", {
+          params: { id: next.id, targetId: target.id }, signal: controller.signal, body,
+        })).data;
+        if (next.targets.find(item => item.id === target.id)?.status !== "running") {
+          targetRequests.current.delete(target.id);
+        }
         setBatch(next);
       }
     } catch (error) {
-      if (!controller.signal.aborted) setError(errorMessage(error));
+      if (controller.signal.aborted) return;
+      if (error instanceof ApiClientError && error.code === "REVISION_CONFLICT") {
+        creationId.current = null;
+        targetRequests.current.clear();
+        setBatch(null);
+        result.retry();
+        setError("전시 내용이 바뀌었어요. 최신 내용으로 다시 학습시켜 주세요.");
+      } else {
+        setError(errorMessage(error));
+      }
     } finally {
       operation.current = null;
       if (!controller.signal.aborted) setBusy(false);
     }
   }
 
-  const completed = batch?.targets.filter(item => item.status !== "queued" && item.status !== "running").length ?? 0;
+  const completed = batch?.targets.filter(item => item.status === "succeeded").length ?? 0;
+  const running = batch?.targets.some(item => item.status === "running");
+  const needsMaterial = batch?.targets.some(item => item.status === "abstained");
+  const expired = batch?.targets.some(item => item.resultCode === "JOB_EXPIRED");
+  const incomplete = batch?.status === "completed" && completed !== batch.targets.length;
+  const hasQuestions = batch?.targets.some(item => item.kind === "expected_qa" && item.status === "succeeded");
   return <>
     {!result.data ? <Loading {...result} /> : <section className="artist-learning yeobek-appear">
       <div className="artist-learning-names">
@@ -82,13 +131,17 @@ export function Learning({ id }: { id: string }) {
         <Image className="artist-learning-shadow-inner" src="/yeobek/learning-shadow-inner.svg" width={158} height={39} alt="" unoptimized />
         <Image className="artist-learning-lens" src="/yeobek/learning-lens.svg" width={137} height={137} alt="" unoptimized />
       </div>
-      <h2 role="status">{busy || batch?.status === "running" ? "여운이 정보를 학습하고 있어요" : "여운 학습시키기"}</h2>
+      <h2 role="status">{busy || running ? "여운이 정보를 학습하고 있어요" : "여운 학습시키기"}</h2>
       {result.data.works.length ? <>
         {batch && <progress aria-label="학습 진행" max={batch.targets.length || 1} value={completed} />}
-        {batch?.status !== "completed" && <button className="artist-action" disabled={busy} onClick={() => void run()}>
-          {busy ? "학습 중…" : batch ? "다시 시도" : "여운 학습시키기"}
+        {(!batch || running || expired || batch.targets.some(canRunTarget)) && <button className="artist-action" disabled={busy} onClick={() => void run()}>
+          {busy ? "학습 중…" : running ? "진행 확인" : batch ? "다시 시도" : "여운 학습시키기"}
         </button>}
-        {batch?.status === "completed" && <Link className="artist-action" href={`${root(id)}/faq`}>자주하는 질문</Link>}
+        {incomplete && <p role="status">{needsMaterial ? "학습을 마치지 못했어요. 전시 자료를 확인해주세요." : "일부 학습을 마치지 못했어요. 다시 시도해주세요."}</p>}
+        {batch?.status === "completed" && (!incomplete || hasQuestions) &&
+          <Link className={`artist-action${incomplete ? " secondary" : ""}`} href={`${root(id)}/faq`}>
+            {incomplete ? "생성된 질문 보기" : "자주하는 질문"}
+          </Link>}
       </> : <p>먼저 작품을 등록해주세요.</p>}
       {error && <p className="error" role="alert">{error}</p>}
     </section>}
@@ -104,9 +157,9 @@ export function Faq({ id }: { id: string }) {
     for (let offset = 0; offset < scopes.length; offset += 5) {
       const lists = await Promise.all(scopes.slice(offset, offset + 5)
         .map(query => requestApi("listQaItems", { params, query, signal })));
-      items.push(...lists.flatMap(({ data }) => data.filter(item => item.state !== "withdrawn")));
+      items.push(...lists.flatMap(({ data }) => data));
     }
-    return items;
+    return latestVisibleQaItems(items);
   }, [id]);
   const result = useArtistLoad(load);
   return <div className="artist-faq yeobek-appear">
@@ -182,7 +235,7 @@ export function Preview({ id, initialArtworkId, qaId }: { id: string; initialArt
     const { data } = await requestApi("listQaItems", {
       params: { id }, query: artworkId ? { artworkId } : {}, signal,
     });
-    return data.find(item => item.id === qaId && item.state !== "withdrawn") ?? null;
+    return latestVisibleQaItems(data).find(item => item.id === qaId) ?? null;
   }, [id, artworkId, qaId]);
   const candidate = useArtistLoad(loadCandidate);
   const firstQuestion = candidate.data?.question;
