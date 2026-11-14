@@ -30,10 +30,15 @@ export const narrationJobResponse = z.object({
 export const audioJobResult = z.strictObject({ assetId: uuid, approvalId: uuid,
   textHash: z.string().regex(/^[a-f0-9]{64}$/), voiceConfigVersion: revision, mock: z.boolean() });
 export const audioJobResponse = narrationJobResponse.extend({ kind: z.literal("audio"), strategy: z.null(), result: audioJobResult.nullable() });
-export const jobResponse = z.discriminatedUnion("kind", [narrationJobResponse, audioJobResponse]);
+export const organizeJobResponse = narrationJobResponse.extend({
+  kind: z.literal("organize"), artworkId: z.null(), expectedRevision: z.null(), strategy: z.null(),
+  result: z.object({ proposalId: uuid, mock: z.boolean() }).nullable(),
+});
+export const jobResponse = z.discriminatedUnion("kind", [narrationJobResponse, audioJobResponse, organizeJobResponse]);
 export const generateAudioSchema = z.strictObject({ requestId: uuid, approvalId: uuid, expectedRevision: revision });
 export type AiJob = z.infer<typeof narrationJobResponse>;
 export type AudioJob = z.infer<typeof audioJobResponse>;
+export type OrganizeJob = z.infer<typeof organizeJobResponse>;
 export type AnyAiJob = z.infer<typeof jobResponse>;
 export type GenerateNarration = z.infer<typeof generateNarrationSchema>;
 export type RetryJob = z.infer<typeof retryJobSchema>;

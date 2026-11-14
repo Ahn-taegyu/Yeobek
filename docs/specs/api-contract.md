@@ -504,3 +504,20 @@ W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 �
 `get_approved_qa_for_publication(p_owner uuid,p_exhibition_id uuid,p_artwork_id uuid,p_allow_mock boolean default false)`는 service_role 전용이며 HTTP/일반 소유자에게 노출하지 않는다. artworkId=null은 전시 항목만, UUID는 그 작품 항목만 조회한다. 최신 버전이 approved이고 모든 evidencePins가 현재 유효한 항목만 반환한다. 최신 draft/withdrawn이면 이전 승인 버전을 새 게시 후보로 되돌려 쓰지 않는다. 기존 공개본의 유지·철회는 B 공개 계약이 별도로 처리한다.
 
 반환은 `[{id,version,exhibitionId,artworkId,scope,question,answer,contentHash,evidencePins:[{id,version}],mock,approvedAt}]`다. 소유자 ID·생성 원문 citations·이전 미리보기 답변·지시문은 포함하지 않는다. 기본은 mock 제외이고 개발 게시 여부는 신뢰된 서버 정책으로만 전달한다. 게시 SQL의 같은 트랜잭션에서 호출해야 작가별 게시 잠금과 검증이 스냅샷 쓰기까지 유지된다. 별도 HTTP에서 먼저 조회한 뒤 나중에 쓰는 방식은 금지한다. B가 공개 시 정확한 버전·핀을 보존하고 관람/미디어에서 철회를 재검사하며 모델 전달량12근거/8,000자 상한도 적용한다.
+
+
+# W2 작가 자료 정리 후보·이력
+
+PR #13의 구현 계약이며 최종 CI·병합 전에는 main에서 호출 가능하다고 가정하지 않는다. 원자료를 새 문장으로 요약하지 않고 모델이 선택한 source ID의 원문을 서버가 복사한다. W10 주체별 질문·활동 이력 카탈로그를 사용하며 선택하지 않은 section과 출처는 보존한다. 자료 생성은 원본 수정·근거 승인·게시가 아니다.
+
+| requestApi | 경로·요청 | 응답·경계 |
+| --- | --- | --- |
+| generateProposal | POST `/api/admin/knowledge/{id}/proposals`, `{requestId,expectedDocumentRevision}` | 최초201/재전송200, `organizeJobResponse`. 같은 requestId로 중복 복구, 다른 입력409 |
+| getJob / retryJob | GET `/api/admin/jobs/{id}`, POST `.../retry`, `{requestId,expectedAttempt}` | kind=organize, result={proposalId,mock} 또는 null. 실패/abstained도 HTTP200 가능 |
+| getProposal | GET `/api/admin/proposals/{id}` | before/proposed sections·sourceRefs, changes, expiresAt, appliedRevision, mock. 내부 모델 선택·ownerId는 미노출 |
+| applyProposal | POST `/api/admin/proposals/{id}/apply`, `{reviewed:true}` | `{documentRevision}`. 원문/조상 revision·출처 지문 재검사, 동일 적용 replay는 추가 이력 없음 |
+| listDocumentHistory | GET `/api/admin/knowledge/{id}/history?beforeRevision=...&limit=...` | items의 원래 sections/sourceRefs/revision/proposalId, nextBeforeRevision. 기본/최대50 |
+
+인증·같은 출처가 필요하고 다른 작가의 문서·후보·이력은404다. 미검수 적용400, 원자료 변경409, 만료 미적용 후보410 `PROPOSAL_EXPIRED`, 일일 작업 한도429다. 생성은 기존 author_jobs_per_day에 W11과 합산된다. 입력 근거는 최대12개/8,000자이고 전체 문서는 별도 보존된다. 자료가 많으면 선택되지 않은 항목까지 처리됐다고 표시하지 않는다.
+
+220000은 공유한130000/131000을 보존하는 후속 migration이다. 작업 원장 만료와 후보 보존을 분리하고 mock을 후보에 보관한다. 적용된 후보·이력은 작업 정리 후에도 보존한다. 만료된 미적용 후보는 cron 호출당 최대1000개 본문/이전본문/출처를 비우고 최소 식별·만료 tombstone을 남겨410을 유지한다. 운영 cron 연결은 별도 점검이며 삭제 완료 시각을 보장하지 않는다. 정리 후보는 비공개이며 적용 후에도 별도 근거 승인·게시를 거친다.

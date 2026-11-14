@@ -21,6 +21,7 @@ export function databaseError(error: { code?: string; message?: string }): ApiEr
     case "P1004": return new ApiError(429, "AUTHOR_JOB_LIMIT", "오늘 사용할 수 있는 생성 횟수를 모두 사용했습니다.");
     case "P1005": return new ApiError(409, "REQUEST_ID_CONFLICT", "이 요청 ID는 다른 작업에 이미 사용했습니다.");
     case "P1006": return new ApiError(409, "JOB_ATTEMPT_CONFLICT", "작업 상태가 변경되었습니다. 새로 불러와 확인해 주세요.");
+    case "P1008": return new ApiError(410, "PROPOSAL_EXPIRED", "정리 후보의 적용 시간이 지났습니다. 새 후보를 만들어 주세요.");
     case "P1010": return new ApiError(429, "VISITOR_REQUEST_LIMIT", "요청이 많습니다. 잠시 후 다시 시도해 주세요. 기본 작품 해설은 계속 볼 수 있습니다.", { fallback: ["approved_narration", "published_audio"] }, 60);
     case "P1011": return new ApiError(409, "REQUEST_IN_PROGRESS", "답변을 준비하고 있습니다. 잠시 후 확인해 주세요.", undefined, 2);
     case "P1012": return new ApiError(410, "ANSWER_EXPIRED", "답변 보관 시간이 지났습니다. 새 요청으로 질문해 주세요.");
