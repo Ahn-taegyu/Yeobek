@@ -95,6 +95,10 @@
   background: transparent;
 }
 
+/* Edge 기본 비밀번호 표시 버튼이 커스텀 토글과 중복되지 않도록 숨긴다. */
+.loginField input[name="password"]::-ms-reveal,
+.loginField input[name="password"]::-ms-clear { display: none; }
+
 .passwordToggle svg { width: 18px; height: 18px; }
 .authLinks { padding: 0 10px; font-size: 14px; color: #626267; }
 .authLinks a:hover, .resume:hover { text-decoration: underline; }
