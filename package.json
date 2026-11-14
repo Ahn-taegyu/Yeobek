@@ -41,7 +41,10 @@
     "db:env": "node scripts/local-env.mjs",
     "db:artist": "node scripts/local-artist.mjs",
     "db:operator": "node scripts/local-operator.mjs",
-    "db:types": "node scripts/database-types.mjs"
+    "db:types": "node scripts/database-types.mjs",
+    "db:seed:demo": "node scripts/demo-seed.mjs",
+    "test:demo:guards": "node --test tests/scripts/demo-seed.test.mjs",
+    "test:demo": "node --test tests/integration/mock/demo-seed.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
