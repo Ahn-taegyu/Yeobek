@@ -1,6 +1,6 @@
 ---
 type: Reference
-id: SRC-071
+id: SRC-072
 title: AI 정보 검색 방식 점검과 관람 근거 선택 개선 요청
 description: 기획 검색과 제품 근거 검색의 부족한 점, Codex 기록 확인 요청과 제품 근거 검색 우선 선택.
 status: stable
