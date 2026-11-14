@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ApiClientError, requestApi } from "@/lib/client";
 import { forgetArtistPage, loadArtistPage } from "@/lib/client/artist-navigation";
@@ -9,7 +10,7 @@ import { AiStarLogo } from "@/components/ui/ai-star/ai-star-logo";
 
 import type { PreviewAnswer, QaRewriteJob } from "@/lib/contracts/qa";
 import { ArtistLink, errorMessage, Field, Header, Loading, PrivateImage, useArtistLoad } from "./ui";
-import { artworkListKey, exhibitionKey, loadArtworkList, loadExhibitionOverview, overviewKey } from "./navigation-data";
+import { artworkListKey, exhibitionKey, loadArtworkList, loadExhibitionOverview, loadProfile, overviewKey, profileKey } from "./navigation-data";
 
 type Batch = Awaited<ReturnType<typeof requestApi<"getTrainingBatch">>>["data"];
 type Target = Batch["targets"][number];
@@ -52,12 +53,20 @@ export function Learning({ id }: { id: string }) {
   const operation = useRef<AbortController | null>(null);
   const creationId = useRef<string | null>(null);
   const targetRequests = useRef(new Map<string, { requestId: string; expectedAttempt: number }>());
-  useEffect(() => () => operation.current?.abort(), []);
+  const autoStarted = useRef(false);
+  const [started, setStarted] = useState(false);
+  const profile = useArtistLoad(loadProfile, profileKey);
+  const router = useRouter();
+  useEffect(() => () => {
+    operation.current?.abort();
+    autoStarted.current = false;
+  }, []);
 
   async function run(startNew = false) {
     if (!result.data || batch === undefined || operation.current) return;
     const controller = new AbortController();
     operation.current = controller;
+    setStarted(true);
     setBusy(true);
     setError("");
     try {
@@ -119,46 +128,85 @@ export function Learning({ id }: { id: string }) {
   const incomplete = batch?.status === "completed" && completed !== batch.targets.length;
   const hasQuestions = batch?.targets.some(item => item.kind === "expected_qa" && item.status === "succeeded");
   const hasNarration = batch?.targets.some(item => item.kind === "narration" && item.status === "succeeded");
-  return <>
-    {!result.data ? <Loading {...result} /> : <section className="artist-learning yeobek-appear">
-      <div className="artist-learning-names">
-        {batch?.artistName && <span>{batch.artistName}</span>}
-        <strong>{result.data.exhibition.title}</strong>
-        {result.data.works.slice(0, 3).map(work => <span key={work.id}>{work.title}</span>)}
-      </div>
-      <div className="artist-learning-art" aria-hidden="true">
-        {result.data.works.flatMap(work => work.imageMaterialId ? [work.imageMaterialId] : []).slice(0, 3).map(id =>
-          <PrivateImage key={id} materialId={id} alt="" className="artist-learning-image" />)}
-        <Image className="artist-learning-shadow" src="/yeobek/learning-shadow.svg" width={418} height={83} alt="" unoptimized />
-        <Image className="artist-learning-shadow-inner" src="/yeobek/learning-shadow-inner.svg" width={158} height={39} alt="" unoptimized />
-        <Image className="artist-learning-lens" src="/yeobek/learning-lens.svg" width={137} height={137} alt="" unoptimized />
-      </div>
-      <h2 role="status">{busy || running ? "여운이 정보를 학습하고 있어요" : "여운 학습시키기"}</h2>
-      {result.data.works.length ? <>
-        {busy || running
-          ? <AiStarLogo className="artist-learning-star" state="thinking" size={72}
-            label={batch ? `학습 진행 ${completed}/${batch.targets.length}` : "학습 준비 중"} />
-          : batch && <progress aria-label="최근 학습 진행" max={batch.targets.length || 1} value={completed} />}
-        {batch === undefined && <Loading {...latest} />}
-        {batch !== undefined && (!batch || running || expired || batch.targets.some(canRunTarget)) && <button className="artist-action" disabled={busy} onClick={() => void run()}>
-          {busy ? "학습 중…" : running ? "진행 확인" : batch ? "다시 시도" : "여운 학습시키기"}
-        </button>}
-        {incomplete && <p role="status">{needsMaterial ? "학습을 마치지 못했어요. 전시 자료를 확인해주세요." : "일부 학습을 마치지 못했어요. 다시 시도해주세요."}</p>}
-        {batch?.status === "completed" && !expired && <button className="artist-action secondary" disabled={busy}
-          onClick={() => void run(true)}>새로 학습시키기</button>}
-        {batch && hasNarration && <ArtistLink className="artist-action" href={`${root(id)}/review?batch=${batch.id}`}
-          prepare={() => import("./narration-review").then(({ prepareNarrationReview }) => prepareNarrationReview(id, result.data?.works[0]?.id))}>
-          기본 해설 검토
-        </ArtistLink>}
-        {batch?.status === "completed" && (!incomplete || hasQuestions) &&
-          <ArtistLink className={`artist-action${incomplete ? " secondary" : ""}`} href={`${root(id)}/faq`}
-            prepare={() => loadArtistPage(faqKey(id), signal => loadFaq(id, signal))}>
-            {incomplete ? "생성된 질문 보기" : "자주하는 질문"}
-          </ArtistLink>}
-      </> : <p>먼저 작품을 등록해주세요.</p>}
+  const done = batch?.status === "completed" && !incomplete && !expired;
+  const canRun = batch !== undefined && (!batch || running || expired || batch.targets.some(canRunTarget));
+  const works = result.data?.works ?? [];
+  const firstWorkId = works[0]?.id;
+
+  // Entering the screen starts learning; there is no start button in the design.
+  useEffect(() => {
+    if (autoStarted.current || !result.data || !works.length || !canRun) return;
+    autoStarted.current = true;
+    void run();
+  });
+
+  // A finished batch moves on by itself instead of offering buttons.
+  useEffect(() => {
+    if (!done || !batch || busy) return;
+    if (hasNarration) {
+      void import("./narration-review").then(({ prepareNarrationReview }) =>
+        prepareNarrationReview(id, firstWorkId)).catch(() => {});
+      router.replace(`${root(id)}/review?batch=${batch.id}`);
+    } else {
+      void loadArtistPage(faqKey(id), signal => loadFaq(id, signal)).catch(() => {});
+      router.replace(`${root(id)}/faq`);
+    }
+  }, [done, batch, busy, hasNarration, id, router, firstWorkId]);
+
+  // Until the automatic start has happened, a runnable or still-loading batch counts as in progress.
+  const pending = !started && !latest.error && works.length > 0 && (batch === undefined || canRun);
+  const thinking = busy || running || done || pending;
+  const chips = learningChips(result.data?.exhibition.title, batch?.artistName ?? profile.data?.displayName, works, profile.data?.keywords);
+  const images = works.flatMap(work => work.imageMaterialId ? [work.imageMaterialId] : []).slice(0, 3);
+  return !result.data ? <Loading {...result} /> : <section className="artist-learning yeobek-appear" aria-busy={thinking}>
+    <div className="artist-learning-stage" aria-hidden="true">
+      {images.map((materialId, index) => <div key={materialId} className={`artist-learning-card artist-learning-card-${index + 1}`}>
+        <PrivateImage materialId={materialId} alt="" className="artist-learning-image" />
+      </div>)}
+      <Image className="artist-learning-shadow" src="/yeobek/learning-shadow.svg" width={418} height={83} alt="" unoptimized />
+      <Image className="artist-learning-shadow-inner" src="/yeobek/learning-shadow-inner.svg" width={158} height={39} alt="" unoptimized />
+      {chips.map(([slot, text]) => <span key={slot} className={`artist-learning-chip artist-learning-chip-${slot}`}>{text}</span>)}
+      <div className="artist-learning-star"><AiStarLogo state={thinking ? "thinking" : "idle"} size={177} label="" /></div>
+    </div>
+    <div className="artist-learning-copy">
+      {works.length ? thinking ? <>
+        <h2 role="status">여운에게 전달해주고 있어요</h2>
+        <p>작가님이 들려주신 이야기를 바탕으로<br />관람객에게 전할 답변을 준비하고 있어요</p>
+      </> : <>
+        <h2 role="status">{incomplete ? "학습을 마치지 못했어요" : "여운에게 전달하지 못했어요"}</h2>
+        <p>{incomplete && needsMaterial ? "전시 자료를 확인한 뒤 다시 시도해주세요." : "잠시 후 다시 시도해주세요."}</p>
+      </> : <>
+        <h2>먼저 작품을 등록해주세요</h2>
+        <p>작품이 있어야 여운이 이야기를 배울 수 있어요.</p>
+      </>}
+      {batch === undefined && latest.error && <Loading {...latest} />}
       {error && <p className="error" role="alert">{error}</p>}
-    </section>}
-  </>;
+      {!thinking && works.length > 0 && <div className="artist-actions">
+        {canRun && <button className="artist-action" onClick={() => void run()}>다시 시도</button>}
+        {incomplete && !expired && <button className="artist-action secondary" onClick={() => void run(true)}>새로 학습시키기</button>}
+        {incomplete && hasQuestions && <ArtistLink className="artist-action secondary" href={`${root(id)}/faq`}
+          prepare={() => loadArtistPage(faqKey(id), signal => loadFaq(id, signal))}>생성된 질문 보기</ArtistLink>}
+      </div>}
+    </div>
+  </section>;
+}
+
+type Keywords = NonNullable<Awaited<ReturnType<typeof loadProfile>>["keywords"]>;
+type ChipSlot = "title" | "artist" | "a" | "b" | "c";
+
+/** Exhibition title in the middle, the artist, then artwork titles topped up with the artist's leading keywords. */
+function learningChips(title: string | undefined, artist: string | null | undefined,
+  works: { id: string; title: string }[], keywords?: Keywords): [ChipSlot, string][] {
+  const name = artist?.trim();
+  const extras = [...new Set([
+    ...works.map(work => work.title.trim()),
+    ...(keywords ? [...keywords.moods, ...keywords.topics, ...keywords.fields] : []),
+  ].filter(Boolean))].slice(0, 3);
+  return [
+    ...(title ? [["title", title] as [ChipSlot, string]] : []),
+    ...(name ? [["artist", name.endsWith("작가") ? name : `${name} 작가`] as [ChipSlot, string]] : []),
+    ...extras.map((text, index) => [(["a", "b", "c"] as const)[index], text] as [ChipSlot, string]),
+  ];
 }
 
 const faqKey = (id: string) => `faq:${id}`;
