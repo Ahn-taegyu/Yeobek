@@ -39,14 +39,24 @@ select throws_ok($$select approve_narration('20000000-0000-0000-0000-00000000000
 select is(approve_narration('20000000-0000-0000-0000-000000000001',2,
     current_setting('test.citations')::jsonb)->>'text','The artist uses bronze.','approval pins the saved narration');
 select is(get_review_bundle('20000000-0000-0000-0000-000000000001')->'blocking_codes',
-    '["IMAGE_REQUIRED","AUDIO_REQUIRED"]'::jsonb,'missing image and required voice block publication');
+    '["AUDIO_REQUIRED"]'::jsonb,'optional image does not block but explicitly required voice does');
 set local role service_role;
 update app_features set enabled = false where key = 'voice_required';
 set local role authenticated;
 select is(get_review_bundle('20000000-0000-0000-0000-000000000001')->'blocking_codes',
-    '["IMAGE_REQUIRED"]'::jsonb,'trusted database feature disables the audio rule');
+    '[]'::jsonb,'approved text without image or audio can pass review');
 
 reset role;
+insert into materials(id,owner_id,artwork_id,kind,state,byte_size) values
+    ('30000000-0000-0000-0000-000000000099','00000000-0000-0000-0000-000000000001',
+     '20000000-0000-0000-0000-000000000001','image','pending',100);
+update artworks set image_material_id = '30000000-0000-0000-0000-000000000099'
+    where id = '20000000-0000-0000-0000-000000000001';
+set local role authenticated;
+select is(get_review_bundle('20000000-0000-0000-0000-000000000001')->'blocking_codes',
+    '["IMAGE_UNAVAILABLE"]'::jsonb,'a supplied pending image is rejected');
+reset role;
+update artworks set image_material_id = null where id = '20000000-0000-0000-0000-000000000001';
 update artworks set revision = revision + 1,state = 'paused'
     where id = '20000000-0000-0000-0000-000000000001';
 set local role authenticated;

@@ -547,14 +547,14 @@ isOneToOne: false
                   ]
                 },"publications": {
                   Row: {
-                    "approved_at": string,"approved_by": string,"artwork_id": string,"audio_key": string | null,"audio_text_hash": string | null,"creation_year": string | null,"dimensions": string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id": string,"image_key": string,"medium": string | null,"narration_citations": NonNullable<Json>,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at": string | null,"title": string,"version": number
+                    "approved_at": string,"approved_by": string,"artwork_id": string,"audio_key": string | null,"audio_text_hash": string | null,"creation_year": string | null,"dimensions": string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id": string,"image_key": string | null,"medium": string | null,"narration_citations": NonNullable<Json>,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at": string | null,"title": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "approved_at"?: string,"approved_by": string,"artwork_id": string,"audio_key"?: string | null,"audio_text_hash"?: string | null,"creation_year"?: string | null,"dimensions"?: string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id"?: string,"image_key": string,"medium"?: string | null,"narration_citations"?: NonNullable<Json>,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at"?: string | null,"title": string,"version": number
+                    "approved_at"?: string,"approved_by": string,"artwork_id": string,"audio_key"?: string | null,"audio_text_hash"?: string | null,"creation_year"?: string | null,"dimensions"?: string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id"?: string,"image_key"?: string | null,"medium"?: string | null,"narration_citations"?: NonNullable<Json>,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at"?: string | null,"title": string,"version": number
                   }
                   Update: {
-                    "approved_at"?: string,"approved_by"?: string,"artwork_id"?: string,"audio_key"?: string | null,"audio_text_hash"?: string | null,"creation_year"?: string | null,"dimensions"?: string | null,"evidence"?: NonNullable<Json>,"exhibition_id"?: string,"id"?: string,"image_key"?: string,"medium"?: string | null,"narration_citations"?: NonNullable<Json>,"narration_hash"?: string,"narration_text"?: string,"number"?: number,"owner_id"?: string,"revoked_at"?: string | null,"title"?: string,"version"?: number
+                    "approved_at"?: string,"approved_by"?: string,"artwork_id"?: string,"audio_key"?: string | null,"audio_text_hash"?: string | null,"creation_year"?: string | null,"dimensions"?: string | null,"evidence"?: NonNullable<Json>,"exhibition_id"?: string,"id"?: string,"image_key"?: string | null,"medium"?: string | null,"narration_citations"?: NonNullable<Json>,"narration_hash"?: string,"narration_text"?: string,"number"?: number,"owner_id"?: string,"revoked_at"?: string | null,"title"?: string,"version"?: number
                   }
                   Relationships: [
                     {
