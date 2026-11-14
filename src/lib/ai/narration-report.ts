@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { NarrationResult, NarrationStrategy } from "./narration";
 
-const rateSchema = z.strictObject({ provider: z.enum(["openai", "liner"]), model: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/),
+const rateSchema = z.strictObject({ provider: z.enum(["openai", "liner", "gemini", "groq"]), model: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/),
   inputUsdPerMillion: z.number().finite().nonnegative(), outputUsdPerMillion: z.number().finite().nonnegative() });
 export const pricingSchema = z.strictObject({ currency: z.literal("USD"), asOf: z.iso.date(), rates: z.array(rateSchema).max(100) })
   .refine(v => new Set(v.rates.map(r => `${r.provider}:${r.model}`)).size === v.rates.length, "Duplicate rate");

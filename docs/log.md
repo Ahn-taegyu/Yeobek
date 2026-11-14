@@ -2,6 +2,8 @@
 
 ## 2026-11-14
 
+- **무료 텍스트 제공사 선택 시험**: Gemini 생성·Groq 평가의 계정 확인, 키 설정과 제한된 시험 절차를 추가했다. 실제 AI 호출은 0회다. [사용자 요청](references/user-free-ai-providers.md).
+
 - **스티비 가입 인증 메일 연결**: Supabase Auth Send Email 훅에서 서명을 확인하고 가입·재발송 코드만 전용 주소록의 자동 이메일로 보낸다. 모의 발송과 서명 검증을 검사하며 실제 수신과 프로필 표시는 테스트 계정으로 검증한다. [사용자 요청](references/user-stibee-signup.md).
 
 - **작가 가입·전시 진입 수정**: 진행 중 전시는 해당 전시명과 작품 목록으로 연결한다. 이름·작가명은 가입에서 받아 인증 및 직접 로그인 후 처음 생성되는 프로필에 반영한다. [사용자 요청](references/user-artist-signup-exhibition.md).

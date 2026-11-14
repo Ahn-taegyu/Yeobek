@@ -19,7 +19,7 @@ export type AiCapability = keyof typeof defaults;
 export const AI_CAPABILITIES = Object.keys(defaults) as AiCapability[];
 export type TextCapability = Exclude<AiCapability, "stt" | "tts">;
 
-const textProviders = ["liner", "openai", "exaone"] as const;
+const textProviders = ["liner", "openai", "exaone", "gemini", "groq"] as const;
 const transcriptionProviders = ["liner", "openai"] as const;
 const speechProviders = ["liner", "openai", "typecast"] as const;
 export type LiveAiProvider = typeof textProviders[number] | typeof speechProviders[number];
@@ -52,13 +52,19 @@ export function resolveAiRoute(capability: AiCapability, env: AiEnvironment = pr
       : env.OPENAI_TTS_MODEL?.trim() || AI_MODELS.openAiSpeech
     : capability === "draft" ? env.LINER_DRAFT_MODEL?.trim() || defaults.draft
     : defaults[capability];
-  return { provider, model: modelIdentifier(explicit, fallback) };
+  const model = modelIdentifier(explicit, fallback);
+  if ((provider === "gemini" || provider === "groq") && model !== AI_MODELS[provider]) {
+    throw new AiError("not_configured");
+  }
+  return { provider, model };
 }
 
 // Check upstream families across gateways, rather than comparing provider IDs.
 // Only pinned, recognizable families qualify; router aliases cannot guarantee separation.
 function family(route: Route): string | undefined {
   if (route.provider === "mock" || route.provider === "openai" || route.provider === "exaone") return route.provider;
+  if (route.provider === "gemini") return route.model === AI_MODELS.gemini ? "google" : undefined;
+  if (route.provider === "groq") return route.model === AI_MODELS.groq ? "openai" : undefined;
   const model = route.model.toLowerCase();
   if (/^openai\/(?:gpt-|o[1-9](?:-|$))/.test(model)) return "openai";
   if (/^google\/gemini-/.test(model)) return "google";
