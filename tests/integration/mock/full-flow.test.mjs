@@ -52,10 +52,10 @@ test("mock acceptance: signup, verify, login, authoring, generation, review, pub
   const profile = await artist("/api/admin/profile");
   await artist("/api/admin/profile/onboarding", { expectedRevision: profile.revision, fullName: "가상 통합 작가",
     displayName: "통합 작가", keywords: { fields: ["서양화"], moods: ["차분한"], topics: ["자연"] }, complete: true }, { method: "PATCH" });
-  const show = await artist("/api/admin/exhibitions", { id: randomUUID(), title: "통합 시연 전시", startDate: "2026-11-14",
+  let show = await artist("/api/admin/exhibitions", { id: randomUUID(), draft: true, startTime: "09:30", endTime: "18:00", title: "통합 시연 전시", startDate: "2026-11-14",
     endDate: "2026-11-15", place: "가상 전시장", sections: [{ id: "introduction", body: "가상 작품을 감상하는 전시입니다." }], sourceRefs: [] });
   const ep = `/api/admin/exhibitions/${show.id}`;
-  let work = await artist(ep + "/artworks", { id: randomUUID(), number: 1, title: "아침의 여백",
+  let work = await artist(ep + "/artworks", { id: randomUUID(), draft: true, number: 1, title: "아침의 여백",
     sections: [{ id: "description", body: "아침의 여백은 종이에 수채 물감으로 푸른 아침을 표현했습니다." }], sourceRefs: [] });
   const ap = `/api/admin/artworks/${work.id}`;
   const publicPath = `/api/public/exhibitions/${show.id}`;
@@ -98,6 +98,15 @@ test("mock acceptance: signup, verify, login, authoring, generation, review, pub
   await artist(`/api/admin/qa/${revised.id}/approve`, { expectedVersion: revised.version, evidencePins: [pin] });
   await visitor(publicPath, undefined, { expected: 404 });
   work = await artist(ap);
+  const incomplete = await artist(ep + "/publication");
+  assert.ok(incomplete.exhibitionBlockingCodes.includes("EXHIBITION_AUTHORING_INCOMPLETE"));
+  const blocked = await artist(ep + "/publication", { action: "publish", requestId: randomUUID(), expectedRevision: show.revision,
+    artworks: [{ artworkId: work.id, expectedRevision: work.revision }], intro: { bio: null, introduction: null, theme: null } }, { expected: 409 });
+  assert.ok(blocked.fields.exhibition.includes("EXHIBITION_AUTHORING_INCOMPLETE"));
+  for (const step of ["world", "artworks"]) {
+    const advanced = await artist(ep + "/advance", { expectedRevision: show.revision, step });
+    assert.equal(advanced.advanced, true); show = advanced.exhibition;
+  }
   const checklist = await artist(ep + "/publication");
   assert.deepEqual(checklist.exhibitionBlockingCodes, []);
   assert.deepEqual(checklist.artworks[0].blockingCodes, []);

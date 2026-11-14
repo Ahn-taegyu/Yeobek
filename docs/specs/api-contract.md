@@ -551,3 +551,9 @@ read는 `{id,status,mock,pageCount,chunkCount,method,resultCode}`다. status=run
 401 인증,404 타 계정·삭제·비활성 생성,400 미동의·부적합 자료/쪽수,409 requestId/버전 충돌,429 작가 일일 한도다. 참조 이미지와 PDF만 허용하고 작품 이미지·avatar·poster는 제외한다. 텍스트 PDF는 로컬 추출, 스캔/이미지는 명시적 요청 때 제공사에 전송한다. 파일3MiB/6MiB와 정책 기본20쪽을 유지한다.
 
 230000·231000 신규 migration은 비공개 hash cache/request/link, 서비스 전용 reserve/complete, 소유자 전용 get, 기존 W2 sourceRef/12근거·8,000자 예산 연결을 추가한다. 원본 파일·추출 본문은 로그/원장 요약에 저장하지 않는다. 모의 추출만 선택된 실모드 W2 생성은 거부하고, 같은 파일의 실추출이 있으면 우선한다. 추출 중 문서 수정은 파일 캐시를 폐기하지 않지만 후속 W2 revision 확인에서 충돌한다.
+
+### 모의 Q&A 공개본의 운영 전환
+
+신규232000은 모의 Q&A가 든 공개본의 live 재개와 미선택 유지 게시를 거부한다(`MOCK_QA_NOT_ALLOWED`). 기존 요청 재전송도 고정 공개본과 유지되는 미선택 공개본을 검사한다. 명시적 live 재게시에서는 A 조회 포트가 모의 Q&A를 제외한다. 읽기 API는 앱 배포 모드를 판별하지 않으므로 개발 DB의 운영 전환은 [키 당일 점검표](key-day-checklist.md)에 따라 선중지·전체 재게시 후 트래픽을 허용한다.
+
+P0 전시(`authoringStep` 비어 있지 않음)는 `artworks` 단계와 기존 작성 필수값/시각 순서를 공통 게시 규칙으로 검사한다. `EXHIBITION_AUTHORING_INCOMPLETE`, `EXHIBITION_START_TIME_REQUIRED`, `EXHIBITION_END_TIME_REQUIRED`, `EXHIBITION_INVALID_PERIOD` 등 작성 사유는 GET 체크리스트와 POST의 `PUBLICATION_BLOCKED`/`fields.exhibition`에 반영한다. 기존 `authoringStep=null` 전시는 기존 날짜/장소 규칙을 유지한다.
