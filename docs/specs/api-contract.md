@@ -522,9 +522,24 @@ PR #13은 최종 head351156f의 App·Knowledge 성공 후 main9c6efbf로 병합�
 
 220000은 공유한130000/131000을 보존하는 후속 migration이다. 작업 원장 만료와 후보 보존을 분리하고 mock을 후보에 보관한다. 적용된 후보·이력은 작업 정리 후에도 보존한다. 만료된 미적용 후보는 cron 호출당 최대1000개 본문/이전본문/출처를 비우고 최소 식별·만료 tombstone을 남겨410을 유지한다. 운영 cron 연결은 별도 점검이며 삭제 완료 시각을 보장하지 않는다. 정리 후보는 비공개이며 적용 후에도 별도 근거 승인·게시를 거친다.
 
+## W12 게시 준비 조회 (PR #25, 병합 전)
+
+`GET /api/admin/exhibitions/{id}/publication`은 소유자에게 `{exhibitionId,revision,exhibitionBlockingCodes,artworks:[{artworkId,revision,blockingCodes}]}`를 반환한다. 다른 작가 전시는 404다. 전시명·기간·장소·작품 부재는 각각 `EXHIBITION_TITLE_REQUIRED`, `EXHIBITION_PERIOD_REQUIRED`, `EXHIBITION_PLACE_REQUIRED`, `ARTWORK_REQUIRED`로 표시한다. 역전된 기간은 `EXHIBITION_PERIOD_INVALID`, 공개 작가명 누락은 `ARTIST_NAME_REQUIRED`다. 작품별 기존 승인·근거·번호 조건은 `blockingCodes`에 남긴다. 저장 음성·Q&A 개수는 기본 게시 필수가 아니다.
+
+조회는 준비 안내이며 게시 권한을 예약하지 않는다. POST 게시 시 같은 조건을 다시 확인하고 전시 차단은 409 `PUBLICATION_BLOCKED`, `fields.exhibition` 배열로 반환한다. 준비 안 된 작품은 기존 `fields[artworkId]` 형식을 유지한다. 선택한 작품만 게시할 수 있으며 다른 미완성 작품은 자동 포함하지 않는다.
+
+### 모의 해설 게시 경계 (PR #25, 병합 전)
+
+모의 생성 해설은 개발 모드에서만 게시한다. 저장할 때 sourceJobId의 결과와 본문 일치를 확인하고, 비공개 revision/해시 기록으로 출처를 보존한다. 수동 수정이나 작업 원장 만료로 모의 표시가 사라지지 않는다. 검증된 live 작업 결과를 저장하고 재승인하면 새 원고로 교체할 수 있다. 운영 게시 요청은 409 `PUBLICATION_BLOCKED`, 해당 작품의 `MOCK_NARRATION_NOT_ALLOWED` 사유를 반환한다. 기존 모의 공개본을 남기는 전시 정보만의 게시도 거부한다. 재개는 구형 RPC도 같은 차단을 적용하며 409다.
+
+공개본의 모의 여부는 게시 때 고정하므로 이후 작업본 수정은 이전 성공 요청의 재전송 결과를 바꾸지 않는다. 운영 설정에서는 과거 모의 게시 요청의 재전송도 거부한다. migration은 보존된 작업 결과로 기존 출처를 복구하며, 적용 전에 이미 작업 원장과 출처를 모두 삭제한 과거 데이터의 기원을 추론하지 않는다. 그런 데이터가 있는 환경은 운영 전 원고 출처를 별도로 확인해야 한다.
+
+### 공개 번호 적용 시점 (PR #25, 병합 전)
+
+작품 재정렬은 `draftNumber`만 바꾸며 관람 번호와 라벨·기존 답변 참조는 유지한다. 다음 명시적 게시에서 선택된 작품의 초안 번호를 새 공개본에 고정한다. 두 공개 작품의 번호를 바꾸려면 두 작품을 같은 게시 요청에 포함한다. 기존 공개 번호의 작품을 선택하지 않으면 `NUMBER_CONFLICT`이며 부분 적용하지 않는다. 일시중지된 작품 번호도 예약을 유지한다. 조회 체크리스트의 작품별 번호 충돌은 단일 작품 기준이며, 관련 작품을 함께 게시하면 배치 검증에서 다시 판단한다. 교체 전 공개본은 활성 참조에서 제외돼 이전 답변·음성의 현재 버전 재검사가 실패한다.
 # 파일 읽기와 W2 후보
 
-feat/material-extraction의 구현 계약이며 최신 CI·병합 전이다. [요청 SRC-054](../references/user-backend-author-parallel-plan.md), [제공사 조사](../research/material-reader.md)가 근거다. 생성 결과의 자동 적용·승인·게시는 없다.
+PR #28은 main4f7faee로 병합됐다. 최종 head04facaa의 App43571147499·Knowledge43571147654 성공을 확인했다. [요청 SRC-054](../references/user-backend-author-parallel-plan.md), [제공사 조사](../research/material-reader.md)가 근거다. 생성 결과의 자동 적용·승인·게시는 없다.
 
 | requestApi | 경로·요청 | 응답 |
 | --- | --- | --- |
@@ -536,3 +551,9 @@ read는 `{id,status,mock,pageCount,chunkCount,method,resultCode}`다. status=run
 401 인증,404 타 계정·삭제·비활성 생성,400 미동의·부적합 자료/쪽수,409 requestId/버전 충돌,429 작가 일일 한도다. 참조 이미지와 PDF만 허용하고 작품 이미지·avatar·poster는 제외한다. 텍스트 PDF는 로컬 추출, 스캔/이미지는 명시적 요청 때 제공사에 전송한다. 파일3MiB/6MiB와 정책 기본20쪽을 유지한다.
 
 230000·231000 신규 migration은 비공개 hash cache/request/link, 서비스 전용 reserve/complete, 소유자 전용 get, 기존 W2 sourceRef/12근거·8,000자 예산 연결을 추가한다. 원본 파일·추출 본문은 로그/원장 요약에 저장하지 않는다. 모의 추출만 선택된 실모드 W2 생성은 거부하고, 같은 파일의 실추출이 있으면 우선한다. 추출 중 문서 수정은 파일 캐시를 폐기하지 않지만 후속 W2 revision 확인에서 충돌한다.
+
+### 모의 Q&A 공개본의 운영 전환
+
+신규232000은 모의 Q&A가 든 공개본의 live 재개와 미선택 유지 게시를 거부한다(`MOCK_QA_NOT_ALLOWED`). 기존 요청 재전송도 고정 공개본과 유지되는 미선택 공개본을 검사한다. 명시적 live 재게시에서는 A 조회 포트가 모의 Q&A를 제외한다. 읽기 API는 앱 배포 모드를 판별하지 않으므로 개발 DB의 운영 전환은 [키 당일 점검표](key-day-checklist.md)에 따라 선중지·전체 재게시 후 트래픽을 허용한다.
+
+P0 전시(`authoringStep` 비어 있지 않음)는 `artworks` 단계와 기존 작성 필수값/시각 순서를 공통 게시 규칙으로 검사한다. `EXHIBITION_AUTHORING_INCOMPLETE`, `EXHIBITION_START_TIME_REQUIRED`, `EXHIBITION_END_TIME_REQUIRED`, `EXHIBITION_INVALID_PERIOD` 등 작성 사유는 GET 체크리스트와 POST의 `PUBLICATION_BLOCKED`/`fields.exhibition`에 반영한다. 기존 `authoringStep=null` 전시는 기존 날짜/장소 규칙을 유지한다.

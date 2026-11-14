@@ -329,14 +329,14 @@ isOneToOne: false
                   ]
                 },"exhibitions": {
                   Row: {
-                    "artist_id": string,"authoring_step": string | null,"create_fingerprint": string,"created_at": string,"deleted_at": string | null,"end_date": string | null,"end_time": string | null,"id": string,"intro_evidence": NonNullable<Json>,"owner_id": string,"place": string | null,"poster_material_id": string | null,"public_artist_bio": string | null,"public_artist_display_name": string | null,"public_end_date": string | null,"public_introduction": string | null,"public_place": string | null,"public_start_date": string | null,"public_theme": string | null,"public_title": string | null,"revision": number,"start_date": string | null,"start_time": string | null,"state": string,"title": string | null,"updated_at": string
+                    "artist_id": string,"authoring_step": string | null,"create_fingerprint": string,"created_at": string,"deleted_at": string | null,"end_date": string | null,"end_time": string | null,"id": string,"intro_evidence": NonNullable<Json>,"owner_id": string,"place": string | null,"poster_material_id": string | null,"public_artist_bio": string | null,"public_artist_display_name": string | null,"public_end_date": string | null,"public_end_time": string | null,"public_introduction": string | null,"public_place": string | null,"public_poster_material_id": string | null,"public_start_date": string | null,"public_start_time": string | null,"public_theme": string | null,"public_title": string | null,"revision": number,"start_date": string | null,"start_time": string | null,"state": string,"title": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "artist_id": string,"authoring_step"?: string | null,"create_fingerprint": string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"end_time"?: string | null,"id": string,"intro_evidence"?: NonNullable<Json>,"owner_id": string,"place"?: string | null,"poster_material_id"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_start_date"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"start_time"?: string | null,"state"?: string,"title"?: string | null,"updated_at"?: string
+                    "artist_id": string,"authoring_step"?: string | null,"create_fingerprint": string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"end_time"?: string | null,"id": string,"intro_evidence"?: NonNullable<Json>,"owner_id": string,"place"?: string | null,"poster_material_id"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_end_time"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_poster_material_id"?: string | null,"public_start_date"?: string | null,"public_start_time"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"start_time"?: string | null,"state"?: string,"title"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "artist_id"?: string,"authoring_step"?: string | null,"create_fingerprint"?: string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"end_time"?: string | null,"id"?: string,"intro_evidence"?: NonNullable<Json>,"owner_id"?: string,"place"?: string | null,"poster_material_id"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_start_date"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"start_time"?: string | null,"state"?: string,"title"?: string | null,"updated_at"?: string
+                    "artist_id"?: string,"authoring_step"?: string | null,"create_fingerprint"?: string,"created_at"?: string,"deleted_at"?: string | null,"end_date"?: string | null,"end_time"?: string | null,"id"?: string,"intro_evidence"?: NonNullable<Json>,"owner_id"?: string,"place"?: string | null,"poster_material_id"?: string | null,"public_artist_bio"?: string | null,"public_artist_display_name"?: string | null,"public_end_date"?: string | null,"public_end_time"?: string | null,"public_introduction"?: string | null,"public_place"?: string | null,"public_poster_material_id"?: string | null,"public_start_date"?: string | null,"public_start_time"?: string | null,"public_theme"?: string | null,"public_title"?: string | null,"revision"?: number,"start_date"?: string | null,"start_time"?: string | null,"state"?: string,"title"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -605,14 +605,14 @@ isOneToOne: false
                   ]
                 },"publications": {
                   Row: {
-                    "approved_at": string,"approved_by": string,"artwork_id": string,"audio_key": string | null,"audio_text_hash": string | null,"creation_year": string | null,"dimensions": string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id": string,"image_key": string,"medium": string | null,"narration_citations": NonNullable<Json>,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at": string | null,"title": string,"version": number
+                    "approved_at": string,"approved_by": string,"artwork_id": string,"audio_key": string | null,"audio_text_hash": string | null,"creation_year": string | null,"dimensions": string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id": string,"image_key": string | null,"medium": string | null,"narration_citations": NonNullable<Json>,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at": string | null,"title": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "approved_at"?: string,"approved_by": string,"artwork_id": string,"audio_key"?: string | null,"audio_text_hash"?: string | null,"creation_year"?: string | null,"dimensions"?: string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id"?: string,"image_key": string,"medium"?: string | null,"narration_citations"?: NonNullable<Json>,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at"?: string | null,"title": string,"version": number
+                    "approved_at"?: string,"approved_by": string,"artwork_id": string,"audio_key"?: string | null,"audio_text_hash"?: string | null,"creation_year"?: string | null,"dimensions"?: string | null,"evidence": NonNullable<Json>,"exhibition_id": string,"id"?: string,"image_key"?: string | null,"medium"?: string | null,"narration_citations"?: NonNullable<Json>,"narration_hash": string,"narration_text": string,"number": number,"owner_id": string,"revoked_at"?: string | null,"title": string,"version": number
                   }
                   Update: {
-                    "approved_at"?: string,"approved_by"?: string,"artwork_id"?: string,"audio_key"?: string | null,"audio_text_hash"?: string | null,"creation_year"?: string | null,"dimensions"?: string | null,"evidence"?: NonNullable<Json>,"exhibition_id"?: string,"id"?: string,"image_key"?: string,"medium"?: string | null,"narration_citations"?: NonNullable<Json>,"narration_hash"?: string,"narration_text"?: string,"number"?: number,"owner_id"?: string,"revoked_at"?: string | null,"title"?: string,"version"?: number
+                    "approved_at"?: string,"approved_by"?: string,"artwork_id"?: string,"audio_key"?: string | null,"audio_text_hash"?: string | null,"creation_year"?: string | null,"dimensions"?: string | null,"evidence"?: NonNullable<Json>,"exhibition_id"?: string,"id"?: string,"image_key"?: string | null,"medium"?: string | null,"narration_citations"?: NonNullable<Json>,"narration_hash"?: string,"narration_text"?: string,"number"?: number,"owner_id"?: string,"revoked_at"?: string | null,"title"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -940,6 +940,9 @@ isOneToOne: false
                            },
 "get_public_media_refs":
 { Args: { "p_mock": boolean,"p_publication_ids": (string)[] }; Returns: Json
+                           },
+"get_publication_checklist":
+{ Args: { "p_exhibition_id": string }; Returns: Json
                            },
 "get_qa_rewrite_job":
 { Args: { "p_job_id": string }; Returns: Json

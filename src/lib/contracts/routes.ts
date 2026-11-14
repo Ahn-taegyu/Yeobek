@@ -18,7 +18,7 @@ import { requestUploadSchema, completeUploadSchema, deleteMaterialSchema, delete
 import { closeGapRecheckSchema, visitorChatRequest, visitorReplyResponse, gapListResponse, gapResponse, checkVersionsRequest, checkVersionsResponse, purgeResponse } from "./visitor";
 import { generateNarrationSchema, narrationJobResponse, jobResponse, audioJobResponse, organizeJobResponse, generateAudioSchema, retryJobSchema, saveNarrationSchema } from "./jobs";
 import { approvalSchema, approvalResponse, evidenceImpactSchema, evidenceResponse, labelsResponse,
-  publicationSchema, publicationResponse, reviewResponse, revokeEvidenceSchema, revokeImpactResponse,
+  publicationSchema, publicationResponse, publicationChecklistResponse, reviewResponse, revokeEvidenceSchema, revokeImpactResponse,
   upsertEvidenceSchema, upsertExhibitionEvidenceSchema, approveEvidenceSchema } from "./publication";
 import {
   emptySchema, loginSchema, profileSchema,
@@ -102,6 +102,7 @@ export const routes = {
   upsertExhibitionEvidence: { method: "POST", path: "/api/admin/exhibitions/{id}/evidence", params: byId, body: upsertExhibitionEvidenceSchema, response: successEnvelope(evidenceResponse), statuses: [201] },
   approveEvidence: { method: "POST", path: "/api/admin/evidence/{id}/approve", params: byId, body: approveEvidenceSchema, response: successEnvelope(evidenceResponse), statuses: [200] },
   approveArtwork: { method: "POST", path: "/api/admin/artworks/{id}/approvals", params: byId, body: approvalSchema, response: successEnvelope(approvalResponse), statuses: [200] },
+  getPublicationChecklist: { method: "GET", path: "/api/admin/exhibitions/{id}/publication", params: byId, response: successEnvelope(publicationChecklistResponse), statuses: [200] },
   changePublication: { method: "POST", path: "/api/admin/exhibitions/{id}/publication", params: byId, body: publicationSchema, response: successEnvelope(publicationResponse), statuses: [200, 201] },
   listLabels: { method: "GET", path: "/api/admin/exhibitions/{id}/labels", params: byId, response: successEnvelope(labelsResponse), statuses: [200] },
   evidenceImpact: { method: "POST", path: "/api/admin/evidence/{id}/impact", params: byId, body: evidenceImpactSchema, response: successEnvelope(revokeImpactResponse), statuses: [200] },

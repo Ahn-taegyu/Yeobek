@@ -11,7 +11,7 @@ import { normalizeAiOutcome } from "../ai/outcome";
 import { readMaterialResponse } from "./validate";
 
 const metadata = z.strictObject({ publicationId: z.uuid(), exhibitionId: z.uuid(), artworkId: z.uuid(),
-  version: z.number().int().positive(), kind: z.enum(["image", "audio"]),
+  version: z.number().int().positive(), kind: z.enum(["image", "audio", "poster"]),
   bucket: z.enum(["artist-materials", "artist-audio"]), storageKey: z.string().min(1),
   contentType: z.enum(["image/png", "image/jpeg", "image/webp", "audio/mpeg"]),
   byteSize: z.number().int().positive().max(mediaBinary.maxBytes), contentHash: z.string().regex(/^[a-f0-9]{64}$/), mock: z.boolean() });
@@ -50,9 +50,17 @@ export async function attachPublicMedia<T extends { publicationId: string }>(art
     audio: refs.get(work.publicationId)?.audio ?? null }));
 }
 
+/** Resolve optional answer media after loading/revalidating the saved reply.
+ * A retry refreshes references instead of persisting a file pointer in answer history. */
+export async function attachVisitorImage<T extends { publication: { publicationId: string; artworkId?: string | null } | null }>(reply: T) {
+  if (!reply.publication || reply.publication.artworkId === null) return { ...reply, image: null };
+  const [media] = await attachPublicMedia([reply.publication]);
+  return { ...reply, image: media.image };
+}
+
 /** No redirect or public signed URL: every delivery checks the current snapshot
  * before fetching bytes and immediately before returning them. */
-export async function readPublicMedia(id: string, kind: "image" | "audio", signal?: AbortSignal) {
+export async function readPublicMedia(id: string, kind: "image" | "audio" | "poster", signal?: AbortSignal) {
   const publicationId = id.toLowerCase();
   const worker = createWorkerSupabase({ timeoutMs: 15_000 });
   const mock = publicMediaMockMode();

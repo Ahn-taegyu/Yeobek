@@ -88,3 +88,8 @@ export const revokeImpactResponse = z.object({
   evidenceId: uuid, version: revision, token: hash,
   exhibitions: z.array(z.object({ exhibitionId: uuid, artworkIds: z.array(uuid), introAffected: z.boolean() })),
 });
+
+export const publicationChecklistResponse = z.object({ exhibitionId: uuid, revision,
+  exhibitionBlockingCodes: z.array(z.string()),
+  artworks: z.array(z.object({ artworkId: uuid, revision, blockingCodes: z.array(z.string()) })),
+});

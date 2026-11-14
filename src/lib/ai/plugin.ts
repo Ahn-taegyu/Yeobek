@@ -36,6 +36,7 @@ type CapabilityMap<Id> = {
   "gap.record": VisitorLifecycle["recordGap"] | undefined;
   "job.reserve": JobLifecycle<JobResult<Id>>["reserve"] | undefined;
   "job.complete": JobLifecycle<JobResult<Id>>["complete"] | undefined;
+  "publication.list": PublicationStore["listLabels"];
   "publication.read": PublicationStore["load"];
   "publication.recheck": PublicationStore["isCurrent"];
   "author.read": ArtistKnowledgeStore["loadOwnedContext"];
@@ -88,6 +89,7 @@ const bindCapability = {
   "gap.record": ({ visitor }) => visitor?.recordGap?.bind(visitor),
   "job.reserve": ({ jobs }) => jobs?.reserve.bind(jobs),
   "job.complete": ({ jobs }) => jobs?.complete.bind(jobs),
+  "publication.list": ({ publications }) => publications?.listLabels?.bind(publications),
   "publication.read": ({ publications }) => requireStore(publications).load.bind(publications),
   "publication.recheck": ({ publications }) => requireStore(publications).isCurrent.bind(publications),
   "author.read": ({ author }) => requireStore(author).loadOwnedContext.bind(author),

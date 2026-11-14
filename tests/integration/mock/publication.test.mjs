@@ -48,9 +48,28 @@ test("publish approved evidence and revoke its use across exhibitions through HT
 
   async function makeExhibition(title) {
     return request("/api/admin/exhibitions", { id: randomUUID(), title,
+      startDate: "2026-11-14", endDate: "2026-11-15", place: "검사 전시장",
       sections: [{ id: "introduction", body: "별도로 공개 승인하지 않은 전시 소개입니다." }], sourceRefs: [],
     }, { expected: 201 });
   }
+  await t.test("checklist reports missing exhibition fields and blocks publication", async () => {
+    const empty = await request("/api/admin/exhibitions", {
+      id: randomUUID(), draft: true, title: null, sections: [], sourceRefs: [],
+    }, { expected: 201 });
+    const path = `/api/admin/exhibitions/${empty.id}/publication`;
+    const checklist = await request(path);
+    assert.deepEqual(checklist.exhibitionBlockingCodes, ["EXHIBITION_TITLE_REQUIRED",
+      "EXHIBITION_PERIOD_REQUIRED", "EXHIBITION_PLACE_REQUIRED", "ARTWORK_REQUIRED",
+      "EXHIBITION_AUTHORING_INCOMPLETE", "EXHIBITION_START_DATE_REQUIRED", "EXHIBITION_START_TIME_REQUIRED",
+      "EXHIBITION_END_DATE_REQUIRED", "EXHIBITION_END_TIME_REQUIRED"]);
+    assert.deepEqual(checklist.artworks, []);
+    await request(path, undefined, { user: 1, expected: 404 });
+    const blocked = await request(path, { action: "publish", requestId: randomUUID(),
+      expectedRevision: empty.revision, artworks: [], intro: { bio: null, introduction: null, theme: null },
+    }, { expected: 409 });
+    assert.equal(blocked.code, "PUBLICATION_BLOCKED");
+    assert.deepEqual(blocked.fields.exhibition, checklist.exhibitionBlockingCodes);
+  });
   const first = await makeExhibition("첫 전시");
   const second = await makeExhibition("둘째 전시");
   const exhibitionPath = id => `/api/admin/exhibitions/${id}`;
@@ -76,7 +95,7 @@ test("publish approved evidence and revoke its use across exhibitions through HT
     const linked = await admin.from("artworks").update({ image_material_id: id }).eq("id", work.id).eq("owner_id", owners[0]);
     assert.equal(linked.error, null);
   }
-  await attachFixtureImage(firstWork);
+  // W12: the first prepared work deliberately has no image.
   await attachFixtureImage(secondWork);
 
   const documentSource = { kind: "document", sourceDocumentId: savedProfile.document.id,
@@ -123,8 +142,12 @@ test("publish approved evidence and revoke its use across exhibitions through HT
       artworks: [...publishFirst.artworks, { artworkId: unready.id, expectedRevision: unready.revision }],
     }, { expected: 409 });
     assert.equal(blocked.code, "PUBLICATION_BLOCKED");
-    assert.ok(blocked.fields[unready.id].includes("IMAGE_REQUIRED"));
+    assert.ok(blocked.fields[unready.id].includes("NARRATION_APPROVAL_REQUIRED"));
     await request(publicPath(first.id), undefined, { user: null, expected: 404 });
+    const checklist = await request(exhibitionPath(first.id) + "/publication");
+    assert.deepEqual(checklist.exhibitionBlockingCodes, []);
+    assert.deepEqual(checklist.artworks.find(item => item.artworkId === firstWork.id).blockingCodes, []);
+    assert.ok(checklist.artworks.find(item => item.artworkId === unready.id).blockingCodes.includes("NARRATION_APPROVAL_REQUIRED"));
     const review = await request(artworkPath(firstWork) + "/review");
     assert.deepEqual(review.blockingCodes, []);
     assert.equal(review.publication, null);
@@ -148,6 +171,7 @@ test("publish approved evidence and revoke its use across exhibitions through HT
     const workPath = `${publicPath(first.id)}/artworks/${firstWork.id}`;
     const publicWork = await request(workPath, undefined, { user: null });
     assert.equal(publicWork.narrationText, excerpt);
+    assert.equal(publicWork.image, null, "image-free publication remains readable");
     assert.equal("imageKey" in publicWork, false);
     assert.equal("audioKey" in publicWork, false);
     await request(`${publicPath(first.id)}/artworks/${unready.id}`, undefined, { user: null, expected: 404 });

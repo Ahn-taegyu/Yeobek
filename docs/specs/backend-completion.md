@@ -85,15 +85,15 @@ sources:
 | W5 | done, PR #7·10 | P0 전시 문맥·출력 전환은 W12 |
 | W8 | in_progress, PR #11의 진행 안내·문의 범위 병합 | 예약 안내·Alt·요약·분류·브리핑·물리 삭제 등 잔여 |
 | W2 | done, [PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), main9c6efbf | 최종 head351156f App43567373083·Knowledge43567373169 성공, W10·이력/만료 신규220000 |
-| 파일 읽기(A) | in_progress, [Draft PR #28](https://github.com/Ahn-taegyu/Yeobek/pull/28) | 신규230000·231000 전진 적용/DB31·권한1 성공, HTTP·최신 CI 대기; materialExtraction 기본off |
+| 파일 읽기(A) | done, [PR #28](https://github.com/Ahn-taegyu/Yeobek/pull/28), main4f7faee | 최종 head04facaa App43571147499·Knowledge43571147654 성공, HTTP/비활성 회귀 통과; materialExtraction 기본off |
 | D0 | done, PR #14 | main 861d27a, App·Knowledge CI 성공 |
 | W10 | done, PR #15, main dadc23b | v3 온보딩·사진/포스터·홈 상태, 전체 CI 성공 |
 | W13 | done, PR #16, main44bf7d3 | 리스크1·5·6·8·9 및 기한 반영, App·Knowledge CI 성공. 운영 적용은 W7 |
 | W9 | done, PR #17 | 직접 가입, 이메일 인증 필수·최소 8자 확정 |
 | W11 | done, PR #18, main40564e6 | 예상 Q&A·검수·미리보기·B용 승인 조회, 최종 App/Knowledge 성공; 공개 연결은 B |
-| W12 | not_started | 공개 체크리스트·접속 URL·관람 P0 (QR 제외) |
+| W12 | in_progress, Draft PR #25 | 체크리스트·공개 메타/이미지·Q&A·전시 문맥·모의 해설 차단·다음 게시 번호 구현, head606bebc 전체 CI·제목 지칭 성공. #28 통합 최신 CI/병합 대기 |
 | W6 | not_started | 운영 및 가입→전시→게시 집계 |
-| W7 | in_progress (기존 묶음 검사 누적) | 새 전체 흐름·시연 데이터·최종 인계는 미구현 |
+| W7 | in_progress, 인계 #20·시연 기반 #23 병합 | 승인 Q&A 시연 확장·키 당일 점검표는 #25. 단일 가입→관람/TTS 모의 HTTP는 head606bebc CI 성공. 최종 인계/병합 대기. 실키·프런트 UI는 별도 |
 
 전달 당시와 실제 차이: PR #12는 `23f6ee0`으로 `docs/p0-feature-spec`에 이미 병합됐으나 main에는 없었다. D0는 이 통합 브랜치와 main을 합친다. main의 SRC-035·036을 보존하고 기획 브랜치의 가입·직접 로그인 출처만 SRC-039·040으로 옮긴다. SRC-037·038은 유지한다. W2는 실제로 착수해 있었으므로 폐기하지 않고 Draft PR로 보존했다.
 
@@ -136,11 +136,11 @@ signup/session API 이름은 제안이다. 공식 Supabase 문서로 가입 방�
 
 ## W12 공개·관람 P0
 
-전시명·기간·장소·작품 1개 이상·번호 고유·승인 해설의 체크리스트와 보완 화면을 제공한다. 이미지는 선택이며 이미지 없이 게시를 허용한다(A3). 음성·필수 Q&A는 사용자 확인 전 기존 동작을 `voiceRequired`·정책값으로 유지한다. 기본 작품 세계와 참고 파일은 선택이다.
+전시명·기간·장소·작품 1개 이상·번호 고유·승인 해설의 체크리스트와 보완 화면을 제공한다. 이미지는 선택이며 이미지 없이 게시를 허용한다(A3). SRC-055에 따라 `voiceRequired` 기본 false이며 저장 음성·Q&A 개수·평가 횟수는 게시 필수가 아니다. 관람객이 음성을 켜면 답변 시 TTS를 요청한다. 기본 작품 세계와 참고 파일은 선택이다.
 
 승인 Q&A를 versioned 공개 스냅샷에 포함하고 이전 schemaVersion 읽기를 유지한다. 교체 게시·철회에서 근거·캐시·음성을 재검증한다. 공개 전시 주소와 번호·제목 라벨을 유지하며 QR 제작은 MVP에서 제외한다. 기존 응답 호환을 별도 필드/플래그로 유지한다. 작품 조회 API는 목록/정보용으로 남긴다. 공개 소개에 날짜·시간을 반환한다.
 
-`exhibitionScopeChat`이 켜지면 미선택/해제는 전시·작가 공통 승인 근거와 전시 Q&A를 사용한다. SRC-050에 따라 승인 Q&A는 생성 근거로 사용하고 기본 작품 소개의 승인문 직접 반환은 유지한다. 새 P0 흐름은 항상 글 답변을 반환하고 음소거에 따라 TTS를 요청한다. 기존 outputMode 의미는 변경하지 않는다. 작품 선택만으로 답변·해설·음성을 만들지 않는다. 선택 시 안내 음성 이행 플래그는 새 P0 흐름에서 기본 off로 둔다. 기존 구현은 질문 이후 선택 요청 문장의 낭독도 있으므로 실제 호출 조건을 확인하고 선택 동작과 혼동하지 않는다. STT 자동 전송·번호 단독 해석 미결정은 기존 동작(인식문 확인 후 전송)을 유지한다.
+`exhibitionScopeChat`이 켜지면 미선택/해제는 전시·작가 공통 승인 근거와 전시 Q&A를 사용한다. SRC-050에 따라 승인 Q&A는 생성 근거로 사용하고 기본 작품 소개의 승인문 직접 반환은 유지한다. 새 P0 흐름은 항상 글 답변을 반환하고 음소거에 따라 TTS를 요청한다. 기존 outputMode 의미는 변경하지 않는다. 작품 선택만으로 답변·해설·음성을 만들지 않는다. 선택 시 안내 음성 이행 플래그는 새 P0 흐름에서 기본 off로 둔다. 기존 구현은 질문 이후 선택 요청 문장의 낭독도 있으므로 실제 호출 조건을 확인하고 선택 동작과 혼동하지 않는다. STT 인식문은 확인 후 전송한다. 명확한 작품 제목/번호는 응답 참조와 상단 선택에 반영하고 잘못된 번호·모호한 지칭은 추측하지 않는다. 초안 번호는 다음 명시적 게시부터 공개본에 반영한다.
 
 ## W8 잔여·W6
 
@@ -156,11 +156,11 @@ W6는 [원 계획 W6](../references/user-backend-completion.md)의 운영 집계
 
 모의 전체 경로는 가입→이메일 확인→직접 로그인→홈→전시 2단계 임시저장/이어쓰기→작품/재정렬→해설·Q&A→검수/정정/승인→게시→공개 주소/전시 소개→전시·작품 채팅→보완/재게시다. 다른 계정 404, 승인 전/게시 전 데이터와 미리보기의 공개 노출 금지, 철회·캐시·TTS 재검사 및 플래그 off의 기존 흐름을 포함한다.
 
-`npm run db:seed:demo`는 계정·전시 1개·작품 3개와 승인 Q&A가 포함된 게시 상태를 준비한다. `frontend-handoff.md`는 SC-A01~A10·SC-V01~V06별 API·타입·상태·오류·플래그·모의를, `key-day-checklist.md`는 Auth 설정·실제 파트너/AI·음질·사람 평가·p50/p95·비용·플러그인 버전을 다룬다. 두 문서는 아직 미작성이다. section 목록 항목 추가/제거의 변경 용이성과 신규 플래그 off 회귀를 확인한다.
+`npm run db:seed:demo`는 계정·전시 1개·작품 3개와 승인 Q&A가 포함된 게시 상태를 준비한다. `frontend-handoff.md`는 SC-A01~A10·SC-V01~V06별 API·타입·상태·오류·플래그·모의를, `key-day-checklist.md`는 Auth 설정·실제 파트너/AI·음질·사람 평가·p50/p95·비용·플러그인 버전을 다룬다. 인계 초안은 #20으로 병합됐으며 최종 계약 보강과 키 당일 점검표는 Draft #25에 작성돼 있다. 가입부터 관람/TTS까지 단일 모의 HTTP 회귀는 head606bebc App43571824061에서 성공했다. #28 통합 최신 CI와 병합이 남았다. section 목록 항목 추가/제거의 변경 용이성과 신규 플래그 off 회귀를 확인한다.
 
 # 미결정과 마감 조정
 
-일요일 아침(2026-11-15)이 마감이다. Q-09는 이메일 인증·8자만 확정됐고 나머지는 열어 둔다. W11 질문 수/검수 기준과 승인 Q&A 사용은 SRC-050에서 확정했다. W12 필수 승인·음성·STT/번호 정책은 해당 묶음 전에 질문한다. 답을 기다리는 동안 독립 작업을 하며 답이 없으면 기존 동작과 비활성 플래그를 유지한다.
+일요일 아침(2026-11-15)이 마감이다. Q-09는 이메일 인증·8자만 확정됐고 나머지는 열어 둔다. W11 질문 수/검수 기준과 승인 Q&A 사용은 SRC-050에서 확정했다. W12의 글 우선 게시·선택적 답변 TTS·STT 확인·작품 지칭·다음 게시 번호 정책은 SRC-055를 적용한다. 미결정인 실물 모델/음성과 운영 설정은 키 당일 체크리스트에서 구분한다.
 
 운영 자동화가 우선이면 W8 안내/요약·W6을 W11 미리보기 정정·전시 전체 Q&A보다 앞당길 수 있다. 줄이는 순서는 **지시문 재작성(직접 수정 유지) → 전시 전체 예상 Q&A → Alt → 브리핑 → W2**다. 축소한 기능은 플래그 off·미구현으로 인계한다. 현재 D0는 새 제품 플래그를 켜거나 끄지 않는다. 실물 모델·음성·행사 키·발송 품질은 미검증이며 모의 성공으로 대체하지 않는다.
 
@@ -408,3 +408,17 @@ W2는 PR #13 main9c6efbf 병합 완료다. 최종 검사 head351156f68458b0b7d28
 materialExtraction 기본off, 기존 플래그 유지, 실외부 AI/TTS/발송0회. 한도·보관·모의 경계는 [조사](../research/material-reader.md), HTTP와 화면 미구현 경계는 [인계](frontend-handoff.md#파일-읽기--a-담당)에 기록했다. 전체 최신 CI·프런트·실물 품질은 아직 완료가 아니다.
 
 PR #28 첫 head609b4c8의 Knowledge CI는 성공했고 App 타입 검사에서 PDF.js의 미지원 isEvalSupported 옵션과 모의 응답 타입이 실패했다. 설치된 타입 선언을 확인해 옵션을 제거하고 테스트 응답에 명시적 타입을 지정했다. 읽기 단위11개를 재확인했고, 본문 삭제·해시 재업로드 검사를 추가해 DB31개가 통과했다. 최신 head 전체 CI는 확인 전이다.
+
+# A 최종 완료·인계 (2026-11-14)
+
+| 범위 | 병합·검사 head | 최종 CI | 직접 확인·남은 경계 |
+| --- | --- | --- | --- |
+| W11a/b | [#18](https://github.com/Ahn-taegyu/Yeobek/pull/18), main40564e6 / head1d596e1 | [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396278)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396325) 성공 | 승인 조회 포트 DB34, 실제 게시 비공개 노출·미리보기 DB24, 최초 로컬 모의 HTTP6. 공개 snapshot 연결은 B 담당 |
+| W2 | [#13](https://github.com/Ahn-taegyu/Yeobek/pull/13), main9c6efbf / head351156f | [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43567373083)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43567373169) 성공 | 기존 DB220000 전진 적용, 후보/권한56+W10/한도11. 생성→조회→명시적 적용→이력 HTTP는 CI에서 확인 |
+| 파일 읽기 | [#28](https://github.com/Ahn-taegyu/Yeobek/pull/28), main4f7faee / head04facaa | [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147499)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147654) 성공 | 기존 DB230000/231000 전진, 파일 DB31+권한1, 실제 Storage 파일 HTTP/기본off·후보 적용 확인. 새 DB988개 포함 |
+
+위 수치는 서로 다른 묶음의 실행 범위이며 중복 합산하지 않는다. A는 공유 로컬 DB를 reset하지 않았다. SQL은 별도 Sol 검토와 부모 수정·직접 검사, 나머지는 부모 diff 대조·좁은 회귀·최종 CI로 확인했다. 최초 타입/fixture 실패와 정정은 각 PR에 보존했다. 병합 SHA와 검사 SHA를 구분하며 후속 변경의 검증으로 재사용하지 않는다.
+
+W9·W10·W11·W2는 병합 상태를 표에 반영했다. 새 expectedQa/exhibitionQa/previewChat/qaRewrite/materialExtraction은 기본off다. 전시 Q&A·학습 manifest는 이미 구현된 API를 보존했고 삭제하지 않았다. 추가 제외는 관람 보완 요청→Q&A 전환, 평가 집계, OCR 라이브러리, W6·W8 잔여·Alt·브리핑이다. 실외부 AI/TTS/발송0회이며 실물 품질·비용·지연·운영 cron/SMTP는 완료로 세지 않는다.
+
+B 인계: `get_approved_qa_for_publication` 계약과 동일 게시 트랜잭션 사용, 신규 migration 번호/불변성, source12개/8,000자 예산을 전달했다. W12·시연 확장·최종 전체 흐름은 B의 완료 기록을 따른다. [프런트 인계](frontend-handoff.md)의 W11·W2·파일 읽기 절은 A의 병합 코드와 일치한다. 후보 검수 UI는 이번 디자인 범위 밖이므로 프런트가 명시적 검수·적용을 제공하기 전까지 파일 학습을 숨긴다. B의 키 당일 문서 예정 경로는 `docs/specs/key-day-checklist.md`이며, A 문서에서 그 파일의 병합/실물 검증 완료를 주장하지 않는다.

@@ -64,6 +64,7 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
     sections: [{ id: "bio", body: "공개되지 않는 작가 기록" }], sourceRefs: [],
   }, { method: "PATCH" });
   const exhibition = await artist("/api/admin/exhibitions", {
+    startDate: "2026-11-14", endDate: "2026-11-15", place: "검사 전시장",
     id: randomUUID(), title: "관람 테스트 전시", sections: [], sourceRefs: [],
   }, { expected: 201 });
   const exhibitPath = `/api/admin/exhibitions/${exhibition.id}`;
@@ -78,6 +79,7 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
   assert.equal((await admin.from("materials").insert({
     id: imageId, owner_id: owner, artwork_id: artwork.id, kind: "image", state: "ready",
     storage_key: `${owner}/fixture/${imageId}.webp`, byte_size: 64,
+    content_type: "image/webp", content_hash: "\\x" + "ab".repeat(32),
   })).error, null);
   assert.equal((await admin.from("artworks").update({ image_material_id: imageId })
     .eq("id", artwork.id).eq("owner_id", owner)).error, null);
@@ -110,6 +112,7 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
     const reply = await visitor("/api/chat", open);
     assert.equal(reply.source, "approved_narration");
     assert.equal(reply.answer, narration);
+    assert.deepEqual(reply.image, { id: reply.publication.publicationId, kind: "image" });
     assert.equal(reply.inputMode, "voice");
     assert.equal(reply.outputMode, "text");
     assert.deepEqual(reply.citations, [evidence.id]);
@@ -138,6 +141,13 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
     for (const key of ["steps", "usage", "promptVersion", "ownerId", "question", "inputHash", "sessionHash"]) {
       assert.equal(key in generated, false);
     }
+  });
+
+  await t.test("an explicit public title selects the answer and image target", async () => {
+    const reply = await visitor("/api/chat", payload({ artworkId: null, question: "푸른 달의 재료를 알려주세요." }));
+    assert.equal(reply.outcome, "answered");
+    assert.equal(reply.publication.artworkId, artwork.id);
+    assert.deepEqual(reply.image, { id: reply.publication.publicationId, kind: "image" });
   });
 
   if (!disabledOnly) await t.test("missing evidence records one gap, with owner-only access and replay", async () => {

@@ -1,5 +1,7 @@
 # 설계 문서
 
+- [키 당일 점검표](key-day-checklist.md) — 실제 Auth·AI·TTS·호스팅·스케줄 검증.
+
 - [프런트 API 인계](frontend-handoff.md) — 16개 화면의 병합 API·상태·오류·플래그와 예정 경계.
 
 - [백엔드 완성 작업 추적](backend-completion.md) — W0~W8 범위·상태·검증.

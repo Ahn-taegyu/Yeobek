@@ -168,8 +168,8 @@ W9는 이메일 가입·코드 확인·재발송·세션 조회 API를 제공합
 
 ## 로컬 시연 데이터
 
-개발 서버를 `AI_PROVIDER_MODE=mock`, `FEATURE_VOICE_REQUIRED=false`, `APP_ORIGIN=http://localhost:3001`로 실행한 뒤 같은 환경에서 `npm run db:seed:demo`를 실행합니다. 이미 실행 중인 로컬 Supabase를 사용하며 스택 시작·초기화는 하지 않습니다. 병렬 작업에서는 스택 소유자와 먼저 사용 시간을 맞춥니다.
+개발 서버를 `AI_PROVIDER_MODE=mock`, `FEATURE_VOICE_REQUIRED=false`, `FEATURE_EXPECTED_QA=true`, `APP_ORIGIN=http://localhost:3001`로 실행한 뒤 같은 환경에서 `npm run db:seed:demo`를 실행합니다. 이미 실행 중인 로컬 Supabase를 사용하며 스택 시작·초기화는 하지 않습니다. 병렬 작업에서는 스택 소유자와 먼저 사용 시간을 맞춥니다.
 
-가상 작가와 전시 1개·작품 3개·실제 업로드 이미지·승인 해설·게시 상태를 Auth/Storage와 기존 HTTP API로 만듭니다. AI·TTS 호출은 없습니다. 로그인 정보는 Git 제외 `.env.demo.local`의 `DEMO_EMAIL`, `DEMO_PASSWORD`, 공개 전시 ID는 `DEMO_EXHIBITION_ID`에 저장합니다. 콘솔에 비밀번호를 출력하지 않습니다.
+가상 작가와 전시 1개·작품 3개·실제 업로드 이미지·승인 해설·게시 상태를 Auth/Storage와 기존 HTTP API로 만듭니다. 모의 Q&A 3개(작품별1개)를 생성·승인하며 실제 외부 AI·TTS 호출은 없습니다. 로그인 정보는 Git 제외 `.env.demo.local`의 `DEMO_EMAIL`, `DEMO_PASSWORD`, 공개 전시 ID는 `DEMO_EXHIBITION_ID`에 저장합니다. 콘솔에 비밀번호를 출력하지 않습니다.
 
-원격 URL·production 환경은 거부합니다. 완료된 시드는 재실행 시 같은 전시를 확인하며 기존 데이터를 덮어쓰지 않습니다. 중간 실패한 데이터도 보존합니다. 새 시연이 필요하면 `DEMO_ENV_FILE=.env.demo-new.local`처럼 별도 파일을 선택합니다. 승인 Q&A 추가는 W11 공개 연결 이후 후속입니다.
+원격 URL·production 환경은 거부합니다. 완료된 시드는 재실행 시 같은 전시를 확인하며 기존 데이터를 덮어쓰지 않습니다. 중간 실패한 데이터도 보존합니다. 새 시연이 필요하면 `DEMO_ENV_FILE=.env.demo-new.local`처럼 별도 파일을 선택합니다. 이전 시연에 승인 Q&A가 없으면 덮어쓰지 않고 새 시연 파일을 선택하도록 안내합니다.

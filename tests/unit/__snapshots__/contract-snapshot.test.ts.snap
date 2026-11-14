@@ -2492,6 +2492,32 @@ exports[`HTTP route contracts > snapshots chat 1`] = `
           "gapRecorded": {
             "type": "boolean",
           },
+          "image": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "kind": {
+                    "const": "image",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "id",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
           "inputMode": {
             "enum": [
               "text",
@@ -2527,9 +2553,16 @@ exports[`HTTP route contracts > snapshots chat 1`] = `
                 "additionalProperties": false,
                 "properties": {
                   "artworkId": {
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                    "type": "string",
+                    "anyOf": [
+                      {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      {
+                        "type": "null",
+                      },
+                    ],
                   },
                   "exhibitionId": {
                     "format": "uuid",
@@ -2618,9 +2651,16 @@ exports[`HTTP route contracts > snapshots checkVersions 1`] = `
           "additionalProperties": false,
           "properties": {
             "artworkId": {
-              "format": "uuid",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-              "type": "string",
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                {
+                  "type": "null",
+                },
+              ],
             },
             "publicationId": {
               "format": "uuid",
@@ -2678,9 +2718,16 @@ exports[`HTTP route contracts > snapshots checkVersions 1`] = `
               "additionalProperties": false,
               "properties": {
                 "artworkId": {
-                  "format": "uuid",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                  "type": "string",
+                  "anyOf": [
+                    {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
                 },
                 "current": {
                   "type": "boolean",
@@ -11776,6 +11823,7 @@ exports[`HTTP route contracts > snapshots getMedia 1`] = `
         "enum": [
           "image",
           "audio",
+          "poster",
         ],
         "type": "string",
       },
@@ -13911,6 +13959,12 @@ exports[`HTTP route contracts > snapshots getPublicExhibition 1`] = `
               "null",
             ],
           },
+          "endTime": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
           "id": {
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$",
@@ -13928,7 +13982,39 @@ exports[`HTTP route contracts > snapshots getPublicExhibition 1`] = `
               "null",
             ],
           },
+          "poster": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "kind": {
+                    "const": "poster",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "id",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
           "startDate": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "startTime": {
             "type": [
               "string",
               "null",
@@ -13954,6 +14040,106 @@ exports[`HTTP route contracts > snapshots getPublicExhibition 1`] = `
           "artistBio",
           "introduction",
           "theme",
+          "artworks",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots getPublicationChecklist 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/exhibitions/{id}/publication",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "artworks": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "artworkId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "blockingCodes": {
+                  "items": {
+                    "type": "string",
+                  },
+                  "type": "array",
+                },
+                "revision": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 2147483647,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "artworkId",
+                "revision",
+                "blockingCodes",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "exhibitionBlockingCodes": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "exhibitionId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "revision": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "exhibitionId",
+          "revision",
+          "exhibitionBlockingCodes",
           "artworks",
         ],
         "type": "object",

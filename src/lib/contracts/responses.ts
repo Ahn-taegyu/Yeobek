@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicMediaReferences } from "./media";
+import { publicMediaReference, publicMediaReferences } from "./media";
 import { revision, section, sourceRefSchema } from "./requests";
 import { narrationText } from "./jobs";
 import { onboardingKeywordsSchema } from "./onboarding";
@@ -88,6 +88,8 @@ export const publicArtworkResponse = publicArtworkSummary.extend({ narrationText
 export const publicExhibitionResponse = z.object({
   id, ...dateRange, title: z.string(), artistDisplayName: z.string(),
   artistBio: nullableText, introduction: nullableText, theme: nullableText,
+  startTime: nullableText.optional(), endTime: nullableText.optional(),
+  poster: publicMediaReference.extend({ kind: z.literal("poster") }).nullable().optional(),
   artworks: z.array(publicArtworkSummary),
 });
 
