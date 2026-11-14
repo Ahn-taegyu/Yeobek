@@ -1,3 +1,6 @@
+import { previewChatSchema, previewAnswerResponse, previewEvaluationSchema, previewEvaluationResponse, qaRewriteSchema, qaRewriteJobResponse, qaCorrectionEvidenceSchema } from "./qa";
+import { createTrainingBatchSchema, runTrainingTargetSchema, trainingBatchResponse } from "./qa";
+import { expectedQaGenerateSchema, expectedQaJobResponse, qaListQuery, qaItemsResponse, qaItemResponse, approveQaItemSchema, withdrawQaItemSchema } from "./qa";
 import { createExhibitionBody, updateExhibitionBody, createArtworkBody, updateArtworkBody,
   advanceExhibitionSchema, advanceExhibitionResponse, reorderArtworksSchema, reorderArtworksResponse } from "./authoring";
 import { z } from "zod";
@@ -10,11 +13,11 @@ import { speechRequest, transcribeRequest, transcribeResponse } from "./voice";
 import { requestUploadSchema, completeUploadSchema, deleteMaterialSchema, deleteArtworkSchema,
   setArtworkImageSchema, materialResponse, materialListResponse, uploadResponse, listMaterialsQuery,
   materialDownloadResponse, deletedArtworkResponse } from "./materials";
-import { visitorChatRequest, visitorReplyResponse, gapListResponse, gapResponse, checkVersionsRequest, checkVersionsResponse, purgeResponse } from "./visitor";
+import { closeGapRecheckSchema, visitorChatRequest, visitorReplyResponse, gapListResponse, gapResponse, checkVersionsRequest, checkVersionsResponse, purgeResponse } from "./visitor";
 import { generateNarrationSchema, narrationJobResponse, jobResponse, audioJobResponse, generateAudioSchema, retryJobSchema, saveNarrationSchema } from "./jobs";
 import { approvalSchema, approvalResponse, evidenceImpactSchema, evidenceResponse, labelsResponse,
   publicationSchema, publicationResponse, reviewResponse, revokeEvidenceSchema, revokeImpactResponse,
-  upsertEvidenceSchema } from "./publication";
+  upsertEvidenceSchema, upsertExhibitionEvidenceSchema, approveEvidenceSchema } from "./publication";
 import {
   emptySchema, loginSchema, profileSchema,
   updateKnowledgeSchema, uuid,
@@ -44,6 +47,23 @@ const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  previewChat: { method: "POST", path: "/api/admin/exhibitions/{id}/preview/chat", params: byId, body: previewChatSchema, response: successEnvelope(previewAnswerResponse), statuses: [200, 201] },
+  getPreviewAnswer: { method: "GET", path: "/api/admin/preview/{id}", params: byId, response: successEnvelope(previewAnswerResponse), statuses: [200] },
+  evaluatePreviewAnswer: { method: "POST", path: "/api/admin/preview/{id}/evaluations", params: byId, body: previewEvaluationSchema, response: successEnvelope(previewEvaluationResponse), statuses: [200] },
+  rewriteQa: { method: "POST", path: "/api/admin/qa/rewrite", body: qaRewriteSchema, response: successEnvelope(qaRewriteJobResponse), statuses: [200, 201] },
+  getQaRewrite: { method: "GET", path: "/api/admin/qa/rewrites/{id}", params: byId, response: successEnvelope(qaRewriteJobResponse), statuses: [200] },
+  retryQaRewrite: { method: "POST", path: "/api/admin/qa/rewrites/{id}/retry", params: byId, body: retryJobSchema, response: successEnvelope(qaRewriteJobResponse), statuses: [200, 201] },
+  createQaCorrectionEvidence: { method: "POST", path: "/api/admin/qa/corrections", body: qaCorrectionEvidenceSchema, response: successEnvelope(evidenceResponse), statuses: [200] },
+  closeGapRecheck: { method: "POST", path: "/api/admin/gaps/{id}/recheck-close", params: byId, body: closeGapRecheckSchema, response: successEnvelope(gapResponse), statuses: [200] },
+  createTrainingBatch: { method: "POST", path: "/api/admin/exhibitions/{id}/training", params: byId, body: createTrainingBatchSchema, response: successEnvelope(trainingBatchResponse), statuses: [200] },
+  getTrainingBatch: { method: "GET", path: "/api/admin/training/{id}", params: byId, response: successEnvelope(trainingBatchResponse), statuses: [200] },
+  runTrainingTarget: { method: "POST", path: "/api/admin/training/{id}/targets/{targetId}/run", params: byId.extend({ targetId: uuid }), body: runTrainingTargetSchema, response: successEnvelope(trainingBatchResponse), statuses: [200] },
+  generateExpectedQa: { method: "POST", path: "/api/admin/exhibitions/{id}/qa/generations", params: byId, body: expectedQaGenerateSchema, response: successEnvelope(expectedQaJobResponse), statuses: [200, 201] },
+  getExpectedQaJob: { method: "GET", path: "/api/admin/qa/jobs/{id}", params: byId, response: successEnvelope(expectedQaJobResponse), statuses: [200] },
+  retryExpectedQaJob: { method: "POST", path: "/api/admin/qa/jobs/{id}/retry", params: byId, body: retryJobSchema, response: successEnvelope(expectedQaJobResponse), statuses: [200, 201] },
+  listQaItems: { method: "GET", path: "/api/admin/exhibitions/{id}/qa", params: byId, query: qaListQuery, response: successEnvelope(qaItemsResponse), statuses: [200] },
+  approveQaItem: { method: "POST", path: "/api/admin/qa/{id}/approve", params: byId, body: approveQaItemSchema, response: successEnvelope(qaItemResponse), statuses: [200] },
+  withdrawQaItem: { method: "POST", path: "/api/admin/qa/{id}/withdraw", params: byId, body: withdrawQaItemSchema, response: successEnvelope(qaItemResponse), statuses: [200] },
   advanceExhibition: { method: "POST", path: "/api/admin/exhibitions/{id}/advance", params: byId, body: advanceExhibitionSchema, response: successEnvelope(advanceExhibitionResponse), statuses: [200] },
   reorderArtworks: { method: "POST", path: "/api/admin/exhibitions/{id}/artworks/reorder", params: byId, body: reorderArtworksSchema, response: successEnvelope(reorderArtworksResponse), statuses: [200] },
   runAutomation: { method: "POST", path: "/api/cron/automation", response: successEnvelope(notificationRunResponse), statuses: [200] },
@@ -71,6 +91,8 @@ export const routes = {
   dismissGap: { method: "POST", path: "/api/admin/gaps/{id}/dismiss", params: byId, body: emptySchema, response: successEnvelope(gapResponse), statuses: [200] },
   reviewArtwork: { method: "GET", path: "/api/admin/artworks/{id}/review", params: byId, response: successEnvelope(reviewResponse), statuses: [200] },
   upsertEvidence: { method: "POST", path: "/api/admin/artworks/{id}/evidence", params: byId, body: upsertEvidenceSchema, response: successEnvelope(evidenceResponse), statuses: [201] },
+  upsertExhibitionEvidence: { method: "POST", path: "/api/admin/exhibitions/{id}/evidence", params: byId, body: upsertExhibitionEvidenceSchema, response: successEnvelope(evidenceResponse), statuses: [201] },
+  approveEvidence: { method: "POST", path: "/api/admin/evidence/{id}/approve", params: byId, body: approveEvidenceSchema, response: successEnvelope(evidenceResponse), statuses: [200] },
   approveArtwork: { method: "POST", path: "/api/admin/artworks/{id}/approvals", params: byId, body: approvalSchema, response: successEnvelope(approvalResponse), statuses: [200] },
   changePublication: { method: "POST", path: "/api/admin/exhibitions/{id}/publication", params: byId, body: publicationSchema, response: successEnvelope(publicationResponse), statuses: [200, 201] },
   listLabels: { method: "GET", path: "/api/admin/exhibitions/{id}/labels", params: byId, response: successEnvelope(labelsResponse), statuses: [200] },

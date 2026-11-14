@@ -57,3 +57,9 @@ export async function retryNarration(db: DbClient, actorId: string, id: string, 
   return execute(db, actorId, job.artworkId, job.documentId, job.expectedDocumentRevision, job.strategy,
     store => store.retry(id, input, isLocalNarrationMock()), signal);
 }
+
+export function runReservedNarration(db: DbClient, actorId: string, reservation: { job: AiJob; claimed: boolean }, signal?: AbortSignal) {
+  const { job } = reservation;
+  return execute(db, actorId, job.artworkId, job.documentId, job.expectedDocumentRevision, job.strategy,
+    async () => reservation, signal);
+}

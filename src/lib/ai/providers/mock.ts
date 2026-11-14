@@ -40,6 +40,15 @@ function keywords(question: string) {
 }
 
 function result(data: Record<string, unknown>, name: string) {
+  if (name === "yeobek_expected_qa") {
+    const source = excerpts(data.evidence, "body").find(row => codepoints(row.text) <= AI_LIMITS.answer);
+    const question = data.scope === "artwork" ? "이 작품에는 어떤 특징이 있나요?" : "이 전시에는 어떤 특징이 있나요?";
+    return { items: source ? [{ question, answer: source.text, citations: [source.id] }] : [] };
+  }
+  if (name === "yeobek_artist_qa_rewrite_judge") {
+    const answer = objectValue(data.candidate)?.answer;
+    return { grounded: typeof answer === "string" && excerpts(data.evidence, "body").some(row => row.text.includes(answer)) };
+  }
   if (name === "yeobek_ops_support_reply") {
     const terms = typeof data.question === "string" ? keywords(data.question) : [];
     const evidence = rows(data.evidence);
@@ -70,11 +79,11 @@ function result(data: Record<string, unknown>, name: string) {
   }
   const withQuestions = name === "yeobek_narration_draft_with_questions";
   const narration = withQuestions || name === "yeobek_narration_draft";
-  if (!narration && name !== "yeobek_docent_answer") throw new AiError("invalid_input");
+  if (!narration && !["yeobek_docent_answer", "yeobek_artist_preview", "yeobek_artist_qa_rewrite"].includes(name)) throw new AiError("invalid_input");
   const terms = typeof data.question === "string" ? keywords(data.question) : [];
   const source = (narration ? excerpts(data.sources, "text") : excerpts(data.evidence, "body"))
     .find(row => codepoints(row.text) <= (narration ? AI_LIMITS.narration : AI_LIMITS.answer) &&
-      (narration || terms.some(term => row.text.toLowerCase().includes(term))));
+      (narration || name === "yeobek_artist_qa_rewrite" || terms.some(term => row.text.toLowerCase().includes(term))));
   const output = source ? { answer: source.text, citations: [source.id], outcome: "answered" } :
     { answer: "제공된 자료에서 답을 찾지 못했습니다.", citations: [], outcome: "insufficient_evidence" };
   return withQuestions ? { ...output, followUpQuestions: [] } : output;

@@ -15,6 +15,15 @@ generated:
   at: '2026-11-12T14:49:23+09:00'
 decision_status: proposed
 sources:
+- id: gap-exclusion
+  resource: /references/user-gap-qa-exclusion.md
+  title: 관람 보완 요청의 Q&A 전환 제외
+- id: qa-policy
+  resource: /references/user-expected-qa-policy.md
+  title: 예상 Q&A 생성·검수 정책
+- id: figma-review
+  resource: /references/figma-review-v3.md
+  title: Figma W11 화면 직접 대조
 - id: signup-contract
   resource: /research/signup-auth-contract.md
   title: W9 이메일 가입과 직접 로그인 경계
@@ -334,3 +343,6 @@ W10에서 작가 화면 8개의 문구와 이미지를 직접 확인했다([SRC-
 
 
 W9 프런트 인계: SC-A09 제출은 202 요청 접수 후 코드 입력으로 이어진다. 최초 requestId를 signupRequestId로 유지하고 재발송·확인에는 새 requestId를 사용한다. 코드를 URL에 넣지 않는다. 확인 후 쿠키/관리자 세션 없이 SC-A01 직접 로그인으로 이동한다. 최초 ID를 잃은 미인증 계정의 복구는 미구현이다. 서버 API는 구현·검증 중이며 선택/가입/코드 입력 화면 자체는 아직 구현하지 않았다. [W9 계약](api-contract.md#w9-이메일-가입-계약-검증-중).
+
+
+W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.
