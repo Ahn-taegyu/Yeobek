@@ -35,12 +35,42 @@ export function validateContext(value: unknown, selector: ArtworkSelector): Publ
   return context;
 }
 
-/** Whole excerpts only: never cut away a negation or separate text from its ID. */
+// Trailing particles/endings, longest first. Matching is by substring, so a short stem still finds 마을이/마을을.
+const questionSuffixes = ["에서는", "에게서", "으로는", "이라고", "인가요", "였나요", "었나요", "았나요", "했나요", "이에요",
+  "에서", "에게", "으로", "부터", "까지", "처럼", "보다", "이나", "하고", "나요", "가요", "까요", "어요", "아요", "세요", "예요",
+  "은", "는", "이", "가", "을", "를", "의", "에", "로", "와", "과", "도", "만", "요"];
+// Question framing that says nothing about the artwork; excluded from matching.
+const questionOnlyTerms = new Set(["무엇", "무슨", "어떤", "어떻게", "어디", "어디서", "언제", "누가", "얼마", "얼마나", "있나", "있었", "기록"]);
+
+/** Question words with one trailing particle/ending removed (keeping ≥2 syllables). */
+export function questionTerms(question: string): string[] {
+  const terms = new Set<string>();
+  for (const word of question.toLocaleLowerCase("ko").match(/\p{Script=Hangul}+|[^\s\p{P}\p{S}\p{Script=Hangul}]+/gu) ?? []) {
+    let stem = word;
+    if (/^\p{Script=Hangul}+$/u.test(word)) {
+      const suffix = questionSuffixes.find(s => word.endsWith(s) && [...word].length - [...s].length >= 2);
+      if (suffix) stem = word.slice(0, -suffix.length);
+    }
+    if ([...stem].length >= 2 && !questionOnlyTerms.has(stem)) terms.add(stem);
+  }
+  return [...terms];
+}
+
+/** Whole excerpts only: never cut away a negation or separate text from its ID.
+ * Each question stem found in a body adds its rarity within this request's candidates (IDF),
+ * so a stem every excerpt shares (작품, the title) counts less than the specific fact asked about.
+ * No length normalisation: short generic notices must not outrank the direct excerpt.
+ * Ties keep artwork scope, then server order. */
 export function selectEvidence(evidence: Evidence[], question: string): Evidence[] {
-  const terms = question.toLocaleLowerCase("ko").split(/[^\p{L}\p{N}]+/u).filter(t => t.length > 1);
-  const ranked = evidence.map((item, index) => ({ item, index,
-    score: terms.filter(t => item.body.toLocaleLowerCase("ko").includes(t)).length,
-  })).sort((a, b) => b.score - a.score || Number(b.item.scope === "artwork") - Number(a.item.scope === "artwork") || a.index - b.index);
+  const terms = questionTerms(question);
+  const bodies = evidence.map(item => item.body.toLocaleLowerCase("ko"));
+  const weights = terms.map(term => {
+    const df = bodies.filter(body => body.includes(term)).length;
+    return Math.log(1 + (evidence.length - df + 0.5) / (df + 0.5));
+  });
+  const score = (body: string) => terms.reduce((sum, term, i) => sum + (body.includes(term) ? weights[i] : 0), 0);
+  const ranked = evidence.map((item, index) => ({ item, index, score: score(bodies[index]) }))
+    .sort((a, b) => b.score - a.score || Number(b.item.scope === "artwork") - Number(a.item.scope === "artwork") || a.index - b.index);
   const selected: Evidence[] = [];
   let size = 0;
   for (const { item } of ranked) {

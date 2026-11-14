@@ -71,6 +71,16 @@ describe("author preview client", () => {
     expect(requestApi).toHaveBeenCalledTimes(1);
   });
 
+  it("asks for the introduction when an artwork is picked with the narration intent", async () => {
+    requestApi.mockResolvedValue(previewData());
+    const exhibition: ExperienceExhibition = { id: exhibitionId, title: "초안", artistDisplayName: "작가", place: null,
+      startDate: null, endDate: null, introduction: null, artworks: [{ id: workId, number: 8, title: "작품" }] };
+    await createAuthorPreviewTransport(exhibition).ask({ requestId: answerId, exhibitionId, artworkId: workId, question: "8. 작품",
+      intent: "narration", contextSequence: 1, inputMode: "text", outputMode: "text" }, signal);
+    expect(requestApi).toHaveBeenCalledWith("previewChat", { params: { id: exhibitionId },
+      body: { requestId: answerId, artworkId: workId, question: "이 작품을 소개해 주세요." }, signal });
+  });
+
   it("reports running preview work as reusable and abstained replies as not speakable", async () => {
     requestApi.mockResolvedValueOnce(previewData({ status: "running", result: null }))
       .mockResolvedValueOnce(previewData({ status: "abstained", result: null }));

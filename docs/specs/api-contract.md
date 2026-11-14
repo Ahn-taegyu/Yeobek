@@ -4,7 +4,7 @@ id: SPEC-011
 title: MVP API 계약
 description: OP-01~23의 초기 기반 및 후속 HTTP 계약과 접근·버전 경계.
 status: draft
-updated: '2026-11-14'
+updated: '2026-11-15'
 tags: [yeobek, api, mvp]
 rag_include: true
 generated:
@@ -134,7 +134,7 @@ W10의 추가 입력 계약은 아래 별도 절을 적용한다. 기존 생성�
 | `POST /api/admin/artworks/{id}/evidence` | `scope`, `sourceLabel`, `body`, `source`, 선택적 `evidenceId`·`expectedVersion`으로 근거 생성/수정 |
 | `GET /api/admin/artworks/{id}/review` | 작품·근거·해설 승인·음성·공개본·차단 사유와 소개 근거 핀 조회 |
 | `POST /api/admin/artworks/{id}/approvals` | `kind=evidence`의 `evidenceId,version` 또는 `kind=narration`의 `expectedRevision,citations`로 각각 승인 |
-| `POST /api/admin/exhibitions/{id}/publication` | `publish`는 `requestId,expectedRevision,artworks,intro`로 선택 작품과 소개 근거 버전을 원자적으로 게시; `pause/resume`은 `expectedRevision,artworkId?` 사용 |
+| `POST /api/admin/exhibitions/{id}/publication` | `publish`는 `requestId,expectedRevision,artworks,intro`로 선택 작품과 소개 근거 버전을 원자적으로 게시; `pause/resume`은 `expectedRevision,artworkId?` 사용. `publish`는 게시 전에 선택 작품의 현재 승인 해설 음성을 준비해 공개본에 묶는다(SRC-071, 작품별 병렬, 최대 약 90초 대기, 같은 승인·음성 설정은 한 작업 공유). 준비하지 못한 작품은 글만 게시한다 |
 | `GET /api/admin/exhibitions/{id}/labels` | 공개 경로·작품 번호와 제목 조회 |
 | `POST /api/admin/evidence/{id}/impact` | `expectedVersion`으로 다른 전시까지 포함한 철회 영향과 token 조회 |
 | `POST /api/admin/evidence/{id}/revoke` | `expectedVersion,impactToken`으로 영향 재검사 후 철회 |
@@ -243,7 +243,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | 16 | `POST /api/transcribe` multipart `exhibition_id,session_id,id,file` | 인식문·상태 반환; 사용자가 수정 후 별도 전송, 원음 장기 저장 없음 |
 | 17 | `POST /api/chat` `{requestId,exhibitionId,artworkId,question,artworkNumber?,intent?,contextSequence,inputMode,outputMode}` | 아래 W5 계약. 세션은 서버 쿠키이며 body의 sessionId·recentContext·conversationId는 받지 않음 |
 | 18 | `POST /api/speech` `{requestId,answerId}` | 같은 세션의 저장된 답변을 현재 공개 상태 확인 후 MP3로 반환. 임의 텍스트 불허 |
-| 19 | `GET /api/media/{id}?kind=image\|audio` | 현재 공개 publication의 이미지/기본 해설 음성 바이트, `no-store`; 원본 PDF 제외 |
+| 19 | `GET /api/media/{id}?kind=image\|audio\|poster[&w=320\|640\|960]` | 현재 공개 publication의 이미지/포스터/기본 해설 음성 바이트, `no-store`; 원본 PDF 제외. 이미지·포스터에 `w`를 주면 그 너비 이하의 WebP로 줄여 반환 |
 | 20 | `GET /api/jobs/{id}`; `POST /api/jobs/{id}/retry` `{id,revision}` | 소유자 또는 소유 세션 확인 후 상태·재시도 가능 여부·대기 시간; 중복 실행 방지 |
 | 22 | `GET /api/admin/exhibitions/{id}/knowledge`; `POST /api/admin/exhibitions/{id}/evidence/apply` `{document_id,section_id,revision,artwork_id?}` | 작가 검수용 근거·출처·변경 여부; 다른 소유자/전시 작품 거부, 적용은 승인 아님 |
 
@@ -314,7 +314,7 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 
 # W5 공개 미디어 (로컬 검증)
 
-`GET /api/media/{id}?kind=image|audio`에서 id는 현재 공개본 UUID다. 공개 전시·작품의 `image`/`audio`는 `{id,kind}` 또는 null이며 키나 서명 URL을 포함하지 않는다. 기존 클라이언트 호환을 위해 스키마에서는 추가 필드를 optional로 둔다. 이미지 최대 기술 상한은 50MiB(현재 업로드 정책 3MiB), 기본 해설 음성은 8MiB다. 현재 공개본·철회·모의 출처를 검사한 뒤 검증 바이트를 반환하기 직전에 다시 확인한다. 공개가 끝나면 404다. 이미 전송한 바이트는 회수할 수 없다.
+`GET /api/media/{id}?kind=image|audio`에서 id는 현재 공개본 UUID다. 공개 전시·작품의 `image`/`audio`는 `{id,kind}` 또는 null이며 키나 서명 URL을 포함하지 않는다. 기존 클라이언트 호환을 위해 스키마에서는 추가 필드를 optional로 둔다. 이미지 최대 기술 상한은 50MiB(현재 업로드 정책 3MiB), 기본 해설 음성은 8MiB다. 현재 공개본·철회·모의 출처를 검사한 뒤 검증 바이트를 반환하기 직전에 다시 확인한다. 공개가 끝나면 404다. 이미 전송한 바이트는 회수할 수 없다. 이미지·포스터는 선택 `w`(320·640·960)로 검증한 원본을 그 너비 이하로 줄인 WebP(품질 75)를 받을 수 있다. 원본보다 키우지 않으며 음성에 `w`를 주면 400이다([SRC-070](../references/user-visitor-select-intro.md)).
 
 성공 응답만 해당 MIME의 바이너리이며 `requestApi("getMedia", {params:{id},query:{kind}})`는 Blob을 반환한다. 오류는 기존 JSON 오류 봉투다. no-store·nosniff·X-Request-Id를 유지하며 자동 리디렉션이나 public signed URL은 사용하지 않는다. 미디어 참조 조회가 실패하면 기존 공개 글 조회는 유지하고 image/audio를 null로 반환한다.
 
