@@ -29,13 +29,16 @@ export function ExhibitionEditor({ id }: { id?: string }) {
   const load = useCallback(async (signal: AbortSignal) => id
     ? (await requestApi("getExhibition", { params: { id }, signal })).data : null, [id]);
   const result = useArtistLoad(load);
-  if (result.data === undefined) return <><Header title="새 전시 등록하기" /><Loading {...result} /></>;
+  if (result.data === undefined) return <><Header title={id ? "전시 정보" : "새 전시 등록하기"} /><Loading {...result} /></>;
   return <ExhibitionSteps initial={result.data} />;
 }
 
 function ExhibitionSteps({ initial }: { initial: Exhibition | null }) {
   const [saved, setSaved] = useState(initial);
-  const [step, setStep] = useState(initial?.authoringStep === "artworks" ? 3 : initial?.authoringStep === "world" ? 2 : 1);
+  const [step, setStep] = useState(() => {
+    if (initial && (initial.state !== "draft" || initial.authoringStep === "artworks")) return 3;
+    return initial?.authoringStep === "world" ? 2 : 1;
+  });
   const [status, setStatus] = useState<{ error?: string; notice?: string }>({});
   const [busy, setBusy] = useState(false);
   const creating = useRef<string | null>(null);
@@ -100,7 +103,7 @@ function ExhibitionSteps({ initial }: { initial: Exhibition | null }) {
   }
 
   return <>
-    <Header title="새 전시 등록하기" />
+    <Header title={initial ? saved?.title || "전시 정보" : "새 전시 등록하기"} />
     {step < 3 && <form key={step} onSubmit={save} aria-busy={busy}>
       <h2>{step === 1 ? "전시 정보를 알려주세요" : "전체적인 작품에 대해 알려주세요"}</h2>
       {step === 1 && <>

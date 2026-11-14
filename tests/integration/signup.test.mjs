@@ -48,7 +48,8 @@ test("email verification requires the originating signup and never logs in autom
   const email = `signup-${randomUUID()}@example.invalid`;
   const password = "Aa123456"; // Exactly eight characters: the confirmed policy boundary.
   const signupRequestId = randomUUID();
-  const input = { email, password, passwordConfirmation: password, requestId: signupRequestId };
+  const profile = { fullName: "가입 작가 이름", displayName: "가입 작가명" };
+  const input = { email, password, passwordConfirmation: password, requestId: signupRequestId, profile };
   const accepted = { status: "verification_required", authenticated: false };
   const post = (path, body, expected = 202) => request(`/api/auth/${path}`, { method: "POST", body, expected, noCookies: true });
 
@@ -89,8 +90,12 @@ test("email verification requires the originating signup and never logs in autom
   const again = await request("/api/admin/profile");
   assert.equal(first.id, again.id, "profile remains lazy and unique");
   assert.equal(first.accountEmail, email);
-  const duplicate = await post("signup", { ...input, requestId: randomUUID(), password: "Different123!", passwordConfirmation: "Different123!" });
+  assert.equal(first.fullName, profile.fullName);
+  assert.equal(first.displayName, profile.displayName);
+  const duplicate = await post("signup", { ...input, requestId: randomUUID(), password: "Different123!", passwordConfirmation: "Different123!",
+    profile: { fullName: "다른 이름", displayName: "다른 작가명" } });
   assert.deepEqual(duplicate, accepted, "confirmed duplicates do not disclose account existence");
+  assert.equal((await request("/api/admin/profile")).displayName, profile.displayName);
   await request("/api/auth/logout", { method: "POST", body: {} });
   await request("/api/admin/profile", { expected: 401 });
   await request("/api/auth/login", { method: "POST", body: { email, password } });

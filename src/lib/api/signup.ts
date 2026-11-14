@@ -92,7 +92,8 @@ export async function prepareArtistSignup(request: Request) {
   const { input, worker, auth } = await signupContext(request, "signup", signupSchema);
   const { data, error } = await providerCall(() => worker.auth.admin.createUser({
     email: input.email, password: input.password, email_confirm: false,
-    app_metadata: { yeobek_signup_request_id: input.requestId },
+    app_metadata: { yeobek_signup_request_id: input.requestId,
+      ...(input.profile && { yeobek_signup_profile: input.profile }) },
   }));
   if (error) {
     if (error.code !== "email_exists") throw providerFailure(error);

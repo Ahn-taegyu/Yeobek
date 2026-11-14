@@ -449,7 +449,7 @@ v3 추가 경로/필드는 W13→W10→W9→W11→W12 순서로 확정한다. �
 
 | 경로 | 입력/결과 |
 | --- | --- |
-| POST /api/auth/signup | `{email,password,passwordConfirmation,requestId}` → 202 `{status:"verification_required",authenticated:false}`. 이메일 trim/lowercase, 비밀번호 8 Unicode 문자 이상·72 UTF-8 bytes 이하, 일치 확인. 기존 로그인 스키마는 유지 |
+| POST /api/auth/signup | `{email,password,passwordConfirmation,requestId,profile?:{fullName,displayName}}` → 202 `{status:"verification_required",authenticated:false}`. 이메일 trim/lowercase, 비밀번호 8 Unicode 문자 이상·72 UTF-8 bytes 이하, 일치 확인. 작가 가입 화면은 이름과 작가명을 필수로 받으며 API는 이전 호출자에 대해 profile 생략을 허용한다. |
 | POST /api/auth/resend | `{email,signupRequestId,requestId}` → 같은 202. 원래 가입 요청 ID와 미인증 계정이 일치할 때만 메일 전송 |
 | POST /api/auth/verify | `{email,code,signupRequestId,requestId}` → 200 `{status:"verified",authenticated:false}`. 숫자 6자리 코드; 올바르지 않음/만료/다른 가입시도는 400 INVALID_VERIFICATION_CODE |
 | GET /api/auth/session | `{authenticated:boolean}`. 실제 인증 장애는 429/503, 비로그인만 false. 프로필 지연 생성 없음 |
@@ -459,6 +459,8 @@ v3 추가 경로/필드는 W13→W10→W9→W11→W12 순서로 확정한다. �
 signupRequestId는 최초 가입 입력의 requestId다. 생성 요청의 응답 유실 때 같은 입력과 같은 ID로 재시도하고, 이후 재발송·코드 확인에는 새 requestId와 원래 signupRequestId를 각각 사용한다. 새 ID로 원래 미인증 가입을 대신 확인할 수 없다. 최초 ID를 잃은 계정의 재설정/복구는 미구현이며 코드 입력만 반복하게 안내하지 않는다. 비밀번호는 확인 대기 단계로 갈 때 지우고 requestId는 복구에 필요한 동안 유지한다.
 
 이메일 확인 응답은 쿠키·토큰을 만들지 않는다. 제공사가 내부 생성한 확인 세션만 local scope로 폐기한다. 확인 이후 폐기/응답 실패 시 인증이 이미 완료됐을 수 있으므로 직접 로그인으로 확인한다. 신규 가입 계정의 관리자 API/RPC/RLS는 password AMR도 요구하여 OTP-only 토큰의 직접 접근을 차단한다. 기존 사전 발급 계정은 추가 AMR 조건을 적용하지 않는다. 사용자 입력의 user_metadata로 이 조건을 바꿀 수 없다.
+
+신규 migration 234000은 이메일 인증을 마친 계정의 첫 프로필 생성 시 서버가 기록한 가입 이름과 작가명을 복사한다. 다시 가입을 요청하거나 기존 프로필을 조회해도 이미 저장된 이름을 덮어쓰지 않는다. migration을 API와 화면보다 먼저 반영한다. [요청 원문](../references/user-artist-signup-exhibition.md).
 
 초기 구현 정책(사용자 확정 수치 아님): 네트워크 가입·재발송 합계10/분·60/시간, 인증60/분·300/시간; 이메일 가입·재발송5/시간, 인증10/시간. 같은 요청 ID도 한도에 포함한다. DB에는 HMAC 해시·UUID·kind·시각만 남기고48시간 후 최대1000개씩 purge한다. 원본 이메일/비밀번호/코드는 기록하지 않는다. 스케줄 실제 연결은 W7이며 정리 완료로 간주하지 않는다. 공개 Supabase 재발송은 제공사 자체 한도를 따르므로 앱 원장으로 모두 통제한다고 주장하지 않는다.
 

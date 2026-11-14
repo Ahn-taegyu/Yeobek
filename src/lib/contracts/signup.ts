@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { uuid } from "./requests";
+import { artistName } from "./onboarding";
 
 const email = z.string().trim().toLowerCase().pipe(z.email("이메일 주소를 확인해 주세요.").max(254));
 const password = z.string()
@@ -8,7 +9,8 @@ const password = z.string()
   .refine(value => new TextEncoder().encode(value).length <= 72, "비밀번호를 UTF-8 기준 72바이트 이하로 입력해 주세요.");
 
 const request = z.strictObject({ email, requestId: uuid.toLowerCase() });
-export const signupSchema = request.extend({ password, passwordConfirmation: z.string() })
+export const signupProfileSchema = z.strictObject({ fullName: artistName, displayName: artistName });
+export const signupSchema = request.extend({ password, passwordConfirmation: z.string(), profile: signupProfileSchema.optional() })
   .refine(value => value.password === value.passwordConfirmation, {
     path: ["passwordConfirmation"], message: "비밀번호와 확인값이 일치하지 않습니다.",
   });

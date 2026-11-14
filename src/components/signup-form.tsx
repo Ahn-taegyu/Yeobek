@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRef, useState, type FormEvent } from "react";
 import { ApiClientError, requestApi } from "@/lib/client";
 import { signupSchema } from "@/lib/contracts/signup";
+import { transitionScreen } from "@/components/ui/motion";
+import type { z } from "zod";
 
 type PendingSignup = { email: string; signupRequestId: string };
 const storageKey = "yeobek-pending-signup";
@@ -26,7 +28,7 @@ export function SignupForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const previousRequest = useRef<{ email: string; password: string; passwordConfirmation: string; requestId: string } | null>(null);
+  const previousRequest = useRef<z.output<typeof signupSchema> | null>(null);
 
   async function perform(action: () => Promise<void>) {
     if (busy) return;
@@ -51,10 +53,15 @@ export function SignupForm() {
     const email = String(fields.get("email") ?? "").trim().toLowerCase();
     const password = String(fields.get("password") ?? "");
     const passwordConfirmation = String(fields.get("passwordConfirmation") ?? "");
+    const profile = {
+      fullName: String(fields.get("fullName") ?? "").trim(),
+      displayName: String(fields.get("displayName") ?? "").trim(),
+    };
     const previous = previousRequest.current;
     const requestId = previous?.email === email && previous.password === password &&
-      previous.passwordConfirmation === passwordConfirmation ? previous.requestId : crypto.randomUUID();
-    const parsed = signupSchema.safeParse({ email, password, passwordConfirmation, requestId });
+      previous.passwordConfirmation === passwordConfirmation && previous.profile?.fullName === profile.fullName &&
+      previous.profile.displayName === profile.displayName ? previous.requestId : crypto.randomUUID();
+    const parsed = signupSchema.safeParse({ email, password, passwordConfirmation, requestId, profile });
     if (!parsed.success) {
       setError(parsed.error.issues[0].message);
       return;
@@ -66,7 +73,7 @@ export function SignupForm() {
       try { sessionStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* The form still works in this page. */ }
       previousRequest.current = null;
       form.reset();
-      setPending(next);
+      transitionScreen(() => setPending(next));
     });
   }
 
@@ -77,7 +84,7 @@ export function SignupForm() {
     void perform(async () => {
       await requestApi("verifySignup", { body: { ...pending, code, requestId: crypto.randomUUID() } });
       try { sessionStorage.removeItem(storageKey); } catch { /* Storage may be disabled. */ }
-      setVerified(true);
+      transitionScreen(() => setVerified(true));
     });
   }
 
@@ -91,7 +98,7 @@ export function SignupForm() {
 
   function restore() {
     const saved = restoreSignup();
-    if (saved) { setPending(saved); setError(""); }
+    if (saved) { transitionScreen(() => setPending(saved)); setError(""); }
     else setError("이 탭에 이어서 진행할 가입 요청이 없어요.");
   }
 
@@ -109,6 +116,11 @@ export function SignupForm() {
       <button disabled={busy}>{busy ? "처리 중…" : "인증하기"}</button>
       <button type="button" className="secondary" disabled={busy} onClick={resend}>인증 코드 다시 받기</button>
     </form> : <form method="post" onSubmit={signup} aria-busy={busy}>
+      <label htmlFor="signup-full-name">이름</label>
+      <input id="signup-full-name" name="fullName" autoComplete="name" maxLength={100} required disabled={busy} />
+      <label htmlFor="signup-display-name">작가명 (활동명)</label>
+      <input id="signup-display-name" name="displayName" placeholder="활동명이 없다면 본명을 입력해주세요"
+        maxLength={100} required disabled={busy} />
       <label htmlFor="signup-email">이메일</label>
       <input id="signup-email" name="email" type="email" autoComplete="email" maxLength={254} required disabled={busy} />
       <label htmlFor="signup-password">비밀번호</label>
