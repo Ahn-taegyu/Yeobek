@@ -83,6 +83,8 @@ export const routes = {
   listOutbox: { method: "GET", path: "/api/ops/outbox", query: outboxQuery, response: successEnvelope(outboxPageResponse), statuses: [200] },
   approveOutbox: { method: "POST", path: "/api/ops/outbox/{id}/approve", params: byId, body: decideOutboxSchema, response: successEnvelope(outboxResponse), statuses: [200] },
   rejectOutbox: { method: "POST", path: "/api/ops/outbox/{id}/reject", params: byId, body: decideOutboxSchema, response: successEnvelope(outboxResponse), statuses: [200] },
+  transcribePreview: { method: "POST", path: "/api/admin/exhibitions/{id}/preview/transcribe", params: byId, body: transcribeRequest, bodyEncoding: "multipart", response: successEnvelope(transcribeResponse), statuses: [200] },
+  speakPreviewAnswer: { method: "POST", path: "/api/admin/preview/{id}/speech", params: byId, body: speechRequest.pick({ requestId: true }), binary: { mimeTypes: ["audio/mpeg"], maxBytes: 2 * 1024 * 1024 }, statuses: [200] },
   transcribe: { method: "POST", path: "/api/transcribe", body: transcribeRequest, bodyEncoding: "multipart", response: successEnvelope(transcribeResponse), statuses: [200] },
   speech: { method: "POST", path: "/api/speech", body: speechRequest, binary: { mimeTypes: ["audio/mpeg"], maxBytes: 8 * 1024 * 1024 }, statuses: [200] },
   getMedia: { method: "GET", path: "/api/media/{id}", params: byId, query: mediaQuery, binary: mediaBinary, statuses: [200] },
