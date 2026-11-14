@@ -10,7 +10,7 @@ export function mentionedArtworks(question: string, labels: PublicArtworkLabel[]
   for (const label of labels) {
     const title = normalizeArtworkTitle(label.title);
     if (!title) continue;
-    const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegex(title)}(?=$|[\\s.,!?"'“”‘’「」<>]|(?:은|는|을|를|의|에서|에|으로|과|와|도)(?=$|[\\s.,!?]))`, "gu");
+    const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegex(title)}(?=$|[\\s.,!?"'“”‘’「」<>]|(?:은|는|이|가|을|를|의|에서|에|으로|로|과|와|도)(?=$|[\\s.,!?]))`, "gu");
     for (const match of text.matchAll(pattern)) {
       const start = match.index, end = start + match[0].length;
       // One-character titles require an explicit title cue or exact standalone input.
