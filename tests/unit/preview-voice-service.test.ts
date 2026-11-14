@@ -11,7 +11,7 @@ const owner = "dbe48811-59a8-4348-84c9-460687880e36";
 const input = { requestId: "dbe48811-59a8-4348-84c9-460687880e37", exhibitionId: "dbe48811-59a8-4348-84c9-460687880e38", filename: "recording.wav", file: new File(["audio"], "recording.wav", { type: "audio/wav" }) };
 const answerId = "dbe48811-59a8-4348-84c9-460687880e39";
 const reply = { requestId: input.requestId, transcript: "인식 결과", mock: true };
-const claim = { id: owner, claimed: true, status: "running", failureCode: null, mock: true };
+const claim = { id: owner, claimed: true, status: "running" as const, failureCode: null, mock: true };
 let reserved: { id: string; claimed: boolean; status: "running" | "succeeded" | "failed"; failureCode: string | null; mock: boolean };
 let loaded: unknown;
 const calls = (name: string) => state.rpc.mock.calls.filter(([, called]) => called === name);
