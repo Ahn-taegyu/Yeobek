@@ -4,7 +4,7 @@ id: P-002
 title: MVP 우선순위와 확정 범위
 description: 사용자 원안·추가 결정·상세 설계 제안을 분리한 구현 기준.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 rag_include: true
@@ -34,6 +34,9 @@ sources:
 - id: direction
   resource: /references/user-build-direction.md
   title: 사용자 최신 개발 방향
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 ---
 
 # 현재 기준
@@ -61,7 +64,7 @@ sources:
 | [F-005](../features/F-005-audio.md) | 해설·채팅 답변 음성 출력 | P1 | MVP | F-003 |
 | [F-006](../features/F-006-qa.md) | 승인 자료 기반 AI 질의응답 | P1 | MVP | F-022 |
 | [F-007](../features/F-007-number-label.md) | 숫자 라벨로 작품 선택 | P1 | MVP | F-022 |
-| [F-008](../features/F-008-qr.md) | 전시·작품 QR 배포 | P1 | MVP | F-022 |
+| [F-008](../features/F-008-qr.md) | 전시 QR 배포 | P1 | MVP | F-022 |
 | [F-009](../features/F-009-nfc.md) | NFC 태그로 작품 선택 | P1 | Later | F-008 |
 | [F-010](../features/F-010-location.md) | 위치 기반 작품 선택 | P1 | Hold | F-011, F-017 |
 | [F-011](../features/F-011-artwork-list.md) | 관람객 작품 목록·정보 | P1 | MVP | F-022 |
@@ -82,7 +85,7 @@ prerequisite는 최초 목록에 독립 이름이 없지만 필요한 전시/권
 
 # 첫 MVP의 완료 경로
 
-작가 홈·작가 정보 → 전시 정보 → 작품·자료 입력과 내부 지식 연결 → 글 해설 생성 → 공개 근거/해설 작가 검수 → 기본 음성 준비·게시 → QR→전시 온보딩→목록 배경 채팅 → 작품 정보 확인·번호/목록 선택·대상 표시 → 같은 채팅에서 해설·후속 질문. 관람 중 네 입력×출력 조합을 자유롭게 전환한다.
+작가 홈 → 전시 기본 필수 정보와 선택 작품 세계 → 작품·자료 → 기본 해설과 예상 Q&A → 검수·승인 → 전시 공개 → 전시 QR과 번호 라벨 → 전시 소개 → 글·음성 질문과 글 답변·TTS.
 
 음성 입력을 제외하거나 음성 입력을 항상 음성 출력으로 묶은 구현은 이번 요구를 충족하지 못한다. 실제 구현 순서는 [개발 계획](delivery-plan.md), 화면/상태/실패 조건은 [기능명세](../specs/functional-spec.md)와 [통합 채팅](../specs/chat-interaction.md)을 따른다.
 
@@ -104,3 +107,9 @@ prerequisite는 최초 목록에 독립 이름이 없지만 필요한 전시/권
 5. **시각 질문:** 말·글 지칭과 승인된 부위 설명을 사용한다. 이미지 부분 선택·카메라는 사용자 확정 후순위이고, 이미지 AI 분석도 일요일 일정 밖이다.
 
 [^answers]: [사용자 추가 응답](../references/user-answers.md).
+
+## 작가 인증 요구
+
+[D-016](../decisions/D-016-artist-auth.md)에 따라 직접 회원가입과 로그인 선택을 MVP 흐름에 포함한다. 가입 후 자동 로그인 없이 직접 로그인한다. 기존 로그인은 구현되어 있으며 직접 가입의 구현·수용 검증은 후속이다. 사용자가 [마감 전 포함](../references/user-auth-signup-timing.md)을 결정했으므로 백엔드 계획의 '직접 가입은 마감 이후' 기준을 대체한다.
+
+현행 P0 및 Notion 기능 대응은 [기능명세](../specs/functional-spec.md#notion-p0-기능-연결)를 따른다. 기존 기능 ID와 원안 우선순위는 이력 및 상세 설계 참조로 사용한다.

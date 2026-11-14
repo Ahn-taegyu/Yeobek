@@ -13,6 +13,12 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: v2
+  resource: /references/user-backend-plan-v2.md
+  title: 백엔드 완성 계획 v2
+- id: signup-policy
+  resource: /references/user-signup-security.md
+  title: 가입 이메일 인증 필수와 비밀번호 최소 8자
 - id: channel-auth
   resource: /references/user-channel-webhook-auth.md
   title: 채널톡 문의 웹훅 인증 선택
@@ -46,6 +52,9 @@ sources:
 - id: local
   resource: https://supabase.com/docs/guides/local-development
   title: Supabase 로컬 개발
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 ---
 
 # 현재 범위
@@ -156,3 +165,14 @@ Sol의 SQL·HTTP 테스트를 부모가 읽고 직접 실행했으며 별도 Sol
 # 문의 자동화 진행
 
 채널톡 기존 웹훅 URL 토큰 수신, 운영자의 명시적 작가 연결, 근거 기반 답변과 고정 대상 발송을 구현 중이다. 상세 경계는 [API 계약](api-contract.md#채널톡-문의-수신과-답변-구현-중)을 따른다. 로컬 문의 DB pgTAP 31개와 관련 단위·계약 107개를 확인했으며 로컬 인증·실제 DB와 모의 답변을 사용한 HTTP 통합 1개가 통과했다. 실제 제공사 호출은 미검증이다. 만료된 문의의 물리 삭제는 남았다. 최신 문의 변경의 CI는 대기 중이다.
+
+## 직접 가입 후속 요구
+
+[D-016](../decisions/D-016-artist-auth.md)에 따라 작가 직접 가입·선택 진입과 가입 후 직접 로그인이 요구되었다. 위 표의 사전 생성 계정 인증은 현재 구현 상태이며 직접 가입 기능은 구현 및 검증 전이다.
+
+
+# v2 이행 기준 (D0)
+
+[작업 추적](backend-completion.md)의 D0 → W10 → W9 → W11 → W12 순서를 적용한다. 기존 W8 진행 안내·채널톡 문의는 PR #11 (`2d7bea1`)로 최신 App/Knowledge CI 성공 후 병합됐으며 실제 외부 호출과 물리 보존 삭제 등 잔여는 미검증이다. 기존의 CI 대기 표현은 당시 기록이다. W2 후보·이력은 Draft PR #13에만 보존되어 main 계약으로 제공하지 않는다.
+
+OP-23 가입의 확정 정책은 이메일 인증 필수·비밀번호 최소 8자·확인 후 직접 로그인이다. 기존 계정 로그인에 새 가입 강도를 소급 적용하지 않는다. signup/session 경로, 확인·재발송 상세와 Supabase 연동은 W9 구현 전 공식 문서로 검증한다. 가입·미리보기·예상 Q&A·새 공개/관람 계약은 아직 미구현이며 현재 HTTP와 구분한다. D0는 새 제품 플래그를 활성화하지 않는다.

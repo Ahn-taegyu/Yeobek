@@ -4,7 +4,7 @@ id: F-011
 title: 관람객 작품 목록·정보
 description: 채팅 배경의 작품 목록과 작품 정보 화면에서 탐색하고 같은 대화의 질문 대상을 선택한다.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 - feature
@@ -65,3 +65,5 @@ sources:
 # 근거와 연결
 
 [사용자 원안](../references/user-mvp.md) · [사용자 추가 결정](../references/user-answers.md) · [기능명세 전체](../specs/functional-spec.md)
+
+Notion F08의 한 줄 목록과 전체보기는 같은 채팅의 대상을 선택한다. 현재 작품을 다시 고르면 선택 해제하며 기록을 유지한다. 독립 F09는 제외한다. [D-017](../decisions/D-017-p0-feature-spec.md).

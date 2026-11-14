@@ -4,7 +4,7 @@ id: F-003
 title: 공개 근거·해설 작가 검수
 description: 작가가 공개 가능한 근거와 생성 해설을 확인·수정·승인한다. 원본 파일 업로드 자체는 승인으로 취급하지 않는다.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 - feature
@@ -66,3 +66,5 @@ sources:
 # 근거와 연결
 
 [사용자 원안](../references/user-mvp.md) · [사용자 추가 결정](../references/user-answers.md) · [기능명세 전체](../specs/functional-spec.md)
+
+Notion F05는 예상 Q&A와 해설 검수, 작가 전용 미리보기의 답변별 정확성 평가·정정을 관리한다. 수정 후 승인한 버전은 게시를 거쳐 F08이 사용한다. [D-017](../decisions/D-017-p0-feature-spec.md).
