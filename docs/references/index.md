@@ -94,3 +94,5 @@
 - [무료 AI 제공사 시험 요청](user-free-ai-providers.md) — SRC-060.
 - [같은 세션에서 페이지 이동 시 미리 불러온 데이터 사용](user-session-navigation.md) — SRC-061.
 - [Liner 재작성·음성 수정과 도슨트 모델 통일](user-liner-voice-evaluation.md) — SRC-062.
+
+- [SRC-063 작가 검수·체험 개선과 AI 인터뷰 병렬 구현 요청](user-author-experience-parallel.md).
