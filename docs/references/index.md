@@ -1,5 +1,6 @@
 # 출처와 보존본
 
+- [인증 코드를 받은 적 있는 이메일도 다시 받기](user-signup-code-again.md) — SRC-074, 미인증 계정 재가입 시 새 코드 발송.
 - [답변 시 자동 TTS와 작품 지칭·게시 정책](user-visitor-tts-publication-policy.md) — SRC-055, 글 우선 게시·질문의 작품 선택·다음 게시 번호 적용.
 - [병렬 백엔드 A 작가 흐름 목표](user-backend-author-parallel-plan.md) — SRC-054, 담당 경계와 인계 조건.
 

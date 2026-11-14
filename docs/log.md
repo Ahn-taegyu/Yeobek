@@ -1,5 +1,9 @@
 # 변경 이력
 
+## 2026-11-15
+
+- **가입 인증 코드 재발송**: SRC-074에 따라 이전 가입 시도로 미인증 계정이 남은 이메일로 다시 가입하면 비밀번호·가입 요청 ID·프로필을 함께 교체하고 새 코드를 보낸다. 서비스 역할 전용 `get_pending_signup_user` RPC와 pgTAP·권한 목록·단위 검사를 추가하고 API 계약의 가입 행을 갱신. 인증된 계정은 계속 메일 없이 같은 202. 로컬 단위 927·lint·typecheck 통과, DB 검사와 타입 차이는 CI에서 확인.
+
 ## 2026-11-14
 
 - **테스트 Preview 배포 연결**: Vercel `yeobek-test`의 GitHub 연결을 점검하고 `main`의 Preview 배포 조건과 고정 주소를 기록했다. [사용자 요청](references/user-vercel-preview-main.md).

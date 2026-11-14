@@ -998,6 +998,9 @@ isOneToOne: false
 "get_organize_context":
 { Args: { "p_document_id": string }; Returns: Json
                            },
+"get_pending_signup_user":
+{ Args: { "p_email": string }; Returns: string
+                           },
 "get_preview_answer":
 { Args: { "p_answer_id": string }; Returns: Json
                            },

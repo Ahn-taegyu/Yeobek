@@ -121,6 +121,7 @@ select results_eq(
     ('retry_expected_qa_job(uuid, uuid, uuid, integer, boolean)', false, false, true, false),
     ('consume_signup_budget(text, text, uuid, text)', false, false, true, false),
     ('get_signup_verification_identity(text, uuid)', false, false, true, false),
+    ('get_pending_signup_user(text)', false, false, true, false),
     ('acquire_notification_run(uuid, boolean)', false, false, true, false),
     ('check_notification_dispatch(uuid, uuid, boolean, uuid)', false, false, true, false),
     ('check_outbound_dispatch(uuid, uuid, boolean)', false, false, true, false),

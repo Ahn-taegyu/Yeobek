@@ -98,11 +98,30 @@ export async function prepareArtistSignup(request: Request) {
   if (error) {
     if (error.code !== "email_exists") throw providerFailure(error);
   } else if (!data.user?.id || data.user.email_confirmed_at) throw signupUnavailable();
-  // Only the original creation attempt can resume confirmation for a pending account.
-  const userId = await signupIdentity(worker, input.email, input.requestId);
+  let userId: string | null = await signupIdentity(worker, input.email, input.requestId);
   if (!error && userId !== data.user?.id) throw signupUnavailable();
+  // A new signup for a still-unconfirmed address restarts verification. The new
+  // password and request ID replace the old ones together, so only the latest
+  // signup screen can finish with the emailed code. Confirmed accounts receive
+  // nothing and the response stays identical, so existence is not revealed.
+  if (error && !userId) userId = await restartPendingSignup(worker, input);
   if (userId) await sendConfirmation(auth, input.email);
   return pending;
+}
+
+async function restartPendingSignup(worker: ReturnType<typeof createWorkerSupabase>, input: z.infer<typeof signupSchema>) {
+  const { data: pendingUser, error } = await providerCall(() => worker.rpc("get_pending_signup_user", { p_email: input.email }).retry(false));
+  if (error) throw signupUnavailable();
+  if (!pendingUser) return null;
+  const { error: updateError } = await providerCall(() => worker.auth.admin.updateUserById(pendingUser, {
+    password: input.password,
+    // Auth merges app metadata keys; null removes a profile left by an earlier attempt.
+    app_metadata: { yeobek_signup_request_id: input.requestId, yeobek_signup_profile: input.profile ?? null },
+  }));
+  if (updateError) throw providerFailure(updateError);
+  const userId = await signupIdentity(worker, input.email, input.requestId);
+  if (userId !== pendingUser) throw signupUnavailable();
+  return userId;
 }
 
 export async function resendArtistSignup(request: Request) {

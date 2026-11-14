@@ -58,6 +58,8 @@ enabled = true
 double_confirm_changes = true
 enable_confirmations = true
 otp_length = 6
+# Minimum gap between confirmation mails to one address (local stack only).
+max_frequency = "1s"
 
 [auth.email.template.confirmation]
 subject = "Yeobek 이메일 인증 코드"
