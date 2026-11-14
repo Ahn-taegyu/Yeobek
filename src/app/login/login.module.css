@@ -1,0 +1,20 @@
+:global(body):has(.screen) > :global(header) { display: none; }
+:global(body):has(.screen) > :global(main) { width: 100%; }
+
+.screen {
+  width: min(100%, 450px);
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: clamp(64px, 15vh, 144px) 20px 32px;
+  background: linear-gradient(var(--yeobek-cream), #f7f7f7 52%);
+  text-align: center;
+  color: var(--yeobek-ink);
+}
+.screen img { margin-inline: auto; height: auto; }
+.screen h1 { font-size: 20px; font-weight: 700; margin: 38px 0 12px; }
+.screen p { font-size: 15px; line-height: 1.4; }
+.screen form { text-align: start; margin-top: 32px; }
+.screen input { border-color: #ccc; border-radius: var(--yeobek-radius-pill); }
+.screen button { border-radius: var(--yeobek-radius-pill); justify-content: center; background: var(--yeobek-coffee); }
+.screen button[type="button"] { background: white; }
+.screen a { display: inline-block; padding: 12px; text-decoration: underline; }
