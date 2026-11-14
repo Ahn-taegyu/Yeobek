@@ -91,9 +91,9 @@ sources:
 | W13 | done, PR #16, main44bf7d3 | 리스크1·5·6·8·9 및 기한 반영, App·Knowledge CI 성공. 운영 적용은 W7 |
 | W9 | done, PR #17 | 직접 가입, 이메일 인증 필수·최소 8자 확정 |
 | W11 | done, PR #18, main40564e6 | 예상 Q&A·검수·미리보기·B용 승인 조회, 최종 App/Knowledge 성공; 공개 연결은 B |
-| W12 | in_progress, Draft PR #25 | 체크리스트·공개 메타/이미지·Q&A·전시 문맥·모의 해설 차단·다음 게시 번호 구현, head606bebc 전체 CI·제목 지칭 성공. #28 통합 최신 CI/병합 대기 |
+| W12 | done, [PR #25](https://github.com/Ahn-taegyu/Yeobek/pull/25), main1bd6734 | 최종 headb8d1daf App43573981012·Knowledge43573981010 성공. 공개/관람·P0 단계·모의 출처·Q&A·번호/제목·클라이언트 회귀 완료; 운영 전환은 점검표 |
 | W6 | not_started | 운영 및 가입→전시→게시 집계 |
-| W7 | in_progress, 인계 #20·시연 기반 #23 병합 | 승인 Q&A 시연 확장·키 당일 점검표는 #25. 단일 가입→관람/TTS 모의 HTTP는 head606bebc CI 성공. 최종 인계/병합 대기. 실키·프런트 UI는 별도 |
+| W7 | done (서버 모의 검증·문서 인계), #20·23·25 병합 | 가입→P0 draft/advance→생성/검수→게시→관람/TTS 단일 흐름 성공. 실제 SMTP·AI/TTS·품질/비용/지연·cron·프런트 UI는 미검증 |
 
 전달 당시와 실제 차이: PR #12는 `23f6ee0`으로 `docs/p0-feature-spec`에 이미 병합됐으나 main에는 없었다. D0는 이 통합 브랜치와 main을 합친다. main의 SRC-035·036을 보존하고 기획 브랜치의 가입·직접 로그인 출처만 SRC-039·040으로 옮긴다. SRC-037·038은 유지한다. W2는 실제로 착수해 있었으므로 폐기하지 않고 Draft PR로 보존했다.
 
@@ -156,7 +156,7 @@ W6는 [원 계획 W6](../references/user-backend-completion.md)의 운영 집계
 
 모의 전체 경로는 가입→이메일 확인→직접 로그인→홈→전시 2단계 임시저장/이어쓰기→작품/재정렬→해설·Q&A→검수/정정/승인→게시→공개 주소/전시 소개→전시·작품 채팅→보완/재게시다. 다른 계정 404, 승인 전/게시 전 데이터와 미리보기의 공개 노출 금지, 철회·캐시·TTS 재검사 및 플래그 off의 기존 흐름을 포함한다.
 
-`npm run db:seed:demo`는 계정·전시 1개·작품 3개와 승인 Q&A가 포함된 게시 상태를 준비한다. `frontend-handoff.md`는 SC-A01~A10·SC-V01~V06별 API·타입·상태·오류·플래그·모의를, `key-day-checklist.md`는 Auth 설정·실제 파트너/AI·음질·사람 평가·p50/p95·비용·플러그인 버전을 다룬다. 인계 초안은 #20으로 병합됐으며 최종 계약 보강과 키 당일 점검표는 Draft #25에 작성돼 있다. 가입부터 관람/TTS까지 단일 모의 HTTP 회귀는 head606bebc App43571824061에서 성공했다. #28 통합 최신 CI와 병합이 남았다. section 목록 항목 추가/제거의 변경 용이성과 신규 플래그 off 회귀를 확인한다.
+`npm run db:seed:demo`는 계정·전시 1개·작품 3개와 승인 Q&A가 포함된 게시 상태를 준비한다. `frontend-handoff.md`는 SC-A01~A10·SC-V01~V06별 API·타입·상태·오류·플래그·모의를, `key-day-checklist.md`는 Auth 설정·실제 파트너/AI·음질·사람 평가·p50/p95·비용·플러그인 버전을 다룬다. 인계 초안은 #20으로 병합됐으며 최종 계약 보강과 키 당일 점검표도 #25로 병합됐다. 가입부터 P0 작성 단계/관람/TTS까지 단일 모의 HTTP 회귀는 최종 headb8d1daf App43573981012에서 성공했다. #28·30을 통합한 #25는 main1bd6734로 병합됐다. section 목록 항목 추가/제거의 변경 용이성과 신규 플래그 off 회귀를 확인한다.
 
 # 미결정과 마감 조정
 
@@ -422,3 +422,22 @@ PR #28 첫 head609b4c8의 Knowledge CI는 성공했고 App 타입 검사에서 P
 W9·W10·W11·W2는 병합 상태를 표에 반영했다. 새 expectedQa/exhibitionQa/previewChat/qaRewrite/materialExtraction은 기본off다. 전시 Q&A·학습 manifest는 이미 구현된 API를 보존했고 삭제하지 않았다. 추가 제외는 관람 보완 요청→Q&A 전환, 평가 집계, OCR 라이브러리, W6·W8 잔여·Alt·브리핑이다. 실외부 AI/TTS/발송0회이며 실물 품질·비용·지연·운영 cron/SMTP는 완료로 세지 않는다.
 
 B 인계: `get_approved_qa_for_publication` 계약과 동일 게시 트랜잭션 사용, 신규 migration 번호/불변성, source12개/8,000자 예산을 전달했다. W12·시연 확장·최종 전체 흐름은 B의 완료 기록을 따른다. [프런트 인계](frontend-handoff.md)의 W11·W2·파일 읽기 절은 A의 병합 코드와 일치한다. 후보 검수 UI는 이번 디자인 범위 밖이므로 프런트가 명시적 검수·적용을 제공하기 전까지 파일 학습을 숨긴다. B의 키 당일 문서 예정 경로는 `docs/specs/key-day-checklist.md`이며, A 문서에서 그 파일의 병합/실물 검증 완료를 주장하지 않는다.
+
+# B 최종 완료·인계 (2026-11-14)
+
+완료는 서버/API·모의 검증·문서 인계 범위다. [PR #25](https://github.com/Ahn-taegyu/Yeobek/pull/25)의 최종 head `b8d1dafba9b7b3535764f117fa1f7e3fdfa122d9`, base `c5703122842c4aeebea828c208f5e0a9cd0f2cba`, 병합 `1bd6734e833e7310df552dd84c6e2b25b68ba54a`를 확인했다. [App43573981012](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43573981012)·[Knowledge43573981010](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43573981010) 모두 성공했다.
+
+| 완료 조건 | 직접 확인한 증거·환경 |
+| --- | --- |
+| 계획 완료 조건과 상태 | 최초 문서 #27 병합514347b, A #18·13·28·30 완료 기록 보존. 최신 결정 SRC-050/052/055 적용 |
+| 프런트 인계 | 초안 #20 병합461d32f, #25 최종 [인계 문서](frontend-handoff.md). SC-A01~A10·SC-V01~V06의 경로·타입·상태·오류·플래그, 체크리스트 typed client 실패→성공 회귀 |
+| 시연 데이터 | 기반 #23 병합0facdbc, #25 승인 Q&A 확장. 로컬 전용 1전시·3작품·승인 해설/QA·게시·재사용 CI, 운영 URL/환경 거부 |
+| 게시 수용 | 이미지/저장 음성 없이 승인 글 게시, P0 작성 단계/시각과 항목별 차단 사유, 모의 해설/QA 운영 게시·재개·유지/재전송 검사. 신규232000·233000 포함 DB1078개 성공 |
+| 공개·관람 | 포스터/작가명/날짜/시간·공개 이미지 참조, Q&A v2/v1 호환·철회/캐시/음성 재검증, 명확한 제목/번호·조사/모호한 지칭, 다음 게시 번호 적용 |
+| 플래그·호환 | exhibitionScopeChat 기본off 및 on/off 회귀, voiceRequired 기본false, 기존 outputMode 유지. 외부 AI/TTS 호출0회 |
+| 단일 통합 | 실제 CI 로컬 Auth·DB·Mailpit + 모의 AI/TTS. 가입→메일 코드 확인→직접 로그인→온보딩→P0 draft/advance→해설/QA 생성→미리보기/재작성·승인→게시→관람/TTS→중지 통과 |
+| 키 당일 인계 | [점검표](key-day-checklist.md) #25 병합. Auth/SMTP·실제 파일 읽기/후보 적용·AI/TTS·사람 평가·p50/p95·비용·플러그인·Hobby·cron 항목은 미검증 |
+
+A/B 통합 검토의 체크리스트 envelope·제목 조사·모의 QA 운영 재개·P0 작성 단계 누락을 수정했다. 별도 SQL 권한/migration 검토와 부모의 실제 diff·좁은 회귀·CI 로그 대조를 완료했다. B는 A 소유 DB를 시작/reset/적용하지 않았다. 기존 DB 누락 migration의 전진 적용은 새 DB CI와 구분한다.
+
+개발 DB의 공개본을 유지한 채 환경 변수만 live로 바꾸는 것은 지원되는 운영 전환이 아니다. 읽기 API는 앱 모드를 판별하지 않으므로 개발 공개본 선중지·전체 live 재게시 후 트래픽을 허용한다. 실제 프런트 화면, 운영 SMTP·외부 모델 품질/비용/지연과 cron은 이 완료 판정에 포함하지 않는다.
