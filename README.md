@@ -18,7 +18,9 @@ npm run dev
 
 클라우드의 기존 인증·초안 API에는 `.env.example`의 Supabase 변수 두 개와 `APP_ORIGIN`이 필요합니다. AI 변수는 아래 절차로 별도 설정합니다. W1 해설 작업의 신뢰된 서버 worker에는 서버 전용 `SUPABASE_SERVICE_ROLE_KEY`가 필요합니다. 브라우저에 노출하지 않습니다. `APP_ORIGIN`은 실제 접속 주소와 정확히 맞춥니다. HTTPS에서는 인증 쿠키에 Secure가 적용됩니다. 클라우드에는 migration과 사전 발급 계정이 필요하며, 이 작업은 클라우드 생성·배포를 수행하지 않았습니다.
 
-로컬 계정을 운영자로 지정하려면 `npm run db:operator -- <사용자 UUID>`를 실행합니다. 같은 명령에 `--disable`을 붙이면 해제됩니다. 로컬 Supabase에 이미 있는 비익명 계정만 허용하며 운영자 발송함 HTTP 검토에 사용합니다. 외부 발송 실행기는 아직 연결 중입니다.
+로컬 계정을 운영자로 지정하려면 `npm run db:operator -- <사용자 UUID>`를 실행합니다. 같은 명령에 `--disable`을 붙이면 해제됩니다. 로컬 Supabase에 이미 있는 비익명 계정만 허용하며 운영자 발송함 HTTP 검토에 사용합니다. 전시 생성·해설 초안 완료·게시의 거래성 안내는 `POST /api/cron/automation`으로 처리합니다. 서버의 `CRON_SECRET`을 Bearer 헤더로 보내며 브라우저에는 전달하지 않습니다. 실제 스케줄러는 아직 배포하지 않았습니다.
+
+자동화도 `AI_PROVIDER_MODE=mock`으로 전체 흐름을 시험할 수 있습니다. 모의 개발 서버의 출처와 시험용 cron 비밀값을 `TEST_APP_ORIGIN`, `TEST_CRON_SECRET`에 지정한 뒤 `npm run test:automation`을 실행합니다. 실환경에는 Liner 키와 스티비 거래성·홍보성 각각의 자동 이메일 URL, API 키, 사용자 정의 문단 필드가 필요합니다(`.env.example`). 스티비 설정이 없으면 승인 발송함을 소비하지 않고 cron 결과의 `dispatchReady=false`로 알립니다. 기본 정책은 운영자 승인 후 발송하는 draft입니다. 채널톡·Alt 전체 실행 연결은 후속입니다.
 
 ## AI 연결 준비
 

@@ -93,6 +93,7 @@ export async function dispatchOutbox(deps: { store: OutboxDispatchStore; mail: M
       } catch { /* The provider may already have accepted the message. */ }
       await complete(outcome.status, outcome.code.toUpperCase(),
         outcome.status === "accepted" ? outcome.providerMessageId ?? null : null);
+      if (permit.channel === "mail") nextMailAt = performance.now() + 334;
     }
     return summary;
   } finally {

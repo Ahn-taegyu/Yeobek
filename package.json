@@ -33,6 +33,7 @@
     "test:audio": "node --test tests/integration/mock/audio.test.mjs",
     "test:publication": "node --test tests/integration/mock/publication.test.mjs",
     "test:visitor": "node --test tests/integration/mock/visitor.test.mjs",
+    "test:automation": "node --test tests/integration/mock/automation.test.mjs",
     "db:env": "node scripts/local-env.mjs",
     "db:artist": "node scripts/local-artist.mjs",
     "db:operator": "node scripts/local-operator.mjs",

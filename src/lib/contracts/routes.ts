@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { consentListResponse, consentResponse, updateConsentSchema, decideOutboxSchema, outboxResponse, outboxPageResponse, outboxQuery } from "./automation";
+import { consentListResponse, consentResponse, updateConsentSchema, decideOutboxSchema, outboxResponse, outboxPageResponse, outboxQuery, notificationRunResponse } from "./automation";
 import { mediaBinary, mediaQuery } from "./media";
 import { speechRequest, transcribeRequest, transcribeResponse } from "./voice";
 import { requestUploadSchema, completeUploadSchema, deleteMaterialSchema, deleteArtworkSchema,
@@ -39,6 +39,7 @@ const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  runAutomation: { method: "POST", path: "/api/cron/automation", response: successEnvelope(notificationRunResponse), statuses: [200] },
   getConsents: { method: "GET", path: "/api/admin/profile/consents", response: successEnvelope(consentListResponse), statuses: [200] },
   updateConsent: { method: "PATCH", path: "/api/admin/profile/consents", body: updateConsentSchema, response: successEnvelope(consentResponse), statuses: [200] },
   listOutbox: { method: "GET", path: "/api/ops/outbox", query: outboxQuery, response: successEnvelope(outboxPageResponse), statuses: [200] },

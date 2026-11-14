@@ -26,3 +26,10 @@ export const outboxQuery = z.strictObject({ cursor: uuid.optional(), state: z.en
   "all", "draft", "approved", "sending", "accepted", "unknown", "rejected", "suppressed", "failed",
 ]).default("draft") });
 export const outboxPageResponse = z.object({ items: outboxListResponse, nextCursor: uuid.nullable() });
+const count = z.number().int().nonnegative();
+export const notificationRunResponse = z.strictObject({
+  mock: z.boolean(), busy: z.boolean(), dispatchReady: z.boolean(), scheduled: count, discarded: count,
+  processed: count, suppressed: count, escalated: count, failed: count, persistenceFailures: count,
+  dispatch: z.strictObject({ claimed: count, accepted: count, rejected: count, unknown: count,
+    failed: count, skipped: count, persistenceFailures: count }),
+});

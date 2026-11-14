@@ -223,6 +223,26 @@ isOneToOne: false
       referencedColumns: ["owner_id","id"]
     }
                   ]
+                },"automation_notify_signals": {
+                  Row: {
+                    "consumed_at": string | null,"created_at": string,"dedupe_key": string,"exhibition_id": string,"exhibition_revision": number,"expires_at": string,"id": string,"owner_id": string,"source_job_id": string | null,"source_mock": boolean | null,"source_revision": number,"trigger_kind": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "consumed_at"?: string | null,"created_at"?: string,"dedupe_key": string,"exhibition_id": string,"exhibition_revision": number,"expires_at"?: string,"id"?: string,"owner_id": string,"source_job_id"?: string | null,"source_mock"?: boolean | null,"source_revision": number,"trigger_kind": string
+                  }
+                  Update: {
+                    "consumed_at"?: string | null,"created_at"?: string,"dedupe_key"?: string,"exhibition_id"?: string,"exhibition_revision"?: number,"expires_at"?: string,"id"?: string,"owner_id"?: string,"source_job_id"?: string | null,"source_mock"?: boolean | null,"source_revision"?: number,"trigger_kind"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "automation_notify_signals_owner_id_exhibition_id_fkey"
+      columns: ["owner_id","exhibition_id"]
+isOneToOne: false
+      referencedRelation: "exhibitions"
+      referencedColumns: ["owner_id","id"]
+    }
+                  ]
                 },"automation_policies": {
                   Row: {
                     "allowed_categories": (string)[],"kind": string,"mode": string,"revision": number
@@ -621,11 +641,17 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "approve_evidence":
+            "acquire_notification_run":
+{ Args: { "p_mock": boolean,"p_token": string }; Returns: Json
+                           },
+"approve_evidence":
 { Args: { "p_evidence_id": string,"p_version": number }; Returns: Json
                            },
 "approve_narration":
 { Args: { "p_artwork_id": string,"p_citations": Json,"p_expected_revision": number }; Returns: Json
+                           },
+"check_notification_dispatch":
+{ Args: { "p_attempt": string,"p_id": string,"p_mock": boolean,"p_token": string }; Returns: Json
                            },
 "check_outbound_dispatch":
 { Args: { "p_attempt": string,"p_id": string,"p_mock": boolean }; Returns: Json
@@ -634,6 +660,12 @@ isOneToOne: false
 { Args: { "p_exhibition_id": string,"p_publications": Json }; Returns: Json
                            },
 "claim_automation_events":
+{ Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
+                           },
+"claim_automation_notifications":
+{ Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
+                           },
+"claim_notification_outbound":
 { Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
                            },
 "claim_outbound_messages":
@@ -656,6 +688,9 @@ isOneToOne: false
                            },
 "complete_material_cleanup":
 { Args: { "p_expected_version": number,"p_id": string,"p_owner": string }; Returns: Json
+                           },
+"complete_notification_dispatch":
+{ Args: { "p_attempt": string,"p_id": string,"p_mock": boolean,"p_provider_id": string,"p_result_code": string,"p_status": string,"p_token": string }; Returns: Json
                            },
 "complete_outbound_message":
 { Args: { "p_attempt": string,"p_id": string,"p_provider_id": string,"p_result_code": string,"p_status": string }; Returns: Json
@@ -716,6 +751,9 @@ isOneToOne: false
                            },
 "get_narration_context":
 { Args: { "p_artwork_id": string }; Returns: Json
+                           },
+"get_notification_context":
+{ Args: { "p_attempt": number,"p_event_id": string,"p_mock": boolean }; Returns: Json
                            },
 "get_public_artwork":
 { Args: { "p_exhibition_id": string,"p_id": string }; Returns: Json
@@ -804,6 +842,9 @@ isOneToOne: false
 "record_visitor_steps":
 { Args: { "p_id": string,"p_session_hash": string,"p_steps": Json }; Returns: undefined
                            },
+"release_notification_run":
+{ Args: { "p_mock": boolean,"p_token": string }; Returns: undefined
+                           },
 "request_upload":
 { Args: { "p_byte_size": number,"p_content_type": string,"p_filename": string,"p_id": string,"p_kind": string,"p_owner": string,"p_subject_id": string,"p_subject_type": string }; Returns: Json
                            },
@@ -843,6 +884,9 @@ isOneToOne: false
                            },
 "save_narration_draft":
 { Args: { "p_artwork_id": string,"p_expected_revision": number,"p_source_job_id"?: string,"p_text": string }; Returns: Json
+                           },
+"schedule_automation_notifications":
+{ Args: { "p_limit": number,"p_mock": boolean }; Returns: Json
                            },
 "set_artwork_image":
 { Args: { "p_artwork_id": string,"p_expected_revision": number,"p_material_id": string }; Returns: Json
