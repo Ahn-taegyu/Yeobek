@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { transitionScreen } from "@/components/ui/motion";
+import { brand } from "@/components/ui/brand";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ApiClientError, requestApi } from "@/lib/client";
 import { AI_LIMITS, codepoints } from "@/lib/contracts/chat";
@@ -29,11 +31,11 @@ function message(error: unknown) {
   return error instanceof ApiClientError ? error.message : "요청을 완료하지 못했어요. 다시 시도해주세요.";
 }
 
-function ArtImage({ artwork, className }: { artwork: Artwork; className?: string }) {
+function ArtImage({ artwork, className, decorative = false }: { artwork: Artwork; className?: string; decorative?: boolean }) {
   const [failed, setFailed] = useState(false);
   return artwork.image && !failed
     ? <Image unoptimized className={className} src={`/api/media/${artwork.image.id}?kind=image`} width={352} height={180}
-        alt={artwork.title} onError={() => setFailed(true)} />
+        alt={decorative ? "" : artwork.title} onError={() => setFailed(true)} />
     : <span className={className} aria-hidden="true">{artwork.number}</span>;
 }
 
@@ -149,8 +151,8 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
     });
   }, setError);
 
-  function select(work: Artwork | null) {
-    const nextId = work?.id ?? null;
+  function select(work: Artwork) {
+    const nextId = work.id;
     if (nextId !== selected) {
       contextSequence.current += 1;
       operation.current?.abort();
@@ -184,7 +186,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
   }
 
   if (!entered) return <section data-visitor className={styles.intro}>
-    <div className={styles.brand}>Yeobek</div>
+    <div className={styles.brand}>{brand.name}</div>
     <span className={styles.poster} aria-hidden="true" />
     <div>
       <h1>{exhibition.title}</h1>
@@ -194,7 +196,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
         <p>{[exhibition.startDate, exhibition.endDate].filter(Boolean).join(" – ")}</p>}
       {exhibition.introduction && <p className={styles.description}>{exhibition.introduction}</p>}
     </div>
-    <button className={styles.primary} onClick={() => setEntered(true)}>여백 채우러 가기</button>
+    <button className={styles.primary} onClick={() => transitionScreen(() => setEntered(true))}>여백 채우러 가기</button>
   </section>;
 
   const shown = exhibition.artworks.filter(work => `${work.number}. ${work.title}`.toLowerCase().includes(search.trim().toLowerCase()));
@@ -206,25 +208,25 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
         setMuted(!muted);
         if (!muted) stopAudio();
       }}><Image src="/yeobek/visitor-sound.svg" alt="" width={24} height={24} />{muted && <span aria-hidden="true">×</span>}</button>
-      <span className={styles.brand}>{active ? `${active.number}. ${active.title}` : "Yeobek"}</span>
+      <span className={styles.brand}>{active ? `${active.number}. ${active.title}` : brand.name}</span>
       <button className={styles.textButton} aria-expanded={picker !== null}
-        onClick={() => setPicker(picker ? null : "row")}>{picker ? "닫기" : "작품 선택"}</button>
+        onClick={() => transitionScreen(() => setPicker(picker ? null : "row"))}>{picker ? "닫기" : "작품 선택"}</button>
     </div>
     {picker && <section className={styles.picker} aria-label="작품 목록">
       <div className={styles.pickerHeading}><h2>작품 목록</h2>
-        <button className={styles.textButton} onClick={() => setPicker(picker === "grid" ? "row" : "grid")}>
+        <button className={styles.textButton} onClick={() => transitionScreen(() => setPicker(picker === "grid" ? "row" : "grid"))}>
           {picker === "grid" ? "한 줄로 보기" : "전체보기"}
         </button></div>
       {picker === "grid" && <div className={styles.search}><input aria-label="작품 검색" type="search"
         placeholder="작품 검색" value={search} onChange={event => setSearch(event.target.value)} />
         <Image src="/yeobek/visitor-search.svg" alt="" width={24} height={24} /></div>}
-      {active && <button className={styles.textButton} onClick={() => select(null)}>작품 선택 해제</button>}
+
       {exhibition.artworks.length === 0 && <p>공개된 작품이 아직 없어요.</p>}
       {picker === "grid" && exhibition.artworks.length > 0 && !shown.length && <p>검색 결과가 없어요.</p>}
       <ul className={picker === "grid" ? styles.grid : styles.strip}>
         {(picker === "grid" ? shown : exhibition.artworks).map(work => <li key={work.id}>
-          <button className={styles.tile} aria-pressed={selected === work.id} onClick={() => select(work)}>
-            <ArtImage artwork={work} className={styles.thumbnail} />
+          <button className={styles.tile} aria-pressed={selected === work.id} onClick={() => transitionScreen(() => select(work))}>
+            <ArtImage artwork={work} className={styles.thumbnail} decorative />
             <span>{work.number}. {work.title}</span>
           </button>
         </li>)}
@@ -235,7 +237,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
         <h1>{exhibition.title}</h1>
         <p>전시에서 느낀 감동과 기억이 오래도록 남을 수 있도록,<br />작품에 담긴 이야기를 들려드릴게요.</p>
       </div>}
-      {turns.map(({ question, reply, artwork }) => <article className={styles.turn} key={reply.answerId}>
+      {turns.map(({ question, reply, artwork }) => <article className={`${styles.turn} yeobek-appear`} key={reply.answerId}>
         <p className={styles.bubble}>{question}</p>
         {artwork?.image && <ArtImage key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
         <p className={styles.answer}>{reply.answer}</p>

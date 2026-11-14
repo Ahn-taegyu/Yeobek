@@ -6,15 +6,15 @@
   min-height: 100dvh;
   margin-inline: auto;
   padding: clamp(64px, 15vh, 144px) 20px 32px;
-  background: linear-gradient(#fffcef, #f7f7f7 52%);
+  background: linear-gradient(var(--yeobek-cream), #f7f7f7 52%);
   text-align: center;
-  color: #121215;
+  color: var(--yeobek-ink);
 }
 .screen img { margin-inline: auto; height: auto; }
 .screen h1 { font-size: 20px; font-weight: 700; margin: 38px 0 12px; }
 .screen p { font-size: 15px; line-height: 1.4; }
 .screen form { text-align: start; margin-top: 32px; }
-.screen input { border-color: #ccc; border-radius: 100px; }
-.screen button { border-radius: 100px; justify-content: center; background: #432f2e; }
+.screen input { border-color: #ccc; border-radius: var(--yeobek-radius-pill); }
+.screen button { border-radius: var(--yeobek-radius-pill); justify-content: center; background: var(--yeobek-coffee); }
 .screen button[type="button"] { background: white; }
 .screen a { display: inline-block; padding: 12px; text-decoration: underline; }
