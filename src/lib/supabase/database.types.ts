@@ -149,6 +149,46 @@ isOneToOne: false
       referencedColumns: ["owner_id","artist_id","id"]
     }
                   ]
+                },"artwork_interview_answers": {
+                  Row: {
+                    "body": string,"owner_id": string,"question_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"owner_id": string,"question_id": string
+                  }
+                  Update: {
+                    "body"?: string,"owner_id"?: string,"question_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "artwork_interview_answers_owner_id_question_id_fkey"
+      columns: ["owner_id","question_id"]
+isOneToOne: false
+      referencedRelation: "artwork_interview_questions"
+      referencedColumns: ["owner_id","id"]
+    }
+                  ]
+                },"artwork_interview_questions": {
+                  Row: {
+                    "artwork_id": string,"created_at": string,"evidence_id": string | null,"id": string,"owner_id": string,"question": string,"slot": number,"status": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "artwork_id": string,"created_at"?: string,"evidence_id"?: string | null,"id"?: string,"owner_id": string,"question": string,"slot": number,"status"?: string,"version"?: number
+                  }
+                  Update: {
+                    "artwork_id"?: string,"created_at"?: string,"evidence_id"?: string | null,"id"?: string,"owner_id"?: string,"question"?: string,"slot"?: number,"status"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "artwork_interview_questions_owner_id_artwork_id_fkey"
+      columns: ["owner_id","artwork_id"]
+isOneToOne: false
+      referencedRelation: "artworks"
+      referencedColumns: ["owner_id","id"]
+    }
+                  ]
                 },"artworks": {
                   Row: {
                     "active_draft_number": number | null,"active_publication_id": string | null,"create_fingerprint": string,"created_at": string,"creation_year": string | null,"deleted_at": string | null,"dimensions": string | null,"dimensions_unit": string | null,"draft_number": number | null,"exhibition_id": string,"id": string,"image_material_id": string | null,"medium": string | null,"narration_draft": string | null,"number": number,"owner_id": string,"revision": number,"state": string,"title": string | null,"updated_at": string
@@ -794,6 +834,9 @@ isOneToOne: false
 "complete_ai_job":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
                            },
+"complete_artwork_interview":
+{ Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
+                           },
 "complete_audio_cleanup":
 { Args: { "p_id": string,"p_owner": string }; Returns: boolean
                            },
@@ -829,6 +872,9 @@ isOneToOne: false
                            },
 "complete_preview_answer":
 { Args: { "p_answer_id": string,"p_attempt": number,"p_owner": string,"p_result": Json }; Returns: Json
+                           },
+"complete_preview_voice":
+{ Args: { "p_audio": string,"p_failure": string,"p_id": string,"p_owner": string,"p_result": Json }; Returns: Json
                            },
 "complete_qa_rewrite_job":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
@@ -974,6 +1020,9 @@ isOneToOne: false
 "is_publication_current":
 { Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_publication_id": string,"p_version": number }; Returns: boolean
                            },
+"list_artwork_interview":
+{ Args: { "p_artwork_id": string }; Returns: Json
+                           },
 "list_artworks":
 { Args: { "p_exhibition_id": string }; Returns: Json
                            },
@@ -1009,6 +1058,9 @@ isOneToOne: false
                            },
 "list_visitor_audio_cleanup":
 { Args: { "p_limit"?: number }; Returns: Json
+                           },
+"load_preview_voice":
+{ Args: { "p_id": string,"p_owner": string }; Returns: Json
                            },
 "load_proposal":
 { Args: { "p_id": string }; Returns: Json
@@ -1063,6 +1115,9 @@ isOneToOne: false
                            } |
 { Args: { "p_artwork_id": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_mock": boolean,"p_owner": string,"p_request_id": string,"p_strategy": string }; Returns: Json
                            },
+"reserve_artwork_interview":
+{ Args: { "p_artwork_id": string,"p_mock": boolean,"p_owner": string,"p_request_id": string }; Returns: Json
+                           },
 "reserve_audio_job":
 { Args: { "p_approval_id": string,"p_artwork_id": string,"p_expected_revision": number,"p_mock": boolean,"p_owner": string,"p_request_id": string,"p_voice_fingerprint": string }; Returns: Json
                            },
@@ -1080,6 +1135,9 @@ isOneToOne: false
                            },
 "reserve_preview_answer":
 { Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_mock": boolean,"p_owner": string,"p_question": string,"p_request_id": string }; Returns: Json
+                           },
+"reserve_preview_voice":
+{ Args: { "p_answer": string,"p_exhibition": string,"p_hash": string,"p_kind": string,"p_mock": boolean,"p_owner": string,"p_request": string }; Returns: Json
                            },
 "reserve_qa_rewrite_job":
 { Args: { "p_evidence_pins": Json,"p_instruction": string,"p_mock": boolean,"p_owner": string,"p_request_id": string,"p_target_id": string,"p_target_kind": string,"p_target_version": number }; Returns: Json
@@ -1115,6 +1173,9 @@ isOneToOne: false
                            },
 "revoke_evidence":
 { Args: { "p_evidence_id": string,"p_expected_version": number,"p_impact_token": string }; Returns: Json
+                           },
+"save_artwork_interview_answer":
+{ Args: { "p_answer": string,"p_approve": boolean,"p_artwork_id": string,"p_expected_version": number,"p_question_id": string,"p_skip": boolean }; Returns: Json
                            },
 "save_narration_draft":
 { Args: { "p_artwork_id": string,"p_expected_revision": number,"p_source_job_id"?: string,"p_text": string }; Returns: Json

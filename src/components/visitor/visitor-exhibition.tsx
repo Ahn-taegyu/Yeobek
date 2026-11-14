@@ -3,24 +3,37 @@
 import Image from "next/image";
 import { transitionScreen } from "@/components/ui/motion";
 import { brand } from "@/components/ui/brand";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ComponentType } from "react";
 import { ApiClientError, requestApi } from "@/lib/client";
 import { AI_LIMITS, codepoints } from "@/lib/contracts/chat";
 import type { ChatRequestInput } from "@/lib/contracts/chat";
 import { useRecording } from "./use-recording";
 import styles from "./visitor.module.css";
+import type { ExperienceArtwork, ExperienceExhibition, ExperienceImageProps, ExperienceReply, ExperienceTransport } from "./experience-types";
 
 type Exhibition = Awaited<ReturnType<typeof loadExhibition>>;
-type Artwork = Exhibition["artworks"][number];
-type Reply = Awaited<ReturnType<typeof askQuestion>>;
+type Artwork = ExperienceArtwork;
+type Reply = ExperienceReply;
 type Turn = { question: string; reply: Reply; artwork?: Artwork };
 
 async function loadExhibition(id: string, signal: AbortSignal) {
   return (await requestApi("getPublicExhibition", { params: { id }, signal })).data;
 }
 
-async function askQuestion(body: ChatRequestInput, signal: AbortSignal) {
-  return (await requestApi("chat", { body, signal })).data;
+const publicTransport: ExperienceTransport = {
+  async ask(body, signal) {
+    const { data } = await requestApi("chat", { body, signal });
+    return { ...data, artworkId: data.publication?.artworkId ?? null };
+  },
+  async transcribe(body, signal) { return (await requestApi("transcribe", { body, signal })).data; },
+  speak(body, signal) { return requestApi("speech", { body, signal }); },
+};
+
+function PublicImage({ id, kind, alt, className, fallback }: ExperienceImageProps) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <span className={className} aria-hidden="true">{fallback}</span>;
+  return <Image unoptimized className={className} src={`/api/media/${id}?kind=${kind}`}
+    width={kind === "poster" ? 233 : 352} height={kind === "poster" ? 392 : 180} alt={alt} onError={() => setFailed(true)} />;
 }
 
 function unavailable(error: unknown) {
@@ -38,11 +51,11 @@ function responseMayBePending(error: unknown) {
   return error instanceof ApiClientError && ["NETWORK_ERROR", "REQUEST_IN_PROGRESS"].includes(error.code);
 }
 
-function ArtImage({ artwork, className, decorative = false }: { artwork: Artwork; className?: string; decorative?: boolean }) {
-  const [failed, setFailed] = useState(false);
-  return artwork.image && !failed
-    ? <Image unoptimized className={className} src={`/api/media/${artwork.image.id}?kind=image`} width={352} height={180}
-        alt={decorative ? "" : artwork.title} onError={() => setFailed(true)} />
+function ArtImage({ artwork, className, decorative = false, ImageComponent }: {
+  artwork: Artwork; className?: string; decorative?: boolean; ImageComponent: ComponentType<ExperienceImageProps>;
+}) {
+  return artwork.image
+    ? <ImageComponent key={artwork.image.id} id={artwork.image.id} kind="image" className={className} fallback={String(artwork.number)} alt={decorative ? "" : artwork.title} />
     : <span className={className} aria-hidden="true">{artwork.number}</span>;
 }
 
@@ -73,10 +86,15 @@ export function VisitorExhibition({ exhibitionId, initialArtworkId }: {
     <button className={styles.primary} onClick={() => { setLoad({}); setAttempt(attempt + 1); }}>다시 시도</button>
   </section>;
   if (!load.exhibition) return <section data-visitor className={styles.state} role="status">전시를 불러오는 중이에요.</section>;
-  return <Visit exhibition={load.exhibition} initialArtworkId={initialArtworkId} />;
+  return <ExhibitionExperience exhibition={load.exhibition} initialArtworkId={initialArtworkId}
+    transport={publicTransport} ImageComponent={PublicImage} />;
 }
 
-function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initialArtworkId?: string }) {
+export function ExhibitionExperience({ exhibition, initialArtworkId, transport, ImageComponent, initiallyMuted = false,
+  emptyArtworkMessage = "공개된 작품이 아직 없어요." }: {
+  exhibition: ExperienceExhibition; initialArtworkId?: string; transport: ExperienceTransport;
+  ImageComponent: ComponentType<ExperienceImageProps>; initiallyMuted?: boolean; emptyArtworkMessage?: string;
+}) {
   const [entered, setEntered] = useState(Boolean(initialArtworkId));
   const [selected, setSelected] = useState(initialArtworkId ?? null);
   const [picker, setPicker] = useState<"row" | "grid" | null>(null);
@@ -84,7 +102,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
   const [question, setQuestion] = useState("");
   const [voiceDraft, setVoiceDraft] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(initiallyMuted);
   const [busy, setBusy] = useState<"chat" | "transcribe" | "speech" | null>(null);
   const [error, setError] = useState("");
   const operation = useRef<AbortController | null>(null);
@@ -92,7 +110,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
   const contextSequence = useRef(0);
   const audio = useRef<HTMLAudioElement | null>(null);
   const audioUrl = useRef<string | null>(null);
-  const mutedNow = useRef(false);
+  const mutedNow = useRef(initiallyMuted);
   const transcript = useRef<HTMLDivElement>(null);
   const active = exhibition.artworks.find(work => work.id === selected);
 
@@ -132,7 +150,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
   async function play(answerId: string, signal: AbortSignal) {
     if (mutedNow.current) return;
     stopAudio();
-    const blob = await requestApi("speech", { body: { requestId: crypto.randomUUID(), answerId }, signal });
+    const blob = await transport.speak({ requestId: crypto.randomUUID(), answerId }, signal);
     if (signal.aborted || mutedNow.current) return;
     const url = URL.createObjectURL(blob);
     audioUrl.current = url;
@@ -151,9 +169,8 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
 
   const recording = useRecording(file => {
     void run("transcribe", async signal => {
-      const { data } = await requestApi("transcribe", {
-        body: { requestId: crypto.randomUUID(), exhibitionId: exhibition.id, file }, signal,
-      });
+      const data = await transport.transcribe({ requestId: crypto.randomUUID(), exhibitionId: exhibition.id, file }, signal);
+      if (signal.aborted) return;
       setQuestion(data.transcript);
       setVoiceDraft(true);
     });
@@ -187,27 +204,27 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
       const key = JSON.stringify(input);
       const requestId = pendingChat.current?.key === key ? pendingChat.current.requestId : crypto.randomUUID();
       pendingChat.current = { key, requestId };
-      const reply = await askQuestion({ ...input, requestId }, signal).catch(error => {
+      const reply = await transport.ask({ ...input, requestId }, signal).catch(error => {
         if (pendingChat.current?.requestId === requestId && !responseMayBePending(error)) pendingChat.current = null;
         throw error;
       });
       if (signal.aborted || reply.contextSequence !== contextSequence.current) return;
       pendingChat.current = null;
-      const resolved = exhibition.artworks.find(work => work.id === reply.publication?.artworkId);
+      const resolved = exhibition.artworks.find(work => work.id === reply.artworkId);
       if (resolved) setSelected(resolved.id);
       setTurns(previous => [...previous, {
         question: text, reply, artwork: resolved,
       }]);
       setQuestion("");
       setVoiceDraft(false);
-      if (reply.outputMode === "voice") await play(reply.answerId, signal);
+      if (reply.outputMode === "voice" && reply.canSpeak !== false) await play(reply.answerId, signal);
     });
   }
 
   if (!entered) return <section data-visitor className={styles.intro}>
     <div className={styles.brand}>{brand.name}</div>
-    {exhibition.poster && <Image unoptimized className={styles.poster}
-      src={`/api/media/${exhibition.poster.id}?kind=poster`} width={233} height={392} alt={`${exhibition.title} 포스터`} />}
+    {exhibition.poster && <ImageComponent className={styles.poster}
+      id={exhibition.poster.id} kind="poster" alt={`${exhibition.title} 포스터`} />}
     <div>
       <h1>{exhibition.title}</h1>
       <p>{exhibition.artistDisplayName}</p>
@@ -241,12 +258,12 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
         placeholder="작품 검색" value={search} onChange={event => setSearch(event.target.value)} />
         <Image src="/yeobek/visitor-search.svg" alt="" width={24} height={24} /></div>}
 
-      {exhibition.artworks.length === 0 && <p>공개된 작품이 아직 없어요.</p>}
+      {exhibition.artworks.length === 0 && <p>{emptyArtworkMessage}</p>}
       {picker === "grid" && exhibition.artworks.length > 0 && !shown.length && <p>검색 결과가 없어요.</p>}
       <ul className={picker === "grid" ? styles.grid : styles.strip}>
         {(picker === "grid" ? shown : exhibition.artworks).map(work => <li key={work.id}>
           <button className={styles.tile} aria-pressed={selected === work.id} onClick={() => transitionScreen(() => select(work))}>
-            <ArtImage artwork={work} className={styles.thumbnail} decorative />
+            <ArtImage ImageComponent={ImageComponent} artwork={work} className={styles.thumbnail} decorative />
             <span>{work.number}. {work.title}</span>
           </button>
         </li>)}
@@ -259,12 +276,12 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
       </div>}
       {turns.map(({ question, reply, artwork }) => <article className={`${styles.turn} yeobek-appear`} key={reply.answerId}>
         <p className={styles.bubble}>{question}</p>
-        {reply.image === undefined && artwork?.image && <ArtImage key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
-        {reply.image && <Image unoptimized className={styles.answerImage}
-          src={`/api/media/${reply.image.id}?kind=image`} width={352} height={180} alt={artwork?.title ?? "작품 이미지"} />}
+        {reply.image === undefined && artwork?.image && <ArtImage ImageComponent={ImageComponent} key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
+        {reply.image && <ImageComponent className={styles.answerImage}
+          id={reply.image.id} kind="image" alt={artwork?.title ?? "작품 이미지"} />}
         <p className={styles.answer}>{reply.answer}</p>
         {reply.notice && <p>{reply.notice}</p>}
-        {!muted && <button className={styles.textButton} disabled={busy !== null}
+        {!muted && reply.canSpeak !== false && <button className={styles.textButton} disabled={busy !== null}
           onClick={() => void run("speech", signal => play(reply.answerId, signal))}>답변 듣기</button>}
       </article>)}
       {busy === "chat" && <p role="status">답변을 준비하고 있어요.</p>}

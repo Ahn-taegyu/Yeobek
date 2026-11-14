@@ -1,0 +1,11 @@
+:global(.artist-screen):has(.preview) { padding: 0; }
+.preview { background: var(--yeobek-visitor); height: 100dvh; display: flex; flex-direction: column; }
+.preview > :global([data-visitor]) { flex: 1; height: auto; min-height: 0; width: 100%; }
+.notice { flex: none; padding: 12px 20px; background: var(--yeobek-cream); color: var(--yeobek-ink); font-size: 12px; }
+.notice a { display: inline-flex; min-height: 32px; align-items: center; margin-right: 16px; }
+.notice strong { font-size: 14px; }
+.notice p { margin: 4px 0 0; line-height: 1.5; }
+.state { padding: 32px 20px; text-align: center; }
+/* Match the visitor composer despite the surrounding artist layout. */
+.preview :global([data-visitor]) input:not([type="file"]) { border: 0; background: transparent; min-width: 0; }
+.preview :global([data-visitor]) form { gap: 4px; }

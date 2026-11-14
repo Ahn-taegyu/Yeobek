@@ -1,5 +1,6 @@
 import { previewChatSchema, previewAnswerResponse, previewEvaluationSchema, previewEvaluationResponse, qaRewriteSchema, qaRewriteJobResponse, qaCorrectionEvidenceSchema } from "./qa";
 import { materialReadRequest, materialReadResponse, materialExtractionResponse } from "./material-extraction";
+import { interviewGenerationResponse, interviewResponse, startInterview, writeInterviewAnswer } from "./interview";
 import { createTrainingBatchSchema, runTrainingTargetSchema, trainingBatchResponse } from "./qa";
 import { expectedQaGenerateSchema, expectedQaJobResponse, qaListQuery, qaItemsResponse, qaItemResponse, approveQaItemSchema, withdrawQaItemSchema } from "./qa";
 import { createExhibitionBody, updateExhibitionBody, createArtworkBody, updateArtworkBody,
@@ -65,6 +66,9 @@ export const routes = {
   closeGapRecheck: { method: "POST", path: "/api/admin/gaps/{id}/recheck-close", params: byId, body: closeGapRecheckSchema, response: successEnvelope(gapResponse), statuses: [200] },
   createTrainingBatch: { method: "POST", path: "/api/admin/exhibitions/{id}/training", params: byId, body: createTrainingBatchSchema, response: successEnvelope(trainingBatchResponse), statuses: [200] },
   getLatestTrainingBatch: { method: "GET", path: "/api/admin/exhibitions/{id}/training/latest", params: byId, response: successEnvelope(trainingBatchResponse.nullable()), statuses: [200] },
+  getArtworkInterview: { method: "GET", path: "/api/admin/artworks/{id}/interview", params: byId, response: successEnvelope(interviewResponse), statuses: [200] },
+  generateArtworkInterview: { method: "POST", path: "/api/admin/artworks/{id}/interview/generations", params: byId, body: startInterview, response: successEnvelope(interviewGenerationResponse), statuses: [200] },
+  updateArtworkInterviewAnswer: { method: "PATCH", path: "/api/admin/artworks/{id}/interview/answers/{questionId}", params: byId.extend({ questionId: uuid }), body: writeInterviewAnswer, response: successEnvelope(interviewResponse), statuses: [200] },
   getTrainingBatch: { method: "GET", path: "/api/admin/training/{id}", params: byId, response: successEnvelope(trainingBatchResponse), statuses: [200] },
   runTrainingTarget: { method: "POST", path: "/api/admin/training/{id}/targets/{targetId}/run", params: byId.extend({ targetId: uuid }), body: runTrainingTargetSchema, response: successEnvelope(trainingBatchResponse), statuses: [200] },
   generateExpectedQa: { method: "POST", path: "/api/admin/exhibitions/{id}/qa/generations", params: byId, body: expectedQaGenerateSchema, response: successEnvelope(expectedQaJobResponse), statuses: [200, 201] },
@@ -83,6 +87,8 @@ export const routes = {
   listOutbox: { method: "GET", path: "/api/ops/outbox", query: outboxQuery, response: successEnvelope(outboxPageResponse), statuses: [200] },
   approveOutbox: { method: "POST", path: "/api/ops/outbox/{id}/approve", params: byId, body: decideOutboxSchema, response: successEnvelope(outboxResponse), statuses: [200] },
   rejectOutbox: { method: "POST", path: "/api/ops/outbox/{id}/reject", params: byId, body: decideOutboxSchema, response: successEnvelope(outboxResponse), statuses: [200] },
+  transcribePreview: { method: "POST", path: "/api/admin/exhibitions/{id}/preview/transcribe", params: byId, body: transcribeRequest, bodyEncoding: "multipart", response: successEnvelope(transcribeResponse), statuses: [200] },
+  speakPreviewAnswer: { method: "POST", path: "/api/admin/preview/{id}/speech", params: byId, body: speechRequest.pick({ requestId: true }), binary: { mimeTypes: ["audio/mpeg"], maxBytes: 2 * 1024 * 1024 }, statuses: [200] },
   transcribe: { method: "POST", path: "/api/transcribe", body: transcribeRequest, bodyEncoding: "multipart", response: successEnvelope(transcribeResponse), statuses: [200] },
   speech: { method: "POST", path: "/api/speech", body: speechRequest, binary: { mimeTypes: ["audio/mpeg"], maxBytes: 8 * 1024 * 1024 }, statuses: [200] },
   getMedia: { method: "GET", path: "/api/media/{id}", params: byId, query: mediaQuery, binary: mediaBinary, statuses: [200] },
