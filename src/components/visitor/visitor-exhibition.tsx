@@ -182,7 +182,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
       <p>{exhibition.artistDisplayName}</p>
       {exhibition.place && <p>{exhibition.place}</p>}
       {(exhibition.startDate || exhibition.endDate) &&
-        <p>{[exhibition.startDate, exhibition.endDate].filter(Boolean).join(" – ")}</p>}
+        <p>{[[exhibition.startDate, exhibition.startTime], [exhibition.endDate, exhibition.endTime]].filter(([date]) => date).map(parts => parts.filter(Boolean).join(" ")).join(" – ")}</p>}
       {exhibition.introduction && <p className={styles.description}>{exhibition.introduction}</p>}
     </div>
     <button className={styles.primary} onClick={() => setEntered(true)}>여백 채우러 가기</button>

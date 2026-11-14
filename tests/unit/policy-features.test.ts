@@ -28,7 +28,7 @@ describe("server feature settings", () => {
     expect(() => requireFeature("followUpQuestions", features)).not.toThrow();
   });
   it("does not collect visitor questions or aggregate by default", () => {
-    expect(getFeatures({})).toEqual({ gaps: false, voiceRequired: true, followUpQuestions: true, opsAggregation: false, signup: false });
+    expect(getFeatures({})).toEqual({ gaps: false, voiceRequired: false, followUpQuestions: true, opsAggregation: false, signup: false });
     expect(getFeatures({ FEATURE_GAPS: "true", FEATURE_OPS_AGGREGATION: "true", FEATURE_SIGNUP: "true" }))
       .toMatchObject({ gaps: true, opsAggregation: true, signup: true });
   });
@@ -36,5 +36,10 @@ describe("server feature settings", () => {
     for (const value of ["flase", "", "   "]) {
       expect(() => getFeatures({ FEATURE_GAPS: value })).toThrowError(expect.objectContaining({ status: 503 }));
     }
+  });
+  it("allows text-first publication by default while retaining explicit audio policy", () => {
+    expect(getFeatures({}).voiceRequired).toBe(false);
+    expect(getFeatures({ FEATURE_VOICE_REQUIRED: "true" }).voiceRequired).toBe(true);
+    expect(getFeatures({ FEATURE_VOICE_REQUIRED: "false" }).voiceRequired).toBe(false);
   });
 });
