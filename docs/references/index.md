@@ -89,3 +89,4 @@
 - [진행 중 전시 진입과 가입 시 작가 프로필](user-artist-signup-exhibition.md) — SRC-057.
 
 - [API 적용 수정 계획과 승인·게시 UI 및 cron GET 구현 요청](user-api-rollout-publication.md) — SRC-058, 실호출 전 준비와 원격 설정 변경 제외.
+- [관람 채팅의 공개 중지 작품과 없는 번호 안내 구분](user-visitor-paused-artwork-copy.md) — SRC-059, 게시 이력 있는 번호는 온라인 안내 중지 문구.

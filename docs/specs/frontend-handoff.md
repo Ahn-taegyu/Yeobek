@@ -216,7 +216,7 @@ SC-A06에서 `getPublicationChecklist` (`GET /api/admin/exhibitions/{id}/publica
 
 ## B 후속: 작품 지칭과 음성 연결 (PR #25 계약)
 
-질문에 명확한 공개 번호나 공개 작품 제목이 있으면 서버가 해당 작품으로 답한다. `reply.publication.artworkId`를 답변 대상과 상단 선택에 함께 반영하되, `contextSequence`가 현재 요청보다 오래된 응답은 선택을 덮어쓰지 않는다. 번호/제목 충돌·중복 제목·여러 작품 지칭·명시적으로 없는 제목은 `outcome:clarify, publication:null`로 재확인을 요청한다. 제목은 현재 공개본만 대조하며 비공개 초안 제목이나 유사어를 모델 추측으로 선택하지 않는다. `image`는 선택된 활성 공개본 참조 또는 null이다.
+질문에 명확한 공개 번호나 공개 작품 제목이 있으면 서버가 해당 작품으로 답한다. `reply.publication.artworkId`를 답변 대상과 상단 선택에 함께 반영하되, `contextSequence`가 현재 요청보다 오래된 응답은 선택을 덮어쓰지 않는다. 번호/제목 충돌·중복 제목·여러 작품 지칭·명시적으로 없는 제목은 `outcome:clarify, publication:null`로 재확인을 요청한다. 제목은 현재 공개본만 대조하며 비공개 초안 제목이나 유사어를 모델 추측으로 선택하지 않는다. 공개 목록에 없는 번호는 같은 공개 전시에서 그 번호로 게시된 적이 있고 작품이 삭제되지 않았으면 고정 문구 `artworkPaused`, 아니면 `artworkUnavailable`로 답한다. 프런트는 서버 문구를 그대로 표시한다([SRC-059](../references/user-visitor-paused-artwork-copy.md)). `image`는 선택된 활성 공개본 참조 또는 null이다.
 
 작품 버튼 선택 자체로 채팅·TTS API를 호출하지 않는다. STT 응답은 입력창에 표시하고 관람객 확인 후 `/api/chat`으로 전송한다. 음성이 켜졌으면 답변의 `answerId`로 `/api/speech`를 호출하고 음소거 시 재생/생성을 중단한다. 글 답변의 `outputMode:text`도 이후 명시적으로 speech를 요청할 수 있다는 기존 계약을 유지한다. 서버의 선택 참조 검증과 프런트 상단 표시·음소거 UI 검증은 구분한다.
 

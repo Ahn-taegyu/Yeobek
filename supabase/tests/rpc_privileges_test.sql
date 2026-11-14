@@ -145,6 +145,7 @@ select results_eq(
     ('get_upload(uuid, uuid, boolean)', false, false, true, false),
     ('get_visitor_answer_exhibition(text, uuid)', false, false, true, false),
     ('is_publication_current(uuid, uuid, uuid, integer)', false, false, true, false),
+    ('was_artwork_number_published(uuid, integer)', false, false, true, false),
     ('list_audio_cleanup(integer)', false, false, true, false),
     ('list_gaps(uuid, uuid, boolean)', false, false, true, false),
     ('list_material_cleanup(integer)', false, false, true, false),

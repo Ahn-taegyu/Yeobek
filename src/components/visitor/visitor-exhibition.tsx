@@ -390,10 +390,7 @@ function Visit({ exhibition: initialExhibition, initialArtworkId, showWorks, onU
           {reply.image === undefined && artwork?.image && <ArtImage key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
           {reply.image && <OptionalImage key={reply.image.id} id={reply.image.id} kind="image"
             className={styles.answerImage} alt={artwork?.title ?? "작품 이미지"} />}
-          <p className={styles.answer}>{reply.source === "fixed" && reply.outcome === "clarify" &&
-            reply.answer === "해당 번호의 공개 작품을 찾을 수 없습니다. 번호를 확인하거나 다른 작품을 선택해 주세요."
-            ? "이 작품은 지금 온라인 안내를 제공하지 않아요. 작품 목록에서 안내 중인 다른 작품을 볼 수 있어요."
-            : reply.answer}</p>
+          <p className={styles.answer}>{reply.answer}</p>
           {reply.notice && <p>{reply.notice}</p>}
           {!muted && <button className={styles.textButton} disabled={busy !== null || recording.state !== "idle"}
             onClick={() => void run("speech", signal => play(reply.answerId, signal))}>답변 듣기</button>}

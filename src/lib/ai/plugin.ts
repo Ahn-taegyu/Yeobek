@@ -39,6 +39,7 @@ type CapabilityMap<Id> = {
   "publication.list": PublicationStore["listLabels"];
   "publication.read": PublicationStore["load"];
   "publication.recheck": PublicationStore["isCurrent"];
+  "publication.history": PublicationStore["wasNumberPublished"];
   "author.read": ArtistKnowledgeStore["loadOwnedContext"];
   "proposal.store": ArtistKnowledgeStore["storeProposal"];
   "proposal.read": ArtistKnowledgeStore["loadOwnedProposal"];
@@ -92,6 +93,7 @@ const bindCapability = {
   "publication.list": ({ publications }) => publications?.listLabels?.bind(publications),
   "publication.read": ({ publications }) => requireStore(publications).load.bind(publications),
   "publication.recheck": ({ publications }) => requireStore(publications).isCurrent.bind(publications),
+  "publication.history": ({ publications }) => publications?.wasNumberPublished?.bind(publications),
   "author.read": ({ author }) => requireStore(author).loadOwnedContext.bind(author),
   "proposal.store": ({ proposals }) => requireStore(proposals).storeProposal.bind(proposals),
   "proposal.read": ({ proposals }) => requireStore(proposals).loadOwnedProposal.bind(proposals),
