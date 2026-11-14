@@ -43,6 +43,7 @@ select results_eq(
     ('create_qa_correction_evidence(text, uuid, integer, uuid, text, text)', false, true, false, false),
     ('get_preview_answer(uuid)', false, true, false, false),
     ('get_qa_rewrite_job(uuid)', false, true, false, false),
+    ('get_latest_training_batch(uuid)', false, true, false, false),
     ('get_training_batch(uuid)', false, true, false, false),
     ('record_preview_evaluation(uuid, uuid, text)', false, true, false, false),
     ('approve_qa_item(uuid, integer, jsonb)', false, true, false, false),

@@ -64,6 +64,7 @@ export const routes = {
   createQaCorrectionEvidence: { method: "POST", path: "/api/admin/qa/corrections", body: qaCorrectionEvidenceSchema, response: successEnvelope(evidenceResponse), statuses: [200] },
   closeGapRecheck: { method: "POST", path: "/api/admin/gaps/{id}/recheck-close", params: byId, body: closeGapRecheckSchema, response: successEnvelope(gapResponse), statuses: [200] },
   createTrainingBatch: { method: "POST", path: "/api/admin/exhibitions/{id}/training", params: byId, body: createTrainingBatchSchema, response: successEnvelope(trainingBatchResponse), statuses: [200] },
+  getLatestTrainingBatch: { method: "GET", path: "/api/admin/exhibitions/{id}/training/latest", params: byId, response: successEnvelope(trainingBatchResponse.nullable()), statuses: [200] },
   getTrainingBatch: { method: "GET", path: "/api/admin/training/{id}", params: byId, response: successEnvelope(trainingBatchResponse), statuses: [200] },
   runTrainingTarget: { method: "POST", path: "/api/admin/training/{id}/targets/{targetId}/run", params: byId.extend({ targetId: uuid }), body: runTrainingTargetSchema, response: successEnvelope(trainingBatchResponse), statuses: [200] },
   generateExpectedQa: { method: "POST", path: "/api/admin/exhibitions/{id}/qa/generations", params: byId, body: expectedQaGenerateSchema, response: successEnvelope(expectedQaJobResponse), statuses: [200, 201] },
