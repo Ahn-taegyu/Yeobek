@@ -76,3 +76,16 @@ it("preserves public text with null media references during a media lookup outag
   expect(log).toHaveBeenCalledWith("public_media_references_unavailable");
   log.mockRestore();
 });
+
+it("serves a poster through the same hash and live-publication checks", async () => {
+  mocks.rpc.mockResolvedValue({ ...metadata, kind: "poster" });
+  const response = await readPublicMedia(id, "poster");
+  expect(new Uint8Array(await response.arrayBuffer())).toEqual(bytes);
+  expect(mocks.rpc).toHaveBeenCalledTimes(2);
+  expect(mocks.rpc).toHaveBeenCalledWith(expect.anything(), "get_public_media",
+    { p_publication_id: id, p_kind: "poster", p_mock: false });
+});
+it("withholds poster bytes when the publication is revoked during download", async () => {
+  mocks.rpc.mockResolvedValueOnce({ ...metadata, kind: "poster" }).mockResolvedValueOnce(null);
+  await expect(readPublicMedia(id, "poster")).rejects.toMatchObject({ status: 404 });
+});

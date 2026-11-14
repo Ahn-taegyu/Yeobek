@@ -136,10 +136,10 @@ main `de06460`에는 이 API·플래그가 없다. A의 W11 PR 병합 뒤 실제
 
 # 공개 확장과 시연 데이터 — 예정(W12/W7, B 담당)
 
-이미지 없이 게시, 항목별 게시 체크리스트, 공개 포스터·시간, 채팅의 작품 이미지 참조, `exhibitionScopeChat`과 승인 Q&A snapshot은 후속이다. 기존 `voiceRequired`·음성/필수 Q&A 정책을 임의로 바꾸지 않는다. `db:seed:demo`와 키 당일 체크리스트는 아직 작성 전이다. 모의 게시 허용은 개발 시연에 한정하며 운영 게시 금지는 W12에서 회귀 검사로 확인한다.
+이미지 없이 게시, 항목별 게시 체크리스트, 공개 포스터·시간, 채팅의 작품 이미지 참조, `exhibitionScopeChat`과 승인 Q&A snapshot은 후속이다. SRC-055에 따라 저장 음성과 Q&A 개수는 게시 필수에서 제외한다. `db:seed:demo`는 Draft #23, 키 당일 체크리스트는 W12 Draft #25에 작성돼 있으며 병합·최종 통합은 대기다. 모의 게시 허용은 개발 시연에 한정하며 운영 게시 금지는 W12에서 회귀 검사로 확인한다.
 
 ## W12 글 우선 게시 변경 진행
 
 최신 사용자 결정(SRC-055, A의 결정 기록)에 따라 저장 음성 사전 준비를 게시 필수에서 제외한다. 서버 기본값과 예제 환경은 voiceRequired=false이며 기존 배포의 명시 true는 유지된다. 이 기본값 변경만으로 이미지 없는 게시·전시 문맥·자동 TTS 화면 연결까지 완료한 것은 아니다. 음성을 켠 관람객의 답변 이후 speech 호출은 프런트 연결과 통합 검증이 필요하다.
 
-W12 공개 시각 계약(구현 중): publicExhibitionResponse에 선택 필드 startTime/endTime(HH:mm 또는 null)을 추가한다. 게시 시점 값을 고정하며 초안 수정은 다음 게시 전까지 반영하지 않는다. 기존 공개본의 시간은 재게시 전 null이다. 포스터 공개 연결은 아직 후속이다.
+W12 공개 시각 계약(구현 중): publicExhibitionResponse에 선택 필드 startTime/endTime(HH:mm 또는 null)을 추가한다. 게시 시점 값을 고정하며 초안 수정은 다음 게시 전까지 반영하지 않는다. 기존 공개본의 시간은 재게시 전 null이다. 포스터도 선택 필드 `poster: {id, kind:"poster"} | null`로 추가한다. id는 공개 publication ID이며 `GET /api/media/{id}?kind=poster`로 읽는다. Storage 경로·서명 URL은 노출하지 않는다. 초안 포스터 변경은 재게시 전 미반영, 삭제·게시 중지·철회·교체 시 이전 참조 전송을 거부한다. 이 계약은 Draft #25 구현 중이며 main 병합 완료가 아니다.

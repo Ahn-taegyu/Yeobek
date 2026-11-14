@@ -2,6 +2,8 @@
 
 ## 2026-11-14
 
+- **W12 공개 포스터 준비**: 신규202000 migration으로 포스터 선택을 게시 시점에 고정하고 기존 공개 미디어 경로의 poster 종류로 제공한다. 파일 해시·소유/전시 범위·활성 공개본을 확인하고 전송 직전 재검증한다. 미디어 단위10개 성공, DB/HTTP와 최신 CI는 대기다. 직전 head a69f324의 App43565111722·Knowledge43565111664 성공은 이번 후속 변경과 구분한다.
+
 - **W12 공개 시각 snapshot 준비**: 신규201000 migration으로 게시 시각 고정·초안 수정 분리와 공개 응답 startTime/endTime을 추가했다. 구 공개본은 null을 유지한다. 응답 계약 좁은 검사1개 통과, SQL 독립 검토에서 차단 문제 없음. 최초 CI의 pending 이미지 fixture가 storage_key 제약을 누락해 해당 fixture를 보완했다. DB/HTTP 새 CI는 대기다.
 
 - **W12 이미지 선택 게시 준비**: 신규200000 migration에서 공개 image_key를 nullable로 바꾸고 두 게시 진입점의 선택 이미지 처리를 통합했다. 제공된 이미지의 소유/ready 검증은 유지한다. 독립 SQL 검토의 legacy publish 누락·기존 pgTAP 기대값을 보완하고 DB/HTTP 회귀를 추가했다. DB 실행·전체 CI는 대기이며 로컬 스택은 사용하지 않았다.
