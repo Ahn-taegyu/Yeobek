@@ -30,7 +30,7 @@ sources:
 
 # 기준과 공개 주소
 
-**기준 main `9c6efbf`와 W12 PR #25의 계약.** W9·W10·W11·W2·시연 기반은 병합됐으며, W12 확장과 최종 통합의 main 포함 여부는 PR #25의 병합 상태를 확인한다. 아래 W12 항목은 해당 PR 구현을 기준으로 한다. 프런트 화면 연결과 운영 활성화는 별도 검증이다.
+**기준 main `1bd6734` (#25 병합).** W9·W10·W11·W2·파일 읽기·시연 데이터·W12 계약과 서버 모의 통합을 포함한다. 최종headb8d1daf App43573981012·Knowledge43573981010 성공. 프런트 화면 연결과 운영 활성화는 별도 검증이다.
 
 공개 주소는 기존 `listLabels` RPC/HTTP가 반환하는 **`/exhibitions/{exhibitionId}`**, 작품 주소는 **`/exhibitions/{exhibitionId}/artworks/{artworkId}`**를 유지한다. `/visit/{exhibitionId}`는 화면 구현 후보였으며 기존 공개 주소를 바꾸는 서버 계약이 아니다. 프런트가 `/visit` 아래에 화면을 만들면 기존 `/exhibitions` 주소에서 동일 화면으로 연결하는 경로를 제공한다. 서버 API 주소는 `/api/public/exhibitions/{id}`다. QR 제작은 이번 범위 밖이며 라벨 API는 유지한다.
 
@@ -193,7 +193,7 @@ PR #28 main4f7faee에 병합됐으며 최종 head04facaa App·Knowledge CI가 �
 
 # 공개 확장과 시연 데이터 (W12/W7, B 담당)
 
-이미지 없이 게시, 항목별 게시 체크리스트, 공개 포스터·시간, 채팅 작품 이미지, `exhibitionScopeChat`과 승인 Q&A snapshot은 PR #25에 구현했다. SRC-055에 따라 저장 음성과 Q&A 개수는 게시 필수에서 제외한다. `db:seed:demo` 기반은 #23으로 main0facdbc에 병합됐다. W12 #25에 작품별 모의 승인 Q&A 1개씩을 추가했고 키 당일 점검표와 단일 가입→관람 모의 회귀를 포함했다. 시연 시 FEATURE_EXPECTED_QA=true가 필요하며 기본 제품 플래그는 off를 유지한다. 모의 게시 허용은 개발 시연에 한정하며 운영 게시·재개 금지는 W12 DB 회귀로 확인한다.
+이미지 없이 게시, 항목별 게시 체크리스트, 공개 포스터·시간, 채팅 작품 이미지, `exhibitionScopeChat`과 승인 Q&A snapshot은 PR #25로 병합됐다. SRC-055에 따라 저장 음성과 Q&A 개수는 게시 필수에서 제외한다. `db:seed:demo` 기반은 #23으로 main0facdbc에 병합됐다. W12 #25에 작품별 모의 승인 Q&A 1개씩을 추가했고 키 당일 점검표와 단일 가입→관람 모의 회귀를 포함했다. 시연 시 FEATURE_EXPECTED_QA=true가 필요하며 기본 제품 플래그는 off를 유지한다. 모의 게시 허용은 개발 시연에 한정하며 운영 게시·재개 금지는 W12 DB 회귀로 확인한다.
 
 ## W12 글 우선 게시 계약
 
@@ -216,3 +216,5 @@ SC-A06에서 `getPublicationChecklist` (`GET /api/admin/exhibitions/{id}/publica
 질문에 명확한 공개 번호나 공개 작품 제목이 있으면 서버가 해당 작품으로 답한다. `reply.publication.artworkId`를 답변 대상과 상단 선택에 함께 반영하되, `contextSequence`가 현재 요청보다 오래된 응답은 선택을 덮어쓰지 않는다. 번호/제목 충돌·중복 제목·여러 작품 지칭·명시적으로 없는 제목은 `outcome:clarify, publication:null`로 재확인을 요청한다. 제목은 현재 공개본만 대조하며 비공개 초안 제목이나 유사어를 모델 추측으로 선택하지 않는다. `image`는 선택된 활성 공개본 참조 또는 null이다.
 
 작품 버튼 선택 자체로 채팅·TTS API를 호출하지 않는다. STT 응답은 입력창에 표시하고 관람객 확인 후 `/api/chat`으로 전송한다. 음성이 켜졌으면 답변의 `answerId`로 `/api/speech`를 호출하고 음소거 시 재생/생성을 중단한다. 글 답변의 `outputMode:text`도 이후 명시적으로 speech를 요청할 수 있다는 기존 계약을 유지한다. 서버의 선택 참조 검증과 프런트 상단 표시·음소거 UI 검증은 구분한다.
+
+게시 체크리스트의 typed client 결과는 `{data, requestId}`이며 내부 목록은 `result.data`에서 읽는다. P0 전시는 artworks 단계/작성 필수 시각까지 검사한다. 개발용 모의 QA 공개본의 운영 전환은 [키 당일 점검표](key-day-checklist.md)의 선중지·전체 재게시 절차를 따른다.

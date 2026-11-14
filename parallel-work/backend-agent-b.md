@@ -1,12 +1,12 @@
 # 백엔드 에이전트 B — 공개·관람·인계
 
-**진행 중인 B 작업을 이어간다.** 기존 worktree·PR과 아래 SHA별 상태를 확인하고 완료된 초안을 다시 만들지 않는다.
+**B의 서버/API·모의 통합·문서 인계는 완료했다.** 아래 병합/검사 근거를 기준으로 프런트와 실환경 검증을 이어가며 완료된 구현을 다시 만들지 않는다.
 
 ## 최신 상태와 결정 (2026-11-14 확인)
 
 - GitHub에서 W13 #16(`44bf7d3`)·W10 #15(`dadc23b`)·W9 #17(`de06460`)의 병합을 확인했다. 인계 기준은 이 계약이며 W9는 기본 off, 운영 SMTP·프런트는 미검증이다.
-- A의 W11 #18·W2 #13·파일 읽기 #28(main `4f7faee`)은 병합됐다. 파일 읽기는 기본 off이며 프런트 후보 검수·실키 검증은 별도다. 승인 Q&A 서비스 RPC를 같은 게시 트랜잭션에서 호출하는 B 연결은 #25에 구현돼 CI가 성공했으며 병합은 남았다.
-- 인계 초안 #20과 시연 데이터 기반 #23은 병합됐다. W12·Q&A 시연 확장·키 당일 점검표 #25는 Draft이며 최종 통합은 미완료다. 아래 SHA별 상태 표를 따른다.
+- A의 W11 #18·W2 #13·파일 읽기 #28(main `4f7faee`)은 병합됐다. 파일 읽기는 기본 off이며 프런트 후보 검수·실키 검증은 별도다. 승인 Q&A 서비스 RPC를 같은 게시 트랜잭션에서 호출하는 B 연결은 #25에 구현돼 CI가 성공했으며 최종 #25 병합도 완료했다.
+- 인계 초안 #20과 시연 데이터 기반 #23은 병합됐다. W12·Q&A 시연 확장·키 당일 점검표 #25도 병합됐으며 서버 모의 통합은 완료했다. 아래 SHA별 상태 표를 따른다.
 - [SRC-050](../docs/references/user-expected-qa-policy.md)의 생성 세트 상한은 작품 3개·전시 5개다. 개별 승인·철회하며 승인 Q&A는 생성 근거로 사용한다. 기본 작품 소개의 승인 원고 직접 반환은 유지한다.
 - [SRC-052](../docs/references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청의 Q&A 전환은 제외한다. 요청 조회와 재게시 후 확인/종료는 유지하며 재게시만으로 자동 종료하지 않는다.
 - 이미지 없이 게시 허용, 모의 해설 운영 게시 차단, QR 제작 제외를 유지한다. 저장 음성과 Q&A 개수는 SRC-055에 따라 게시 필수에서 제외한다.
@@ -15,18 +15,18 @@
 
 | 범위 | 확인한 상태·증거 | 남은 일 |
 | --- | --- | --- |
-| W11 | [#18](https://github.com/Ahn-taegyu/Yeobek/pull/18) 병합 `40564e6`, 검사 head `1d596e1`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396278)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396325) 성공 | 서비스 RPC·전시 Q&A·학습 묶음·W11 인계 포함. B 공개 연결의 최종 병합은 별도 |
-| W2 | [#13](https://github.com/Ahn-taegyu/Yeobek/pull/13) 병합 `9c6efbf`, 검사 head `351156f`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43567373083)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43567373169) 성공 | W10 section·후보/이력 보존 반영. 파일 읽기·프런트 후보 검수·운영 cron은 별도 |
-| 프런트 인계 초안 | [#20](https://github.com/Ahn-taegyu/Yeobek/pull/20) 병합 `461d32f`, 검사 head `f0d49e9` App·Knowledge 성공 | W12 계약과 최종 통합 인계 추가 |
-| 시연 데이터 기반 | [#23](https://github.com/Ahn-taegyu/Yeobek/pull/23) 병합 `0facdbc`, 검사 head `605a7aa`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43566211707)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43566211687) 성공 | 승인 Q&A 3개 추가는 #25에 구현·CI 성공, 아직 미병합 |
-| W12·키 당일 점검표 | [Draft #25](https://github.com/Ahn-taegyu/Yeobek/pull/25), 검사 head `6b95af8`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43570582243)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43570582245) 성공, 미병합 | 게시 체크리스트·모의 해설 운영 차단·다음 게시 번호까지 구현/회귀 성공. 제목 지칭·가입→관람/TTS 단일 흐름과 #28 통합은 후속 CI/병합 대기 |
+| W11 | [#18](https://github.com/Ahn-taegyu/Yeobek/pull/18) 병합 `40564e6`, 검사 head `1d596e1`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396278)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43565396325) 성공 | 서비스 RPC·전시 Q&A·학습 묶음·W11 인계 완료. B 공개 연결도 #25 병합 |
+| W2 | [#13](https://github.com/Ahn-taegyu/Yeobek/pull/13) 병합 `9c6efbf`, 검사 head `351156f`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43567373083)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43567373169) 성공 | W10 section·후보/이력 보존 반영. 파일 읽기도 #28 병합; 프런트 후보 검수·운영 cron은 별도 |
+| 프런트 인계 초안 | [#20](https://github.com/Ahn-taegyu/Yeobek/pull/20) 병합 `461d32f`, 검사 head `f0d49e9` App·Knowledge 성공 | W12 계약과 최종 통합 인계도 #25 병합 |
+| 시연 데이터 기반 | [#23](https://github.com/Ahn-taegyu/Yeobek/pull/23) 병합 `0facdbc`, 검사 head `605a7aa`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43566211707)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43566211687) 성공 | 승인 Q&A 3개 확장도 #25로 병합·CI 성공 |
+| W12·키 당일 점검표 | [#25](https://github.com/Ahn-taegyu/Yeobek/pull/25) 병합 `1bd6734`, 최종 head `b8d1daf`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43573981012)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43573981010) 성공 | 서버/API·모의 통합·인계 완료. 실제 키/운영 전환·프런트 UI는 별도 |
 
-CI 성공은 위 검사 head에 한정한다. 후속 `606bebc`는 [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571824061)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571823941) 모두 성공했고 가입→인증→작성/검수→게시→관람/TTS 단일 모의 HTTP 흐름을 확인했다. main #28 통합 `ed05119`는 별도 최신 CI 대상이다. 파일 읽기는 #28의 head `04facaac` [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147499)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147654) 성공 후 병합됐다. 실제 키·프런트 UI는 미검증이다. 완료 조건의 최초 보강은 [#27](https://github.com/Ahn-taegyu/Yeobek/pull/27) 병합 `514347b`(#19 대체)다.
+CI 성공은 위 검사 head에 한정한다. #25에는 A 파일 읽기 #28·최종 인계 #30을 통합했고 P0 draft/advance→게시→관람/TTS, 체크리스트 typed client, 모의 Q&A 운영 전환, 제목 조사 회귀까지 확인했다. 외부 AI/TTS 호출0회. 완료 조건 최초 보강은 #27(`514347b`)이며 [B 최종 완료 표](../docs/specs/backend-completion.md#b-최종-완료인계-2026-11-14)에 범위·증거·남은 검증을 모았다.
 
 - [SRC-055](../docs/references/user-visitor-tts-publication-policy.md): **승인 글로 먼저 게시하고 관람객이 음성을 켜면 답변 시 TTS를 생성한다.** 저장 음성·Q&A 개수·평가 횟수는 게시 필수가 아니다. 승인 Q&A는 생성 근거로만 사용한다.
 - STT 인식문은 확인 후 전송한다. 질문이 명확히 지칭한 작품/번호는 답변 대상과 상단 선택에 함께 반영하고, 잘못된 번호·모호한 지칭은 추측하지 않는다. 초안 번호 변경은 다음 명시적 게시부터 공개본에 적용한다.
 
-## 계획
+## 최초 계획과 수용 기준 (구현 완료)
 
 | 순서 | 작업 | 예상 | 끝나는 기준 |
 | --- | --- | --- | --- |
@@ -66,17 +66,17 @@ CI 성공은 위 검사 head에 한정한다. 후속 `606bebc`는 [App](https://
 
 ```
 Yeobek 저장소의 남은 백엔드를 두 에이전트가 병렬로 진행한다. 너는 "공개·관람·인계"(에이전트 B)를 맡는다.
-최신 체크포인트: W11 #18·W2 #13·인계 #20·시연 기반 #23은 병합 완료다. 아래 순서는 최초 계획이며 완료 항목을 다시 구현하지 않는다. #25 head6b95af8 App/Knowledge 성공, Draft 유지. 체크리스트·모의 해설 차단·다음 게시 번호는 검증됐으며 제목 지칭·단일 통합 흐름은 head606bebc CI에서 성공했으며 #28 통합은 최신 CI/병합 대기다.
+최신 체크포인트: W11 #18·W2 #13·파일 읽기 #28·인계 #20·시연 기반 #23·W12/점검표 #25가 병합 완료다. #25 main1bd6734, 최종headb8d1daf App43573981012·Knowledge43573981010 성공. 아래 순서는 최초 계획이며 다시 구현하지 않는다. 이후 범위는 프런트 UI·키 당일 실환경 검증이다.
 에이전트 A는 진행 중인 Q&A 저장(W11a)·생성·미리보기·지시문 수정(W11b) → W2 자료 정리 → 업로드 파일 읽기를 맡는다.
 W10·W9·W13은 이미 병합됐다. W11은 #18로 병합됐으며 전시 Q&A·학습 묶음 API도 포함한다. 기존 계약을 재사용한다.
 SRC-050: 생성 세트당 작품 최대3·전시 최대5, 항목별 승인/철회, 승인 Q&A는 생성 근거다.
 SRC-052: 관람 보완 요청의 Q&A 전환 제외, 조회·재게시 후 확인/종료 유지. 재게시만으로 자동 종료하지 않는다.
-프런트는 사람 두 명이 지금 동시에 만들고 있고, 네 첫 두 작업을 기다린다. 마감은 2026-11-15(일) 아침이다.
+프런트는 사람이 구현하며 병합된 인계 문서·시연 데이터를 사용한다. 마감은 2026-11-15(일) 아침이다.
 
 먼저 읽을 것: AGENTS.md, docs/AGENTS.md, docs/agent-workflow.md, docs/collaboration.md,
 docs/specs/backend-completion.md(W12·W7 절), docs/specs/screen-spec.md(SC-A·SC-V 표), docs/specs/api-contract.md.
 결정 기록: docs/references/user-v3-decisions.md, user-v3-review-decisions.md. 이 문서들은 해당 절만 찾아 읽어라.
-기존 B worktree와 feat/publish-visitor-p0 PR #25를 이어가고 병합 직전 최신 main을 통합한다.
+PR #25는 병합됐다. 후속 작업은 최신 main과 완료 표를 기준으로 기존 체크아웃을 재사용한다.
 
 ## 네 순서
 1. 프런트 인계 문서(0.5~1h): docs/specs/frontend-handoff.md를 만든다. 화면 ID(SC-A01~A10, SC-V01~V06)별로
