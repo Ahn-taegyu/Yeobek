@@ -11,6 +11,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-14T15:05:00+09:00'
 sources:
+- id: api-rollout
+  resource: /references/user-api-rollout-publication.md
+  title: API 적용 수정 계획과 실행 제외 범위
 - id: backend
   resource: /specs/backend-completion.md
   title: 백엔드 완성 작업 추적
@@ -27,6 +30,15 @@ sources:
 이 문서는 **실행 전 점검표**다. 현재 모든 실환경 항목은 미검증이다. 모의 HTTP·CI 성공은 실제 메일 발송·모델 품질·한국어 음질·배포 설정의 증거가 아니다. 실제 호출은 승인된 키와 권리 확인 자료를 준비한 담당자가 별도로 실행한다. B의 개발 작업에서는 외부 AI·TTS 호출 0회를 유지한다.
 
 각 항목에 담당자, 실행 시각(Asia/Seoul), 배포 SHA, 환경, 성공/실패, 비밀값을 제거한 증거 링크를 남긴다. 키·비밀번호·OTP·관람 질문 원문은 이 문서나 PR에 붙이지 않는다. 실패한 항목은 미완료로 남기고 해당 기능을 활성화하지 않는다.
+
+# 실행 순서와 현재 경계
+
+[SRC-058](../references/user-api-rollout-publication.md)에 따라 지금은 최소 승인·게시 UI와 인증된 정리 GET만 준비한다. 유료 호출, 실제 메일, 원격 환경 변수·스케줄 설정은 실행하지 않는다. 아래 항목은 이후 승인된 실환경 작업의 점검표다.
+
+1. 글 API를 `npm run ai:smoke -- qa`, `npm run ai:smoke -- draft`, `npm run ai:smoke -- judge`로 하나씩 확인한다. 작업 종류 없는 실행은 오류다. 각 smoke는 최대 한 번의 제공사 요청이며 업무별 모델 접근과 생성/평가 계열 분리를 확인한다.
+2. `npm run ai:smoke -- tts`, `npm run ai:smoke -- stt --audio=권리확인한파일경로`로 음성을 확인한다. 전사 파일은 30초·3MiB 이내다. SMTP·6자리 코드·직접 로그인을 별도로 확인한다.
+3. 예상 Q&A → 미리보기 → 지시문 재작성 플래그를 각각 켜고 검증한 다음 최종 설정으로 가입부터 관람 음성까지 한 번 이어서 확인한다. 파일 읽기는 동의·후보 검수/적용 화면 준비 후 활성화한다.
+4. 정리 스케줄 연결, 마지막으로 미사용 코드/브랜치를 정리한다. 작업 일일 100회는 비용 상한이 아니며 직접 adapter를 호출하는 smoke에 작가 HTTP 작업 한도가 자동 적용된다고 가정하지 않는다. 제공사별 요청 수·토큰·실제 청구 사용량을 확인한다.
 
 # Auth와 기본 배포
 
@@ -67,8 +79,8 @@ sources:
 
 # 스케줄과 운영 인계
 
-- [ ] 외부 스케줄러의 `POST /api/cron/purge`·`POST /api/cron/automation` 호출을 실제 등록한다. Bearer `CRON_SECRET`은 비밀 저장소에 두고 스케줄 주기·시간대·재시도·담당자를 기록한다.
-- [ ] Hobby에서 필요한 주기가 가능한지 확인한다. 지원되지 않으면 승인된 스케줄러를 정하고 연결 전까지 자동 실행 완료로 표시하지 않는다.
+- [ ] 정리는 인증된 `GET /api/cron/purge`를 하루 1회 Vercel cron에 등록한다. 기존 POST 호출도 유지한다. Bearer `CRON_SECRET`은 서버 비밀 저장소에 두고 UTC 주기·실행 시각·실패 복구·담당자를 기록한다. 현재 저장소에는 실제 스케줄을 등록하지 않았다. 발송 `POST /api/cron/automation`은 별도 후속 범위다.
+- [ ] Hobby Cron의 작업별 하루 1회·시간 단위 실행 정밀도를 재확인한다. 매시간 실행이나 정확한 삭제 시각을 보장한다고 쓰지 않는다. 더 잦은 주기가 실제 필요할 때 별도 스케줄러를 결정한다. [호출 방식](https://vercel.com/docs/schedules/cron-jobs) · [제한](https://vercel.com/docs/schedules/cron-jobs/usage-and-pricing).
 - [ ] 인증 없는 cron 요청 거부, 정상 실행 시각·처리 건수·실패 복구를 확인한다. 만료 접근 차단과 파일/본문 물리 삭제를 구분하고 실제 삭제 전 완료로 쓰지 않는다.
 - [ ] 업무 발송·채널톡 연동은 별도 범위다. 필요한 경우 수신 동의·운영자 승인·고정 발송 대상과 쿼리 토큰 로그 제거를 확인한다. 예약 안내·Alt·브리핑·운영 집계의 제외 범위를 유지한다.
 - [ ] 환경 변수 이름·설정 위치·최종 플래그·배포/복구 순서·미검증 항목을 인계한다. 복구 시 기능 비활성화와 호환 앱 배포를 우선하고 공유 DB를 reset하지 않는다.

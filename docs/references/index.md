@@ -87,3 +87,5 @@
 - [답변 시 자동 TTS와 작품 지칭·게시 정책](user-visitor-tts-publication-policy.md) — SRC-055.
 - [프런트 디자인과 모션·스타일 변경 기준](user-frontend-design-fidelity.md) — SRC-056.
 - [진행 중 전시 진입과 가입 시 작가 프로필](user-artist-signup-exhibition.md) — SRC-057.
+
+- [API 적용 수정 계획과 승인·게시 UI 및 cron GET 구현 요청](user-api-rollout-publication.md) — SRC-058, 실호출 전 준비와 원격 설정 변경 제외.

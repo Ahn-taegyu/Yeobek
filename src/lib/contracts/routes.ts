@@ -93,6 +93,7 @@ export const routes = {
   setArtworkImage: { method: "POST", path: "/api/admin/artworks/{id}/image", params: byId, body: setArtworkImageSchema, response: successEnvelope(artworkResponse), statuses: [200] },
   deleteArtwork: { method: "POST", path: "/api/admin/artworks/{id}/delete", params: byId, body: deleteArtworkSchema, response: successEnvelope(deletedArtworkResponse), statuses: [200] },
   purgeExpired: { method: "POST", path: "/api/cron/purge", response: successEnvelope(purgeResponse), statuses: [200] },
+  purgeExpiredScheduled: { method: "GET", path: "/api/cron/purge", response: successEnvelope(purgeResponse), statuses: [200] },
   chat: { method: "POST", path: "/api/chat", body: visitorChatRequest, response: successEnvelope(visitorReplyResponse), statuses: [200] },
   checkVersions: { method: "POST", path: "/api/public/exhibitions/{id}/versions/check", params: byId, body: checkVersionsRequest, response: successEnvelope(checkVersionsResponse), statuses: [200] },
   listGaps: { method: "GET", path: "/api/admin/exhibitions/{id}/gaps", params: byId, response: successEnvelope(gapListResponse), statuses: [200] },

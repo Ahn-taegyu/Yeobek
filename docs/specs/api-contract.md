@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: api-rollout
+  resource: /references/user-api-rollout-publication.md
+  title: API 적용 수정 계획과 최소 게시 UI 구현 요청
 - id: gap-exclusion
   resource: /references/user-gap-qa-exclusion.md
   title: 관람 보완 요청의 Q&A 전환 제외
@@ -559,3 +562,9 @@ read는 `{id,status,mock,pageCount,chunkCount,method,resultCode}`다. status=run
 신규232000은 모의 Q&A가 든 공개본의 live 재개와 미선택 유지 게시를 거부한다(`MOCK_QA_NOT_ALLOWED`). 기존 요청 재전송도 고정 공개본과 유지되는 미선택 공개본을 검사한다. 명시적 live 재게시에서는 A 조회 포트가 모의 Q&A를 제외한다. 읽기 API는 앱 배포 모드를 판별하지 않으므로 개발 DB의 운영 전환은 [키 당일 점검표](key-day-checklist.md)에 따라 선중지·전체 재게시 후 트래픽을 허용한다.
 
 P0 전시(`authoringStep` 비어 있지 않음)는 `artworks` 단계와 기존 작성 필수값/시각 순서를 공통 게시 규칙으로 검사한다. `EXHIBITION_AUTHORING_INCOMPLETE`, `EXHIBITION_START_TIME_REQUIRED`, `EXHIBITION_END_TIME_REQUIRED`, `EXHIBITION_INVALID_PERIOD` 등 작성 사유는 GET 체크리스트와 POST의 `PUBLICATION_BLOCKED`/`fields.exhibition`에 반영한다. 기존 `authoringStep=null` 전시는 기존 날짜/장소 규칙을 유지한다.
+
+## 정리 GET 호환 진입점 (SRC-058)
+
+`GET /api/cron/purge`는 기존 `POST /api/cron/purge`와 같은 Bearer `CRON_SECRET` 인증, 만료 행/파일 정리 및 응답 envelope를 사용한다. 인증 실패 시 worker/DB/Storage 정리를 실행하지 않으며 응답을 캐시하지 않는다. 기존 POST 계약·호출자는 유지하고 typed contract에 purgeExpiredScheduled GET만 추가한다. GET은 서버 스케줄러용이며 작가/관람 클라이언트에 비밀값을 전달하지 않는다. HEAD/OPTIONS 등 부수 요청은 정리를 실행하면 안 된다.
+
+이번 변경은 실제 스케줄 등록이나 배포를 수행하지 않는다. 운영 연결 시 Vercel GET 호출·하루 1회 주기·실패 복구를 별도 점검한다. 자동화 발송 POST는 이 변경 대상이 아니다.

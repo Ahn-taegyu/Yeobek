@@ -50,7 +50,7 @@ npm run ai:smoke -- stt --audio=path/to/test.webm
 
 기존 인증·작가 CRUD와 공개 조회의 경로는 `src/lib/contracts/`에 계약을 두고 프런트에서 `requestApi`를 `@/lib/client`로 가져와 사용합니다. 글 게시와 관람 채팅·보완 요청 HTTP도 같은 계약과 클라이언트로 호출합니다.
 
-W1 해설 작업은 소유자별 일일 초기 한도 100회, 180초 lease, 30일 작업 만료를 사용합니다. 요청 중 동기 실행하고 중단되면 작업 조회 후 재시도하며, 결과는 작가가 별도로 적용해야 초안이 바뀝니다. 모의 모드는 development/test에서만 허용합니다. 30일 만료 후 접근을 차단하며 실제 삭제는 비밀값으로 보호한 POST /api/cron/purge를 외부 스케줄러가 호출합니다. 이 저장소 작업에서 운영 스케줄러를 배포하지는 않았습니다.
+W1 해설 작업은 소유자별 일일 초기 한도 100회, 180초 lease, 30일 작업 만료를 사용합니다. 요청 중 동기 실행하고 중단되면 작업 조회 후 재시도하며, 결과는 작가가 별도로 적용해야 초안이 바뀝니다. 모의 모드는 development/test에서만 허용합니다. 30일 만료 후 접근을 차단하며 실제 삭제는 비밀값으로 보호한 GET /api/cron/purge를 스케줄러가 호출합니다. 기존 POST 호출도 유지합니다. 이 저장소 작업에서 운영 스케줄러를 배포하지는 않았습니다.
 
 모의 작업 HTTP 검사는 별도 개발 서버에서 실행합니다. PowerShell에서 다음을 실행하고, 서버가 준비되면 다른 터미널에서 테스트합니다. 로컬 DB와 작가 계정이 필요합니다.
 
@@ -148,14 +148,14 @@ python scripts/knowledge.py verify
 
 모의 서버에 `FEATURE_VOICE_REQUIRED=false`, `FEATURE_GAPS=true`와 테스트용 `CRON_SECRET`(32자 이상)을 설정한 뒤 `npm run test:visitor`를 실행합니다. 서버를 `FEATURE_GAPS=false`로 다시 시작하고 검사 쪽에 `TEST_GAPS_DISABLED_ONLY=true`를 설정하면 보완 요청 경로 404·필드 생략·채팅 유지도 확인합니다. 이 관람 검사는 이미지 메타데이터 fixture를 사용하며 실제 파일 전송은 별도 materials 통합 검사에서 확인합니다.
 
-운영 배포 시 스케줄러가 매시간 `POST /api/cron/purge`를 `Authorization: Bearer <CRON_SECRET>` 헤더로 호출하도록 설정해야 합니다. DB 접근 만료는 즉시 적용되며 물리 삭제는 이 호출로 실행됩니다. 서버 비밀값을 프런트나 URL에 넣지 않습니다. 현재 스케줄러를 배포하거나 실제 외부 AI를 호출하지 않았습니다.
+운영 연결은 별도 승인 후 Vercel cron이 하루 1회 `GET /api/cron/purge`를 `Authorization: Bearer <CRON_SECRET>` 헤더로 호출하도록 설정합니다. 기존 POST도 동일하게 지원하고 HEAD는 정리를 실행하지 않습니다. Hobby의 정확한 실행 시각은 보장되지 않습니다. DB 접근 만료는 즉시 적용되며 물리 삭제는 이 호출로 실행됩니다. 서버 비밀값을 프런트나 URL에 넣지 않습니다. 현재 스케줄러를 배포하거나 실제 외부 AI를 호출하지 않았습니다.
 
 
 ## 파일 업로드 검사
 
 `npm run test:integration`은 인증/초안과 실제 로컬 Storage의 PNG·JPEG·PDF 전송·검증·삭제를 검사합니다. 실행 서버에 32자 이상 `CRON_SECRET`, 검사 프로세스에 같은 `TEST_CRON_SECRET`을 설정하세요. 비밀값은 명령 이력 대신 로컬 환경에 두고 실제 운영 키를 테스트에 쓰지 않습니다. `TEST_APP_ORIGIN` 기본값은 `http://localhost:3000`입니다. 파일만 확인하려면 `node --test tests/integration/materials.test.mjs`를 실행합니다. 외부 AI 호출은 없습니다.
 
-정리 스케줄러는 `/api/cron/purge`를 호출합니다. 한 번에 최대 50개 자료를 정리하므로 물량이 늘면 실행 간격을 줄여야 합니다. 준비된 자료의 임시 파일은 업로드 서명 만료 뒤 재정리하며 final 원본은 유지합니다. 소유자 다운로드 URL은 60초 유효하고 공개 방문자에게 PDF를 제공하지 않습니다.
+정리 스케줄러는 `/api/cron/purge`를 호출합니다. 한 번에 최대 50개 자료를 정리하므로 물량이 늘면 적체를 확인하고 처리량·주기를 다시 설계해야 합니다. Hobby Cron의 하루 1회보다 잦은 실행이 필요하면 별도 스케줄러를 결정합니다. 준비된 자료의 임시 파일은 업로드 서명 만료 뒤 재정리하며 final 원본은 유지합니다. 소유자 다운로드 URL은 60초 유효하고 공개 방문자에게 PDF를 제공하지 않습니다.
 
 
 ## 직접 가입 API 준비
@@ -173,3 +173,7 @@ W9는 이메일 가입·코드 확인·재발송·세션 조회 API를 제공합
 가상 작가와 전시 1개·작품 3개·실제 업로드 이미지·승인 해설·게시 상태를 Auth/Storage와 기존 HTTP API로 만듭니다. 모의 Q&A 3개(작품별1개)를 생성·승인하며 실제 외부 AI·TTS 호출은 없습니다. 로그인 정보는 Git 제외 `.env.demo.local`의 `DEMO_EMAIL`, `DEMO_PASSWORD`, 공개 전시 ID는 `DEMO_EXHIBITION_ID`에 저장합니다. 콘솔에 비밀번호를 출력하지 않습니다.
 
 원격 URL·production 환경은 거부합니다. 완료된 시드는 재실행 시 같은 전시를 확인하며 기존 데이터를 덮어쓰지 않습니다. 중간 실패한 데이터도 보존합니다. 새 시연이 필요하면 `DEMO_ENV_FILE=.env.demo-new.local`처럼 별도 파일을 선택합니다. 이전 시연에 승인 Q&A가 없으면 덮어쓰지 않고 새 시연 파일을 선택하도록 안내합니다.
+
+## 기본 해설 검토와 전시 게시
+
+전시 관리의 **기본 해설 검토**에서 생성 결과를 초안으로 저장하고, 공개할 근거와 기본 해설을 각각 승인합니다. 질문형 AI 미리보기는 별도 화면입니다. **전시 게시 관리**에서 서버 점검표의 보완 사유를 확인하고 작품을 선택해 게시하거나 전시 공개를 중지합니다. 저장·승인만으로 공개되지 않습니다. [구현 범위와 후속 순서](docs/specs/backend-completion.md), [실제 API 연결 점검표](docs/specs/key-day-checklist.md)를 참고하세요. 이번 준비에는 유료 API 호출·원격 설정·스케줄 등록이 포함되지 않습니다.

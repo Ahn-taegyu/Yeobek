@@ -18,7 +18,9 @@ describe("HTTP route contracts", () => {
         const fullPath = join(routeRoot, file);
         const path = relative("src/app", fullPath).replaceAll("\\", "/").replace(/\/route\.ts$/, "")
           .replace(/\[(\w+)\]/g, "{$1}");
-        return Array.from(readFileSync(fullPath, "utf8").matchAll(methods), ([, method]) => `${method} /${path}`);
+        return Array.from(readFileSync(fullPath, "utf8").matchAll(methods), ([, method]) => `${method} /${path}`)
+          // HEAD explicitly rejects the side-effecting purge; it is not a callable API operation.
+          .filter(route => route !== "HEAD /api/cron/purge");
       });
     expect(Object.values(routes).map(({ method, path }) => `${method} ${path}`).sort()).toEqual(actual.sort());
   });

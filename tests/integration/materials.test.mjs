@@ -169,8 +169,17 @@ test("actual private Storage upload, validation, owner isolation and cleanup", a
     assert.equal(recreated.error, null);
     const cronSecret = process.env.TEST_CRON_SECRET;
     assert.ok(cronSecret, "TEST_CRON_SECRET must match the local app's CRON_SECRET");
-    const purge = await fetch(origin + "/api/cron/purge", { method: "POST", headers: { Authorization: `Bearer ${cronSecret}` } });
+    const purgeUrl = origin + "/api/cron/purge";
+    const unauthorized = await fetch(purgeUrl);
+    assert.equal(unauthorized.status, 404);
+    const head = await fetch(purgeUrl, { method: "HEAD", headers: { Authorization: `Bearer ${cronSecret}` } });
+    assert.equal(head.status, 405);
+    assert.match(head.headers.get("cache-control"), /no-store/);
+    // Denied GET and HEAD must leave the staged object for the authorized cleanup.
+    assert.equal((await worker.storage.from("artist-material-staging").download(image.stagingKey)).error, null);
+    const purge = await fetch(purgeUrl, { headers: { Authorization: `Bearer ${cronSecret}` } });
     assert.equal(purge.status, 200);
+    assert.match(purge.headers.get("cache-control"), /no-store/);
     assert.ok((await purge.json()).data.materials.completed >= 1);
     assert.ok((await worker.storage.from("artist-material-staging").download(image.stagingKey)).error);
     const row = await worker.from("materials").select("cleanup_pending").eq("id", image.id).single();
