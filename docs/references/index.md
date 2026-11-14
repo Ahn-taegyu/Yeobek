@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [현재 구조·Numa·Bivia 비교 계획 요청](user-articul8-comparison.md) — SRC-062, 문서 처리와 자체 LLM 분리 및 세 방식의 비교 계획.
+
 - [답변 시 자동 TTS와 작품 지칭·게시 정책](user-visitor-tts-publication-policy.md) — SRC-055, 글 우선 게시·질문의 작품 선택·다음 게시 번호 적용.
 - [병렬 백엔드 A 작가 흐름 목표](user-backend-author-parallel-plan.md) — SRC-054, 담당 경계와 인계 조건.
 

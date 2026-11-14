@@ -1,5 +1,7 @@
 # 기술 선택 재검토
 
+- [현재 구조·Numa·Bivia 비교 계획](../product/articul8-comparison-plan.md) — 문서 준비와 검색 효과를 분리하는 실험 설계, API 지원·무료 한도 미확인 항목. 실측·채택 전.
+
 - [작가 참고 파일 읽기](material-reader.md) — 로컬 PDF·Liner 파일 입력·W2 검수와 비용 경계. 실제 호출0회.
 
 - [W9 이메일 가입·직접 로그인 경계](signup-auth-contract.md) — 서버 전용 가입, 최초 요청 연결, OTP/비밀번호 세션 구별과 로컬 검증.

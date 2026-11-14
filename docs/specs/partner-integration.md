@@ -12,6 +12,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: articul8-comparison
+  resource: /references/user-articul8-comparison.md
+  title: 현재 구조·Numa·Bivia 비교 계획 요청
 - id: partner-priority
   resource: /decisions/D-015-partner-priority.md
   title: 성능을 유지하는 파트너 API 우선
@@ -59,3 +62,9 @@ decision_status: proposed
 # 운영 자동화와 다른 도구
 
 스티비·채널톡·Alt는 W8의 안내 발송·문의 응대·전사 가져오기 범위다. 정책과 수신 동의, 승인 및 외부 전송 최소화를 지킨다. EXAONE은 비교 후보이며 Bivia와 VAPI는 채택하지 않았다. 파트너 접근과 외부 발송의 실제 동작은 키와 공식 계약 확인 후 검증한다.
+
+# Numa·Bivia 비교 제안
+
+[P-006](../product/articul8-comparison-plan.md)은 현재 구조, Numa 문서 처리·그래프 회수, Bivia의 승인 근거 재정렬을 같은 답변 LLM으로 비교한다. Numa 전처리(B0)와 실시간 검색(B1)은 별도 결과로 기록한다. 고객용 ingest·그래프 API와 내부 팀용 검색·블록 API의 지원 범위를 구별하고, 인증된 서버 호출·필터·무료 한도를 확인하기 전에는 연동 완료로 표시하지 않는다.
+
+승인·게시·철회와 근거 권한은 여백이 유지한다. 이 계획은 Bivia나 Numa의 도입 결정, 유료 호출 또는 운영 전환을 승인한 것이 아니다.
