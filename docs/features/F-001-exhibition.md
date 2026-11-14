@@ -34,6 +34,9 @@ sources:
 - id: answers
   resource: /references/user-answers.md
   title: 2026-11-12 사용자 범위·팀·일정 확인
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 ---
 
 # 목적과 첫 범위

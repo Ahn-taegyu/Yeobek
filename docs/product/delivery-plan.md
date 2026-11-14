@@ -36,6 +36,9 @@ sources:
 - id: direction
   resource: /references/user-build-direction.md
   title: 사용자 사전 개발·키 확인과 기술 선택 위임
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 decision_status: proposed
 ---
 
@@ -67,6 +70,8 @@ decision_status: proposed
 | 3. 검수·게시 | 4시간 | 해설 생성 계약, 공개 근거 선택·수정·승인, 승인본 TTS, 게시/중지·QR | 새 입력으로 기본 해설을 실제 음성까지 준비하고 게시. 새 초안이 기존 공개본에 섞이지 않음 |
 | 4. 제품 검색·Liner | 4시간 | 현재 작품의 승인 근거 조회, OpenAI Q&A/인용 검증, Liner 초안 연결 | 근거 있는/없는 질문·작품 전환을 확인하고 Liner로 새 초안 생성 성공 |
 | 5. 검증·수정·시연 | 7~11시간 | 모드/오류·권한·휴대폰·두 번째 전시·리허설 | 필수 수용 기준 통과, 배포 주소·QR·발표 자료·백업 준비 |
+
+2단계의 작가 로그인은 기존 사전 생성 계정 기준으로 구현됐다. [D-016](../decisions/D-016-artist-auth.md)의 로그인·가입 선택과 직접 가입은 [사용자 결정](../references/user-auth-signup-timing.md)에 따라 마감 전 범위에 추가됐다. 위 예상 시간에는 포함되지 않았으므로 별도 작업 시간과 담당을 배정한다. 이메일 확인·비밀번호 정책(기능명세 Q-09)은 구현 착수 전에 정한다.
 
 실제 음성 시험을 첫 단계에 배치한다. 단일 채팅·글/음성 분리는 앱 전체에 영향을 주므로 마지막에 추가하지 않는다. STT와 TTS만 확인해도 근거 기반 Q&A 품질이나 Liner 초안 생성이 검증됐다는 뜻은 아니다.
 

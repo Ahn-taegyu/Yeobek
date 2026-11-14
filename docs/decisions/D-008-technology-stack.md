@@ -22,6 +22,9 @@ sources:
 - id: official
   resource: /references/stack-references.md
   title: 공식 기술 문서
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 decision_status: accepted
 decision_basis: delegated-selection
 review_status: under-review
