@@ -11,6 +11,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-14T15:00:00+09:00'
 sources:
+- id: qa-contract
+  resource: /specs/api-contract.md
+  title: W11 작가 검수 HTTP 계약
 - id: screens
   resource: /specs/screen-spec.md
   title: 화면 명세
@@ -126,9 +129,46 @@ const { data: reply } = await requestApi("chat", { body: {
 
 STT는 `requestApi("transcribe", {body:{requestId,exhibitionId,file}})`의 multipart 요청이다. `transcript`를 입력창에 넣고 사용자가 확인 후 chat을 보낸다. `overLimit:true`이면 편집을 요구한다. `speech`는 `{requestId,answerId}`로 같은 관람 세션의 저장 답변만 낭독한다. 임의 텍스트 TTS가 아니다. 음소거는 speech 호출·재생을 막으며 기존 inputMode/outputMode 의미를 바꾸지 않는다. `getMedia`는 `{params:{id},query:{kind:"image" 또는 "audio"}}`를 받아 Blob을 반환한다. 생성한 Object URL은 사용 후 해제한다.
 
-# 예상 Q&A·미리보기·지시문 수정 — 예정(W11, A 담당)
+# 예상 Q&A·미리보기·지시문 수정 — W11, A 담당
 
-main `de06460`에는 이 API·플래그가 없다. A의 W11 PR 병합 뒤 실제 경로·스키마·오류·기능 플래그를 이 절에 추가한다. 기본 작품 소개의 직접 편집과 Q&A 지시문 재작성은 구분하고 생성·평가를 승인/게시로 표시하지 않는다. 학습 진행·Q&A 목록도 임의 경로를 만들지 않는다.
+PR #18의 구현 계약이다. 병합 전에는 배포된 main에서 호출 가능하다고 가정하지 않는다. 전체 경로는 [W11 API 계약](api-contract.md#w11-예상-qa미리보기전시-일괄-생성), 요청·응답 타입은 `contracts/qa.ts`와 `routes.ts`를 따른다. 인증 쿠키와 같은 출처가 필요하고 다른 작가 자료는404다.
+
+`FEATURE_EXPECTED_QA`, `FEATURE_EXHIBITION_QA`, `FEATURE_PREVIEW_CHAT`, `FEATURE_QA_REWRITE`는 기본false다. Expected QA·일괄 생성은 expectedQa, 전시 범위 생성은 추가exhibitionQa, 미리보기는previewChat, 재작성은expectedQa+qaRewrite가 필요하다. 플래그off는404이며 임의로 다른 API로 우회하지 않는다.
+
+| 화면/동작 | requestApi 이름·입력·처리 |
+| --- | --- |
+| 학습·FAQ 생성 | `generateExpectedQa`: params.id=전시, body={requestId,artworkId,expectedRevision,expectedDocumentRevision}. artworkId:null=전시. 최초201, 같은 요청200; 작품최대3/전시최대5 |
+| 진행·재시도 | `getExpectedQaJob`, `retryExpectedQaJob`: params.id=jobId, retry body={requestId,expectedAttempt}. 조회/네트워크 재전송은 AI를 다시 부르지 않음 |
+| FAQ 목록 | `listQaItems`: params.id=전시, query.artworkId=작품(생략하면 전시만). 버전 이력이 함께 반환되므로 같은id의 최신version을 기본 목록에 표시 |
+| 검수 | `approveQaItem`: expectedVersion/evidencePins, `withdrawQaItem`: expectedVersion. 미승인=draft, 승인=approved, 철회=withdrawn |
+| 미리보기 | `previewChat`: 전시params.id와 body={requestId,artworkId,question}. 개별 질문 단위, 이전 대화 자동 전달 안 함. `getPreviewAnswer`로 재조회 |
+| 정확/수정필요 | `evaluatePreviewAnswer`: params.id=답변jobId, body={requestId,rating:"accurate" 또는 "needs_revision"}. 횟수 제한을 검수 완료 조건으로 쓰지 않으며 승인/게시가 아님 |
+| 사실 정정 | `createQaCorrectionEvidence`: {requestId,targetKind:"preview" 또는 "qa",targetId,targetVersion,sourceLabel,sourceBody}. targetVersion은QA만 버전, preview는null. 결과는draft 근거 |
+| 근거 승인 | `approveEvidence`: params.id=근거, body={version}. 후보 citations의 정확한 body/출처에 대응하는 근거를 명시적으로 검수·승인 |
+| 재작성 | `rewriteQa`: 정정 대상 필드+instruction+evidencePins. 생성/독립검증 뒤 새draft. `getQaRewrite`와 `retryQaRewrite`로 상태/재시도 |
+
+새 사실은 정정 근거초안→승인→재작성→QA검수 순서다. 단순 말투 변경도 기존 승인근거 pin을 고른다. 원자료 section을 인용한 후보를 승인하려면 citation의 body, sourceDocumentId, sectionId, version으로 기존 `upsertEvidence`/`upsertExhibitionEvidence`에서 문서 근거를 만든 뒤 승인한다. 비공개 원문 전체를 공개 근거로 자동 복사하지 않는다. `gap` 대상은 제외되어400이며 관람 질문을 이 화면의 저장 질문으로 복사하지 않는다.
+
+```ts
+const { data: job } = await requestApi("generateExpectedQa", {
+  params: { id: exhibition.id },
+  body: { requestId: crypto.randomUUID(), artworkId: artwork.id,
+    expectedRevision: artwork.revision, expectedDocumentRevision: artwork.document.revision },
+});
+// job.status: running/succeeded/abstained/failed/cancelled
+// succeeded.result: {itemIds, mock}; EVIDENCE_REQUIRED는 자료를 보완하도록 안내
+const { data: preview } = await requestApi("previewChat", {
+  params: { id: exhibition.id },
+  body: { requestId: crypto.randomUUID(), artworkId: artwork.id, question: "파란색을 쓴 이유가 있나요?" },
+});
+// preview.result: {answer,citations,mock} 또는 null. 평가/재작성에는 preview.id 사용.
+```
+
+HTTP200/201도 job.status가failed/abstained일 수 있다. `resultCode`를 확인하고 `EVIDENCE_REQUIRED`는 원자료 보완, `AI_INVALID_CONTEXT`·`REVISION_CONFLICT`는 최신 자료 재조회/새 생성, `REQUEST_TIMEOUT`은 명시적 재시도로 연결한다. HTTP409는 revision/요청ID/attempt 충돌이며 같은입력 재전송에 UUID를 바꾸지 않는다. HTTP429는한도,401은로그인,404는없는자료/권한/비활성,400은입력/근거문제다. 응답본문/질문/파일을 콘솔·분석로그에 남기지 않는다.
+
+## 전시 일괄 학습
+
+이미 구현된 묶음은 유지하며 기본off다. `createTrainingBatch`({requestId,expectedRevision})는 목록만 저장하고 `getTrainingBatch`는 모델을 실행하지 않는다. 프런트는 `runTrainingTarget`에 params={id:batchId,targetId}, body={requestId,expectedAttempt:0}을 한 건씩 보낸다. 재시도는 실제target.attempt를 기준으로 하며 성공 후 같은 요청은재실행하지 않는다. 배치가completed라도 자식실패를 확인한다. 원문 변경409면 최신 전시로 새배치를 만든다. 기본해설 결과의 적용/승인은 기존 원고 화면에서 별도로 한다.
 
 # 파일 읽기 — 예정(A 담당)
 

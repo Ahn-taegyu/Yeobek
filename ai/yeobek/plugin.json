@@ -1,10 +1,45 @@
 {
   "id": "yeobek",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "instructions": "instructions.md",
   "messages": "messages.json",
-  "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply"],
+  "skills": ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa"],
   "playbooks": {
+    "artist-preview": {
+      "skills": ["author-qa"],
+      "tools": ["preview.reserve", "preview.complete"],
+      "steps": [
+        { "id": "job.reserve", "tool": "preview.reserve" },
+        { "id": "context.validate" },
+        { "id": "model.generate" },
+        { "id": "output.validate" },
+        { "id": "job.complete", "tool": "preview.complete" }
+      ]
+    },
+    "artist-qa-rewrite": {
+      "skills": ["author-qa"],
+      "tools": ["rewrite.reserve", "rewrite.complete"],
+      "steps": [
+        { "id": "job.reserve", "tool": "rewrite.reserve" },
+        { "id": "context.validate" },
+        { "id": "model.generate" },
+        { "id": "output.validate" },
+        { "id": "model.judge" },
+        { "id": "judge.validate" },
+        { "id": "job.complete", "tool": "rewrite.complete" }
+      ]
+    },
+    "expected-qa-draft": {
+      "skills": ["author-qa"],
+      "tools": ["qa.reserve", "qa.complete"],
+      "steps": [
+        { "id": "job.reserve", "tool": "qa.reserve" },
+        { "id": "context.validate" },
+        { "id": "model.generate" },
+        { "id": "output.validate" },
+        { "id": "job.complete", "tool": "qa.complete" }
+      ]
+    },
     "ops-support-reply": {
       "skills": ["support-reply"],
       "tools": ["support.read"],
