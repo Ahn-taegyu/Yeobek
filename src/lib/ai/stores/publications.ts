@@ -1,4 +1,5 @@
 import "server-only";
+import { z } from "zod";
 import { rpc, type DbClient } from "../../api/db";
 import { assertNotCancelled } from "../context";
 import type { PublicationStore } from "../contracts";
@@ -6,6 +7,14 @@ import type { PublicationStore } from "../contracts";
 /** Service RPCs enforce current public state and cross-exhibition revocation. */
 export function createPublicationStore(worker: DbClient): PublicationStore {
   return {
+    async listLabels(exhibitionId, signal) {
+      assertNotCancelled(signal);
+      const result = await rpc(worker, "get_public_exhibition", { p_id: exhibitionId });
+      assertNotCancelled(signal);
+      if (result === null) return [];
+      return z.object({ artworks: z.array(z.object({ id: z.uuid(), title: z.string(), number: z.number().int() })) })
+        .parse(result).artworks;
+    },
     async load(selector, signal) {
       assertNotCancelled(signal);
       const result = await rpc(worker, "load_publication_context", {

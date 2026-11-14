@@ -6,7 +6,7 @@ import { z } from "zod";
 const root = new URL("../ai/yeobek/", import.meta.url);
 const target = new URL("../src/lib/ai/plugin.generated.ts", import.meta.url);
 const names = ["retrieve-wiki", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa"];
-const tools = ["support.read", "status.read", "voice.read", "voice.store", "voice.reserve", "voice.complete", "audio.read", "audio.store", "request.reserve", "answer.store", "gap.record", "job.reserve", "job.complete", "publication.read", "publication.recheck", "author.read", "proposal.store", "proposal.read", "proposal.apply", "qa.reserve", "qa.complete", "preview.reserve", "preview.complete", "rewrite.reserve", "rewrite.complete"];
+const tools = ["support.read", "status.read", "voice.read", "voice.store", "voice.reserve", "voice.complete", "audio.read", "audio.store", "request.reserve", "answer.store", "gap.record", "job.reserve", "job.complete", "publication.list", "publication.read", "publication.recheck", "author.read", "proposal.store", "proposal.read", "proposal.apply", "qa.reserve", "qa.complete", "preview.reserve", "preview.complete", "rewrite.reserve", "rewrite.complete"];
 const step = z.strictObject({
   id: z.string().regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$/),
   tool: z.enum(tools).optional(),
@@ -25,7 +25,7 @@ export function validateManifest(input) {
   const manifest = schema.parse(input);
   if (new Set(manifest.skills).size !== names.length) throw new Error("Duplicate plugin skill");
   const capabilities = { "ops-support-reply": ["support.read"], "ops-notify": ["status.read"],
-    "visitor-transcribe": ["voice.reserve", "voice.complete"], "visitor-speech": ["voice.read", "voice.store", "voice.reserve", "voice.complete"], "narration-audio": ["job.reserve", "audio.read", "audio.store", "job.complete"], "visitor-answer": ["request.reserve", "answer.store", "gap.record", "publication.read", "publication.recheck"], "narration-draft": ["author.read", "job.reserve", "job.complete"], "narration-evaluate": ["author.read"],
+    "visitor-transcribe": ["voice.reserve", "voice.complete"], "visitor-speech": ["voice.read", "voice.store", "voice.reserve", "voice.complete"], "narration-audio": ["job.reserve", "audio.read", "audio.store", "job.complete"], "visitor-answer": ["request.reserve", "answer.store", "gap.record", "publication.list", "publication.read", "publication.recheck"], "narration-draft": ["author.read", "job.reserve", "job.complete"], "narration-evaluate": ["author.read"],
     "artist-organize": ["author.read", "proposal.store", "job.reserve", "job.complete"], "artist-apply": ["author.read", "proposal.read", "proposal.apply"],
     "expected-qa-draft": ["qa.reserve", "qa.complete"], "artist-preview": ["preview.reserve", "preview.complete"],
     "artist-qa-rewrite": ["rewrite.reserve", "rewrite.complete"] };

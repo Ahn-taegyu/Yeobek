@@ -34,7 +34,7 @@ function artistSetup() {
 }
 describe("product plugin boundaries", () => {
   it("selects only skills for the declared server task", () => {
-    expect(PLUGIN_VERSION).toMatch(/^yeobek@0\.12\.0:[a-f0-9]{12}$/);
+    expect(PLUGIN_VERSION).toMatch(/^yeobek@0\.13\.0:[a-f0-9]{12}$/);
     expect(playbookPrompt("visitor-answer")).toContain("차분한 존댓말");
     expect(playbookPrompt("visitor-answer")).not.toContain("출력은 sections 배열");
     expect(playbookPrompt("artist-organize")).not.toContain("기본 말투는 차분한 존댓말");

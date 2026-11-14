@@ -143,6 +143,13 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
     }
   });
 
+  await t.test("an explicit public title selects the answer and image target", async () => {
+    const reply = await visitor("/api/chat", payload({ artworkId: null, question: "푸른 달은 어떤 재료인가요?" }));
+    assert.equal(reply.outcome, "answered");
+    assert.equal(reply.publication.artworkId, artwork.id);
+    assert.deepEqual(reply.image, { id: reply.publication.publicationId, kind: "image" });
+  });
+
   if (!disabledOnly) await t.test("missing evidence records one gap, with owner-only access and replay", async () => {
     const reply = await visitor("/api/chat", insufficient);
     assert.equal(reply.outcome, "insufficient_evidence");

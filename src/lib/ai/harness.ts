@@ -1,4 +1,5 @@
 import "server-only";
+import { mentionedArtworks } from "./artwork-mentions";
 import { z } from "zod";
 import { answerJsonSchema, answerSchema, narrationDraftSchema, chatRequestSchema, type DocentReply, type ModelAnswer, type NarrationDraft, type PublicationContext,
   type ArtworkSelector, type PublicationRef, type PublicationStore, type SpeechSourceStore } from "./contracts";
@@ -69,14 +70,19 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
           } else flow.skip("gap.record", "gap_not_applicable");
           return { ...reply, steps: flow.finish() };
         };
-        const resolved = await flow.step("intent.resolve", () => {
+        const resolved = await flow.step("intent.resolve", async () => {
           assertNotCancelled(signal);
           const intent = resolveIntent({ question: request.question, intent: explicitIntent });
           const { numbers, invalid } = mentionedNumbers(request.question);
-          const ambiguous = invalid || numbers.length > 1 ||
+          const titles = caps["publication.list"] ? mentionedArtworks(request.question,
+            await caps["publication.list"](request.exhibitionId, signal)) : { matches: [], explicitUnknown: false };
+          const named = titles.matches.length === 1 ? titles.matches[0] : undefined;
+          const ambiguous = invalid || numbers.length > 1 || titles.matches.length > 1 || titles.explicitUnknown ||
+            (named !== undefined && (request.artworkNumber ?? numbers[0]) !== undefined && named.number !== (request.artworkNumber ?? numbers[0])) ||
             (request.artworkNumber !== undefined && numbers.length === 1 && numbers[0] !== request.artworkNumber);
           const number = request.artworkNumber ?? numbers[0];
           const selector: ArtworkSelector | null = ambiguous ? null : number !== undefined ? { exhibitionId: request.exhibitionId, number }
+            : named ? { exhibitionId: request.exhibitionId, artworkId: named.id }
             : request.artworkId ? { exhibitionId: request.exhibitionId, artworkId: request.artworkId }
             : deps.exhibitionScopeChat && intent === "question" ? { exhibitionId: request.exhibitionId, artworkId: null } : null;
           return { intent, selector, message: ambiguous ? DOCENT_COPY.chooseOne : DOCENT_COPY.chooseArtwork };

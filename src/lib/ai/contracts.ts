@@ -72,9 +72,11 @@ export type ArtworkSelector = { exhibitionId: string } & ({ artworkId: string | 
  * The publisher must persist approved citation IDs and validate each pinned
  * source's ownership/version/hash. The current SQL JSON-array check is not this
  * contract; never invent narration citations by citing every evidence row.
- * No production DB adapter exists until the approval/publication workflow lands.
+ * The database adapter reads current public labels and approved snapshots only.
  */
+export type PublicArtworkLabel = { id: string; title: string; number: number };
 export interface PublicationStore {
+  listLabels?(exhibitionId: string, signal?: AbortSignal): Promise<PublicArtworkLabel[]>;
   load(selector: ArtworkSelector, signal?: AbortSignal): Promise<unknown | null>;
   isCurrent(ref: PublicationRef, signal?: AbortSignal): Promise<boolean>;
 }
