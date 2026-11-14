@@ -13,6 +13,12 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: v3-scope
+  resource: /references/user-v3-decisions.md
+  title: v3 온보딩·입력·화면 범위 결정
+- id: v3-review
+  resource: /references/user-v3-review-decisions.md
+  title: v3 검수·미리보기·운영 게시 결정
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -41,7 +47,7 @@ sources:
 
 # 현재 기준
 
-**공통 도슨트부터 개발한다. 첫 인식은 QR·숫자이며 NFC·위치는 후속 검토한다.** 사용자 추가 응답으로 확인된 결정이다.[^answers]
+**공통 도슨트부터 개발한다. 공개 전시 주소로 진입하고 작품 번호와 목록으로 작품을 고른다.** 이전 QR·숫자 결정의 QR 제작은 v3에서 보류한다. NFC·위치는 후속 검토한다.[^answers] [v3 범위 결정](../references/user-v3-decisions.md).
 
 **11/13 추가 확정: 사업안은 1번(도슨트 공급 회사의 1인 운영)이다.** 개발 순서와 아래 우선순위 표는 바뀌지 않으며 운영 자동화의 세부 범위는 제안이다. [D-014](../decisions/D-014-business-scope-supply.md).
 
@@ -64,7 +70,7 @@ sources:
 | [F-005](../features/F-005-audio.md) | 해설·채팅 답변 음성 출력 | P1 | MVP | F-003 |
 | [F-006](../features/F-006-qa.md) | 승인 자료 기반 AI 질의응답 | P1 | MVP | F-022 |
 | [F-007](../features/F-007-number-label.md) | 숫자 라벨로 작품 선택 | P1 | MVP | F-022 |
-| [F-008](../features/F-008-qr.md) | 전시 QR 배포 | P1 | MVP | F-022 |
+| [F-008](../features/F-008-qr.md) | 전시 QR 배포 | P1 | Hold | F-022 |
 | [F-009](../features/F-009-nfc.md) | NFC 태그로 작품 선택 | P1 | Later | F-008 |
 | [F-010](../features/F-010-location.md) | 위치 기반 작품 선택 | P1 | Hold | F-011, F-017 |
 | [F-011](../features/F-011-artwork-list.md) | 관람객 작품 목록·정보 | P1 | MVP | F-022 |
@@ -85,13 +91,13 @@ prerequisite는 최초 목록에 독립 이름이 없지만 필요한 전시/권
 
 # 첫 MVP의 완료 경로
 
-작가 홈 → 전시 기본 필수 정보와 선택 작품 세계 → 작품·자료 → 기본 해설과 예상 Q&A → 검수·승인 → 전시 공개 → 전시 QR과 번호 라벨 → 전시 소개 → 글·음성 질문과 글 답변·TTS.
+작가 홈 → 전시 기본 필수 정보와 선택 작품 세계 → 작품·자료 → 기본 해설과 예상 Q&A → 검수·승인 → 전시 공개 → 공개 전시 주소 → 전시 소개 → 글·음성 질문과 글 답변·TTS.
 
 음성 입력을 제외하거나 음성 입력을 항상 음성 출력으로 묶은 구현은 이번 요구를 충족하지 못한다. 실제 구현 순서는 [개발 계획](delivery-plan.md), 화면/상태/실패 조건은 [기능명세](../specs/functional-spec.md)와 [통합 채팅](../specs/chat-interaction.md)을 따른다.
 
 # 범위를 줄이는 이유
 
-- QR·숫자는 사용자가 확정했다. NFC·위치는 최초 P1 이력을 남긴 채 첫 MVP에서 제외한다.
+- 작품 번호 접근은 유지한다. QR 제작과 별도 도슨트 화면 후보는 v3에서 MVP 범위에서 제외했다. NFC·위치는 최초 P1 이력을 남긴 채 첫 MVP에서 제외한다. [v3 범위 결정](../references/user-v3-decisions.md).
 - AI 인터뷰는 최신 사용자 P2를 따른다. 정적 입력 안내는 가능하나 대화형 인터뷰를 조용히 P1로 올리지 않는다.
 - 그룹 관람·데이터 수집도 P2다. 동시 재생 서버나 분석 대시보드가 첫 공개의 선행 조건이 아니다.
 - 작가 AI 인터뷰 P2와 관람객 음성 입력 MVP는 다른 기능이다. 이미지 부분 선택·카메라는 [D-007](../decisions/D-007-visual-reference.md)에서 사용자가 후순위로 확정했다.

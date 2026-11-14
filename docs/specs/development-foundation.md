@@ -13,6 +13,15 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: v3-answers
+  resource: /references/user-v3-decisions.md
+  title: v3 범위와 Vercel Hobby 답변
+- id: review-answers
+  resource: /references/user-v3-review-decisions.md
+  title: 해설 수정·검수 화면·모의 게시 정책
+- id: v3
+  resource: /references/user-backend-plan-v3.md
+  title: 백엔드 v3 화면·리스크 보강
 - id: v2
   resource: /references/user-backend-plan-v2.md
   title: 백엔드 완성 계획 v2
@@ -173,6 +182,16 @@ Sol의 SQL·HTTP 테스트를 부모가 읽고 직접 실행했으며 별도 Sol
 
 # v2 이행 기준 (D0)
 
-[작업 추적](backend-completion.md)의 D0 → W10 → W9 → W11 → W12 순서를 적용한다. 기존 W8 진행 안내·채널톡 문의는 PR #11 (`2d7bea1`)로 최신 App/Knowledge CI 성공 후 병합됐으며 실제 외부 호출과 물리 보존 삭제 등 잔여는 미검증이다. 기존의 CI 대기 표현은 당시 기록이다. W2 후보·이력은 Draft PR #13에만 보존되어 main 계약으로 제공하지 않는다.
+이 절은 v2 D0 당시 기록이다. 현재는 [작업 추적](backend-completion.md)의 D0 완료 → W13 → W10 → W9 → W11 → W12 순서를 적용한다. 기존 W8 진행 안내·채널톡 문의는 PR #11 (`2d7bea1`)로 최신 App/Knowledge CI 성공 후 병합됐으며 실제 외부 호출과 물리 보존 삭제 등 잔여는 미검증이다. 기존의 CI 대기 표현은 당시 기록이다. W2 후보·이력은 Draft PR #13에만 보존되어 main 계약으로 제공하지 않는다.
 
 OP-23 가입의 확정 정책은 이메일 인증 필수·비밀번호 최소 8자·확인 후 직접 로그인이다. 기존 계정 로그인에 새 가입 강도를 소급 적용하지 않는다. signup/session 경로, 확인·재발송 상세와 Supabase 연동은 W9 구현 전 공식 문서로 검증한다. 가입·미리보기·예상 Q&A·새 공개/관람 계약은 아직 미구현이며 현재 HTTP와 구분한다. D0는 새 제품 플래그를 활성화하지 않는다.
+
+
+# v3 변경분 연결
+
+v3 전환: main은 861d27a, W10 v2 입력 계약은 Draft PR #15 b950557에 보존했다. W13을 main 기준 fix/backend-security-hardening에서 먼저 진행한다. W2 PR #13 d276d9f의 App/Knowledge CI는 성공했으나 미병합이다. 직접 확인하지 않은 Figma/배포/실호출을 완료로 쓰지 않는다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md), [진행 계획](backend-completion.md)을 따른다.
+
+
+## W13 로컬 구현 경계
+
+네트워크 HMAC 한도·개인정보 플래그 기본off·3MiB/6MiB Storage 전송 제한·invalid_context 재시도 불가·전체 RPC 권한 검사·임대보다 짧은 경로 실행 시간과 Fluid 설정을 추가했다. 새 migration150000/160000은 소유 로컬 DB에 전진 적용했다. 직접 검사와 CI 상태는 [작업 추적](backend-completion.md#w13-구현검증-기록-병합-전)에 기록한다. 이 변경은 병합/배포 전이며 Vercel Hobby 배포 실제 점검과 외부 호출은 남았다.

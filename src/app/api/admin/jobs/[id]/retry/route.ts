@@ -6,7 +6,7 @@ import { retryNarration } from "@/lib/ai/author-service";
 import { retryAudio } from "@/lib/ai/audio-service";
 import { loadJob } from "@/lib/ai/stores/jobs";
 
-export const maxDuration = 180;
+export const maxDuration = 150;
 export function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   return handleApi(async () => {
     assertSameOrigin(request);

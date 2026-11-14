@@ -11,10 +11,11 @@ assert.ok(["localhost", "127.0.0.1"].includes(new URL(origin).hostname));
 
 function browser() {
   const jar = new Map();
+  const fixtureIp = "2001:db8:" + randomUUID().replaceAll("-", "").match(/.{4}/g).slice(0, 6).join(":");
   return async (path, body, { method = body === undefined ? "GET" : "POST", expected = 200, binary = false } = {}) => {
     const response = await fetch(origin + path, {
       method,
-      headers: { Origin: origin, "Content-Type": "application/json",
+      headers: { "x-forwarded-for": fixtureIp, Origin: origin, "Content-Type": "application/json",
         Cookie: [...jar].map(([key, value]) => `${key}=${value}`).join("; ") },
       body: body === undefined ? undefined : JSON.stringify(body),
     });

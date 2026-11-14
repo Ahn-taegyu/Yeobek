@@ -8642,7 +8642,7 @@ exports[`HTTP route contracts > snapshots requestUpload 1`] = `
     "additionalProperties": false,
     "properties": {
       "byteSize": {
-        "maximum": 52428800,
+        "maximum": 6291456,
         "minimum": 1,
         "type": "integer",
       },
@@ -8860,7 +8860,10 @@ exports[`HTTP route contracts > snapshots requestUpload 1`] = `
                 "additionalProperties": false,
                 "properties": {
                   "bucket": {
-                    "const": "artist-material-staging",
+                    "enum": [
+                      "artist-material-staging",
+                      "artist-material-pdf-staging",
+                    ],
                     "type": "string",
                   },
                   "expiresAt": {

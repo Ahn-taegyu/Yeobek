@@ -9,6 +9,7 @@ import { abortable, createDeadline } from "@/lib/ai/deadline";
 import { AiError } from "@/lib/ai/errors";
 import type { AbstentionReason } from "@/lib/ai/narration";
 import { normalizeAiOutcome } from "@/lib/ai/outcome";
+import { ApiError } from "@/lib/api/errors";
 import { requestJson } from "@/lib/ai/providers/http";
 
 afterEach(() => {
@@ -140,14 +141,14 @@ const abstained = (reason: AbstentionReason) => ({ status: "abstained", reason }
 describe("normalizeAiOutcome", () => {
   it.each([
     [new HarnessError("invalid_request"), 400, "INVALID_INPUT", false, "author"],
-    [new HarnessError("invalid_context"), 500, "INTERNAL_ERROR", true, "operator"],
+    [new HarnessError("invalid_context"), 500, "AI_INVALID_CONTEXT", false, "operator"],
     [new HarnessError("invalid_output"), 502, "AI_INVALID_OUTPUT", true, "operator"],
     [new HarnessError("publication_unavailable"), 404, "NOT_FOUND", false, "author"],
     [new HarnessError("answer_unavailable"), 404, "NOT_FOUND", false, "author"],
     [new HarnessError("cancelled"), 499, "REQUEST_CANCELLED", false, "none"],
     [new KnowledgeError("invalid_input"), 400, "INVALID_INPUT", false, "author"],
     [new KnowledgeError("unavailable"), 404, "NOT_FOUND", false, "author"],
-    [new KnowledgeError("invalid_context"), 500, "INTERNAL_ERROR", true, "operator"],
+    [new KnowledgeError("invalid_context"), 500, "AI_INVALID_CONTEXT", false, "operator"],
     [new KnowledgeError("invalid_output"), 502, "AI_INVALID_OUTPUT", true, "operator"],
     [new KnowledgeError("revision_conflict"), 409, "REVISION_CONFLICT", false, "author"],
     [new KnowledgeError("proposal_expired"), 410, "PROPOSAL_EXPIRED", false, "author"],
@@ -165,7 +166,7 @@ describe("normalizeAiOutcome", () => {
     [new AiError("incomplete"), 502, "AI_GENERATION_FAILED", true, "operator"],
     [abstained("invalid_request"), 400, "INVALID_INPUT", false, "author"],
     [abstained("unavailable"), 404, "NOT_FOUND", false, "author"],
-    [abstained("invalid_context"), 500, "INTERNAL_ERROR", true, "operator"],
+    [abstained("invalid_context"), 500, "AI_INVALID_CONTEXT", false, "operator"],
     [abstained("stale_context"), 409, "REVISION_CONFLICT", false, "author"],
     [abstained("insufficient_evidence"), 422, "EVIDENCE_REQUIRED", false, "author"],
     [abstained("clarify"), 422, "CONTEXT_AMBIGUOUS", false, "author"],
@@ -177,6 +178,7 @@ describe("normalizeAiOutcome", () => {
     [abstained("timeout"), 504, "REQUEST_TIMEOUT", true, "operator"],
   ] as const)("normalizes %s to %i %s", (input, status, code, retryable, routing) => {
     expect(normalizeAiOutcome(input)).toEqual({ status, code, retryable, routing });
+    expect(new ApiError(status, code, "message").retryable).toBe(retryable);
   });
 
   it("returns a safe fallback for unknown, inherited and spoofed codes", () => {

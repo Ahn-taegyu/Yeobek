@@ -13,6 +13,12 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: v3-answers
+  resource: /references/user-v3-decisions.md
+  title: v3 범위와 Vercel Hobby 답변
+- id: review-answers
+  resource: /references/user-v3-review-decisions.md
+  title: 해설 수정·검수 화면·모의 게시 정책
 - id: partner-priority
   resource: /decisions/D-015-partner-priority.md
   title: 성능을 유지하는 파트너 API 우선
@@ -57,8 +63,8 @@ decision_status: proposed
 | 음성 인식 | Liner 우선; OpenAI 비교 | 녹음 파일 전사와 한국어 품질 확인 |
 | 음성 합성 | Liner 우선; Typecast·OpenAI 비교 | 승인 해설과 확정 답변의 음성; 품질·지연 확인 |
 | 브라우저 음성 | MediaRecorder, HTML audio | 버튼 녹음·인식문 확인·재생·정지 |
-| 검증·QR | Zod, `qrcode` | 서버 입력/모델 결과 검증, URL QR 출력 |
-| 배포 | Vercel, Node runtime; 상업/팀 주안은 Pro | DB와 가까운 리전. 무료 제약이 필수이면 Netlify 대안 비교 |
+| 검증 | Zod | 서버 입력/모델 결과 검증. QR 제작은 최신 사용자 결정으로 MVP 제외 |
+| 배포 | Vercel Hobby, Node runtime, Fluid | 사용자 확정. 실제 배포·스케줄·파일 응답 크기는 W7 검증 |
 
 Next/React/Tailwind의 세부 패치 조합은 프로젝트를 생성할 때 안정 템플릿이 설치한 호환 버전을 lockfile에 고정한다. 행사 중 메이저 버전을 바꾸지 않는다. ORM·LangChain·에이전트 프레임워크·Redis·벡터 DB·작업 큐는 첫 구현에 추가하지 않는다.
 
@@ -159,4 +165,11 @@ D-011의 DB 원본·AI용 내부 위키 요구로 기존 5개 저장 단위를 7
 
 ## 작가 직접 가입 요구
 
-[D-016](../decisions/D-016-artist-auth.md)은 기존 사전 생성 계정 로그인에 더해 직접 가입을 요구한다. 가입 완료 후 직접 로그인하며 인증 제공사의 가입 세션 처리·이메일 인증과 비밀번호 정책은 구현 전에 검토한다. 기존 로그인 구현 현황은 [개발 기반](development-foundation.md)을 따른다.
+[D-016](../decisions/D-016-artist-auth.md)은 기존 사전 생성 계정 로그인에 더해 직접 가입을 요구한다. 가입·이메일 확인 후 직접 로그인, 이메일 인증 필수와 가입 비밀번호 8자 이상은 확정됐다. 인증 제공사의 세션 처리 방식·발송 설정·나머지 세션 정책은 구현 전에 검토한다. 기존 로그인 구현 현황은 [개발 기반](development-foundation.md)을 따른다.
+
+
+## Vercel Hobby 실행 조건 (W13)
+
+사용자가 [Hobby](../references/user-v3-decisions.md)를 선택했다. 저장소 vercel.json은 fluid=true를 명시한다. [공식 실행 제한](https://vercel.com/docs/functions/limitations)의 Hobby Fluid 최대300초 안에서 경로 기한을 더 짧게 설정하며 실제 배포에서 적용 여부를 W7에 확인한다. [fluid 설정](https://vercel.com/docs/project-configuration/vercel-json)은 배포 구성이고 현재 배포 완료를 뜻하지 않는다.
+
+[공식 요청 헤더](https://vercel.com/docs/headers/request-headers)에 따라 플랫폼이 덮어쓴 x-forwarded-for만 신뢰한다. 앱은 VERCEL=1에서 단일 IP를 검증해 HMAC 처리하고 운영 VISITOR_IP_HASH_SECRET을 요구한다. Vercel 이외 환경은 확인되지 않은 전달 헤더를 무시하고 공통 네트워크 한도를 쓴다. 운영 배포 전 secret을 설정해야 한다. 대형 PDF는 Supabase signed upload를 이용하며 4.5MB 초과 음성/미디어 응답과 cron 주기는 W7에서 실제 제약을 확인해야 한다.

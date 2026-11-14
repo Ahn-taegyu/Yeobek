@@ -16,10 +16,11 @@ export async function authenticatedContext() {
 export async function authenticatedDb() { return (await authenticatedContext()).db; }
 type Functions = Database["public"]["Functions"];
 export async function rpc<Name extends keyof Functions>(
-  db: DbClient, name: Name, args: Record<string, unknown>,
+  db: DbClient, name: Name, args: Record<string, unknown>, signal?: AbortSignal,
 ) {
   // HTTP schemas validate inputs; SQL validates relations and nullable arguments.
-  const { data, error } = await db.rpc(name, args as Functions[Name]["Args"]);
+  const request = db.rpc(name, args as Functions[Name]["Args"]);
+  const { data, error } = await (signal ? request.abortSignal(signal) : request);
   if (error) throw databaseError(error);
   return data;
 }
