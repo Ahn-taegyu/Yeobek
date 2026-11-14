@@ -149,9 +149,17 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
     });
   }, setError);
 
-  function select(work: Artwork) {
-    if (work.id !== selected) contextSequence.current += 1;
-    setSelected(work.id);
+  function select(work: Artwork | null) {
+    const nextId = work?.id ?? null;
+    if (nextId !== selected) {
+      contextSequence.current += 1;
+      operation.current?.abort();
+      operation.current = null;
+      stopAudio();
+      setBusy(null);
+      setError("");
+    }
+    setSelected(nextId);
     setPicker(null);
   }
 
@@ -165,6 +173,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
         question: text, contextSequence: contextSequence.current,
         inputMode: voiceDraft ? "voice" : "text", outputMode: mutedNow.current ? "text" : "voice",
       }, signal);
+      if (signal.aborted || reply.contextSequence !== contextSequence.current) return;
       setTurns(previous => [...previous, {
         question: text, reply, artwork: exhibition.artworks.find(work => work.id === reply.publication?.artworkId),
       }]);
@@ -209,6 +218,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
       {picker === "grid" && <div className={styles.search}><input aria-label="작품 검색" type="search"
         placeholder="작품 검색" value={search} onChange={event => setSearch(event.target.value)} />
         <Image src="/yeobek/visitor-search.svg" alt="" width={24} height={24} /></div>}
+      {active && <button className={styles.textButton} onClick={() => select(null)}>작품 선택 해제</button>}
       {exhibition.artworks.length === 0 && <p>공개된 작품이 아직 없어요.</p>}
       {picker === "grid" && exhibition.artworks.length > 0 && !shown.length && <p>검색 결과가 없어요.</p>}
       <ul className={picker === "grid" ? styles.grid : styles.strip}>

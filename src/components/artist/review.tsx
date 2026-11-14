@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { requestApi } from "@/lib/client";
 import { AI_LIMITS } from "@/lib/contracts/chat";
+import { section } from "@/lib/contracts/requests";
 import type { PreviewAnswer, QaRewriteJob } from "@/lib/contracts/qa";
 import { errorMessage, Field, Header, Loading, PrivateImage, useArtistLoad } from "./ui";
 
@@ -113,9 +114,64 @@ function FaqList({ load }: { load: (signal: AbortSignal) => Promise<QaItem[]> })
   const result = useArtistLoad(load);
   if (!result.data) return <Loading {...result} />;
   const items = result.data.filter(item => item.state !== "withdrawn");
-  return items.length ? items.map(item => <details key={item.id}>
-    <summary>{item.question}</summary><p>{item.answer}</p>
-  </details>) : <p>등록된 예상 질문이 없어요.</p>;
+  return items.length ? items.map(item => <FaqItem key={item.id} item={item} onChange={result.retry} />) :
+    <p>등록된 예상 질문이 없어요.</p>;
+}
+
+function FaqItem({ item, onChange }: { item: QaItem; onChange: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function approve() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const pins = [];
+      for (const citation of item.citations) {
+        const sectionId = section.shape.id.safeParse(citation.sectionId);
+        const source = citation.evidenceId ? null : citation.sourceDocumentId && sectionId.success
+          ? { kind: "document" as const, sourceDocumentId: citation.sourceDocumentId,
+            sourceSectionId: sectionId.data, sourceRevision: citation.version }
+          : null;
+        if (!source) {
+          if (!citation.evidenceId) throw new Error("Missing citation");
+          pins.push({ id: citation.evidenceId, version: citation.version });
+          continue;
+        }
+        const fields = { sourceLabel: citation.sourceLabel.slice(0, 100), body: citation.body, source };
+        const created = citation.scope === "artwork" && item.artworkId
+          ? await requestApi("upsertEvidence", { params: { id: item.artworkId }, body: { ...fields, scope: "artwork" } })
+          : await requestApi("upsertExhibitionEvidence", { params: { id: item.exhibitionId },
+            body: { ...fields, scope: citation.scope } });
+        const { data } = await requestApi("approveEvidence", {
+          params: { id: created.data.id }, body: { version: created.data.version },
+        });
+        pins.push({ id: data.id, version: data.version });
+      }
+      await requestApi("approveQaItem", { params: { id: item.id },
+        body: { expectedVersion: item.version, evidencePins: pins } });
+      onChange();
+    } catch (error) {
+      setError(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <details>
+    <summary>{item.question}</summary>
+    <p>{item.answer}</p>
+    <h3>답변 근거</h3>
+    <ul>{item.citations.map(citation => <li key={citation.id}>
+      <strong>{citation.sourceLabel}</strong><p>{citation.body}</p>
+    </li>)}</ul>
+    {item.state === "draft" && <button className="artist-action" disabled={busy} onClick={() => void approve()}>
+      {busy ? "승인 중…" : "근거와 답변 승인하기"}
+    </button>}
+    {item.state === "approved" && <p>승인됨</p>}
+    {error && <p className="error" role="alert">{error}</p>}
+  </details>;
 }
 
 export function Preview({ id, initialArtworkId }: { id: string; initialArtworkId?: string }) {
