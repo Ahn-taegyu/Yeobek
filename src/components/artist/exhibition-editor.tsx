@@ -26,19 +26,19 @@ function explain(error: unknown) {
   return error instanceof Error && error.constructor === Error ? error.message : errorMessage(error);
 }
 
-export function ExhibitionEditor({ id }: { id?: string }) {
-  if (!id) return <ExhibitionSteps initial={null} />;
-  return <ExistingExhibition key={id} id={id} />;
+export function ExhibitionEditor({ id, interviewEnabled = false }: { id?: string; interviewEnabled?: boolean }) {
+  if (!id) return <ExhibitionSteps initial={null} interviewEnabled={interviewEnabled} />;
+  return <ExistingExhibition key={id} id={id} interviewEnabled={interviewEnabled} />;
 }
 
-function ExistingExhibition({ id }: { id: string }) {
+function ExistingExhibition({ id, interviewEnabled }: { id: string; interviewEnabled: boolean }) {
   const load = useCallback((signal: AbortSignal) => loadExhibition(id, signal), [id]);
   const result = useArtistLoad(load, exhibitionKey(id));
   if (!result.data) return <><Header title="전시 정보" /><Loading {...result} /></>;
-  return <ExhibitionSteps initial={result.data} />;
+  return <ExhibitionSteps initial={result.data} interviewEnabled={interviewEnabled} />;
 }
 
-function ExhibitionSteps({ initial }: { initial: Exhibition | null }) {
+function ExhibitionSteps({ initial, interviewEnabled }: { initial: Exhibition | null; interviewEnabled: boolean }) {
   const [saved, setSaved] = useState(initial);
   const [step, setStep] = useState(() => {
     if (initial && (initial.state !== "draft" || initial.authoringStep === "artworks")) return 3;
@@ -134,12 +134,17 @@ function ExhibitionSteps({ initial }: { initial: Exhibition | null }) {
         <button className="artist-action" value="next" disabled={busy}>{busy ? "저장 중…" : "다음"}</button>
       </div>
     </form>}
-    {step === 3 && saved && <ExhibitionMaterials exhibition={saved} onChange={setSaved} onBack={() => transitionScreen(() => setStep(2))} />}
+    {saved && <nav className="artist-actions" aria-label="전시 질문과 체험">
+      <ArtistLink className="artist-action secondary" href={`/artist/exhibitions/${saved.id}/faq`}>자주하는 질문</ArtistLink>
+      <ArtistLink className="artist-action secondary" href={`/artist/exhibitions/${saved.id}/preview`}>여운 체험하기</ArtistLink>
+    </nav>}
+    {step === 3 && saved && <ExhibitionMaterials exhibition={saved} interviewEnabled={interviewEnabled}
+      onChange={setSaved} onBack={() => transitionScreen(() => setStep(2))} />}
   </>;
 }
 
-function ExhibitionMaterials({ exhibition, onChange, onBack }: {
-  exhibition: Exhibition; onChange: (value: Exhibition) => void; onBack: () => void;
+function ExhibitionMaterials({ exhibition, interviewEnabled, onChange, onBack }: {
+  exhibition: Exhibition; interviewEnabled: boolean; onChange: (value: Exhibition) => void; onBack: () => void;
 }) {
   const id = exhibition.id;
   const load = useCallback((signal: AbortSignal) => loadExhibitionMaterials(id, signal), [id]);
@@ -203,6 +208,8 @@ function ExhibitionMaterials({ exhibition, onChange, onBack }: {
       <summary>{work.draftNumber ?? work.number}. {work.draftTitle || work.title}</summary>
       <ArtworkForm exhibitionId={id} work={work} onSaved={result.retry} />
       <div className="artist-actions">
+        {interviewEnabled && <ArtistLink className="artist-action secondary"
+          href={`/artist/exhibitions/${id}/artworks/${work.id}/interview`}>작품 인터뷰</ArtistLink>}
         <button className="artist-action secondary" disabled={busy || index === 0} onClick={() => void move(index, -1)}>위로</button>
         <button className="artist-action secondary" disabled={busy || index === result.data!.works.length - 1} onClick={() => void move(index, 1)}>아래로</button>
       </div>

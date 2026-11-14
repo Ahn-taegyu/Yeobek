@@ -41,7 +41,11 @@ function useReviewData(id: string) {
 
 export function Learning({ id }: { id: string }) {
   const result = useReviewData(id);
-  const [batch, setBatch] = useState<Batch | null>(null);
+  const loadLatest = useCallback(async (signal: AbortSignal) =>
+    (await requestApi("getLatestTrainingBatch", { params: { id }, signal })).data, [id]);
+  const latest = useArtistLoad(loadLatest);
+  const [updatedBatch, setBatch] = useState<Batch | null>();
+  const batch = updatedBatch === undefined ? latest.data : updatedBatch;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const operation = useRef<AbortController | null>(null);
@@ -49,25 +53,22 @@ export function Learning({ id }: { id: string }) {
   const targetRequests = useRef(new Map<string, { requestId: string; expectedAttempt: number }>());
   useEffect(() => () => operation.current?.abort(), []);
 
-  async function run() {
-    if (!result.data || operation.current) return;
+  async function run(startNew = false) {
+    if (!result.data || batch === undefined || operation.current) return;
     const controller = new AbortController();
     operation.current = controller;
     setBusy(true);
     setError("");
     try {
-      const restart = batch?.status === "completed" &&
-        batch.targets.some(target => target.resultCode === "JOB_EXPIRED");
-      if (restart) {
-        creationId.current = null;
-        targetRequests.current.clear();
-        setBatch(null);
-      }
-      creationId.current ??= crypto.randomUUID();
+      const restart = startNew || (batch?.status === "completed" &&
+        batch.targets.some(target => target.resultCode === "JOB_EXPIRED"));
+      if (restart) targetRequests.current.clear();
       let next = batch && !restart
         ? (await requestApi("getTrainingBatch", { params: { id: batch.id }, signal: controller.signal })).data
         : (await requestApi("createTrainingBatch", { params: { id },
-          body: { requestId: creationId.current, expectedRevision: result.data.exhibition.revision }, signal: controller.signal })).data;
+          body: { requestId: creationId.current ??= crypto.randomUUID(), expectedRevision: result.data.exhibition.revision },
+          signal: controller.signal })).data;
+      if (!batch || restart) creationId.current = null;
       setBatch(next);
       const runningTarget = next.targets.find(target => target.status === "running");
       const targetIds = next.targets.map(target => target.id).filter(id => id !== runningTarget?.id);
@@ -133,11 +134,14 @@ export function Learning({ id }: { id: string }) {
       </div>
       <h2 role="status">{busy || running ? "여운이 정보를 학습하고 있어요" : "여운 학습시키기"}</h2>
       {result.data.works.length ? <>
-        {batch && <progress aria-label="학습 진행" max={batch.targets.length || 1} value={completed} />}
-        {(!batch || running || expired || batch.targets.some(canRunTarget)) && <button className="artist-action" disabled={busy} onClick={() => void run()}>
+        {batch && <progress aria-label="최근 학습 진행" max={batch.targets.length || 1} value={completed} />}
+        {batch === undefined && <Loading {...latest} />}
+        {batch !== undefined && (!batch || running || expired || batch.targets.some(canRunTarget)) && <button className="artist-action" disabled={busy} onClick={() => void run()}>
           {busy ? "학습 중…" : running ? "진행 확인" : batch ? "다시 시도" : "여운 학습시키기"}
         </button>}
         {incomplete && <p role="status">{needsMaterial ? "학습을 마치지 못했어요. 전시 자료를 확인해주세요." : "일부 학습을 마치지 못했어요. 다시 시도해주세요."}</p>}
+        {batch?.status === "completed" && !expired && <button className="artist-action secondary" disabled={busy}
+          onClick={() => void run(true)}>새로 학습시키기</button>}
         {batch && hasNarration && <ArtistLink className="artist-action" href={`${root(id)}/review?batch=${batch.id}`}
           prepare={() => import("./narration-review").then(({ prepareNarrationReview }) => prepareNarrationReview(id, result.data?.works[0]?.id))}>
           기본 해설 검토
@@ -188,6 +192,154 @@ export function Faq({ id }: { id: string }) {
 }
 
 export function Preview({ id, initialArtworkId, qaId }: { id: string; initialArtworkId?: string; qaId?: string }) {
+  return qaId ? <SavedQa key={`${id}:${initialArtworkId ?? ""}:${qaId}`} id={id} artworkId={initialArtworkId} qaId={qaId} /> :
+    <GeneralPreview id={id} initialArtworkId={initialArtworkId} />;
+}
+
+function SavedQa({ id, artworkId, qaId }: { id: string; artworkId?: string; qaId: string }) {
+  const load = useCallback(async (signal: AbortSignal) => {
+    const { data } = await requestApi("listQaItems", { params: { id }, query: artworkId ? { artworkId } : {}, signal });
+    const item = latestVisibleQaItems(data).find(value => value.id === qaId) ?? null;
+    const approvedVersions = data.filter(value => value.id === qaId && value.state === "approved")
+      .map(value => value.version);
+    if (!item || item.citations.every(c => c.evidenceId)) return { item, evidence: [], approvedVersions };
+    // The artwork review endpoint also returns exhibition and artist evidence.
+    // For exhibition questions, use a work only to read those shared scopes.
+    try {
+      const reviewId = item.artworkId ?? (await loadArtworkList(id, signal))[0]?.id;
+      if (!reviewId) return { item, evidence: [], approvedVersions };
+      const review = await requestApi("reviewArtwork", { params: { id: reviewId }, signal });
+      return { item, approvedVersions, evidence: review.data.evidence.filter(e => e.state === "approved" &&
+        (item.artworkId !== null || e.artworkId === null)) };
+    } catch (error) {
+      if (signal.aborted || error instanceof ApiClientError && error.status === 401) throw error;
+      return { item, evidence: [], approvedVersions, evidenceLoadFailed: true };
+    }
+  }, [id, artworkId, qaId]);
+  const result = useArtistLoad(load);
+  const [instruction, setInstruction] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [correction, setCorrection] = useState<{ id: string; version: number; approved: boolean }>();
+  const pendingCorrection = useRef<{ key: string; requestId: string } | null>(null);
+  const pendingRewrite = useRef<{ key: string; requestId: string } | null>(null);
+  const item = result.data?.item;
+  const evidence = result.data?.evidence ?? [];
+  const matches = item?.citations.map(c => {
+    const direct = c.evidenceId ? { id: c.evidenceId, version: c.version } : undefined;
+    const matching = evidence.find(e => e.contentHash === c.bodyHash && e.scope === c.scope &&
+      (c.evidenceId === e.id && c.version === e.version || e.source.kind === "document" &&
+       c.sourceDocumentId === e.source.sourceDocumentId && c.sectionId === e.source.sourceSectionId &&
+       c.version === e.source.sourceRevision));
+    return matching ? { id: matching.id, version: matching.version } : direct;
+  }) ?? [];
+  const pins = [...new Map(matches.flatMap(pin => pin ? [[pin.id, pin] as const] : [])).values()];
+  const rewritePins = correction?.approved ? [...pins.slice(0, AI_LIMITS.evidenceCount - 1),
+    { id: correction.id, version: correction.version }] : pins;
+  const completePins = !!item && matches.every(Boolean) && pins.length === item.citations.length;
+
+  async function act(fn: () => Promise<void>) {
+    if (busy) return;
+    setBusy(true); setError(""); setNotice("");
+    try { await fn(); } catch (error) { setError(errorMessage(error)); }
+    finally { setBusy(false); }
+  }
+  function refresh() { forgetArtistPage(faqKey(id)); result.retry(); }
+  function rewrite(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!item || !rewritePins.length || !instruction.trim()) return;
+    void act(async () => {
+      const key = JSON.stringify([item.id, item.version, instruction.trim(), rewritePins]);
+      if (pendingRewrite.current?.key !== key) pendingRewrite.current = { key, requestId: crypto.randomUUID() };
+      const { data } = await requestApi("rewriteQa", { body: { targetKind: "qa", targetId: item.id,
+        targetVersion: item.version, requestId: pendingRewrite.current.requestId, instruction: instruction.trim(), evidencePins: rewritePins } });
+      if (data.status === "succeeded") { pendingRewrite.current = null; setCorrection(undefined); setInstruction(""); setNotice("새 답변 초안을 만들었어요. 검토 후 사용해주세요."); refresh(); }
+      else {
+        if (data.status !== "running") pendingRewrite.current = null;
+        setNotice(data.status === "running" ? "답변을 준비 중이에요. 잠시 후 다시 확인해주세요." : `답변을 만들지 못했어요: ${statuses[data.status]}`);
+      }
+    });
+  }
+  function saveCorrection(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!item || correction) return;
+    const form = new FormData(event.currentTarget);
+    const sourceLabel = String(form.get("sourceLabel") ?? "").trim();
+    const sourceBody = String(form.get("sourceBody") ?? "").trim();
+    if (!sourceLabel || !sourceBody) return;
+    void act(async () => {
+      const key = JSON.stringify([item.id, item.version, sourceLabel, sourceBody]);
+      if (pendingCorrection.current?.key !== key) pendingCorrection.current = { key, requestId: crypto.randomUUID() };
+      const { data } = await requestApi("createQaCorrectionEvidence", { body: { targetKind: "qa", targetId: item.id,
+        targetVersion: item.version, requestId: pendingCorrection.current.requestId, sourceLabel, sourceBody } });
+      setCorrection({ id: data.id, version: data.version, approved: data.state === "approved" });
+    });
+  }
+  function approveCorrection() {
+    if (!correction) return;
+    void act(async () => {
+      const { data } = await requestApi("approveEvidence", { params: { id: correction.id }, body: { version: correction.version } });
+      setCorrection({ id: data.id, version: data.version, approved: data.state === "approved" });
+    });
+  }
+  function decide(action: "approve" | "withdraw") {
+    if (!item) return;
+    void act(async () => {
+      if (action === "approve") await requestApi("approveQaItem", { params: { id: item.id }, body: { expectedVersion: item.version, evidencePins: pins } });
+      else {
+        const versions = new Set([...(result.data?.approvedVersions ?? []), item.version]);
+        // Withdraw older approved answers first so a failed request leaves the current item available to retry.
+        for (const version of versions) {
+          await requestApi("withdrawQaItem", { params: { id: item.id }, body: { expectedVersion: version } });
+        }
+      }
+      setNotice(action === "approve" ? "답변을 승인했어요. 공개 반영은 게시 과정에서 이루어져요." : "확인한 답변 버전의 사용을 중지했어요.");
+      refresh();
+    });
+  }
+  return <>
+    <Header title="예상 질문 검토" back={`${root(id)}/faq`} />
+    {!result.data ? <Loading {...result} /> : !item ? <p>질문을 찾을 수 없거나 사용이 중지되었어요.</p> :
+      <section className="artist-preview yeobek-appear">
+        <p className="artist-question">{item.question}</p><p>{item.answer}</p>
+        <p>상태: {item.state === "approved" ? "사용 승인" : "검토 중"} · 버전 {item.version}</p>
+        <ul className="artist-workflow-list">{item.citations.map((citation, index) =>
+          <li key={citation.id}>
+            <strong>{citation.sourceLabel}</strong>
+            <p className="artist-note">{matches[index] ? "연결된 근거 · 현재 승인 상태 확인 필요" : "승인 근거 확인 필요"}</p>
+            <details><summary>근거 보기</summary><p className="artist-workflow-text">{citation.body}</p></details>
+          </li>)}</ul>
+        <details>
+          <summary>새 사실을 근거로 추가</summary>
+          {!correction ? <form onSubmit={saveCorrection}>
+            <Field label="근거 이름"><input name="sourceLabel" maxLength={100} required disabled={busy} /></Field>
+            <Field label="추가할 근거"><textarea name="sourceBody" maxLength={2000} required disabled={busy} /></Field>
+            <button className="artist-action secondary" disabled={busy}>근거 초안 저장</button>
+          </form> : correction.approved ? <p role="status">승인한 근거를 재작성에 사용할 수 있어요.</p> :
+            <button className="artist-action secondary" disabled={busy} onClick={approveCorrection}>추가한 근거 승인</button>}
+        </details>
+        <form onSubmit={rewrite} aria-busy={busy}>
+          <Field label="수정할 내용·추가 정보"><textarea value={instruction} onChange={event => setInstruction(event.target.value)}
+            maxLength={2000} required disabled={busy} /></Field>
+          <p>새 사실은 근거로 추가해 승인한 뒤 답변에 반영할 수 있어요.</p>
+          {result.data.evidenceLoadFailed ? <div role="alert">현재 근거를 불러오지 못했어요.{" "}
+            <button type="button" className="artist-action secondary" disabled={busy} onClick={refresh}>다시 확인</button>
+          </div> : !rewritePins.length && <p>지금 답변을 수정하려면 근거를 먼저 승인해주세요.</p>}
+          <button className="artist-action" disabled={busy || !rewritePins.length}>답변 다시 쓰기</button>
+        </form>
+        {!completePins && <p>답변의 모든 인용 근거를 승인하고 최신 상태로 확인해야 사용할 수 있어요.</p>}
+        {!!result.data.approvedVersions.length && <p>사용 중지하면 이전에 승인된 답변도 사용을 중지해요.</p>}
+        <div className="artist-actions">
+          <button className="artist-action" disabled={busy || item.state !== "draft" || !completePins} onClick={() => decide("approve")}>이 답변 사용</button>
+          <button className="artist-action secondary" disabled={busy} onClick={() => decide("withdraw")}>사용 중지</button>
+        </div>
+      </section>}
+    {notice && <p role="status">{notice}</p>}{error && <p className="error" role="alert">{error}</p>}
+  </>;
+}
+
+function GeneralPreview({ id, initialArtworkId }: { id: string; initialArtworkId?: string }) {
   const result = useReviewData(id);
   const artworkId = initialArtworkId ?? "";
   const [question, setQuestion] = useState("");
@@ -240,24 +392,10 @@ export function Preview({ id, initialArtworkId, qaId }: { id: string; initialArt
     });
   }
 
-  const loadCandidate = useCallback(async (signal: AbortSignal) => {
-    if (!qaId) return null;
-    const { data } = await requestApi("listQaItems", {
-      params: { id }, query: artworkId ? { artworkId } : {}, signal,
-    });
-    return latestVisibleQaItems(data).find(item => item.id === qaId) ?? null;
-  }, [id, artworkId, qaId]);
-  const candidate = useArtistLoad(loadCandidate);
-  const firstQuestion = candidate.data?.question;
   const work = result.data?.works.find(item => item.id === (answer?.artworkId ?? artworkId));
   return <>
     <Header title="AI 답변 미리보기" back={`${root(id)}/faq`} />
     {!result.data ? <Loading {...result} /> : <>
-      {!answer && candidate.data && <section className="artist-preview yeobek-appear">
-        <p className="artist-question">{candidate.data.question}</p>
-        {work?.imageMaterialId && <PrivateImage materialId={work.imageMaterialId} alt={work.title} className="artist-preview-image" />}
-        <p>{candidate.data.answer}</p>
-      </section>}
       {answer && <section className="artist-preview yeobek-appear" aria-live="polite">
         <p className="artist-question">{answer.question}</p>
         {work?.imageMaterialId && <PrivateImage key={work.imageMaterialId} materialId={work.imageMaterialId} alt={work.title} className="artist-preview-image" />}
@@ -274,7 +412,7 @@ export function Preview({ id, initialArtworkId, qaId }: { id: string; initialArt
       </section>}
       <form onSubmit={ask} aria-busy={busy}>
         <Field label="질문"><input value={question} onChange={event => setQuestion(event.target.value)}
-          placeholder={firstQuestion ?? "자유롭게 질문해보세요"} maxLength={AI_LIMITS.question} disabled={busy} required /></Field>
+          placeholder="자유롭게 질문해보세요" maxLength={AI_LIMITS.question} disabled={busy} required /></Field>
         <button className="artist-action" disabled={busy}>{busy ? "처리 중…" : "보내기"}</button>
       </form>
       {error && <p className="error" role="alert">{error}</p>}
