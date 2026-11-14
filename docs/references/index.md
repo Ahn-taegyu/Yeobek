@@ -51,3 +51,5 @@
 - [Git 작업 시점과 병합 판단 위임](user-git-lifecycle-delegation.md) — SRC-034, 작업 묶음과 중복 검증 절감.
 
 - [작가 가입·로그인 결정 전달](user-artist-auth.md) — SRC-035. [가입 후 직접 로그인 확정](user-auth-direct-login.md) — SRC-036.
+
+- [Notion P0 명세와 후속 보완](user-p0-feature-spec.md) — SRC-037.

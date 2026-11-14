@@ -23,3 +23,5 @@
 - [지식 구조](knowledge-contract.md) — OKF·Bases·로컬 RAG 규칙.
 
 - [작가 해설 후보 실행과 비교 평가](narration-evaluation.md) — SPEC-015 제안·구현 진행 중.
+
+- [최신 P0 명세와 ID 대응](functional-spec.md#notion-p0-기능-연결) — 제작·검수·공개·관람과 인증의 연결.

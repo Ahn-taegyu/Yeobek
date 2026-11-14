@@ -4,7 +4,7 @@ id: F-005
 title: 해설·채팅 답변 음성 출력
 description: 승인 해설과 근거 기반 채팅 답변을 선택한 출력 모드에 따라 음성으로 전달한다.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 - feature
@@ -69,3 +69,5 @@ sources:
 # 근거와 연결
 
 [사용자 원안](../references/user-mvp.md) · [사용자 추가 결정](../references/user-answers.md) · [기능명세 전체](../specs/functional-spec.md)
+
+Notion 독립 F06은 현행 목록에서 제외한다. 관람 답변의 글과 TTS·음소거는 Notion F08에 포함한다. 기존 게시 음성 설정은 구현 계약으로 기록한다. [D-017](../decisions/D-017-p0-feature-spec.md).

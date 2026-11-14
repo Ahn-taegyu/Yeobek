@@ -4,7 +4,7 @@ id: F-023
 title: AI용 작가·전시·작품 연결 지식 저장
 description: 작가 입력을 DB 원본의 내부 위키 문서로 나누고 관계·출처·승인 범위를 보존한다.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags: [yeobek, feature, knowledge]
 rag_include: true
 generated:
@@ -54,3 +54,5 @@ AI 정리의 추가 계약은 [제품 플러그인](../specs/product-ai-plugin.m
 # 범위와 연결
 
 세부 저장 계약은 [SPEC-010](../specs/artist-knowledge.md), 화면은 SC-A02~A05, 업무는 OP-21~22와 OP-07~10, 수용 시나리오는 UC-17이다. Markdown 파일 동기화·Obsidian 연동·전체 그래프 편집·검토 없는 AI 자동 위키 저장은 이번 구현 범위에 추가하지 않는다.
+
+작가 공통 작품 세계의 등록 상태·편집은 SC-A02/A10에 연결한다. 전시별 작품 세계는 SC-A03의 2단계 선택 입력이다. 작품 정보와 세 범위의 출처를 구분한다. [D-017](../decisions/D-017-p0-feature-spec.md).

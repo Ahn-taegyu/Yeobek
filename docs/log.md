@@ -1,5 +1,7 @@
 # 변경 이력
 
+- 2026-11-14 [Notion P0 명세](references/user-p0-feature-spec.md)를 [D-017](decisions/D-017-p0-feature-spec.md)에 반영했다. 전시 부분 저장과 선택 데이터, 작품 입력, 승인 Q&A의 게시·관람 사용을 연결하고 F06·F09·F10의 기능 참조를 정리했다. 제품 검증은 미실행이다.
+
 ## 2026-11-14
 
 - F13 작가 직접 가입·로그인 요구를 [D-016](decisions/D-016-artist-auth.md)과 관련 기능·화면·수용 시나리오에 반영했다. 기존 인증 구현과 신규 요구를 구분한다. 출처는 [SRC-035](references/user-artist-auth.md)와 [SRC-036](references/user-auth-direct-login.md)이다.

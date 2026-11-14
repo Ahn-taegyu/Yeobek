@@ -4,7 +4,7 @@ id: F-007
 title: 숫자 라벨로 작품 선택
 description: 같은 채팅에서 작품 번호를 말하거나 입력해 현재 작품을 선택하고 해설을 요청한다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-14'
 tags:
 - mawd
 - feature
@@ -63,3 +63,5 @@ sources:
 # 근거와 연결
 
 [사용자 원안](../references/user-mvp.md) · [사용자 추가 결정](../references/user-answers.md) · [기능명세 전체](../specs/functional-spec.md)
+
+Notion F02 재정렬은 초안 번호를 바꾼다. F07은 공개 번호용 라벨을 제공한다. 적용 시점 및 기존 번호 처리의 상세는 검토한다. [D-017](../decisions/D-017-p0-feature-spec.md).

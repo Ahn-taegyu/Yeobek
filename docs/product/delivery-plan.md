@@ -4,7 +4,7 @@ id: P-004
 title: 일요일 MVP 개발 순서와 팀 일정
 description: 사전 개발을 활용해 네 입출력 조합과 등록·검수·게시를 11/15 04:30까지 연결하는 계획.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 rag_include: true
@@ -127,3 +127,5 @@ decision_status: proposed
 
 [^direction]: [사용자 개발 조건](../references/user-build-direction.md).
 [^event]: [공식 행사 일정과 확인 한계](../references/hackathon.md).
+
+후속 개정의 구현 순서와 수용 기준은 Notion F14→F01→F02→F04→F05→F07→F08 흐름을 따른다. 위 일정과 이전 음성 모드 체크리스트는 작성 당시 계획이다. [D-017](../decisions/D-017-p0-feature-spec.md).

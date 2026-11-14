@@ -54,3 +54,5 @@ okf_version: "0.2"
 - [변경 이력](log.md) — 출처와 결정 변경 기록.
 
 - [작가 해설 후보와 비교 평가](specs/narration-evaluation.md) — 사용자 확정 범위와 잠정 실행·평가 계약.
+
+- [Notion P0 범위와 승인본 사용 결정](decisions/D-017-p0-feature-spec.md).

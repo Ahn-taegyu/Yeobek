@@ -4,7 +4,7 @@ id: F-021
 title: 승인 버전 게시·공개 중지
 description: 공개 근거·해설·음성이 준비된 작품 버전을 게시하고, 전시의 공개를 시작/중단한다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-14'
 tags:
 - mawd
 - feature
@@ -66,3 +66,5 @@ sources:
 # 근거와 연결
 
 [사용자 원안](../references/user-mvp.md) · [사용자 추가 결정](../references/user-answers.md) · [기능명세 전체](../specs/functional-spec.md)
+
+Notion F07은 공개 조건 확인과 안내, 공개·비공개 전환을 제공한다. F05 승인 해설·예상 Q&A·정정 답변 중 게시된 버전을 F08에서 사용한다. [D-017](../decisions/D-017-p0-feature-spec.md).

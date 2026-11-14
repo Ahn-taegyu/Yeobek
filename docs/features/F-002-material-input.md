@@ -74,3 +74,5 @@ sources:
 # 근거와 연결
 
 [사용자 원안](../references/user-mvp.md) · [사용자 추가 결정](../references/user-answers.md) · [기능명세 전체](../specs/functional-spec.md)
+
+Notion F02의 기본 정보, 여섯 서술 질문, 선택 사진·참고 자료는 [기능명세 F02](../specs/functional-spec.md#f02-작품-및-자료-등록)를 따른다. 한 화면에서 여러 작품을 펼쳐 편집하고 부분 저장, 재정렬과 초안 번호 갱신을 지원한다. [D-017](../decisions/D-017-p0-feature-spec.md).
