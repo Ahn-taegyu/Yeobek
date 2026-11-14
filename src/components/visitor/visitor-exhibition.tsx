@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { transitionScreen } from "@/components/ui/motion";
 import { brand } from "@/components/ui/brand";
-import { useEffect, useRef, useState, type FormEvent, type ComponentType } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ComponentType } from "react";
+import { AiStarLogo } from "@/components/ui/ai-star/ai-star-logo";
 import { ApiClientError, requestApi } from "@/lib/client";
 import { AI_LIMITS, codepoints } from "@/lib/contracts/chat";
 import type { ChatRequestInput } from "@/lib/contracts/chat";
@@ -14,7 +15,55 @@ import type { ExperienceArtwork, ExperienceExhibition, ExperienceImageProps, Exp
 type Exhibition = Awaited<ReturnType<typeof loadExhibition>>;
 type Artwork = ExperienceArtwork;
 type Reply = ExperienceReply;
-type Turn = { question: string; reply: Reply; artwork?: Artwork };
+type Turn = { id: string; question: string; reply: Reply; artwork?: Artwork; reveal?: boolean };
+/** The question being answered: shown as its bubble with the thinking star until the reply lands. */
+type Asking = { id: string; question: string; leaving: boolean };
+
+/** Thinking star fade-out before the answer starts revealing (matches .thinking transition). */
+const THINKING_FADE_MS = 280;
+/** Delay between answer lines as they fade in top to bottom (matches .revealWord animation). */
+const REVEAL_LINE_MS = 110;
+const REVEAL_FADE_MS = 420;
+
+const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function wait(ms: number, signal: AbortSignal) {
+  return new Promise<void>(resolve => {
+    if (ms <= 0 || signal.aborted) return resolve();
+    const timer = setTimeout(resolve, ms);
+    signal.addEventListener("abort", () => { clearTimeout(timer); resolve(); }, { once: true });
+  });
+}
+
+/**
+ * Fades an answer in line by line: words are measured once, grouped by rendered line and staggered;
+ * after the reveal the paragraph returns to plain text so it reflows normally.
+ */
+function RevealLines({ text, className }: { text: string; className?: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [done, setDone] = useState(reducedMotion);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (done || !element) return;
+    let line = -1;
+    let top = -Infinity;
+    element.querySelectorAll<HTMLElement>("[data-word]").forEach(word => {
+      if (word.offsetTop > top + 2) {
+        line += 1;
+        top = word.offsetTop;
+      }
+      word.style.animationDelay = `${line * REVEAL_LINE_MS}ms`;
+    });
+    const timer = setTimeout(() => setDone(true), Math.max(0, line) * REVEAL_LINE_MS + REVEAL_FADE_MS);
+    return () => clearTimeout(timer);
+  }, [done]);
+  if (done) return <p className={className}>{text}</p>;
+  return <p ref={ref} className={className}>
+    {text.split(/(\s+)/).map((part, index) => !part || /^\s+$/.test(part)
+      ? part
+      : <span key={index} data-word className={styles.revealWord}>{part}</span>)}
+  </p>;
+}
 
 async function loadExhibition(id: string, signal: AbortSignal) {
   return (await requestApi("getPublicExhibition", { params: { id }, signal })).data;
@@ -102,6 +151,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
   const [question, setQuestion] = useState("");
   const [voiceDraft, setVoiceDraft] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
+  const [asking, setAsking] = useState<Asking | null>(null);
   const [muted, setMuted] = useState(initiallyMuted);
   const [busy, setBusy] = useState<"chat" | "transcribe" | "speech" | null>(null);
   const [error, setError] = useState("");
@@ -122,7 +172,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
 
   useEffect(() => {
     transcript.current?.scrollTo({ top: transcript.current.scrollHeight });
-  }, [turns]);
+  }, [turns, asking?.id]);
 
   async function run(kind: NonNullable<typeof busy>, action: (signal: AbortSignal) => Promise<void>) {
     if (operation.current) return;
@@ -185,6 +235,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       operation.current = null;
       stopAudio();
       setBusy(null);
+      setAsking(null);
       setError("");
     }
     setSelected(nextId);
@@ -194,8 +245,18 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = question.trim();
-    if (!text || codepoints(text) > AI_LIMITS.question || recording.state !== "idle") return;
+    if (!text || codepoints(text) > AI_LIMITS.question || recording.state !== "idle" || operation.current) return;
+    const turnId = crypto.randomUUID();
+    setAsking({ id: turnId, question: text, leaving: false });
     void run("chat", async signal => {
+      try {
+        await ask(signal);
+      } finally {
+        setAsking(current => current?.id === turnId ? null : current);
+      }
+    });
+
+    async function ask(signal: AbortSignal) {
       const input = {
         exhibitionId: exhibition.id, artworkId: selected,
         question: text, contextSequence: contextSequence.current,
@@ -210,15 +271,20 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       });
       if (signal.aborted || reply.contextSequence !== contextSequence.current) return;
       pendingChat.current = null;
+      // Let the thinking star fade out under the bubble before the answer starts to appear.
+      setAsking(current => current?.id === turnId ? { ...current, leaving: true } : current);
+      await wait(reducedMotion() ? 0 : THINKING_FADE_MS, signal);
+      if (signal.aborted) return;
       const resolved = exhibition.artworks.find(work => work.id === reply.artworkId);
       if (resolved) setSelected(resolved.id);
       setTurns(previous => [...previous, {
-        question: text, reply, artwork: resolved,
+        id: turnId, question: text, reply, artwork: resolved, reveal: true,
       }]);
+      setAsking(null);
       setQuestion("");
       setVoiceDraft(false);
       if (reply.outputMode === "voice" && reply.canSpeak !== false) await play(reply.answerId, signal);
-    });
+    }
   }
 
   if (!entered) return <section data-visitor className={styles.intro}>
@@ -272,22 +338,28 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       </ul>
     </section>}
     <div className={styles.transcript} ref={transcript} aria-live="polite" inert={picker === "grid"}>
-      {!turns.length && <div className={styles.welcome}>
+      {!turns.length && !asking && <div className={styles.welcome}>
         <h1 className={styles.visuallyHidden}>{exhibition.title}</h1>
         <Image className={styles.welcomeMark} src="/yeobek/visitor-yeoun.svg" width={171} height={155} alt="" />
         <p>전시에서 느낀 감동과 기억이 오래도록 남을 수 있도록,<br />작품에 담긴 이야기를 들려드릴게요.</p>
       </div>}
-      {turns.map(({ question, reply, artwork }) => <article className={`${styles.turn} yeobek-appear`} key={reply.answerId}>
+      {/* One keyed list: the pending article becomes the answered turn in place, so the bubble never re-mounts. */}
+      {[...turns.map(({ id, question, reply, artwork, reveal }) => <article className={`${styles.turn} yeobek-appear`} key={id}>
         <p className={styles.bubble}>{question}</p>
-        {reply.image === undefined && artwork?.image && <ArtImage ImageComponent={ImageComponent} key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
-        {reply.image && <ImageComponent className={styles.answerImage}
+        {reply.image === undefined && artwork?.image && <ArtImage ImageComponent={ImageComponent} key={artwork.image.id} artwork={artwork}
+          className={`${styles.answerImage}${reveal ? ` ${styles.revealBlock}` : ""}`} />}
+        {reply.image && <ImageComponent className={`${styles.answerImage}${reveal ? ` ${styles.revealBlock}` : ""}`}
           id={reply.image.id} kind="image" alt={artwork?.title ?? "작품 이미지"} />}
-        <p className={styles.answer}>{reply.answer}</p>
+        {reveal ? <RevealLines className={styles.answer} text={reply.answer} /> : <p className={styles.answer}>{reply.answer}</p>}
         {reply.notice && <p>{reply.notice}</p>}
         {!muted && reply.canSpeak !== false && <button className={styles.textButton} disabled={busy !== null}
           onClick={() => void run("speech", signal => play(reply.answerId, signal))}>답변 듣기</button>}
-      </article>)}
-      {busy === "chat" && <p role="status">답변을 준비하고 있어요.</p>}
+      </article>), ...(asking ? [<article className={`${styles.turn} yeobek-appear`} key={asking.id}>
+        <p className={styles.bubble}>{asking.question}</p>
+        <AiStarLogo className={`${styles.thinking}${asking.leaving ? ` ${styles.thinkingDone}` : ""}`}
+          state="thinking" size={64} label="" />
+        <p className="sr-only" role="status">답변을 준비하고 있어요.</p>
+      </article>] : [])]}
     </div>
     <div className={styles.composer} inert={picker === "grid"}>
       {error && <p role="alert">{error}</p>}

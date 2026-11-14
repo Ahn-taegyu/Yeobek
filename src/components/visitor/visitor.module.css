@@ -108,6 +108,18 @@ span.answerImage { display: none; }
 .turn .answer { color: var(--yeobek-ink); white-space: pre-wrap; font-size: 15px; line-height: 1.55; }
 .turn .textButton { justify-self: start; }
 
+/* Thinking star under the visitor's bubble: fades in, then fades out once the answer is ready. */
+.thinking { justify-self: start; margin: 8px 6px; animation: visitor-fade-in 320ms var(--yeobek-motion-ease) both; transition: opacity 280ms ease, transform 280ms ease; }
+.thinkingDone { opacity: 0; transform: scale(.92); }
+/* Answer reveal: words of each rendered line share a delay, so lines fade in top to bottom. */
+.revealWord { display: inline-block; animation: visitor-line-in 420ms var(--yeobek-motion-ease) both; }
+.revealBlock { animation: visitor-line-in 420ms var(--yeobek-motion-ease) both; }
+@keyframes visitor-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes visitor-line-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .thinking, .revealWord, .revealBlock { animation: none; transition: none; }
+}
+
 .composer { padding: 8px 20px max(18px, env(safe-area-inset-bottom)); }
 .composer p { margin: 0 0 6px; font-size: 13px; }
 .composer [role="alert"] { color: #a33127; }
