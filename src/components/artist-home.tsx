@@ -8,6 +8,8 @@ import { forgetArtistPage, loadArtistPage } from "@/lib/client/artist-navigation
 import { countExhibitions } from "@/lib/contracts/responses";
 import { ArtistLink, errorMessage, Loading, PrivateImage, useArtistLoad } from "./artist/ui";
 import { homeKey, loadHome, loadProfile, prepareExhibition, profileKey } from "./artist/navigation-data";
+import { ExhibitionShareSheet } from "./artist/exhibition-share-sheet";
+import shareStyles from "./artist/exhibition-share-sheet.module.css";
 
 const tabs = [["all", "전체"], ["preparing", "준비중"], ["ongoing", "진행중"], ["ended", "종료"]] as const;
 const statuses = { preparing: "준비중", ongoing: "진행 중", ended: "종료" } as const;
@@ -43,6 +45,7 @@ export function ArtistDashboard({ data, preview = false, previewPosters, onLogou
   error?: string;
 }) {
   const [tab, setTab] = useState<typeof tabs[number][0]>("all");
+  const [sharing, setSharing] = useState<{ id: string; title: string } | null>(null);
   const { profile, items, counts = countExhibitions(items) } = data;
   const visible = items.filter(item => tab === "all" || tab === (item.dashboardStatus ?? "preparing"));
   const firstExhibition = visible[0]?.id;
@@ -87,21 +90,26 @@ export function ArtistDashboard({ data, preview = false, previewPosters, onLogou
       </div>
       {visible.length ? <ul className="artist-gallery">{visible.map(exhibition => {
         const poster = previewPosters?.[exhibition.id];
+        const title = exhibition.draftTitle || exhibition.title || "제목 없는 전시";
         const card = <>
           {poster ? <Image src={poster} alt="" width={155} height={190} className="artist-placeholder" /> :
             exhibition.posterMaterialId ? <PrivateImage materialId={exhibition.posterMaterialId} alt="" className="artist-placeholder" /> :
             <span className="artist-placeholder" aria-hidden="true" />}
-          <div className={styles.exhibitionDetails}>
-          <strong>{exhibition.draftTitle || exhibition.title || "제목 없는 전시"}</strong>
+          <span className={styles.exhibitionDetails}>
+          <strong>{title}</strong>
           {(exhibition.startDate || exhibition.endDate) && <small>{[exhibition.startDate, exhibition.endDate].filter(Boolean).map(date => date?.replaceAll("-", ".")).join(" - ")}</small>}
           <small className={styles.status} data-status={exhibition.dashboardStatus ?? "preparing"}>{statuses[exhibition.dashboardStatus ?? "preparing"]}</small>
-          </div>
+          </span>
         </>;
-        return <li key={exhibition.id}>{preview ? card :
+        return <li key={exhibition.id}>{exhibition.dashboardStatus === "ongoing" ?
+          <button type="button" className={shareStyles.card} aria-haspopup="dialog" aria-label={`${title} 공유하기`}
+            onClick={() => setSharing({ id: exhibition.id, title })}>{card}</button> :
+          preview ? card :
           <ArtistLink href={`/artist/exhibitions/${exhibition.id}`} prepare={() => prepareExhibition(exhibition.id)}>{card}</ArtistLink>}
         </li>;
       })}</ul> : <p>표시할 전시가 없어요.</p>}
     </section>
+    {sharing && <ExhibitionShareSheet key={sharing.id} exhibition={sharing} preview={preview} onClose={() => setSharing(null)} />}
     {error && <p role="alert" className="error">{error}</p>}
     <button className="artist-action secondary" disabled={leaving || preview} onClick={onLogout}>로그아웃</button>
   </div>;
