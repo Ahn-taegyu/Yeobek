@@ -2,25 +2,31 @@
 
 import Image from "next/image";
 import { brand } from "@/components/ui/brand";
-import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { requestApi } from "@/lib/client";
+import { forgetArtistPage, loadArtistPage } from "@/lib/client/artist-navigation";
 import { countExhibitions } from "@/lib/contracts/responses";
-import { errorMessage, Loading, loadProfile, PrivateImage, useArtistLoad } from "./artist/ui";
+import { ArtistLink, errorMessage, Loading, PrivateImage, useArtistLoad } from "./artist/ui";
+import { homeKey, loadHome, loadProfile, prepareExhibition, profileKey } from "./artist/navigation-data";
 
 const tabs = [["all", "전체"], ["preparing", "준비중"], ["ongoing", "진행중"], ["ended", "종료"]] as const;
 const statuses = { preparing: "준비중", ongoing: "진행 중", ended: "종료" } as const;
 
-async function loadHome(signal: AbortSignal) {
-  const [profile, exhibitions] = await Promise.all([loadProfile(signal), requestApi("listExhibitions", { signal })]);
-  return { profile, ...exhibitions.data };
-}
+const prepareProfile = () => loadArtistPage(profileKey, loadProfile);
+const refreshProfile = () => forgetArtistPage(profileKey);
 
 export function ArtistHome() {
-  const result = useArtistLoad(loadHome);
+  const result = useArtistLoad(loadHome, homeKey, refreshProfile);
   const [tab, setTab] = useState<typeof tabs[number][0]>("all");
   const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState("");
+  const firstExhibition = result.data?.items.find(item => tab === "all" || tab === (item.dashboardStatus ?? "preparing"))?.id;
+
+  useEffect(() => {
+    if (!firstExhibition || typeof window.requestIdleCallback !== "function") return;
+    const warm = window.requestIdleCallback(() => { void prepareExhibition(firstExhibition).catch(() => {}); });
+    return () => window.cancelIdleCallback(warm);
+  }, [firstExhibition]);
 
   async function logout() {
     setLeaving(true);
@@ -44,7 +50,7 @@ export function ArtistHome() {
         <div>
           <h2>{profile.displayName ? `${profile.displayName} 작가` : "작가 프로필"}</h2>
           {profile.keywords?.fields.length ? <p>{profile.keywords.fields.join(" · ")}</p> : null}
-          <Link href="/artist/onboarding">{profile.onboardingComplete ? "프로필 수정" : "기본 정보 입력"}</Link>
+          <ArtistLink href="/artist/onboarding" prepare={prepareProfile}>{profile.onboardingComplete ? "프로필 수정" : "기본 정보 입력"}</ArtistLink>
         </div>
       </div>
       <dl className="artist-counts">
@@ -53,8 +59,8 @@ export function ArtistHome() {
         <div><dd>{counts.ended}</dd><dt>종료</dt></div>
       </dl>
       <div className="artist-actions">
-        <Link className="artist-action" href="/artist/world">나의 작품 세계</Link>
-        <Link className="artist-action" href="/artist/exhibitions/new">새 전시 등록하기</Link>
+        <ArtistLink className="artist-action" href="/artist/world" prepare={prepareProfile}>나의 작품 세계</ArtistLink>
+        <ArtistLink className="artist-action" href="/artist/exhibitions/new">새 전시 등록하기</ArtistLink>
       </div>
     </section>
     <section className="artist-card">
@@ -65,13 +71,13 @@ export function ArtistHome() {
         </button>)}
       </div>
       {visible.length ? <ul className="artist-gallery">{visible.map(exhibition => <li key={exhibition.id}>
-        <Link href={`/artist/exhibitions/${exhibition.id}`}>
+        <ArtistLink href={`/artist/exhibitions/${exhibition.id}`} prepare={() => prepareExhibition(exhibition.id)}>
           {exhibition.posterMaterialId ? <PrivateImage materialId={exhibition.posterMaterialId} alt="" className="artist-placeholder" /> :
             <span className="artist-placeholder" aria-hidden="true" />}
           <strong>{exhibition.draftTitle || exhibition.title || "제목 없는 전시"}</strong>
           {(exhibition.startDate || exhibition.endDate) && <small>{[exhibition.startDate, exhibition.endDate].filter(Boolean).join(" – ")}</small>}
           <small>{statuses[exhibition.dashboardStatus ?? "preparing"]}</small>
-        </Link>
+        </ArtistLink>
       </li>)}</ul> : <p>표시할 전시가 없어요.</p>}
     </section>
     {error && <p role="alert" className="error">{error}</p>}

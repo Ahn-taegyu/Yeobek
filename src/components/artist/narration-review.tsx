@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ApiClientError, requestApi } from "@/lib/client";
+import { loadArtistPage } from "@/lib/client/artist-navigation";
 import type { AiJob } from "@/lib/contracts/jobs";
 import { sectionById } from "@/lib/contracts/knowledge-sections";
 import { AI_LIMITS, DEFAULT_POLICIES } from "@/lib/policy";
-import { errorMessage, Field, Header, Loading, useArtistLoad, type Document } from "./ui";
+import { ArtistLink, errorMessage, Field, Header, Loading, useArtistLoad, type Document } from "./ui";
+import { artworkListKey, loadArtworkList } from "./navigation-data";
 
 type Review = Awaited<ReturnType<typeof requestApi<"reviewArtwork">>>["data"];
 type Evidence = Review["evidence"][number];
@@ -14,16 +15,13 @@ type Pin = NonNullable<Review["approval"]>["citations"][number];
 type EvidenceInput = Pick<Evidence, "scope" | "body" | "sourceLabel" | "source">;
 
 export function NarrationReview({ id, batchId, initialArtworkId }: { id: string; batchId?: string; initialArtworkId?: string }) {
-  const load = useCallback(async (signal: AbortSignal) => {
-    const params = { id };
-    return (await requestApi("listArtworks", { params, signal })).data.items;
-  }, [id]);
+  const load = useCallback((signal: AbortSignal) => loadArtworkList(id, signal), [id]);
   const loadBatch = useCallback(async (signal: AbortSignal) => {
     if (!batchId) return null;
     const { data } = await requestApi("getTrainingBatch", { params: { id: batchId }, signal });
     return data.exhibitionId === id ? data : null;
   }, [batchId, id]);
-  const result = useArtistLoad(load);
+  const result = useArtistLoad(load, artworkListKey(id));
   const batch = useArtistLoad(loadBatch);
   const [artworkId, setArtworkId] = useState(initialArtworkId);
   const work = result.data?.find(item => item.id === artworkId) ?? result.data?.[0];
@@ -45,7 +43,8 @@ export function NarrationReview({ id, batchId, initialArtworkId }: { id: string;
         {(!batchId || batch.data !== undefined || batch.error) && <ArtworkReview key={`${work.id}:${trainingJobId ?? ""}`}
           exhibitionId={id} artworkId={work.id} trainingJobId={trainingJobId ?? undefined} />}
       </> : <p>먼저 작품을 등록해주세요.</p>}
-      <Link className="artist-action" href={`${root}/publication`}>게시 준비 확인</Link>
+      <ArtistLink className="artist-action" href={`${root}/publication`}
+        prepare={() => import("./publication").then(({ preparePublication }) => preparePublication(id))}>게시 준비 확인</ArtistLink>
     </div>}
   </>;
 }
@@ -57,21 +56,30 @@ async function loadSources(exhibitionId: string, signal: AbortSignal) {
   return [exhibition.data.document, profile.data.document];
 }
 
+const narrationKey = (exhibitionId: string, artworkId: string) => `narration:${exhibitionId}:${artworkId}`;
+
+async function loadNarration(exhibitionId: string, artworkId: string, signal: AbortSignal) {
+  const [review, documents] = await Promise.all([
+    requestApi("reviewArtwork", { params: { id: artworkId }, signal }), loadSources(exhibitionId, signal),
+  ]);
+  return { review: review.data, documents };
+}
+
+export async function prepareNarrationReview(exhibitionId: string, artworkId?: string) {
+  if (artworkId) await loadArtistPage(narrationKey(exhibitionId, artworkId),
+    signal => loadNarration(exhibitionId, artworkId, signal));
+}
+
 function ArtworkReview({ exhibitionId, artworkId, trainingJobId }: {
   exhibitionId: string; artworkId: string; trainingJobId?: string;
 }) {
-  const load = useCallback(async (signal: AbortSignal) => {
-    const [review, documents] = await Promise.all([
-      requestApi("reviewArtwork", { params: { id: artworkId }, signal }), loadSources(exhibitionId, signal),
-    ]);
-    return { review: review.data, documents };
-  }, [artworkId, exhibitionId]);
+  const load = useCallback((signal: AbortSignal) => loadNarration(exhibitionId, artworkId, signal), [artworkId, exhibitionId]);
   const loadJob = useCallback(async (signal: AbortSignal) => {
     if (!trainingJobId) return null;
     const { data } = await requestApi("getJob", { params: { id: trainingJobId }, signal });
     return data.kind === "narration" && data.artworkId === artworkId ? data : null;
   }, [trainingJobId, artworkId]);
-  const review = useArtistLoad(load);
+  const review = useArtistLoad(load, narrationKey(exhibitionId, artworkId));
   const initialJob = useArtistLoad(loadJob);
   if (!review.data) return <Loading {...review} />;
   if (trainingJobId && initialJob.data === undefined && !initialJob.error) return <Loading {...initialJob} />;

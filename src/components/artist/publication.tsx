@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiClientError, requestApi } from "@/lib/client";
+import { loadArtistPage } from "@/lib/client/artist-navigation";
 import { errorMessage, Header, Loading, useArtistLoad } from "./ui";
 
 const blockerMessages: Record<string, string> = {
@@ -54,12 +55,18 @@ async function loadPublication(id: string, signal: AbortSignal) {
   };
 }
 
+const publicationKey = (id: string) => `publication:${id}`;
+
+export function preparePublication(id: string) {
+  return loadArtistPage(publicationKey(id), signal => loadPublication(id, signal));
+}
+
 type PublicationData = Awaited<ReturnType<typeof loadPublication>>;
 type Selection = { artworkId: string; expectedRevision: number };
 
 export function Publication({ id }: { id: string }) {
   const load = useCallback((signal: AbortSignal) => loadPublication(id, signal), [id]);
-  const result = useArtistLoad(load);
+  const result = useArtistLoad(load, publicationKey(id));
   return <>
     <Header title="전시 게시 관리" back={`/artist/exhibitions/${id}`} />
     {result.data ? <PublicationForm initial={result.data} /> : <Loading {...result} />}

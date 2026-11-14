@@ -2,6 +2,7 @@ import { z } from "zod";
 import { apiErrorEnvelope } from "../contracts/responses";
 import { mediaMimeTypes } from "../contracts/media";
 import { routes, type BinaryRouteContract, type RouteContract } from "../contracts/routes";
+import { clearArtistSession, startArtistWrite } from "./artist-navigation";
 
 export class ApiClientError extends Error {
   constructor(
@@ -74,6 +75,8 @@ export async function requestApi(name: RouteName, options?: {
     body = JSON.stringify(options?.body);
   }
   let response: Response;
+  const finishWrite = typeof window !== "undefined" && route.method !== "GET" && path.startsWith("/api/admin/")
+    ? startArtistWrite() : undefined;
   try {
     response = await fetch(path, {
       method: route.method,
@@ -87,6 +90,12 @@ export async function requestApi(name: RouteName, options?: {
   } catch {
     options?.signal?.throwIfAborted();
     throw new ApiClientError(null, "NETWORK_ERROR", "서비스에 연결하지 못했습니다.", true);
+  } finally {
+    finishWrite?.();
+  }
+  if (typeof window !== "undefined") {
+    if (response.ok && (name === "login" || name === "logout")) clearArtistSession(true);
+    else if (response.status === 401 && path.startsWith("/api/admin/")) clearArtistSession();
   }
 
   const invalidResponse = () => new ApiClientError(response.status, "INVALID_RESPONSE", "서버 응답을 확인하지 못했습니다.");
