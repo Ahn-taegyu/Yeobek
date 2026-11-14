@@ -85,7 +85,7 @@ sources:
 | W5 | done, PR #7·10 | P0 전시 문맥·출력 전환은 W12 |
 | W8 | in_progress, PR #11의 진행 안내·문의 범위 병합 | 예약 안내·Alt·요약·분류·브리핑·물리 삭제 등 잔여 |
 | W2 | done, [PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), main9c6efbf | 최종 head351156f App43567373083·Knowledge43567373169 성공, W10·이력/만료 신규220000 |
-| 파일 읽기(A) | in_progress, feat/material-extraction | 신규230000·231000 전진 적용/DB29·권한1 성공, HTTP·최신 CI 대기; materialExtraction 기본off |
+| 파일 읽기(A) | in_progress, [Draft PR #28](https://github.com/Ahn-taegyu/Yeobek/pull/28) | 신규230000·231000 전진 적용/DB31·권한1 성공, HTTP·최신 CI 대기; materialExtraction 기본off |
 | D0 | done, PR #14 | main 861d27a, App·Knowledge CI 성공 |
 | W10 | done, PR #15, main dadc23b | v3 온보딩·사진/포스터·홈 상태, 전체 CI 성공 |
 | W13 | done, PR #16, main44bf7d3 | 리스크1·5·6·8·9 및 기한 반영, App·Knowledge CI 성공. 운영 적용은 W7 |
@@ -388,7 +388,7 @@ W11 최종 교차검토 후194000으로 예약 시 생성 상한을 고정하고
 
 A가 로컬 Supabase를 소유하고 전진 migration만 적용한다. B는 공개 게시/스냅샷/관람 채팅·frontend-handoff 전체·시연·키 당일 점검을 맡으며 A는 W11 절만 제공한다. 별도 검토 에이전트는 SQL/권한/migration만 담당한다. 최신 TTS/작품지칭 정책은 [SRC-055](../references/user-visitor-tts-publication-policy.md)에 기록해 B에게 전달했고 아직 현재 코드의 게시 음성 조건을 바꾼 것은 아니다.
 
-195000 서비스전용 승인QA 포트를 추가해 B에게 시그니처·반환형·같은 게시 트랜잭션 호출을 전달했다. 최신 main461d32f까지 확인했으며195000은 main 마지막181000보다 뒤다. 부모 전진 적용과 승인 조회 DB34개가 통과했고, 첫 fixture의 필수mock 누락을 바로잡았다. SQL/권한 독립 검토에 차단사항은 없었다. B 인계문서의 W11절을 추가하고 main461d32f를 합쳤다. 실제 게시 후 비공개 Q&A/미리보기의 관람 문맥·익명 응답 비노출과 게시 revision 변경 후 승인 거부를 포함한 DB29개가 통과했다. 최종 head CI·병합은 대기다.
+195000 서비스전용 승인QA 포트를 추가해 B에게 시그니처·반환형·같은 게시 트랜잭션 호출을 전달했다. 최신 main461d32f까지 확인했으며195000은 main 마지막181000보다 뒤다. 부모 전진 적용과 승인 조회 DB34개가 통과했고, 첫 fixture의 필수mock 누락을 바로잡았다. SQL/권한 독립 검토에 차단사항은 없었다. B 인계문서의 W11절을 추가하고 main461d32f를 합쳤다. 실제 게시 후 비공개 Q&A/미리보기의 관람 문맥·익명 응답 비노출과 게시 revision 변경 후 승인 거부를 포함한 DB31개가 통과했다. 최종 head CI·병합은 대기다.
 
 
 # W11 병합·W2 병렬 계획 재개
@@ -403,6 +403,8 @@ W2 PR #13에 main40564e6을 합치고 양쪽 API/CI/문서 충돌을 보존해 �
 
 W2는 PR #13 main9c6efbf 병합 완료다. 최종 검사 head351156f68458b0b7d28e9c27df1d2c76f04881fc의 App43567373083·Knowledge43567373169 성공을 확인했다. 위 과거 보존 체크포인트의 미병합/구형 section 문구는 당시 기록이다.
 
-파일 읽기는 [SRC-054](../references/user-backend-author-parallel-plan.md) 범위로 진행 중이다. 로컬 PDF.js6.5.438, Liner catalog 이미지/PDF 입력과 명시적 OpenAI 대체 어댑터, 읽기 플레이북, 비공개 해시 캐시와 W2 후보 연결을 추가했다. 기존 공유 migration은 보존하고230000·231000을 A 소유 DB에 전진 적용했다. 별도 SQL 검토의 지적을 적용 전에 수정했고 부모가 DB29개·권한1개를 직접 확인했다. 첫 CLI DB 검사 대상이 적용 DB와 달라 소유 컨테이너를 직접 지정해 재확인했다. 초기 파일 fixture에는 final Storage metadata가 없어 실패했고 fixture를 보완했다.
+파일 읽기는 [SRC-054](../references/user-backend-author-parallel-plan.md) 범위로 진행 중이다. 로컬 PDF.js6.5.438, Liner catalog 이미지/PDF 입력과 명시적 OpenAI 대체 어댑터, 읽기 플레이북, 비공개 해시 캐시와 W2 후보 연결을 추가했다. 기존 공유 migration은 보존하고230000·231000을 A 소유 DB에 전진 적용했다. 별도 SQL 검토의 지적을 적용 전에 수정했고 부모가 DB31개·권한1개를 직접 확인했다. 첫 CLI DB 검사 대상이 적용 DB와 달라 소유 컨테이너를 직접 지정해 재확인했다. 초기 파일 fixture에는 final Storage metadata가 없어 실패했고 fixture를 보완했다.
 
 materialExtraction 기본off, 기존 플래그 유지, 실외부 AI/TTS/발송0회. 한도·보관·모의 경계는 [조사](../research/material-reader.md), HTTP와 화면 미구현 경계는 [인계](frontend-handoff.md#파일-읽기--a-담당)에 기록했다. 전체 최신 CI·프런트·실물 품질은 아직 완료가 아니다.
+
+PR #28 첫 head609b4c8의 Knowledge CI는 성공했고 App 타입 검사에서 PDF.js의 미지원 isEvalSupported 옵션과 모의 응답 타입이 실패했다. 설치된 타입 선언을 확인해 옵션을 제거하고 테스트 응답에 명시적 타입을 지정했다. 읽기 단위11개를 재확인했고, 본문 삭제·해시 재업로드 검사를 추가해 DB31개가 통과했다. 최신 head 전체 CI는 확인 전이다.

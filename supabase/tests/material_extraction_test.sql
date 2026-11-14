@@ -142,5 +142,13 @@ select is(complete_material_read(current_setting('test.read_owner')::uuid,curren
     'EXPIRED','late worker cannot store extracted text');
 select is(reserve_material_read(current_setting('test.read_owner')::uuid,current_setting('test.read_expired_request')::uuid,
     current_setting('test.read_image')::uuid,1,current_setting('test.read_document')::uuid,2,false)->>'claimed','false','timeout replay does not grant another model attempt');
+update materials set state='revoked',deleted_at=clock_timestamp(),version=version+1 where id=current_setting('test.read_m2')::uuid;
+select purge_expired();
+select is((select count(*)::integer from yeoback_private.material_reads where owner_id=current_setting('test.read_owner')::uuid
+    and content_hash=decode(repeat('a',64),'hex') and chunks='[]' and status='purged'),2,'deletion clears both private bodies but retains mode-specific hash tombstones');
+select set_config('test.read_reupload',gen_random_uuid()::text,true);
+select pg_temp.read_fixture(current_setting('test.read_reupload')::uuid,'pdf',repeat('a',64),2);
+select is(reserve_material_read(current_setting('test.read_owner')::uuid,gen_random_uuid(),current_setting('test.read_reupload')::uuid,1,
+    current_setting('test.read_document')::uuid,2,false)#>>'{read,status}','purged','reupload of deleted bytes does not silently grant another model read');
 select * from finish();
 rollback;

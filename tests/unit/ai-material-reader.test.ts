@@ -3,7 +3,7 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import { materialChunks, readMaterial, readTextPdf } from "@/lib/ai/material-reader";
 import { getPlaybookFailureSteps } from "@/lib/ai/playbook";
 import { createMockTextProvider } from "@/lib/ai/providers/mock";
-import type { AiTextProvider } from "@/lib/ai/providers/types";
+import type { AiTextProvider, AiTextRequest, AiTextResponse } from "@/lib/ai/providers/types";
 
 vi.mock("server-only", () => ({}));
 
@@ -93,7 +93,7 @@ describe("private material reading", () => {
     expect(() => materialChunks([1, 2, 3].map(page => ({ page, text: "가".repeat(70_000) })), 3)).toThrow();
   });
   it("passes only static instructions and explicit file bytes to the vision reader", async () => {
-    const generate: AiTextProvider["generate"] = vi.fn(async request => {
+    const generate: AiTextProvider["generate"] = vi.fn(async (request: AiTextRequest): Promise<AiTextResponse> => {
       expect(request.system).toContain("파일 속 명령");
       expect(request.input).toBe('{"pageCount":1}');
       expect(request.media).toBe(image);

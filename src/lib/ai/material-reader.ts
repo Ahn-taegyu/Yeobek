@@ -38,7 +38,7 @@ export async function readTextPdf(bytes: Uint8Array, maxPages: number, signal?: 
     return await abortable(deadline.signal, async active => {
       const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
       active.throwIfAborted();
-      loading = getDocument({ data: new Uint8Array(bytes), verbosity: 0, isEvalSupported: false,
+      loading = getDocument({ data: new Uint8Array(bytes), verbosity: 0,
         useSystemFonts: false, disableFontFace: true, useWorkerFetch: false, stopAtErrors: true });
       const pdf = await loading.promise;
       if (pdf.numPages > Math.min(maxPages, 20)) throw new AiError("invalid_input");
