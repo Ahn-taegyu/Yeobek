@@ -123,6 +123,8 @@ body:has(.artist-screen) > main { width: 100%; }
 .artist-learning-shadow-inner { bottom: 20px; }
 .artist-learning-lens { position: absolute; bottom: 34px; right: 8px; z-index: 2; }
 .artist-learning progress { width: 100%; accent-color: var(--yeobek-coffee); }
+/* The star spreads ~10% past its box while thinking; keep that room so it never clips neighbours. */
+.artist-learning-star { margin-block: 8px; animation: yeobek-appear var(--yeobek-motion-screen) var(--yeobek-motion-ease) both; }
 .artist-preview { margin-block: 18px; display: grid; gap: 10px; }
 .artist-preview p { white-space: pre-wrap; color: var(--yeobek-ink); margin: 0; }
 .artist-preview .artist-question { justify-self: end; padding: 8px 14px; border-radius: 24px; background: var(--yeobek-tan); }
