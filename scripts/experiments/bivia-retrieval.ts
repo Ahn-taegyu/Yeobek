@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { AI_LIMITS, codepoints, type Evidence } from "../../src/lib/ai/contracts";
-import { validateContext } from "../../src/lib/ai/context";
+import { selectEvidence, validateContext } from "../../src/lib/ai/context";
 import type { RetrievalCase } from "../../tests/evaluation/retrieval-cases";
 
 export const BIVIA_URL = "https://api.articul8.ai/bivia/score";
@@ -50,7 +50,7 @@ export function validateFreeRun(allowance: unknown, plan: ReturnType<typeof pref
   const result = allowanceSchema.safeParse(allowance);
   if (!result.success) throw new Error("free_allowance_invalid");
   const a = result.data, checked = Date.parse(a.verifiedAt), expires = Date.parse(a.expiresAt);
-  // Do not cross UTC daily quota reset or use an old UI observation.
+  // UTC-date boundary is a conservative local guard, NOT the provider's documented reset time.
   if (checked > now || now - checked > 3_600_000 || new Date(checked).toISOString().slice(0, 10) !== new Date(now).toISOString().slice(0, 10) || expires <= now + 3_600_000) throw new Error("free_allowance_stale");
   if (plan.calls > maxCalls || plan.calls > a.freeRequestsRemaining || plan.reservedTokens > a.freeTokensRemaining) throw new Error("free_allowance_insufficient");
   return a;
@@ -110,22 +110,59 @@ export function createFreeScorer(apiKey: string, allowance: FreeAllowance, plan:
 /** Run on a server-authorized publication snapshot. The experiment uses synthetic
  * snapshots only; this function is deliberately not wired to production routes.
  */
-export async function rerank(c: RetrievalCase, score: Scorer) {
+export type ScoredEvidence = Score & { evidenceId: string };
+export type AbstentionPolicy = "tail" | "protect-baseline";
+
+/** Bounded pool; after a failure, drain requests already sent and start no more.
+ * The scorer reserves each request synchronously, before its first await.
+ */
+export async function scoreCandidates(c: RetrievalCase, score: Scorer, concurrency: number) {
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4) throw new Error("bivia_invalid_concurrency");
   const context = validateContext(c.context, { exhibitionId: c.context.exhibitionId, artworkId: c.context.artworkId });
-  const scored: { item: Evidence; index: number; score: Score }[] = [];
-  // Score ALL allowed candidates before the 12 excerpts / 8000 codepoints limit.
-  for (const [index, item] of context.evidence.entries()) scored.push({ item, index, score: parseScore(await score(c.question, item)) });
+  const scores: ScoredEvidence[] = new Array(context.evidence.length);
+  let cursor = 0, failure: unknown;
+  let failed = false;
+  async function worker() {
+    while (!failed && cursor < context.evidence.length) {
+      const index = cursor++, item = context.evidence[index];
+      try { scores[index] = { evidenceId: item.id, ...parseScore(await score(c.question, item)) }; }
+      catch (error) { if (!failed) failure = error; failed = true; }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, context.evidence.length) }, worker));
+  if (failed) throw failure;
+  return scores;
+}
+
+/** An abstention means uncertainty. Preserve abstained excerpts that the baseline
+ * selected, then spend the remaining excerpt budget in Bivia score order.
+ * This rule uses no answer labels, score threshold or calibrated probability.
+ */
+export function selectScoredEvidence(c: RetrievalCase, scores: ScoredEvidence[], policy: AbstentionPolicy) {
+  const context = validateContext(c.context, { exhibitionId: c.context.exhibitionId, artworkId: c.context.artworkId });
+  const byId = new Map(scores.map(s => [s.evidenceId, parseScore(s)]));
+  if (scores.length !== context.evidence.length || byId.size !== scores.length || context.evidence.some(e => !byId.has(e.id))) {
+    throw new Error("bivia_score_coverage_invalid");
+  }
+  const scored = context.evidence.map((item, index) => ({ item, index, score: byId.get(item.id)! }));
   scored.sort((a, b) => (b.score.value ?? -1) - (a.score.value ?? -1) ||
     Number(b.item.scope === "artwork") - Number(a.item.scope === "artwork") || a.index - b.index);
+  const protectedEvidence = policy === "protect-baseline"
+    ? selectEvidence(context.evidence, c.question).filter(e => byId.get(e.id)!.status === "abstained") : [];
+  const protectedIds = new Set(protectedEvidence.map(e => e.id));
+  const ordered = [...protectedEvidence, ...scored.filter(s => !protectedIds.has(s.item.id)).map(s => s.item)];
   const selected: Evidence[] = []; let size = 0;
-  for (const { item } of scored) {
+  for (const item of ordered) {
     if (selected.length === AI_LIMITS.evidenceCount) break;
     const length = codepoints(item.body);
     if (size + length > AI_LIMITS.evidenceChars) continue;
     selected.push(item); size += length;
   }
-  // Abstained scores sort last; they do not imply visitor-level abstention.
-  return { selected, scores: scored.map(({ item, score }) => ({ evidenceId: item.id, ...score })) };
+  return { selected, protectedIds: [...protectedIds], scores: scored.map(({ item, score }) => ({ evidenceId: item.id, ...score })) };
+}
+
+export async function rerank(c: RetrievalCase, score: Scorer, options: { concurrency: number; abstention: AbstentionPolicy } = { concurrency: 1, abstention: "tail" }) {
+  return selectScoredEvidence(c, await scoreCandidates(c, score, options.concurrency), options.abstention);
 }
 export function retrievalMetrics(c: RetrievalCase, selected: Evidence[]) {
   const allowed = new Set(c.context.evidence.map(e => e.id));

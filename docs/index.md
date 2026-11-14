@@ -11,6 +11,7 @@ okf_version: "0.2"
 
 # MVP부터 읽기
 
+- [Bivia 병렬화와 최종 답변 비교](research/bivia-answer-comparison.md) — 무료 Bivia 제한과 Liner 크레딧 사용을 구분한 후속 실험.
 - [현재 검색과 Bivia 무료 비교 실험](research/bivia-retrieval-experiment.md) — 실행 명령, API 키·무료 한도, 합성 자료 실측.
 
 - [프런트 API 인계](specs/frontend-handoff.md) — 화면별 호출 계약과 예시.

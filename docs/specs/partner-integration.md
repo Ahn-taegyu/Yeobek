@@ -12,6 +12,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: bivia-recompare
+  resource: /references/user-bivia-answer-recomparison.md
+  title: Bivia 재비교와 Liner 크레딧 사용 승인
 - id: bivia-experiment
   resource: /references/user-bivia-comparison-experiment.md
   title: 현재 구조와 Bivia의 무료 비교 실행 요청
@@ -67,6 +70,8 @@ decision_status: proposed
 스티비·채널톡·Alt는 W8의 안내 발송·문의 응대·전사 가져오기 범위다. 정책과 수신 동의, 승인 및 외부 전송 최소화를 지킨다. EXAONE은 비교 후보이며 Bivia와 VAPI는 채택하지 않았다. 파트너 접근과 외부 발송의 실제 동작은 키와 공식 계약 확인 후 검증한다.
 
 # Numa·Bivia 비교 제안
+
+[후속 재비교](../research/bivia-answer-comparison.md)는 이전 점수 캐시, 최대4개 병렬 Bivia 요청, 보류 근거 보존과 실제 Liner 최종 답변을 검사한다. Bivia는 무료 한도 내288회로 제한하고 Liner 생성·평가는 사용자 승인 크레딧을 사용한다. 운영 경로 채택과 분리한다.
 
 11/14 [후속 실험 요청](../references/user-bivia-comparison-experiment.md)에 따라 A/C 검색 비교를 먼저 실행한다. [실험 도구와 기록](../research/bivia-retrieval-experiment.md)은 Bivia `/score`의 무료 API 시험을 다루며 운영 제공사 채택과 분리한다.
 

@@ -1,5 +1,7 @@
 # 출처와 보존본
 
+- [Bivia 재비교·Liner 크레딧 사용 승인](user-bivia-answer-recomparison.md) — SRC-064, 병렬화·보류 보완·최종 답변 비교와 Liner 유료 사용 허용.
+
 - [현재 구조와 Bivia 무료 비교 실험 요청](user-bivia-comparison-experiment.md) — SRC-063, A/C 실행·키 안내·유료 호출 제외.
 
 - [현재 구조·Numa·Bivia 비교 계획 요청](user-articul8-comparison.md) — SRC-062, 문서 처리와 자체 LLM 분리 및 세 방식의 비교 계획.

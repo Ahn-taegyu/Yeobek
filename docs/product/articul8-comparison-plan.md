@@ -13,6 +13,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-14T21:02:17+09:00'
 sources:
+- id: recompare
+  resource: /references/user-bivia-answer-recomparison.md
+  title: 병렬화·보류 보완과 Liner 최종 답변 비교 승인
 - id: execution
   resource: /references/user-bivia-comparison-experiment.md
   title: 현재 구조와 Bivia부터 무료 비교 실행
@@ -52,6 +55,8 @@ sources:
 ---
 
 # 목적과 현재 상태
+
+**11/14 후속:** [SRC-064](../references/user-bivia-answer-recomparison.md)에 따라 병렬화·보류 보존과 최종 답변 비교를 진행한다. Bivia는 무료288회 이내이며 Liner 생성·평가는 후속 사용자 승인 크레딧을 사용한다. 실행 범위와 결과는 [RES-011](../research/bivia-answer-comparison.md)을 따른다. 아래 초기 계획의 3회 반복·사람 검수·Numa 범위는 완료된 것으로 간주하지 않는다.
 
 [사용자 요청](../references/user-articul8-comparison.md)에 따라 **도입 효과를 확인한 뒤 채택 여부를 판단**한다. 이 문서는 실행 계획이며 벤더 도입 결정·실험 결과가 아니다. 실제 작가 자료·API 키·계정 식별자를 이 기획 검색 번들에 저장하지 않는다.
 
@@ -175,4 +180,4 @@ A의 현재 파일 읽기+W2와 B0의 Numa 처리+변환+검수를 비교한다.
 
 결과 행은 run ID, 코드 SHA, 모델/프롬프트/자료 해시, 질문 ID, arm(A/B0/B1/C), 허용/선택 근거 ID, expected/actual outcome, 사람 채점, 단계별 시간, 사용량·비용, 에러·fallback 여부를 갖는다. `재현 안내 + 지표 표 + 실패 사례 + 미실행 사유 + 채택 판단`을 함께 인계한다. 원문·응답 전문은 Git 공개 저장소에 넣지 않는다.
 
-남은 결정은 API 키/권한과 무료 한도, 내부용 Numa API의 지원 계약·필터·출처 본문 형식, 실제 자료 사용 허락, 담당 검수자와 작업 일정이다. **이번 변경은 계획 문서만 작성하며 실험 코드·데이터셋·외부 호출·성능 측정은 수행하지 않는다.**
+남은 결정은 API 키/권한과 무료 한도, 내부용 Numa API의 지원 계약·필터·출처 본문 형식, 실제 자료 사용 허락, 담당 검수자와 작업 일정이다. 초기 계획 작성은 실호출을 포함하지 않았다. 이후 승인된 검색·최종 답변 파일럿의 실제 실행 범위는 상단 현황과 RES-010·RES-011을 따른다.

@@ -80,7 +80,7 @@ AI의 업무 절차와 말투는 [제품 플러그인](docs/specs/product-ai-plu
 
 ## 관람 검색 비교 실험
 
-현재 검색과 Bivia 재정렬은 별도 `npm run ai:compare:bivia`로 비교합니다. 기본 실행은 합성 평가60문항의 기존 검색만 실행하며 외부 호출0회입니다. `--mode=live-free`는 Bivia 키와 최근 무료 한도 확인 파일·명시적 호출 예산이 모두 있어야 실행됩니다. [설정·측정 범위·결과](docs/research/bivia-retrieval-experiment.md)를 확인하세요. 운영 관람 경로와 답변 생성 모델은 이 도구로 바뀌지 않습니다.
+현재 검색과 Bivia 재정렬은 별도 `npm run ai:compare:bivia`로 비교합니다. 기본 실행은 합성 평가60문항의 기존 검색만 실행하며 외부 호출0회입니다. `--mode=live-free`는 Bivia 키와 최근 무료 한도 확인 파일·명시적 호출 예산이 모두 있어야 실행됩니다. [설정·측정 범위·결과](docs/research/bivia-retrieval-experiment.md)를 확인하세요. 운영 관람 경로와 답변 생성 모델은 이 도구로 바뀌지 않습니다. 후속 `npm run ai:recompare:bivia`는 기존 점수를 재사용하고 병렬 속도·보류 보존·실제 최종 답변을 검사합니다. [후속 실험 안내](docs/research/bivia-answer-comparison.md)에 Bivia 무료 조건과 Liner 크레딧 사용 승인을 구분했습니다.
 
 ## 작가 해설 비교 실험
 

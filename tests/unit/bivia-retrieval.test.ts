@@ -103,6 +103,17 @@ describe("Bivia HTTP contract (fake fetch only)", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
     expect(Object.keys(scoreBody(fixture.question, fixture.context.evidence[0]))).not.toContain("expectedFact");
   });
+  it("reserves synchronously when parallel callers compete for the last two requests", async () => {
+    const fetcher = vi.fn<typeof fetch>(async () => {
+      await new Promise(r => setTimeout(r, 2)); return Response.json(result());
+    });
+    const client = createFreeScorer("test-secret", allowance(), { ...plan(), calls: 2 }, 2, fetcher);
+    const completed = await Promise.allSettled(fixture.context.evidence.slice(0, 4).map(e => client.score(fixture.question, e)));
+    expect(fetcher).toHaveBeenCalledTimes(2); expect(client.ledger.calls).toBe(2);
+    expect(client.ledger.billableTokens).toBe(20);
+    expect(completed.filter(r => r.status === "fulfilled")).toHaveLength(2);
+    expect(client.ledger.usageUnknownCalls).toBe(0);
+  });
 });
 
 describe("reranking and measurement boundaries", () => {

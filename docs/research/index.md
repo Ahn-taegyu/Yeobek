@@ -1,5 +1,7 @@
 # 기술 선택 재검토
 
+- [Bivia 병렬화·보류 보완과 Liner 답변 비교](bivia-answer-comparison.md) — 점수 캐시 재사용, 288회 속도 측정, Liner 크레딧 답변 평가.
+
 - [현재 검색과 Bivia 재정렬 무료 실험](bivia-retrieval-experiment.md) — A/C 검색 실행 도구, 키·무료 한도 설정, 합성 자료의 실측 범위.
 
 - [현재 구조·Numa·Bivia 비교 계획](../product/articul8-comparison-plan.md) — 문서 준비와 검색 효과를 분리하는 실험 설계, API 지원·무료 한도 미확인 항목. 실측·채택 전.

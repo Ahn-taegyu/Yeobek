@@ -25,6 +25,7 @@
     "preai:compare": "npm run ai:bundle:check",
     "ai:compare": "node scripts/ai-compare.mjs",
     "ai:compare:bivia": "node scripts/bivia-compare.mjs",
+    "ai:recompare:bivia": "node scripts/bivia-recompare.mjs",
     "ai:review": "node scripts/ai-review.mjs",
     "ai:smoke": "node scripts/ai-smoke.mjs",
     "db:start": "node scripts/start-local.mjs",
