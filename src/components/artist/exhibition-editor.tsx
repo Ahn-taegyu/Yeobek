@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useRef, useState, type FormEvent } from "react";
 import { requestApi } from "@/lib/client";
 import { sectionDefinitions } from "@/lib/contracts/knowledge-sections";
@@ -211,7 +212,8 @@ function ExhibitionMaterials({ exhibition, onChange, onBack }: {
     {error && <p className="error" role="alert">{error}</p>}
     <div className="artist-actions">
       <button className="artist-action secondary" onClick={onBack}>이전</button>
-      <a className="artist-action" href="/artist">등록 내용 저장하고 나가기</a>
+      <Link className="artist-action" href={`/artist/exhibitions/${id}/learning`}>여운 학습시키기</Link>
+      <Link className="artist-action secondary" href={`/artist/exhibitions/${id}/faq`}>자주하는 질문</Link>
     </div>
   </section>;
 }
