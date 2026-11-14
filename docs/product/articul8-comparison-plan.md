@@ -8,11 +8,14 @@ updated: '2026-11-14'
 tags: [yeobek, evaluation, articul8]
 rag_include: true
 decision_status: proposed
-work_status: not_started
+work_status: in_progress
 generated:
   by: codex/gpt-6
   at: '2026-11-14T21:02:17+09:00'
 sources:
+- id: execution
+  resource: /references/user-bivia-comparison-experiment.md
+  title: 현재 구조와 Bivia부터 무료 비교 실행
 - id: request
   resource: /references/user-articul8-comparison.md
   title: 세 방식 비교 계획 요청
@@ -52,6 +55,8 @@ sources:
 
 [사용자 요청](../references/user-articul8-comparison.md)에 따라 **도입 효과를 확인한 뒤 채택 여부를 판단**한다. 이 문서는 실행 계획이며 벤더 도입 결정·실험 결과가 아니다. 실제 작가 자료·API 키·계정 식별자를 이 기획 검색 번들에 저장하지 않는다.
 
+**11/14 검색 파일럿 완료:** [후속 요청](../references/user-bivia-comparison-experiment.md)에 따라 A/C 검색60문항을1회 비교했다. 필요한 근거 전부 회수는 A45/50, C49/50이며 C의 순차 검색 p95는9.88초였다. 독립 CLI·합성 자료·실측과 키 설정은 [RES-010](../research/bivia-retrieval-experiment.md)에 기록한다. Numa, 최종 답변 생성 및3회 반복을 포함한 전체 계획 완료나 제품 채택을 뜻하지 않는다.
+
 기준 코드: `main`의 `497ce98ab733ffd81f4cac58c293e351546c6600`(2026-11-14 조사 시점). 실행 직전 기준 SHA를 다시 고정하고, 중간에 코드·모델·프롬프트가 바뀌면 같은 실험군으로 합산하지 않는다. 기존 [MVP 일정](delivery-plan.md)을 변경하거나 이번 비교를 출시 선행 조건으로 추가하지 않는다.
 
 | 현재 확보한 근거 | 확인 범위와 한계 |
@@ -60,7 +65,7 @@ sources:
 | 현재 관람 검색 코드 | `src/lib/ai/context.ts`의 `selectEvidence`가 허용된 근거를 키워드로 정렬하고 개수·문자 예산 안에서 선택한다. `harness.ts`의 생성·인용 검증과 분리되어 있다. docs의 BM25 기획 검색은 비교 대상이 아니다. |
 | 이전 턴 Numa UI 시험 | 플랫폼 잔액 0에서 가상 TXT 1개 업로드, 활성 파일 1개, 문서 1·페이지 1·블록 2와 관계 4개를 확인했다. 페이지 노드에서 한국어 원문·출처 연결을 읽었다. 의미 개체·관계 추출 품질은 미검증이다. Arty는 `Input Tokens limit reached.`로 차단됐다. |
 | Numa API 조사 | 고객용 문서에 ingest·상태·그래프 조회가 있다. 검색·문서 블록·export는 내부 팀용 문서에 있으므로 계정의 지원 계약을 별도로 확인한다. API 키와 필수 tenant/user 헤더를 갖춘 서버 요청은 미검증이다. 주소창 직접 GET의 not-found 응답은 성공 증거가 아니다. |
-| Bivia | 공식 소개는 분류·점수·선택·보류 등의 구조화된 판단을 설명한다. 우리 자료의 정확도, 반환 확률의 보정 상태, API 권한·속도는 미측정이다. 무료 토큰 표시를 모든 기능의 사용 가능성으로 해석하지 않는다. |
+| Bivia | 11/14 `/score` 무료 API 연결과 합성 근거의 A/C 검색을 실측했다([RES-010](../research/bivia-retrieval-experiment.md)). 실제 작가 자료·최종 답변 정확도와 반환 확률 보정 상태는 미검증이다. 무료 토큰 표시를 모든 기능의 사용 가능성으로 해석하지 않는다. |
 
 # 비교하는 세 안
 

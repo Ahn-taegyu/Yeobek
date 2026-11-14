@@ -1,5 +1,7 @@
 # 기술 선택 재검토
 
+- [현재 검색과 Bivia 재정렬 무료 실험](bivia-retrieval-experiment.md) — A/C 검색 실행 도구, 키·무료 한도 설정, 합성 자료의 실측 범위.
+
 - [현재 구조·Numa·Bivia 비교 계획](../product/articul8-comparison-plan.md) — 문서 준비와 검색 효과를 분리하는 실험 설계, API 지원·무료 한도 미확인 항목. 실측·채택 전.
 
 - [작가 참고 파일 읽기](material-reader.md) — 로컬 PDF·Liner 파일 입력·W2 검수와 비용 경계. 실제 호출0회.
@@ -10,7 +12,7 @@
 - **11/14 후속:** [백엔드 제공사 연결](backend-provider-routing.md), [D-015](../decisions/D-015-partner-priority.md). 파트너 우선 원칙과 잠정 모델, 실제 호출 미검증.
 - [다중 후보 평가·재생성과 채택 문맥 계승](candidate-selection.md) — 적용 가능성·평가 하한·비용/지연·서버 대화 상태 설계. 미구현·미측정 제안.
 
-공식 문서 조사 결과와 이번 MVP에 대한 판단을 구분한다. 실제 음성 청취·API 호출·부하 시험·배포 결과가 아니다.
+공식 문서 조사와 실제 실행을 구분한다. Bivia 검색 실험의 API 실측은 RES-010에 기록하며, 다른 문서는 각 문서에 명시된 검증 범위만 확인된 것으로 해석한다.
 
 - **최신 11/13:** [Render 제외 후 추천 스택·AI별 모델/API](recommended-stack.md), [D-010](../decisions/D-010-practical-stack.md). 사용자 안내로 Render 제외 반영, 나머지는 권고 단계.
 

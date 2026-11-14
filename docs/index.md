@@ -11,6 +11,8 @@ okf_version: "0.2"
 
 # MVP부터 읽기
 
+- [현재 검색과 Bivia 무료 비교 실험](research/bivia-retrieval-experiment.md) — 실행 명령, API 키·무료 한도, 합성 자료 실측.
+
 - [프런트 API 인계](specs/frontend-handoff.md) — 화면별 호출 계약과 예시.
 
 - [백엔드 완성 작업 추적](specs/backend-completion.md) — W0~W8 상태와 의존 순서.

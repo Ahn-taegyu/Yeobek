@@ -26,7 +26,7 @@ npm run dev
 
 ## AI 연결 준비
 
-`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 실제 외부 모델 호출은 아직 0회입니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증과 [PR #5 CI](https://github.com/Ahn-taegyu/Yeobek/pull/5)를 통과해 병합됐습니다. 글 승인·게시 API는 PR #6 CI를 통과해 병합됐으며 관람 글 채팅 HTTP도 연결했습니다. 키를 넣어도 관람 화면이 활성화되지는 않습니다.
+`src/lib/ai/`는 해설·자료 정리·평가·Q&A·전사·합성의 서버 어댑터와 하네스를 제공합니다. 기본 경로는 모두 Liner이며 평가 기본 모델은 초안과 다른 Google 계열입니다. 모델 접근과 품질은 실측 전 미확정입니다. 앱 생성·음성 제공사의 실호출 검증과 별도로, [Bivia 검색 실험](docs/research/bivia-retrieval-experiment.md)은 무료 API 실측을 완료했습니다. W1 해설 작업 원장과 생성·조회·재시도·명시적 초안 적용 HTTP는 로컬 검증과 [PR #5 CI](https://github.com/Ahn-taegyu/Yeobek/pull/5)를 통과해 병합됐습니다. 글 승인·게시 API는 PR #6 CI를 통과해 병합됐으며 관람 글 채팅 HTTP도 연결했습니다. 키를 넣어도 관람 화면이 활성화되지는 않습니다.
 
 1. `.env.example`의 AI 항목을 기존 `.env.local`에 추가하고 `LINER_API_KEY`를 서버에 설정합니다. 키에 `NEXT_PUBLIC_`를 붙이지 않습니다.
 2. `AI_ROUTE_DRAFT`, `AI_ROUTE_ORGANIZE`, `AI_ROUTE_JUDGE`, `AI_ROUTE_QA`, `AI_ROUTE_STT`, `AI_ROUTE_TTS`는 `제공사:모델` 형식으로 선택합니다. Liner TTS는 계정에서 확인한 고정 모델을 `AI_ROUTE_TTS` 또는 `LINER_TTS_MODEL`에, 음성을 `LINER_TTS_VOICE`에 지정해야 합니다. 평가 모델은 초안과 다른 인식 가능한 계열이어야 합니다.
@@ -77,6 +77,10 @@ AI의 업무 절차와 말투는 [제품 플러그인](docs/specs/product-ai-plu
 작가 자료 정리는 원문 블록을 분류한 비공개 후보 → 작가 검토 → 버전 재검사 → 적용의 서버 실행 모듈을 제공합니다. 실제 DB 저장소·검수 UI는 아직 연결하지 않았습니다. `createNarrationRuntime`에는 소유 자료로 해설 후보 2개를 병렬 생성하고 평가·최대 한 라운드 재생성하는 경로와 단일 생성 기준선을 연결했습니다. 최종 결과는 미승인 초안입니다. 관람 글 채팅은 연결됐고 대화 문맥 복제는 후속이며 [작가 해설 비교 계약](docs/specs/narration-evaluation.md)을 확인하세요.
 
 관람 하네스 입력은 선택적인 `intent: "narration" | "question"`와 `artworkNumber`를 받습니다. 해설 버튼은 `intent: "narration"`과 작품 ID를, 숫자 입력은 같은 의도와 작품 번호를 보내며 `question`도 함께 전달합니다. 생략 시 제한된 문장 판별을 사용합니다. 승인 해설은 최대 2,000 Unicode 코드 포인트를 그대로 반환·음성 전달하고, 관람 생성 답변은 600자 상한을 유지합니다. 해설 초안은 별도 2,000자 계약을 쓰고 선택 결과의 `overTarget`으로 600자 초과 경고를 전달합니다. 관람 음성 HTTP는 PR #10으로 병합됐으며 UI는 후속입니다. [PR #2 수정 검토서](docs/reviews/ai-harness-fix-review.md)에 재현 근거와 게시 데이터·적용 이력의 후속 요구를 정리했습니다.
+
+## 관람 검색 비교 실험
+
+현재 검색과 Bivia 재정렬은 별도 `npm run ai:compare:bivia`로 비교합니다. 기본 실행은 합성 평가60문항의 기존 검색만 실행하며 외부 호출0회입니다. `--mode=live-free`는 Bivia 키와 최근 무료 한도 확인 파일·명시적 호출 예산이 모두 있어야 실행됩니다. [설정·측정 범위·결과](docs/research/bivia-retrieval-experiment.md)를 확인하세요. 운영 관람 경로와 답변 생성 모델은 이 도구로 바뀌지 않습니다.
 
 ## 작가 해설 비교 실험
 

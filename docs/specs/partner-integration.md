@@ -12,6 +12,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: bivia-experiment
+  resource: /references/user-bivia-comparison-experiment.md
+  title: 현재 구조와 Bivia의 무료 비교 실행 요청
 - id: articul8-comparison
   resource: /references/user-articul8-comparison.md
   title: 현재 구조·Numa·Bivia 비교 계획 요청
@@ -64,6 +67,8 @@ decision_status: proposed
 스티비·채널톡·Alt는 W8의 안내 발송·문의 응대·전사 가져오기 범위다. 정책과 수신 동의, 승인 및 외부 전송 최소화를 지킨다. EXAONE은 비교 후보이며 Bivia와 VAPI는 채택하지 않았다. 파트너 접근과 외부 발송의 실제 동작은 키와 공식 계약 확인 후 검증한다.
 
 # Numa·Bivia 비교 제안
+
+11/14 [후속 실험 요청](../references/user-bivia-comparison-experiment.md)에 따라 A/C 검색 비교를 먼저 실행한다. [실험 도구와 기록](../research/bivia-retrieval-experiment.md)은 Bivia `/score`의 무료 API 시험을 다루며 운영 제공사 채택과 분리한다.
 
 [P-006](../product/articul8-comparison-plan.md)은 현재 구조, Numa 문서 처리·그래프 회수, Bivia의 승인 근거 재정렬을 같은 답변 LLM으로 비교한다. Numa 전처리(B0)와 실시간 검색(B1)은 별도 결과로 기록한다. 고객용 ingest·그래프 API와 내부 팀용 검색·블록 API의 지원 범위를 구별하고, 인증된 서버 호출·필터·무료 한도를 확인하기 전에는 연동 완료로 표시하지 않는다.
 
