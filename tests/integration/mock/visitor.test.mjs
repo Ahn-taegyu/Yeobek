@@ -134,8 +134,9 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
     const execution = JSON.parse(execFileSync("docker", ["exec", "-i", "supabase_db_yeobek-mvp", "psql", "-U", "postgres", "-d", "postgres", "-At", "-v", "ON_ERROR_STOP=1"], {
       input: `select usage from public.api_requests where id='${generated.answerId}';`, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"],
     }).trim());
-    assert.equal(execution.calls.length, 1, "replay must not duplicate usage");
-    assert.equal(execution.calls[0].provider, "mock");
+    // One answer generation plus its single evidence review; the replay adds nothing.
+    assert.equal(execution.calls.length, 2, "replay must not duplicate usage");
+    for (const call of execution.calls) assert.equal(call.provider, "mock");
     assert.ok(execution.elapsedMs >= 0);
     assert.equal("answer" in execution, false);
     for (const key of ["steps", "usage", "promptVersion", "ownerId", "question", "inputHash", "sessionHash"]) {
