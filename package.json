@@ -35,6 +35,7 @@
     "test:visitor": "node --test tests/integration/mock/visitor.test.mjs",
     "db:env": "node scripts/local-env.mjs",
     "db:artist": "node scripts/local-artist.mjs",
+    "db:operator": "node scripts/local-operator.mjs",
     "db:types": "node scripts/database-types.mjs"
   },
   "dependencies": {

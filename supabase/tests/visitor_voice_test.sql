@@ -3,6 +3,9 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public,extensions;
 select no_plan();
 
+-- Isolate cleanup ordering from earlier local HTTP runs; rollback restores it.
+update visitor_audio_assets set cleanup_after = statement_timestamp() + interval '100 years';
+
 insert into auth.users(id,email) values
     ('00000000-0000-0000-0000-000000000001','visitor-owner@example.invalid'),
     ('00000000-0000-0000-0000-000000000002','other-visitor-owner@example.invalid');

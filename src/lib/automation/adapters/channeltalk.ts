@@ -3,9 +3,10 @@ import { z } from "zod";
 import { abortable, createDeadline } from "../../ai/deadline";
 import { AutomationError } from "../errors";
 import type { SupportPort, DispatchResult } from "../ports";
+import { outboundBodySchema } from "../../contracts/automation";
 
 const id = z.string().regex(/^[A-Za-z0-9_-]{1,200}$/);
-const inputSchema = z.object({ channelId: id, chatId: id, text: z.string().trim().min(1).max(2000) }).strict();
+const inputSchema = z.object({ channelId: id, chatId: id, text: outboundBodySchema }).strict();
 const receipt = z.object({ result: z.object({ message: z.object({ id: id.optional() }) }) });
 
 async function readReceipt(response: Response, signal: AbortSignal): Promise<unknown> {

@@ -2,6 +2,10 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public,extensions;
 select no_plan();
+-- Tests own their queue/policy view; prior local HTTP drafts are restored by rollback.
+update automation_events set state = 'suppressed' where state in ('queued','running');
+update outbound_messages set state = 'suppressed' where state in ('approved','sending');
+update automation_policies set mode = 'draft',allowed_categories = array['transactional'] where kind = 'notify';
 insert into auth.users(id,email,email_confirmed_at) values
     ('00000000-0000-0000-0000-000000000001','automation-owner@example.invalid',now()),
     ('00000000-0000-0000-0000-000000000002','automation-operator@example.invalid',now());

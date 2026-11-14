@@ -27,14 +27,14 @@ isOneToOne: false
                   ]
                 },"ai_jobs": {
                   Row: {
-                    "artwork_id": string,"attempt": number,"audio_approval_id": string | null,"created_at": string,"document_id": string,"expected_document_revision": number,"expected_revision": number,"expires_at": string,"id": string,"kind": string,"lease_until": string,"mock": boolean,"owner_id": string,"request_id": string,"result": Json | null,"result_code": string | null,"routing": string,"source_fingerprint": NonNullable<Json>,"source_ids": NonNullable<Json>,"status": string,"strategy": string | null,"updated_at": string,"voice_config_version": number | null,"voice_fingerprint": string | null
+                    "artwork_id": string | null,"attempt": number,"audio_approval_id": string | null,"automation_event_id": string | null,"created_at": string,"document_id": string | null,"expected_document_revision": number | null,"expected_revision": number | null,"expires_at": string,"id": string,"kind": string,"lease_until": string,"mock": boolean,"owner_id": string,"request_id": string,"result": Json | null,"result_code": string | null,"routing": string,"source_fingerprint": NonNullable<Json>,"source_ids": NonNullable<Json>,"status": string,"strategy": string | null,"updated_at": string,"voice_config_version": number | null,"voice_fingerprint": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "artwork_id": string,"attempt"?: number,"audio_approval_id"?: string | null,"created_at"?: string,"document_id": string,"expected_document_revision": number,"expected_revision": number,"expires_at": string,"id"?: string,"kind"?: string,"lease_until": string,"mock"?: boolean,"owner_id": string,"request_id": string,"result"?: Json | null,"result_code"?: string | null,"routing"?: string,"source_fingerprint": NonNullable<Json>,"source_ids": NonNullable<Json>,"status"?: string,"strategy"?: string | null,"updated_at"?: string,"voice_config_version"?: number | null,"voice_fingerprint"?: string | null
+                    "artwork_id"?: string | null,"attempt"?: number,"audio_approval_id"?: string | null,"automation_event_id"?: string | null,"created_at"?: string,"document_id"?: string | null,"expected_document_revision"?: number | null,"expected_revision"?: number | null,"expires_at": string,"id"?: string,"kind"?: string,"lease_until": string,"mock"?: boolean,"owner_id": string,"request_id": string,"result"?: Json | null,"result_code"?: string | null,"routing"?: string,"source_fingerprint": NonNullable<Json>,"source_ids": NonNullable<Json>,"status"?: string,"strategy"?: string | null,"updated_at"?: string,"voice_config_version"?: number | null,"voice_fingerprint"?: string | null
                   }
                   Update: {
-                    "artwork_id"?: string,"attempt"?: number,"audio_approval_id"?: string | null,"created_at"?: string,"document_id"?: string,"expected_document_revision"?: number,"expected_revision"?: number,"expires_at"?: string,"id"?: string,"kind"?: string,"lease_until"?: string,"mock"?: boolean,"owner_id"?: string,"request_id"?: string,"result"?: Json | null,"result_code"?: string | null,"routing"?: string,"source_fingerprint"?: NonNullable<Json>,"source_ids"?: NonNullable<Json>,"status"?: string,"strategy"?: string | null,"updated_at"?: string,"voice_config_version"?: number | null,"voice_fingerprint"?: string | null
+                    "artwork_id"?: string | null,"attempt"?: number,"audio_approval_id"?: string | null,"automation_event_id"?: string | null,"created_at"?: string,"document_id"?: string | null,"expected_document_revision"?: number | null,"expected_revision"?: number | null,"expires_at"?: string,"id"?: string,"kind"?: string,"lease_until"?: string,"mock"?: boolean,"owner_id"?: string,"request_id"?: string,"result"?: Json | null,"result_code"?: string | null,"routing"?: string,"source_fingerprint"?: NonNullable<Json>,"source_ids"?: NonNullable<Json>,"status"?: string,"strategy"?: string | null,"updated_at"?: string,"voice_config_version"?: number | null,"voice_fingerprint"?: string | null
                   }
                   Relationships: [
                     {
@@ -42,6 +42,12 @@ isOneToOne: false
       columns: ["audio_approval_id"]
 isOneToOne: false
       referencedRelation: "narration_approvals"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "ai_jobs_automation_event_id_fkey"
+      columns: ["automation_event_id"]
+isOneToOne: true
+      referencedRelation: "automation_events"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "ai_jobs_owner_id_artwork_id_fkey"
@@ -645,6 +651,9 @@ isOneToOne: false
 "complete_automation_event":
 { Args: { "p_attempt": number,"p_id": string,"p_outbound"?: Json,"p_result_code": string,"p_state": string }; Returns: Json
                            },
+"complete_automation_job":
+{ Args: { "p_attempt": number,"p_elapsed_ms"?: number,"p_event_id": string,"p_job_id": string,"p_outbound"?: Json,"p_result_code": string,"p_state": string,"p_steps"?: Json,"p_usage"?: Json }; Returns: Json
+                           },
 "complete_material_cleanup":
 { Args: { "p_expected_version": number,"p_id": string,"p_owner": string }; Returns: Json
                            },
@@ -759,6 +768,9 @@ isOneToOne: false
 "list_outbox":
 { Args: { "p_limit"?: number }; Returns: Json
                            },
+"list_outbox_page":
+{ Args: { "p_before"?: string,"p_limit"?: number,"p_state"?: string }; Returns: Json
+                           },
 "list_visitor_audio_cleanup":
 { Args: { "p_limit"?: number }; Returns: Json
                            },
@@ -802,6 +814,9 @@ isOneToOne: false
                            },
 "reserve_audio_job":
 { Args: { "p_approval_id": string,"p_artwork_id": string,"p_expected_revision": number,"p_mock": boolean,"p_owner": string,"p_request_id": string,"p_voice_fingerprint": string }; Returns: Json
+                           },
+"reserve_automation_job":
+{ Args: { "p_event_attempt": number,"p_event_id": string,"p_mock": boolean }; Returns: Json
                            },
 "reserve_visitor_request":
 { Args: { "p_exhibition_id": string,"p_input_hash": string,"p_mock": boolean,"p_request_id": string,"p_session_hash": string }; Returns: Json

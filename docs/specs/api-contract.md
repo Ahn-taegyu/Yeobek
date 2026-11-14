@@ -280,10 +280,24 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 
 새 ID의 생성 음성 캐시 재사용은 생성 한도를 차감하지 않지만 원장 행이 무한히 늘지 않도록 세션당 분당 60개 초기 정책 `visitor_audio_cache_requests_per_minute`를 별도로 적용한다. 기존 요청 ID 조회는 이 한도에서도 재사용 가능하다. 60은 측정 전 구현 초기값이며 DB 정책에서 변경한다.
 
-# W8 자동화 내부 DB 계약 (HTTP 미연결)
+# W8 수신 동의·운영자 검토와 내부 DB 계약
 
 `090000` migration의 `get_contact_consents`·`set_contact_consent(category,granted,expectedRevision)`은 인증된 작가 본인만 다루며, 거래성·홍보성 동의는 각각 기본 false·revision 0이다. `list_outbox`·`decide_outbox(id,expectedRevision,approve)`는 등록된 운영자만 실행한다. 일반 로그인 계정은 404에 해당하는 DB 오류를 받는다. 본문 수정은 승인 API에 포함하지 않으며 승인할 때 정확한 revision을 검사한다.
 
 서비스 역할만 `enqueue_automation_event`·`claim_automation_events`·`complete_automation_event`와 발송 claim/check/complete RPC를 실행할 수 있다. 동일 종류·중복 키의 다른 입력과 다른 완료 결과는 충돌이다. `check_outbound_dispatch`는 현재 정책·동의·계정 연결·만료를 다시 확인하고 한 번만 수신 대상과 본문을 반환한다. `accepted`는 제공사 접수, `unknown`은 결과 불명이며 자동 재전송하지 않는다. 이벤트/발송 lease·최대 시도·만료는 `app_policies`에서 읽는다.
 
-이 계약은 실행기에 사용할 DB 기반이다. 예정된 `/api/ops/outbox`, 동의 변경, cron과 웹훅 경로는 아직 구현하지 않았으므로 프런트에서 호출할 수 없다. `ai_jobs` 연결과 문의의 실제 chat 대상 고정도 후속이며 서비스 역할이 임의 모델 출력을 수신 대상으로 사용해서는 안 된다.
+작가·운영자 HTTP는 다음과 같이 연결했다. 모두 기존 `{data,requestId}` 봉투와 `no-store`를 쓰고, 변경 요청은 동일 출처를 요구한다. 타입 클라이언트 경로도 같은 계약에서 파생된다.
+
+| 경로 | 입력 | 반환·거부 |
+| --- | --- | --- |
+| `GET /api/admin/profile/consents` | 로그인 | 두 종류의 `{category,granted,revision,updatedAt}` 배열 |
+| `PATCH /api/admin/profile/consents` | `{category,granted,expectedRevision}` | 본인 동의만 변경. 최초 revision 0, 충돌 409 |
+| `GET /api/ops/outbox` | 선택 쿼리 `cursor`, `state` | `{items,nextCursor}`. 기본 draft, 페이지 50개. `state=all` 또는 개별 상태로 이력 조회 |
+| `POST /api/ops/outbox/{id}/approve` | `{expectedRevision}` | 해당 revision의 초안만 승인. 만료·삭제된 전시는 409 `OUTBOX_UNAVAILABLE` |
+| `POST /api/ops/outbox/{id}/reject` | `{expectedRevision}` | 해당 revision의 초안 거절. 만료된 초안도 정리 가능 |
+
+기본 발송함은 만료·삭제된 전시의 초안을 제외하고, 완료된 발송량과 무관하게 오래된 초안을 커서로 조회한다. 이력은 상태 필터로 명시 조회한다. 승인 요청에 본문·주소를 추가할 수 없으며 응답에는 수신 주소·계정 연결·내부 단계 기록을 넣지 않는다. 운영자 외 계정은 404다. 로컬 운영자 지정은 `npm run db:operator -- <기존 로컬 사용자 UUID>`, 해제는 같은 명령에 `--disable`을 붙인다. 이 명령은 로컬 스택·비익명 사용자만 허용한다.
+
+`091000`은 서비스 전용 `reserve_automation_job`·`complete_automation_job`으로 이벤트와 `ai_jobs`·시도별 사용량/단계를 연결한다. 이벤트당 하나의 원장, 일일 자동화 한도, 시도/lease 검사, 완료와 발송함의 원자적 저장을 적용한다. 작가용 작업 조회에는 운영 작업을 노출하지 않는다. `092000`은 발송 예약 및 본문 전달 직전에 전시 삭제도 재검사한다. 검사 이후 이미 외부로 전송된 내용의 회수를 보장하지 않는다.
+
+상태 전이 이벤트 생성, cron과 웹훅 HTTP, 문의의 실제 chat 대상 고정은 아직 후속이다. 서비스 역할이 임의 모델 출력을 수신 대상으로 사용해서는 안 된다. 이 HTTP 구현과 원장 DB 기반만으로 자동화 전체가 연결된 것은 아니다.

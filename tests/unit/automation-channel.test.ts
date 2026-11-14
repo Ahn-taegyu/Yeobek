@@ -7,6 +7,16 @@ import { verifyChannelSignature } from "@/lib/automation/channel-signature";
 const config = { channelId: "channel-1", getChannelToken: async () => "test-token" };
 const message = { channelId: "channel-1", chatId: "chat-1", text: "승인 후 게시해 주세요." };
 describe("Channel app native message boundary", () => {
+  it("preserves reviewed whitespace and code points and rejects NUL before sending", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => Response.json({ result: { message: {} } }));
+    const adapter = createChannelTalkAdapter(config, { fetch: fetcher });
+    for (const text of ["  승인한 문구\n", "🌿".repeat(2000)]) {
+      expect((await adapter.reply({ ...message, text })).status).toBe("accepted");
+      expect(JSON.parse(fetcher.mock.calls.at(-1)![1]!.body as string).params.dto.plainText).toBe(text);
+    }
+    await expect(adapter.reply({ ...message, text: "문구\0" })).rejects.toMatchObject({ code: "invalid_input" });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
   it("uses scoped token and reviewed native DTO; strips other response fields", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ result: { message: { id: "msg-1", privateField: "discard" } } }));
     expect(await createChannelTalkAdapter(config, { fetch: fetcher }).reply(message)).toEqual({

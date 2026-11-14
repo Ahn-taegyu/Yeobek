@@ -3,11 +3,12 @@ import { z } from "zod";
 import { abortable, createDeadline } from "../../ai/deadline";
 import { AutomationError } from "../errors";
 import type { MailPort, DispatchResult } from "../ports";
+import { outboundBodySchema } from "../../contracts/automation";
 
 const mailInput = z.object({
   recipient: z.email().max(254),
   template: z.enum(["transactional", "marketing"]),
-  paragraph: z.string().trim().min(1).max(2000).refine(value => !value.includes("\0")),
+  paragraph: outboundBodySchema,
 }).strict();
 
 function templateUrl(value: string): string {

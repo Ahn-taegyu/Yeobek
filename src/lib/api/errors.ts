@@ -28,6 +28,8 @@ export function databaseError(error: { code?: string; message?: string }): ApiEr
     case "P1021": return new ApiError(409, "MATERIAL_IN_USE", "연결된 문서와 승인 근거·공개본에서 사용하는 자료입니다.");
     case "P1022": return new ApiError(409, "ACTIVE_PUBLICATION", "공개본을 철회한 뒤 작품을 삭제해 주세요.");
     case "P1023": return new ApiError(429, "AUTHOR_UPLOAD_LIMIT", "오늘 사용할 수 있는 업로드 횟수를 모두 사용했습니다.");
+    case "P1030": return new ApiError(429, "AUTOMATION_JOB_LIMIT", "오늘 사용할 수 있는 자동화 처리 횟수를 모두 사용했습니다.");
+    case "P1031": return new ApiError(409, "OUTBOX_UNAVAILABLE", "검토 가능한 안내가 아닙니다. 새로 불러와 확인해 주세요.");
     case "42501": return new ApiError(403, "FORBIDDEN", "허용되지 않은 요청입니다.");
     case "40001": return new ApiError(409, "REVISION_CONFLICT", "다른 변경이 저장되었습니다. 새로 불러온 뒤 다시 수정해 주세요.");
     case "P1001": return new ApiError(409, "SOURCE_REVISION_CONFLICT", "새로 연결한 출처가 변경되었습니다. 출처를 확인해 주세요.", { sourceRefs: ["최신 출처를 확인한 뒤 다시 연결해 주세요."] });

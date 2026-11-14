@@ -27,6 +27,7 @@ export const DEFAULT_POLICIES = Object.freeze({
   automation_dispatch_lease_seconds: 60,
   automation_event_max_attempts: 3,
   automation_event_retention_days: 30,
+  automation_jobs_per_day: 100,
 });
 export type PolicyKey = keyof typeof DEFAULT_POLICIES;
 export type AppPolicies = { readonly [Key in PolicyKey]: number };
