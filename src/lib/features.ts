@@ -13,6 +13,7 @@ const variables = {
   previewChat: "FEATURE_PREVIEW_CHAT",
   qaRewrite: "FEATURE_QA_REWRITE",
   materialExtraction: "FEATURE_MATERIAL_EXTRACTION",
+  artworkInterview: "FEATURE_ARTWORK_INTERVIEW",
 } as const;
 export type Feature = keyof typeof variables;
 export type Features = Readonly<Record<Feature, boolean>>;

@@ -160,3 +160,7 @@ R1 설계(미구현): 서비스 역할 전용 RPC가 권한 확인된 삭제 요
 
 
 W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.
+
+## F-024 작품 글 인터뷰 논리 데이터
+
+작품별 인터뷰 질문은 `artwork_interview_questions`에 최대 5개까지 관리한다. 행은 작가·작품·슬롯에 귀속되며 질문, 상태, 버전, 연결 근거 ID를 보유한다. 답변 본문은 소유자 권한을 적용하는 `artwork_interview_answers`에 따로 저장한다. 답변 상태는 pending/answered/skipped/approved다. 저장된 답변은 연결된 작품 범위 근거 초안으로 관리되어, 작가가 질문 인터뷰 화면에서 “공개 근거로 사용”을 명시 승인하면 기존 근거 승인·게시 경계를 따른다. 질문과 미승인 답변은 공개 snapshot이나 공개 검색에 포함하지 않는다. 생성은 기존 `ai_jobs`·`ai_job_attempts` 원장을 재사용한다. [F-024](../features/F-024-artwork-text-interview.md) · [API 계약](api-contract.md#작품-글-인터뷰-계약-f-024) · migration `supabase/migrations/20261115010000_artwork_text_interview.sql`.

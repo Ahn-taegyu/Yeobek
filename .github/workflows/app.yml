@@ -77,6 +77,7 @@ jobs:
           FEATURE_PREVIEW_CHAT: "true"
           FEATURE_QA_REWRITE: "true"
           FEATURE_MATERIAL_EXTRACTION: "true"
+          FEATURE_ARTWORK_INTERVIEW: "true"
           CRON_SECRET: local-integration-only-0123456789abcdef
           TEST_CRON_SECRET: local-integration-only-0123456789abcdef
           APP_ORIGIN: http://localhost:3001
@@ -107,11 +108,12 @@ jobs:
           npm run test:proposals
           npm run test:demo
           npm run test:qa
+          node --test tests/integration/mock/artwork-interview.test.mjs
           node --test tests/integration/mock/full-flow.test.mjs
           node --test tests/integration/mock/exhibition-chat.test.mjs
           kill "$mock_pid"
           wait "$mock_pid" || true
-          FEATURE_EXHIBITION_SCOPE_CHAT=true FEATURE_GAPS=false FEATURE_SIGNUP=false FEATURE_EXPECTED_QA=false FEATURE_EXHIBITION_QA=false FEATURE_PREVIEW_CHAT=false FEATURE_QA_REWRITE=false FEATURE_MATERIAL_EXTRACTION=false node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-gaps-off.log 2>&1 &
+          FEATURE_EXHIBITION_SCOPE_CHAT=true FEATURE_GAPS=false FEATURE_SIGNUP=false FEATURE_EXPECTED_QA=false FEATURE_EXHIBITION_QA=false FEATURE_PREVIEW_CHAT=false FEATURE_QA_REWRITE=false FEATURE_MATERIAL_EXTRACTION=false FEATURE_ARTWORK_INTERVIEW=false node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-gaps-off.log 2>&1 &
           mock_pid=$!
           for attempt in {1..60}; do
             if curl --silent --fail http://localhost:3001/api/health > /dev/null; then
@@ -126,6 +128,7 @@ jobs:
           TEST_GAPS_DISABLED_ONLY=true npm run test:visitor
           TEST_SIGNUP_DISABLED_ONLY=true node --test tests/integration/signup.test.mjs
           TEST_QA_DISABLED_ONLY=true npm run test:qa
+          TEST_INTERVIEW_DISABLED_ONLY=true node --test tests/integration/mock/artwork-interview.test.mjs
           TEST_EXHIBITION_CHAT_ENABLED=true node --test tests/integration/mock/exhibition-chat.test.mjs
           TEST_MATERIAL_DISABLED_ONLY=true npm run test:proposals
       - name: Stop the disposable stack
