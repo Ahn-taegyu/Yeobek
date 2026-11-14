@@ -496,9 +496,12 @@ signupRequestId는 최초 가입 입력의 requestId다. 생성 요청의 응답
 | POST `/api/admin/qa/rewrite` | 동일 대상 식별자+instruction+승인 evidencePins. 생성과 독립 평가 통과 후에도 새 draft이며 자동 적용/승인 안 함 |
 | GET `/api/admin/qa/rewrites/{id}`, POST `.../retry` | 원대상 정보와 job 조회, 새 requestId/expectedAttempt로 명시적 재시도. gap 대상은 허용하지 않음 |
 | POST `/api/admin/exhibitions/{id}/training` | requestId, expectedRevision.200; 작업 목록만 저장. 작품별 기본해설+예상QA, 전시QA는 해당 플래그가 켜졌을 때 포함 |
+| GET `/api/admin/exhibitions/{id}/training/latest` | getLatestTrainingBatch. 소유 전시의 만료되지 않은 최근 묶음, 기존 trainingBatchResponse 또는 null(200). 미인증401, 타인·삭제·없는 전시404, expectedQa off404. private/no-store, 모델 호출 없음 |
 | GET `/api/admin/training/{id}` | queued/running/completed와 자식별 상태. completed는 전부 성공을 뜻하지 않으며 각 결과코드 확인 |
 | POST `/api/admin/training/{id}/targets/{targetId}/run` | requestId, expectedAttempt(첫 실행0). 자식 한 건 실행, 같은 요청 재전송은 중복 생성 안 함. 배치별 실행중 한 건 제한 |
 | POST `/api/admin/gaps/{id}/recheck-close` | expectedPublicationId로 작가가 확인한 공개본을 고정해 종료. 재게시 자체는 기존 gap을 닫지 않음 |
+
+최근 학습 묶음은 created_at 내림차순, 동률이면 id 내림차순으로 정한다. 신규 migration 20261115000000은 생성 시각과 조회 인덱스를 추가한다. 이전 묶음은 생성 시각이 없으므로 기존 30일 보존 기준(expires_at − 30일)으로 추정해 만료 시각 순서를 보존한다. 새 묶음은 생성 순간을 저장하므로 보존 정책 변경과 무관하다. 기존 묶음 생성·조회 응답은 바뀌지 않으며 GET은 작업을 생성하거나 재실행하지 않는다. DB 확장을 앱보다 먼저 적용하며 앱을 되돌려도 추가 열·RPC는 유지할 수 있다.
 
 재작성 지시문은 근거가 아니다. 새 사실은 corrections→evidence 승인→rewrite→QA 승인→W12 명시적 게시 순서다. 공개본과 원문을 덮어쓰지 않는다. 미리보기는 현재 단일 질문 단위이며 이전 대화를 자동으로 모델에 전달하지 않는다.
 

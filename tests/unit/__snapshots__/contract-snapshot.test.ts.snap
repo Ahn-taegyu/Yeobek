@@ -11461,6 +11461,188 @@ exports[`HTTP route contracts > snapshots getKnowledge 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots getLatestTrainingBatch 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/exhibitions/{id}/training/latest",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "artistName": {
+                "type": "string",
+              },
+              "exhibitionId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "exhibitionName": {
+                "type": "string",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "status": {
+                "enum": [
+                  "queued",
+                  "running",
+                  "completed",
+                ],
+                "type": "string",
+              },
+              "targets": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "artworkId": {
+                      "anyOf": [
+                        {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                        {
+                          "type": "null",
+                        },
+                      ],
+                    },
+                    "attempt": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "maximum": 2147483647,
+                          "type": "integer",
+                        },
+                        {
+                          "type": "null",
+                        },
+                      ],
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "jobId": {
+                      "anyOf": [
+                        {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                        {
+                          "type": "null",
+                        },
+                      ],
+                    },
+                    "kind": {
+                      "enum": [
+                        "narration",
+                        "expected_qa",
+                      ],
+                      "type": "string",
+                    },
+                    "resultCode": {
+                      "type": [
+                        "string",
+                        "null",
+                      ],
+                    },
+                    "scope": {
+                      "enum": [
+                        "artwork",
+                        "exhibition",
+                      ],
+                      "type": "string",
+                    },
+                    "status": {
+                      "enum": [
+                        "queued",
+                        "running",
+                        "succeeded",
+                        "abstained",
+                        "failed",
+                        "cancelled",
+                      ],
+                      "type": "string",
+                    },
+                    "targetName": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "scope",
+                    "artworkId",
+                    "targetName",
+                    "jobId",
+                    "status",
+                    "attempt",
+                    "resultCode",
+                  ],
+                  "type": "object",
+                },
+                "type": "array",
+              },
+            },
+            "required": [
+              "id",
+              "exhibitionId",
+              "exhibitionName",
+              "artistName",
+              "status",
+              "targets",
+            ],
+            "type": "object",
+          },
+          {
+            "type": "null",
+          },
+        ],
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots getMaterial 1`] = `
 {
   "body": null,

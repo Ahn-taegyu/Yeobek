@@ -914,6 +914,9 @@ isOneToOne: false
 "get_knowledge_document":
 { Args: { "p_subject_id": string,"p_subject_type": string }; Returns: Json
                            },
+"get_latest_training_batch":
+{ Args: { "p_exhibition_id": string }; Returns: Json
+                           },
 "get_material_read":
 { Args: { "p_request_id": string }; Returns: Json
                            },
