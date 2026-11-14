@@ -10,7 +10,7 @@
   text-align: center;
   color: #121215;
 }
-.screen img { margin-inline: auto; }
+.screen img { margin-inline: auto; height: auto; }
 .screen h1 { font-size: 20px; font-weight: 700; margin: 38px 0 12px; }
 .screen p { font-size: 15px; line-height: 1.4; }
 .screen form { text-align: start; margin-top: 32px; }
