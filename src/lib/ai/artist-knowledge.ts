@@ -1,22 +1,22 @@
 import "server-only";
 import type { JobLifecycle } from "./job-lifecycle";
-import { KnowledgeError } from "./errors";
+import { AiError, KnowledgeError } from "./errors";
 export { KnowledgeError } from "./errors";
 import { normalizeAiOutcome } from "./outcome";
+import { abortable, createDeadline } from "./deadline";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { section, sourceRef } from "../api/schemas";
-import { MAX_SECTIONS, sectionsFor } from "../contracts/knowledge-sections";
+import { MAX_SECTIONS, SECTION_IDS, sectionsFor } from "../contracts/knowledge-sections";
 import { assertNotCancelled, textHash } from "./context";
 import { codepoints } from "./contracts";
 import { capabilitiesFor, PLUGIN_VERSION, playbookPrompt } from "./plugin";
 import { PlaybookOrderError, startPlaybook, type PlaybookStepRecord } from "./playbook";
-import type { AiTextProvider } from "./providers/types";
+import type { AiProviderTrace, AiTextProvider } from "./providers/types";
 
 const uuid = z.uuid();
 const revision = z.number().int().positive().max(2147483647);
 const subject = z.enum(["artist", "exhibition", "artwork"]);
-const sectionIds = { artist: ["bio", "practice"], exhibition: ["introduction", "theme"], artwork: ["description", "notes"] } as const;
 const sourceSchema = z.strictObject({ id: uuid, ownerId: uuid, artistId: uuid, subjectType: subject, subjectId: uuid,
   exhibitionId: uuid.nullable(), revision, text: z.string().min(1).refine(v => codepoints(v) <= 5000 && !v.includes("\u0000")), ref: sourceRef });
 const contextSchema = z.strictObject({ documentId: uuid, ownerId: uuid, artistId: uuid, subjectId: uuid,
@@ -25,11 +25,11 @@ const contextSchema = z.strictObject({ documentId: uuid, ownerId: uuid, artistId
 export type ArtistKnowledgeContext = z.infer<typeof contextSchema>;
 const selectionSchema = z.strictObject({ sections: z.array(z.strictObject({
   id: section.shape.id, sourceIds: z.array(uuid).min(1).max(12),
-})).max(2) });
+})).max(MAX_SECTIONS) });
 export const organizationJsonSchema = { name: "yeobek_knowledge_organization", definition: {
   type: "object", additionalProperties: false, required: ["sections"], properties: { sections: { type: "array", items: {
     type: "object", additionalProperties: false, required: ["id", "sourceIds"], properties: {
-      id: { type: "string", enum: ["bio", "practice", "introduction", "theme", "description", "notes"] },
+      id: { type: "string", enum: [...SECTION_IDS] },
       sourceIds: { type: "array", items: { type: "string" } },
     },
   } } },
@@ -38,13 +38,19 @@ const pinSchema = z.strictObject({ id: uuid, revision, hash: z.string().regex(/^
 const proposalSchema = z.strictObject({ id: uuid, ownerId: uuid, documentId: uuid, targetRevision: revision,
   pluginVersion: z.string().min(1), expiresAt: z.number().int().positive(),
   selection: selectionSchema, sourcePins: z.array(pinSchema).max(12),
-  sections: z.array(section).max(2), sourceRefs: z.array(sourceRef).max(24), appliedRevision: revision.nullable() });
+  sections: z.array(section).max(MAX_SECTIONS), sourceRefs: z.array(sourceRef).max(24), appliedRevision: revision.nullable() });
 export type KnowledgeProposal = z.infer<typeof proposalSchema>;
 /** Execution records stay outside the immutable proposal and public HTTP body. */
-export type KnowledgeOrganizationResult = { proposal: KnowledgeProposal | null; failure?: ReturnType<typeof normalizeAiOutcome>; steps: readonly PlaybookStepRecord[] };
+export type KnowledgeOrganizationResult = {
+  proposal: KnowledgeProposal | null;
+  failure?: ReturnType<typeof normalizeAiOutcome>;
+  usage: AiProviderTrace[];
+  elapsedMs: number;
+  steps: readonly PlaybookStepRecord[];
+};
 export type KnowledgeApplicationResult = { documentRevision: number; steps: readonly PlaybookStepRecord[] };
 
-/** Production adapter pending. All reads must enforce authenticated owner and
+/** All adapters must enforce authenticated owner and
  * ancestry. Proposals are private/immutable. commitOwnedProposal must atomically
  * recheck owner, expiry, target CAS and every source pin, consume/apply once, and
  * return the original result on replay. No generic unchecked PATCH is sufficient.
@@ -96,7 +102,7 @@ function planSelection(output: unknown, context: ArtistKnowledgeContext) {
   const parsed = selectionSchema.safeParse(output);
   if (!parsed.success) throw new KnowledgeError("invalid_output");
   const selection = parsed.data;
-  const allowed: readonly string[] = sectionIds[context.subjectType];
+  const allowed: readonly string[] = sectionsFor(context.subjectType).map(section => section.id);
   const used = new Set<string>();
   const sections = [...context.sections];
   let refs = [...context.sourceRefs];
@@ -125,7 +131,13 @@ function planSelection(output: unknown, context: ArtistKnowledgeContext) {
 }
 
 /** actorId must come from verified server auth, never from the request body. */
-export function createArtistKnowledgeHarness(actorId: string, deps: { store: ArtistKnowledgeStore; text: AiTextProvider; now?: () => number; jobs?: JobLifecycle<KnowledgeOrganizationResult> }) {
+export function createArtistKnowledgeHarness(actorId: string, deps: {
+  store: ArtistKnowledgeStore;
+  text: AiTextProvider;
+  now?: () => number;
+  jobs?: JobLifecycle<KnowledgeOrganizationResult>;
+  proposalIdentity?: () => { id: string; expiresAt: number };
+}) {
   if (!uuid.safeParse(actorId).success) throw new KnowledgeError("invalid_input");
   const now = deps.now ?? Date.now;
   const organize = capabilitiesFor("artist-organize", { author: deps.store, proposals: deps.store, jobs: deps.jobs });
@@ -141,11 +153,17 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
   return {
     async propose(input: { documentId: string; expectedRevision: number }, signal?: AbortSignal): Promise<KnowledgeOrganizationResult> {
       const flow = startPlaybook("artist-organize");
+      const started = performance.now();
+      const deadline = createDeadline(30_000, signal);
+      const usage: AiProviderTrace[] = [];
       let reserved = false;
-      const settle = async (result: Omit<KnowledgeOrganizationResult, "steps">) => {
+      let completionAttempted = false;
+      const settle = async (result: Pick<KnowledgeOrganizationResult, "proposal" | "failure">) => {
+        completionAttempted = true;
         const complete = organize["job.complete"];
-        const steps = await flow.settleJob(complete ? snapshot => complete({ ...result, steps: snapshot }) : undefined);
-        return { ...result, steps };
+        const metrics = { usage, elapsedMs: Math.round(performance.now() - started) };
+        const steps = await flow.settleJob(complete ? snapshot => complete({ ...result, ...metrics, steps: snapshot }) : undefined);
+        return { ...result, ...metrics, steps };
       };
       try {
         const request = await flow.step("request.validate", () => {
@@ -156,13 +174,11 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
         });
         const reserve = organize["job.reserve"];
         if (reserve) {
-          await flow.step("job.reserve", reserve);
+          await flow.step("job.reserve", () => abortable(deadline.signal, reserve));
           reserved = true;
         } else flow.skip("job.reserve", "job_unbound");
         const context = await flow.step("author.read", async () => {
-          assertNotCancelled(signal);
-          const raw = await organize["author.read"](actorId, request.documentId, signal);
-          assertNotCancelled(signal);
+          const raw = await abortable(deadline.signal, active => organize["author.read"](actorId, request.documentId, active));
           if (!raw) throw new KnowledgeError("unavailable");
           const context = validateArtistKnowledgeContext(raw, actorId, request.documentId);
           if (context.revision !== request.expectedRevision) throw new KnowledgeError("revision_conflict");
@@ -170,36 +186,52 @@ export function createArtistKnowledgeHarness(actorId: string, deps: { store: Art
         });
         if (!context.sources.length) {
           for (const id of ["model.generate", "output.validate", "proposal.store"] as const) flow.skip(id, "no_sources");
-          return settle({ proposal: null });
+          return await settle({ proposal: null });
         }
         const generated = await flow.step("model.generate", async () => {
-          assertNotCancelled(signal);
-          const result = await deps.text.generate({ system: playbookPrompt("artist-organize"), schema: organizationJsonSchema, signal,
-            input: JSON.stringify({ subjectType: context.subjectType, sources: context.sources.map(({ id, text }) => ({ id, text })) }) });
-          assertNotCancelled(signal);
+          const result = await abortable(deadline.signal, active => deps.text.generate({
+            system: playbookPrompt("artist-organize"), schema: organizationJsonSchema, signal: active, maxOutputTokens: 4096,
+            input: JSON.stringify({ subjectType: context.subjectType,
+              allowedSections: sectionsFor(context.subjectType).map(({ id, prompt }) => ({ id, prompt })),
+              sources: context.sources.map(({ id, text }) => ({ id, text })) }),
+          }));
+          usage.push(result.trace);
           return result;
         });
         const plan = await flow.step("output.validate", () => planSelection(generated.output, context));
         if (!plan.selection.sections.length) {
           flow.skip("proposal.store", "empty_selection");
-          return settle({ proposal: null });
+          return await settle({ proposal: null });
         }
         const proposal = await flow.step("proposal.store", async () => {
-          const proposal: KnowledgeProposal = { id: randomUUID(), ownerId: actorId, documentId: context.documentId,
-            targetRevision: context.revision, pluginVersion: PLUGIN_VERSION, expiresAt: now() + 15 * 60 * 1000,
+          const createdAt = now();
+          const identity = deps.proposalIdentity?.() ?? { id: randomUUID(), expiresAt: createdAt + 15 * 60 * 1000 };
+          const pinned = proposalSchema.pick({ id: true, expiresAt: true }).safeParse(identity);
+          if (!pinned.success) throw new KnowledgeError("invalid_input");
+          if (pinned.data.expiresAt <= createdAt) throw new KnowledgeError("proposal_expired");
+          const proposal: KnowledgeProposal = { ...pinned.data, ownerId: actorId, documentId: context.documentId,
+            targetRevision: context.revision, pluginVersion: PLUGIN_VERSION,
             ...plan, appliedRevision: null };
           assertNotCancelled(signal);
-          await organize["proposal.store"](proposal, signal);
+          if (reserved) await abortable(deadline.signal, active => organize["proposal.store"](proposal, active));
+          else {
+            // An unbound store may commit the proposal itself.
+            deadline.signal.throwIfAborted();
+            await organize["proposal.store"](proposal, deadline.signal);
+          }
           return proposal;
         });
-        return settle({ proposal });
+        return await settle({ proposal });
       } catch (error) {
-        if (!(error instanceof PlaybookOrderError)) {
-          if (reserved) await settle({ proposal: null, failure: normalizeAiOutcome(error) });
+        if (!(error instanceof PlaybookOrderError) && !completionAttempted) {
+          if (reserved) {
+            const failure = signal?.aborted ? new AiError("cancelled") : error;
+            await settle({ proposal: null, failure: normalizeAiOutcome(failure) });
+          }
           else flow.fail(error);
         }
         throw error;
-      }
+      } finally { deadline.dispose(); }
     },
     async apply(input: { proposalId: string; reviewed: true }, signal?: AbortSignal): Promise<KnowledgeApplicationResult> {
       const flow = startPlaybook("artist-apply");

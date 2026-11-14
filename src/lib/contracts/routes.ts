@@ -4,6 +4,7 @@ import { expectedQaGenerateSchema, expectedQaJobResponse, qaListQuery, qaItemsRe
 import { createExhibitionBody, updateExhibitionBody, createArtworkBody, updateArtworkBody,
   advanceExhibitionSchema, advanceExhibitionResponse, reorderArtworksSchema, reorderArtworksResponse } from "./authoring";
 import { z } from "zod";
+import { generateProposalSchema, applyProposalSchema, appliedProposalResponse, proposalResponse, historyQuery, historyResponse } from "./proposals";
 import { setOnboardingMediaSchema, updateOnboardingSchema } from "./onboarding";
 import { authSessionResponse, resendSignupSchema, signupPendingResponse, signupSchema, signupVerifiedResponse, verifySignupSchema } from "./signup";
 import { channelWebhookSchema, channelWebhookResponse, supportBindingSchema, supportBindingResponse } from "./support";
@@ -14,7 +15,7 @@ import { requestUploadSchema, completeUploadSchema, deleteMaterialSchema, delete
   setArtworkImageSchema, materialResponse, materialListResponse, uploadResponse, listMaterialsQuery,
   materialDownloadResponse, deletedArtworkResponse } from "./materials";
 import { closeGapRecheckSchema, visitorChatRequest, visitorReplyResponse, gapListResponse, gapResponse, checkVersionsRequest, checkVersionsResponse, purgeResponse } from "./visitor";
-import { generateNarrationSchema, narrationJobResponse, jobResponse, audioJobResponse, generateAudioSchema, retryJobSchema, saveNarrationSchema } from "./jobs";
+import { generateNarrationSchema, narrationJobResponse, jobResponse, audioJobResponse, organizeJobResponse, generateAudioSchema, retryJobSchema, saveNarrationSchema } from "./jobs";
 import { approvalSchema, approvalResponse, evidenceImpactSchema, evidenceResponse, labelsResponse,
   publicationSchema, publicationResponse, reviewResponse, revokeEvidenceSchema, revokeImpactResponse,
   upsertEvidenceSchema, upsertExhibitionEvidenceSchema, approveEvidenceSchema } from "./publication";
@@ -47,6 +48,10 @@ const byId = z.strictObject({ id: uuid });
 const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
+  generateProposal: { method: "POST", path: "/api/admin/knowledge/{id}/proposals", params: byId, body: generateProposalSchema, response: successEnvelope(organizeJobResponse), statuses: [200, 201] },
+  getProposal: { method: "GET", path: "/api/admin/proposals/{id}", params: byId, response: successEnvelope(proposalResponse), statuses: [200] },
+  applyProposal: { method: "POST", path: "/api/admin/proposals/{id}/apply", params: byId, body: applyProposalSchema, response: successEnvelope(appliedProposalResponse), statuses: [200] },
+  listDocumentHistory: { method: "GET", path: "/api/admin/knowledge/{id}/history", params: byId, query: historyQuery, response: successEnvelope(historyResponse), statuses: [200] },
   previewChat: { method: "POST", path: "/api/admin/exhibitions/{id}/preview/chat", params: byId, body: previewChatSchema, response: successEnvelope(previewAnswerResponse), statuses: [200, 201] },
   getPreviewAnswer: { method: "GET", path: "/api/admin/preview/{id}", params: byId, response: successEnvelope(previewAnswerResponse), statuses: [200] },
   evaluatePreviewAnswer: { method: "POST", path: "/api/admin/preview/{id}/evaluations", params: byId, body: previewEvaluationSchema, response: successEnvelope(previewEvaluationResponse), statuses: [200] },

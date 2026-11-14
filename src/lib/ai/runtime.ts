@@ -64,9 +64,10 @@ export function createDocentRuntime(publications: PublicationStore, answers: Spe
 export const transcribeRecording: AiTranscriptionProvider["transcribe"] = input => createConfiguredTranscriptionProvider().transcribe(input);
 export const createNarrationDraftProvider = () => createConfiguredTextProvider("draft");
 
-export function createArtistKnowledgeRuntime(actorId: string, store: ArtistKnowledgeStore, jobs?: JobLifecycle<KnowledgeOrganizationResult>) {
+export function createArtistKnowledgeRuntime(actorId: string, store: ArtistKnowledgeStore, jobs?: JobLifecycle<KnowledgeOrganizationResult>,
+  proposalIdentity?: () => { id: string; expiresAt: number }) {
   const mock = isMockMode();
-  const harness = createArtistKnowledgeHarness(actorId, { store, jobs,
+  const harness = createArtistKnowledgeHarness(actorId, { store, jobs, proposalIdentity,
     text: { generate: input => createConfiguredTextProvider("organize").generate(input) },
   });
   return {
