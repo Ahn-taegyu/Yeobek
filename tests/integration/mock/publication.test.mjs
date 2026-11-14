@@ -59,7 +59,9 @@ test("publish approved evidence and revoke its use across exhibitions through HT
     const path = `/api/admin/exhibitions/${empty.id}/publication`;
     const checklist = await request(path);
     assert.deepEqual(checklist.exhibitionBlockingCodes, ["EXHIBITION_TITLE_REQUIRED",
-      "EXHIBITION_PERIOD_REQUIRED", "EXHIBITION_PLACE_REQUIRED", "ARTWORK_REQUIRED"]);
+      "EXHIBITION_PERIOD_REQUIRED", "EXHIBITION_PLACE_REQUIRED", "ARTWORK_REQUIRED",
+      "EXHIBITION_AUTHORING_INCOMPLETE", "EXHIBITION_START_DATE_REQUIRED", "EXHIBITION_START_TIME_REQUIRED",
+      "EXHIBITION_END_DATE_REQUIRED", "EXHIBITION_END_TIME_REQUIRED"]);
     assert.deepEqual(checklist.artworks, []);
     await request(path, undefined, { user: 1, expected: 404 });
     const blocked = await request(path, { action: "publish", requestId: randomUUID(),
