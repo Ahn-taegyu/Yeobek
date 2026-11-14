@@ -9,6 +9,7 @@ import { AI_LIMITS } from "@/lib/contracts/chat";
 import type { PreviewAnswer, QaRewriteJob } from "@/lib/contracts/qa";
 import { ArtistLink, errorMessage, Field, Header, Loading, PrivateImage, useArtistLoad } from "./ui";
 import { artworkListKey, exhibitionKey, loadArtworkList, loadExhibitionOverview, overviewKey } from "./navigation-data";
+import { VerificationLinks } from "./verification-links";
 
 type Batch = Awaited<ReturnType<typeof requestApi<"getTrainingBatch">>>["data"];
 type Target = Batch["targets"][number];
@@ -39,7 +40,7 @@ function useReviewData(id: string) {
   });
 }
 
-export function Learning({ id }: { id: string }) {
+export function Learning({ id, interviewEnabled = false }: { id: string; interviewEnabled?: boolean }) {
   const result = useReviewData(id);
   const loadLatest = useCallback(async (signal: AbortSignal) =>
     (await requestApi("getLatestTrainingBatch", { params: { id }, signal })).data, [id]);
@@ -116,8 +117,6 @@ export function Learning({ id }: { id: string }) {
   const needsMaterial = batch?.targets.some(item => item.status === "abstained");
   const expired = batch?.targets.some(item => item.resultCode === "JOB_EXPIRED");
   const incomplete = batch?.status === "completed" && completed !== batch.targets.length;
-  const hasQuestions = batch?.targets.some(item => item.kind === "expected_qa" && item.status === "succeeded");
-  const hasNarration = batch?.targets.some(item => item.kind === "narration" && item.status === "succeeded");
   return <>
     {!result.data ? <Loading {...result} /> : <section className="artist-learning yeobek-appear">
       <div className="artist-learning-names">
@@ -142,19 +141,40 @@ export function Learning({ id }: { id: string }) {
         {incomplete && <p role="status">{needsMaterial ? "학습을 마치지 못했어요. 전시 자료를 확인해주세요." : "일부 학습을 마치지 못했어요. 다시 시도해주세요."}</p>}
         {batch?.status === "completed" && !expired && <button className="artist-action secondary" disabled={busy}
           onClick={() => void run(true)}>새로 학습시키기</button>}
-        {batch && hasNarration && <ArtistLink className="artist-action" href={`${root(id)}/review?batch=${batch.id}`}
-          prepare={() => import("./narration-review").then(({ prepareNarrationReview }) => prepareNarrationReview(id, result.data?.works[0]?.id))}>
-          기본 해설 검토
-        </ArtistLink>}
-        {batch?.status === "completed" && (!incomplete || hasQuestions) &&
-          <ArtistLink className={`artist-action${incomplete ? " secondary" : ""}`} href={`${root(id)}/faq`}
-            prepare={() => loadArtistPage(faqKey(id), signal => loadFaq(id, signal))}>
-            {incomplete ? "생성된 질문 보기" : "자주하는 질문"}
-          </ArtistLink>}
+        {batch?.status === "completed" && <>
+          {interviewEnabled && <InterviewStep id={id} works={result.data.works} busy={busy} onRetrain={() => void run(true)} />}
+          <h3>{interviewEnabled ? "3. 학습 결과 검증" : "학습 결과 검증"}</h3>
+          <VerificationLinks id={id} batch={batch} prepareFaq={() => loadArtistPage(faqKey(id), signal => loadFaq(id, signal))} />
+        </>}
       </> : <p>먼저 작품을 등록해주세요.</p>}
       {error && <p className="error" role="alert">{error}</p>}
     </section>}
   </>;
+}
+
+/** Between training and review: interview answers enter narration and Q&A only on the next training. */
+function InterviewStep({ id, works, busy, onRetrain }: {
+  id: string; works: { id: string; title: string }[]; busy: boolean; onRetrain: () => void;
+}) {
+  const load = useCallback(async (signal: AbortSignal) => Promise.all(works.map(async work => {
+    const { data } = await requestApi("getArtworkInterview", { params: { id: work.id }, signal });
+    return { id: work.id, title: work.title, asked: data.questions.length,
+      approved: data.questions.filter(question => question.status === "approved").length };
+  })), [works]);
+  const result = useArtistLoad(load);
+  const approved = result.data?.reduce((sum, work) => sum + work.approved, 0) ?? 0;
+  return <section aria-labelledby="interview-step">
+    <h3 id="interview-step">2. AI 인터뷰</h3>
+    <p>여운이 학습한 자료로 답하지 못한 내용을 작품별로 물어봐요. 승인한 답변은 다시 학습해야 해설과 질문에 반영돼요.</p>
+    {!result.data ? <Loading {...result} /> : <ul className="artist-workflow-list">{result.data.map(work => <li key={work.id}>
+      <strong>{work.title}</strong>
+      <p className="artist-note">{work.asked ? `질문 ${work.asked}개 · 승인 ${work.approved}개` : "아직 인터뷰하지 않았어요"}</p>
+      <ArtistLink className="artist-action secondary" href={`${root(id)}/artworks/${work.id}/interview`}>
+        {work.asked ? "인터뷰 이어하기" : "인터뷰 시작"}
+      </ArtistLink>
+    </li>)}</ul>}
+    {approved > 0 && <button className="artist-action" disabled={busy} onClick={onRetrain}>인터뷰 답변 반영해 다시 학습</button>}
+  </section>;
 }
 
 const faqKey = (id: string) => `faq:${id}`;
