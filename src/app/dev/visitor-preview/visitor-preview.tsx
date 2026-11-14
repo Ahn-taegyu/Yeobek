@@ -17,7 +17,7 @@ const works = [
   ...work,
   id: `preview-work-${index + 1}`,
   number: index + 1,
-  image: { id: String(index + 1) },
+  image: index === 3 || index === 4 ? null : { id: String(index + 1) },
 }));
 
 const exhibition: ExperienceExhibition = {
@@ -35,7 +35,8 @@ const exhibition: ExperienceExhibition = {
 function PreviewImage({ id, alt, className, kind }: ExperienceImageProps) {
   const index = Number(id);
   if (!Number.isInteger(index) || index < 1 || index > works.length) return null;
-  return <Image unoptimized src={`/yeobek/preview/work-${index}.png`} alt={alt}
+  const imageName = kind === "poster" || index > 3 ? `work-${index}` : `sample-${index}`;
+  return <Image unoptimized src={`/yeobek/preview/${imageName}.png`} alt={alt}
     className={className} width={kind === "poster" ? 233 : 352} height={kind === "poster" ? 392 : 352} />;
 }
 
@@ -44,7 +45,9 @@ const previewTransport: ExperienceTransport = {
     const selected = works.find(work => work.id === body.artworkId);
     return {
       answerId: crypto.randomUUID(),
-      answer: selected
+      answer: selected && body.intent === "narration"
+        ? `[시연 기본 해설] ${selected.description}`
+        : selected
         ? `[시연 답변] ${selected.title} — ${selected.description} 작가명은 시연 작가입니다.`
         : "[시연 답변] 이 전시는 일상의 풍경과 기억을 다룹니다. 작품을 선택해 질문할 수도 있어요.",
       artworkId: selected?.id ?? null,

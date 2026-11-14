@@ -214,3 +214,25 @@ span.answerImage { display: none; }
 .intro .description { scrollbar-width: none; }
 .intro .description::-webkit-scrollbar { display: none; }
 .tileName { width: 100%; text-align: center; }
+
+.grid { display: block; columns: 2; column-gap: 18px; }
+.grid li { break-inside: avoid; margin-bottom: 16px; }
+.grid .tile { grid-template-columns: minmax(0, 1fr); }
+.pickerImage { display: block; width: 100%; }
+.grid img.thumbnail { max-height: none; aspect-ratio: auto; object-fit: contain; }
+.fallbackImage { display: grid; place-items: center; background: #fff; overflow: hidden; }
+.fallbackImage img { display: block; width: 80%; height: auto; object-fit: contain; }
+.strip { padding-top: 10px; padding-bottom: 6px; scrollbar-width: none; }
+.strip::-webkit-scrollbar { display: none; }
+.strip .pickerImage { width: 80px; }
+.grid .fallbackImage { width: 100%; }
+.grid .gridFallback { aspect-ratio: auto; min-height: 0; border: 0; border-radius: 20px; overflow: hidden; background: transparent; }
+.grid .gridFallback img { width: 100%; height: auto; display: block; }
+.welcomeMark { transform: scale(1.2); }
+.welcome p { width: 100%; margin-inline: auto; white-space: nowrap; letter-spacing: -.035em; }
+.composer { padding-bottom: calc(30px + max(18px, env(safe-area-inset-bottom))); }
+@media (max-width: 360px) { .welcome p { white-space: normal; } }
+.turn .bubble { background: #734120; color: #fff3de; font-size: 14px; line-height: 20px; border-radius: 100px; padding: 11px 16px; }
+.turn .answer { font-size: 14px; line-height: 20px; letter-spacing: -.025em; }
+.answerImage { width: 179px; height: 222px; object-fit: cover; border-radius: 16px; }
+.composer .mic { background: #734120; }

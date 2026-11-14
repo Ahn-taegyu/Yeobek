@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { transitionScreen } from "@/components/ui/motion";
 import { brand } from "@/components/ui/brand";
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ComponentType } from "react";
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState, type FormEvent, type ComponentType } from "react";
 import { AiStarLogo } from "@/components/ui/ai-star/ai-star-logo";
 import { ApiClientError, requestApi } from "@/lib/client";
 import { AI_LIMITS, codepoints } from "@/lib/contracts/chat";
@@ -15,9 +15,9 @@ import type { ExperienceArtwork, ExperienceExhibition, ExperienceImageProps, Exp
 type Exhibition = Awaited<ReturnType<typeof loadExhibition>>;
 type Artwork = ExperienceArtwork;
 type Reply = ExperienceReply;
-type Turn = { id: string; question: string; reply: Reply; artwork?: Artwork; reveal?: boolean };
+type Turn = { id: string; question: string; reply: Reply; artwork?: Artwork; reveal?: boolean; isNarration?: boolean };
 /** The question being answered: shown as its bubble with the thinking star until the reply lands. */
-type Asking = { id: string; question: string; leaving: boolean };
+type Asking = { id: string; question: string; leaving: boolean; isNarration?: boolean };
 
 /** Thinking star fade-out before the answer starts revealing (matches .thinking transition). */
 const THINKING_FADE_MS = 280;
@@ -124,10 +124,20 @@ function responseMayBePending(error: unknown) {
   return error instanceof ApiClientError && ["NETWORK_ERROR", "REQUEST_IN_PROGRESS"].includes(error.code);
 }
 
-function ArtImage({ artwork, className, decorative = false, thumbnail = false, ImageComponent }: {
-  artwork: Artwork; className?: string; decorative?: boolean; thumbnail?: boolean; ImageComponent: ComponentType<ExperienceImageProps>;
+function ArtImage({ artwork, className, decorative = false, thumbnail = false, grid = false, ImageComponent }: {
+  artwork: Artwork; className?: string; decorative?: boolean; thumbnail?: boolean; grid?: boolean; ImageComponent: ComponentType<ExperienceImageProps>;
 }) {
-  return artwork.image
+  const [failed, setFailed] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
+  if (thumbnail) return <span className={styles.pickerImage} onErrorCapture={() => setFailed(true)}>
+    {artwork.image?.id?.trim() && !failed
+      ? <ImageComponent key={artwork.image.id} id={artwork.image.id} kind="image" className={className} alt="" thumbnail />
+      : !fallbackFailed && <span className={`${className} ${styles.fallbackImage} ${grid ? styles.gridFallback : ""}`}>
+        <Image src={grid ? "/yeobek/artwork-default.png" : "/yeobek/visitor-fallback.png"}
+          width={grid ? 332 : 320} height={grid ? 186 : 320} alt="" onError={() => setFallbackFailed(true)} />
+      </span>}
+  </span>;
+  return artwork.image?.id
     ? <ImageComponent key={artwork.image.id} id={artwork.image.id} kind="image" className={className} fallback={String(artwork.number)}
       alt={decorative ? "" : artwork.title} thumbnail={thumbnail} />
     : <span className={className} aria-hidden="true">{artwork.number}</span>;
@@ -182,6 +192,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
   const [error, setError] = useState("");
   const operation = useRef<AbortController | null>(null);
   const pendingChat = useRef<{ key: string; requestId: string } | null>(null);
+  const introduced = useRef(new Set<string>());
   const contextSequence = useRef(0);
   const audio = useRef<HTMLAudioElement | null>(null);
   const audioUrl = useRef<string | null>(null);
@@ -261,7 +272,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
   }, setError);
 
   function select(work: Artwork) {
-    const nextId = work.id;
+    const nextId = work.id === selected ? null : work.id;
     const changed = nextId !== selected;
     if (changed) {
       contextSequence.current += 1;
@@ -274,9 +285,9 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       setError("");
     }
     setSelected(nextId);
-    setPicker(null);
+    if (nextId !== null) setPicker(null);
     // Picking a different artwork immediately shows its approved introduction.
-    if (changed) send(`${work.number}. ${work.title}`, { artworkId: nextId, intent: "narration", fromDraft: false });
+    if (changed && nextId && !introduced.current.has(nextId)) send(`${work.number}. ${work.title}`, { artworkId: nextId, intent: "narration", fromDraft: false });
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -290,7 +301,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
   function send(text: string, { artworkId, intent, fromDraft }: { artworkId: string | null; intent?: "narration"; fromDraft: boolean }) {
     if (operation.current) return;
     const turnId = crypto.randomUUID();
-    setAsking({ id: turnId, question: text, leaving: false });
+    setAsking({ id: turnId, question: text, leaving: false, isNarration: intent === "narration" });
     void run("chat", async signal => {
       try {
         await ask(signal);
@@ -318,10 +329,11 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       setAsking(current => current?.id === turnId ? { ...current, leaving: true } : current);
       await wait(reducedMotion() ? 0 : THINKING_FADE_MS, signal);
       if (signal.aborted) return;
+      if (intent === "narration" && artworkId) introduced.current.add(artworkId);
       const resolved = exhibition.artworks.find(work => work.id === reply.artworkId);
       if (resolved) setSelected(resolved.id);
       setTurns(previous => [...previous, {
-        id: turnId, question: text, reply, artwork: resolved, reveal: true,
+        id: turnId, question: text, reply, artwork: resolved, reveal: true, isNarration: intent === "narration",
       }]);
       setAsking(null);
       if (fromDraft) {
@@ -331,6 +343,19 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       if (reply.outputMode === "voice" && reply.canSpeak !== false) await play(reply.answerId, signal);
     }
   }
+
+  const introduceDirectArtwork = useEffectEvent(() => {
+    const work = exhibition.artworks.find(item => item.id === initialArtworkId);
+    if (work && !introduced.current.has(work.id)) {
+      send(`${work.number}. ${work.title}`, { artworkId: work.id, intent: "narration", fromDraft: false });
+    }
+  });
+
+  useEffect(() => {
+    if (!initialArtworkId) return;
+    const timer = window.setTimeout(() => introduceDirectArtwork(), 0);
+    return () => window.clearTimeout(timer);
+  }, [initialArtworkId]);
 
   if (!entered) return <section data-visitor className={styles.intro}>
     <div className={styles.brand}>{brand.name}</div>
@@ -377,7 +402,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       <ul className={picker === "grid" ? styles.grid : styles.strip}>
         {(picker === "grid" ? shown : exhibition.artworks).map(work => <li key={work.id}>
           <button className={styles.tile} aria-pressed={selected === work.id} onClick={() => { unlockAudio(); transitionScreen(() => select(work)); }}>
-            <ArtImage ImageComponent={ImageComponent} artwork={work} className={styles.thumbnail} decorative thumbnail />
+            <ArtImage key={work.image?.id ?? work.id} ImageComponent={ImageComponent} artwork={work} className={styles.thumbnail} decorative thumbnail grid={picker === "grid"} />
             <span className={picker === "grid" ? styles.visuallyHidden : styles.tileName} title={`${work.number}. ${work.title}`}>{work.number}. {work.title}</span>
           </button>
         </li>)}
@@ -390,8 +415,8 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
         <p>전시에서 느낀 감동과 기억이 오래도록 남을 수 있도록,<br />작품에 담긴 이야기를 들려드릴게요.</p>
       </div>}
       {/* One keyed list: the pending article becomes the answered turn in place, so the bubble never re-mounts. */}
-      {[...turns.map(({ id, question, reply, artwork, reveal }) => <article className={`${styles.turn} yeobek-appear`} key={id}>
-        <p className={styles.bubble}>{question}</p>
+      {[...turns.map(({ id, question, reply, artwork, reveal, isNarration }) => <article className={`${styles.turn} yeobek-appear`} key={id}>
+        {!isNarration && <p className={styles.bubble}>{question}</p>}
         {reply.image === undefined && artwork?.image && <ArtImage ImageComponent={ImageComponent} key={artwork.image.id} artwork={artwork}
           className={`${styles.answerImage}${reveal ? ` ${styles.revealBlock}` : ""}`} />}
         {reply.image && <ImageComponent className={`${styles.answerImage}${reveal ? ` ${styles.revealBlock}` : ""}`}
@@ -401,7 +426,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
         {!muted && reply.canSpeak !== false && <button className={styles.textButton} disabled={busy !== null}
           onClick={() => { unlockAudio(); void run("speech", signal => play(reply.answerId, signal)); }}>답변 듣기</button>}
       </article>), ...(asking ? [<article className={`${styles.turn} yeobek-appear`} key={asking.id}>
-        <p className={styles.bubble}>{asking.question}</p>
+        {!asking.isNarration && <p className={styles.bubble}>{asking.question}</p>}
         <AiStarLogo className={`${styles.thinking}${asking.leaving ? ` ${styles.thinkingDone}` : ""}`}
           state="thinking" size={64} label="" />
         <p className="sr-only" role="status">답변을 준비하고 있어요.</p>
