@@ -68,9 +68,12 @@ set local role service_role;
 
 select set_config('test.mockjob',reserve_ai_job('00000000-0000-0000-0000-000000000001',gen_random_uuid(),
     '20000000-0000-0000-0000-000000000001',2,1,'single',true)#>>'{job,id}',true);
+reset role;
+select set_config('test.source_ids',(select jsonb_build_array(source_ids->>0)::text from ai_jobs where id=current_setting('test.mockjob')::uuid),true);
+set local role service_role;
 select complete_ai_job('00000000-0000-0000-0000-000000000001',current_setting('test.mockjob')::uuid,1,
     jsonb_build_object('status','selected','reason','passed','mock',true,'selected',jsonb_build_object(
-        'answer','Simulated narration','citations',(select jsonb_build_array(source_ids->>0) from ai_jobs where id=current_setting('test.mockjob')::uuid))));
+        'answer','Simulated narration','citations',current_setting('test.source_ids')::jsonb)));
 set local role authenticated;
 select save_narration_draft('20000000-0000-0000-0000-000000000001',2,'Simulated narration',current_setting('test.mockjob')::uuid);
 select save_narration_draft('20000000-0000-0000-0000-000000000001',3,'Edited simulated narration');
@@ -108,9 +111,12 @@ select lives_ok($$select resume_with_audio_mode('00000000-0000-0000-0000-0000000
 
 select set_config('test.livejob',reserve_ai_job('00000000-0000-0000-0000-000000000001',gen_random_uuid(),
     '20000000-0000-0000-0000-000000000001',5,1,'single',false)#>>'{job,id}',true);
+reset role;
+select set_config('test.source_ids',(select jsonb_build_array(source_ids->>0)::text from ai_jobs where id=current_setting('test.livejob')::uuid),true);
+set local role service_role;
 select complete_ai_job('00000000-0000-0000-0000-000000000001',current_setting('test.livejob')::uuid,1,
     jsonb_build_object('status','selected','reason','passed','mock',false,'selected',jsonb_build_object(
-        'answer','Replacement live narration','citations',(select jsonb_build_array(source_ids->>0) from ai_jobs where id=current_setting('test.livejob')::uuid))));
+        'answer','Replacement live narration','citations',current_setting('test.source_ids')::jsonb)));
 set local role authenticated;
 select save_narration_draft('20000000-0000-0000-0000-000000000001',5,'Replacement live narration',current_setting('test.livejob')::uuid);
 select save_narration_draft('20000000-0000-0000-0000-000000000001',6,'Edited live narration');
