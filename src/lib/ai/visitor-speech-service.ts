@@ -33,7 +33,7 @@ const unavailable = () => new ApiError(404, "NOT_FOUND", "낭독할 답변을 �
 const storageUnavailable = () => new ApiError(503, "STORAGE_UNAVAILABLE", "음성 파일을 불러오지 못했습니다.");
 const failureStatuses: Record<string, number> = { CONTENT_CHANGED: 404, NOT_FOUND: 404, REQUEST_CANCELLED: 499,
   REQUEST_TIMEOUT: 504, RATE_LIMITED: 429, PROVIDER_UNAVAILABLE: 503, SERVER_CONFIGURATION_ERROR: 503,
-  STORAGE_UNAVAILABLE: 503, AI_INVALID_OUTPUT: 502, AI_GENERATION_FAILED: 502, INTERNAL_ERROR: 500 };
+  STORAGE_UNAVAILABLE: 503, AI_INVALID_OUTPUT: 502, AI_GENERATION_FAILED: 502, AI_INVALID_CONTEXT: 500, INTERNAL_ERROR: 500 };
 
 function replayFailure(code: string | null): never {
   if (code === "CONTENT_CHANGED" || code === "NOT_FOUND") throw unavailable();
@@ -41,7 +41,8 @@ function replayFailure(code: string | null): never {
   throw new ApiError(502, "AI_GENERATION_FAILED", "음성을 준비하지 못했습니다.");
 }
 
-export async function speakVisitorAnswer(input: z.infer<typeof speechRequest>, sessionHash: string, signal?: AbortSignal) {
+export async function speakVisitorAnswer(input: z.infer<typeof speechRequest>, sessionHash: string, signal?: AbortSignal,
+  beforeReservation?: (exhibitionId: string) => Promise<void>) {
   const worker = createWorkerSupabase({ timeoutMs: 15_000 });
   const publications = createPublicationStore(worker);
   const answers = createSpeechSourceStore(worker, sessionHash);
@@ -86,6 +87,8 @@ export async function speakVisitorAnswer(input: z.infer<typeof speechRequest>, s
         p_session_hash: sessionHash, p_id: input.answerId,
       });
       if (typeof exhibitionId !== "string") throw unavailable();
+      active();
+      if (beforeReservation) await beforeReservation(exhibitionId);
       active();
       request = decodeDatabase(voiceReservation, await rpc(worker, "reserve_visitor_voice", {
         p_session_hash: sessionHash, p_exhibition_id: exhibitionId, p_request_id: input.requestId,

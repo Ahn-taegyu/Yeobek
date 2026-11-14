@@ -14,6 +14,7 @@ const notFound = { status: 404, code: "NOT_FOUND" };
 const revisionConflict = { status: 409, code: "REVISION_CONFLICT" };
 const cancelled = { status: 499, code: "REQUEST_CANCELLED" };
 const internalError = { status: 500, code: "INTERNAL_ERROR" };
+const invalidContext = { status: 500, code: "AI_INVALID_CONTEXT" };
 const invalidOutput = { status: 502, code: "AI_INVALID_OUTPUT" };
 const generationFailed = { status: 502, code: "AI_GENERATION_FAILED" };
 const providerUnavailable = { status: 503, code: "PROVIDER_UNAVAILABLE" };
@@ -21,7 +22,7 @@ const timeout = { status: 504, code: "REQUEST_TIMEOUT" };
 
 const harnessFailures = {
   invalid_request: invalidInput,
-  invalid_context: internalError,
+  invalid_context: invalidContext,
   invalid_output: invalidOutput,
   publication_unavailable: notFound,
   answer_unavailable: notFound,
@@ -31,7 +32,7 @@ const harnessFailures = {
 const knowledgeFailures = {
   invalid_input: invalidInput,
   unavailable: notFound,
-  invalid_context: internalError,
+  invalid_context: invalidContext,
   invalid_output: invalidOutput,
   revision_conflict: revisionConflict,
   proposal_expired: { status: 410, code: "PROPOSAL_EXPIRED" },
@@ -55,7 +56,7 @@ const providerFailures = {
 const abstentions = {
   invalid_request: invalidInput,
   unavailable: notFound,
-  invalid_context: internalError,
+  invalid_context: invalidContext,
   stale_context: revisionConflict,
   insufficient_evidence: { status: 422, code: "EVIDENCE_REQUIRED" },
   clarify: { status: 422, code: "CONTEXT_AMBIGUOUS" },
@@ -85,5 +86,5 @@ export function normalizeAiOutcome(value: unknown): AiOutcome {
   const { status, code } = failure;
   // Match the HTTP contract. Provider retry policy remains local to AiError.
   const routing: AiRouting = status === 499 ? "none" : status === 429 || status >= 500 ? "operator" : "author";
-  return { status, code, routing, retryable: code !== "SERVER_CONFIGURATION_ERROR" && (status === 429 || status >= 500) };
+  return { status, code, routing, retryable: !["SERVER_CONFIGURATION_ERROR", "AI_INVALID_CONTEXT"].includes(code) && (status === 429 || status >= 500) };
 }

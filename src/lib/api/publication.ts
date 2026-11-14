@@ -34,7 +34,9 @@ export async function loadReview(db: DbClient, artworkId: string) {
   // Check owner before touching shared deployment configuration.
   await rpc(db, "get_artwork", { p_id: artworkId });
   await publicationWorker();
-  return decodeDatabase(reviewResponse, await rpc(db, "get_review_bundle", { p_artwork_id: artworkId }));
+  const review = decodeDatabase(reviewResponse, await rpc(db, "get_review_bundle", { p_artwork_id: artworkId }));
+  if (!getFeatures().expectedQa) delete review.expectedQa;
+  return review;
 }
 
 export async function upsertEvidence(db: DbClient, artworkId: string, input: z.infer<typeof upsertEvidenceSchema>) {

@@ -13,6 +13,33 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: gap-exclusion
+  resource: /references/user-gap-qa-exclusion.md
+  title: 관람 보완 요청의 Q&A 전환 제외
+- id: signup-contract
+  resource: /research/signup-auth-contract.md
+  title: W9 이메일 가입과 직접 로그인 경계
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
+- id: v3-answers
+  resource: /references/user-v3-decisions.md
+  title: v3 범위와 Vercel Hobby 답변
+- id: review-answers
+  resource: /references/user-v3-review-decisions.md
+  title: 해설 수정·검수 화면·모의 게시 정책
+- id: v3
+  resource: /references/user-backend-plan-v3.md
+  title: 백엔드 v3 화면·리스크 보강
+- id: v2
+  resource: /references/user-backend-plan-v2.md
+  title: 백엔드 완성 계획 v2
+- id: signup-policy
+  resource: /references/user-signup-security.md
+  title: 가입 이메일 인증 필수와 비밀번호 최소 8자
 - id: channel-auth
   resource: /references/user-channel-webhook-auth.md
   title: 채널톡 문의 웹훅 인증 선택
@@ -46,6 +73,9 @@ sources:
 - id: local
   resource: https://supabase.com/docs/guides/local-development
   title: Supabase 로컬 개발
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 ---
 
 # 현재 범위
@@ -93,7 +123,7 @@ sources:
 
 기존 계정 삭제 FK 제한과 논리 삭제된 작품의 번호 예약은 유지했다. 자동 cascade나 부분 unique 변경은 하지 않았으며 탈퇴·삭제·게시 기능에서 공개 차단 및 번호 예약 정책과 함께 구현한다.
 
-[API 계약](api-contract.md)의 초기 경로를 구현한다. 요청 JSON은 최대 64KiB이며 실제 수신 바이트도 검사한다. owner·state 등 정의 밖 필드는 거부한다. 변경 요청은 Origin을 검사하며 운영 환경에서는 `APP_ORIGIN`을 실제 앱 주소로 지정한다. 인증 서비스 장애 503, 요청 제한 429, 로그인 필요 401을 구별한다. 잘못되거나 운영에서 누락된 `APP_ORIGIN`은 503 `SERVER_CONFIGURATION_ERROR`이며 재시도 불가로 표시한다. 오류에는 `retryable`과 선택적 `retryAfter`를 반환한다. 프로필 조회는 `accountEmail`을 포함하고 전시 목록은 삭제되지 않은 작품 수 `artworkCount`와 최근 수정순을 제공한다. 세션 쿠키는 HttpOnly/Lax이며 HTTPS 앱에서 Secure로 설정한다.
+[API 계약](api-contract.md)의 초기 경로를 구현한다. 기본 요청 JSON은 최대 64KiB이며 W10의 인증된 입력 저장 경로는 1MiB다. 실제 수신 바이트도 검사한다. owner·state 등 정의 밖 필드는 거부한다. 변경 요청은 Origin을 검사하며 운영 환경에서는 `APP_ORIGIN`을 실제 앱 주소로 지정한다. 인증 서비스 장애 503, 요청 제한 429, 로그인 필요 401을 구별한다. 잘못되거나 운영에서 누락된 `APP_ORIGIN`은 503 `SERVER_CONFIGURATION_ERROR`이며 재시도 불가로 표시한다. 오류에는 `retryable`과 선택적 `retryAfter`를 반환한다. 프로필 조회는 `accountEmail`을 포함하고 전시 목록은 삭제되지 않은 작품 수 `artworkCount`와 최근 수정순을 제공한다. 세션 쿠키는 HttpOnly/Lax이며 HTTPS 앱에서 Secure로 설정한다.
 
 공개 전시/작품 RPC는 현재 전시와 작품이 게시 상태이고 활성 publication이 철회되지 않은 경우에만 명시된 공개 필드를 반환한다. 전시는 적격 작품이 최소 하나 있어야 한다. 작품의 publications 행은 불변성 제약이 있지만 전시의 public_*는 별도 가변 컬럼이며 버전 이력 테이블이 아니다. 내부 문서, 비공개 파일 경로, PDF 원본은 반환하지 않고 이미지·음성 전달은 PR #10의 별도 미디어 경로에서 현재 공개 상태를 검사한다. W4 글 게시 API는 로컬 DB·HTTP와 PR #6 CI를 통과해 병합됐다. 유효한 공개본이 없으면 404다. 공개·관리자 응답은 모두 no-store다.
 
@@ -156,3 +186,46 @@ Sol의 SQL·HTTP 테스트를 부모가 읽고 직접 실행했으며 별도 Sol
 # 문의 자동화 진행
 
 채널톡 기존 웹훅 URL 토큰 수신, 운영자의 명시적 작가 연결, 근거 기반 답변과 고정 대상 발송을 구현 중이다. 상세 경계는 [API 계약](api-contract.md#채널톡-문의-수신과-답변-구현-중)을 따른다. 로컬 문의 DB pgTAP 31개와 관련 단위·계약 107개를 확인했으며 로컬 인증·실제 DB와 모의 답변을 사용한 HTTP 통합 1개가 통과했다. 실제 제공사 호출은 미검증이다. 만료된 문의의 물리 삭제는 남았다. 최신 문의 변경의 CI는 대기 중이다.
+
+## 직접 가입 후속 요구
+
+[D-016](../decisions/D-016-artist-auth.md)에 따라 작가 직접 가입·선택 진입과 가입 후 직접 로그인이 요구되었다. 위 표의 사전 생성 계정 인증은 현재 구현 상태이며 직접 가입 기능은 구현 및 검증 전이다.
+
+
+# v2 이행 기준 (D0)
+
+이 절은 v2 D0 당시 기록이다. 현재는 [작업 추적](backend-completion.md)의 D0 완료 → W13 → W10 → W9 → W11 → W12 순서를 적용한다. 기존 W8 진행 안내·채널톡 문의는 PR #11 (`2d7bea1`)로 최신 App/Knowledge CI 성공 후 병합됐으며 실제 외부 호출과 물리 보존 삭제 등 잔여는 미검증이다. 기존의 CI 대기 표현은 당시 기록이다. W2 후보·이력은 Draft PR #13에만 보존되어 main 계약으로 제공하지 않는다.
+
+OP-23 가입의 확정 정책은 이메일 인증 필수·비밀번호 최소 8자·확인 후 직접 로그인이다. 기존 계정 로그인에 새 가입 강도를 소급 적용하지 않는다. signup/session 경로, 확인·재발송 상세와 Supabase 연동은 W9 구현 전 공식 문서로 검증한다. 가입·미리보기·예상 Q&A·새 공개/관람 계약은 아직 미구현이며 현재 HTTP와 구분한다. D0는 새 제품 플래그를 활성화하지 않는다.
+
+# W10 구현 및 직접 검증
+
+SRC-043 질문지, 부분 저장, 작성 단계 전이, 초안 번호 재정렬을 `feat/p0-authoring-contracts`에 구현했다. 새 migration `20261114140000_p0_authoring.sql`은 nullable 초안 제목·시간·작성 단계·크기 단위·초안 번호·비공개 section 카탈로그를 추가한다. 기존 RPC는 제목/기간 검증을 유지한다. 자세한 HTTP 추가 필드와 미연결 W12 범위는 [API 계약](api-contract.md#w10-p0-입력-계약-검증-중)에 있다. 기능 플래그 기본값은 바꾸지 않았으며 P0 입력은 요청의 `draft:true`로 명시한다.
+
+직접 수행: 카탈로그 일치 확인, 집중 단위/계약 70개(새 snapshot 2개, 변경 17개), 기존 로컬 DB에 forward 적용, W10 pgTAP 35개, 실제 로컬 Auth·DB의 HTTP 5개 통과. 첫 적용에서 CASE 비교 괄호 누락이 재현돼 transaction rollback 후 수정했고, 수정본만 적용됐다. HTTP는 64KiB를 넘는 한글 입력, 부분/역순 기간 저장과 전이 차단, 번호 재정렬, 문서 버전 충돌 시 원자적 거부, 타인 404를 확인했다. 외부 AI/발송 호출은 0회다.
+
+로컬 DB에는 보존 중인 W2 migration도 있으므로 타입 생성 뒤 W2 전용 차이를 제외했다. CI의 새 DB에서 재생성한 타입과 비교해 W10만의 정확성을 확인해야 한다. 전체 lint·타입·단위·DB/HTTP·빌드·문서 verify는 CI 대기이며 아직 병합 완료가 아니다.
+
+
+# v3 변경분 연결
+
+v3 전환: main은 861d27a, W10 v2 입력 계약은 Draft PR #15 b950557에 보존했다. W13을 main 기준 fix/backend-security-hardening에서 먼저 진행한다. W2 PR #13 d276d9f의 App/Knowledge CI는 성공했으나 미병합이다. 직접 확인하지 않은 Figma/배포/실호출을 완료로 쓰지 않는다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md), [진행 계획](backend-completion.md)을 따른다.
+
+
+## W13 로컬 구현 경계
+
+네트워크 HMAC 한도·개인정보 플래그 기본off·3MiB/6MiB Storage 전송 제한·invalid_context 재시도 불가·전체 RPC 권한 검사·임대보다 짧은 경로 실행 시간과 Fluid 설정을 추가했다. 새 migration150000/160000은 소유 로컬 DB에 전진 적용했다. 직접 검사와 CI 상태는 [작업 추적](backend-completion.md#w13-구현검증-기록-병합-전)에 기록한다. W13은 최신 CI 성공 후 PR #16/main44bf7d3으로 병합됐다. Vercel Hobby 배포 실제 점검과 외부 호출은 남았다.
+
+## W10 v3 구현 경계
+
+온보딩 정형 정보와 활동 이력, 소유자 전용 사진/포스터 연결, 홈 기간·공개 상태와 집계 API를 구현했다. Figma 8개 화면을 대조했으나 프런트 화면 구현은 포함하지 않는다. 새 DB forward 적용과 DB147·단위/계약78·HTTP6 검사는 통과했고 최신 전체 CI/병합은 대기다. [상세 검증](backend-completion.md#w10-v3-직접-검증과-병합-대기), [API/배포 계약](api-contract.md#w10-v3-온보딩사진홈-계약)을 따른다. W9 직접 가입과 W11/W12 새 검수·공개는 후속이다.
+
+
+## W9 서버 인증 경계
+
+이메일 가입·최초 요청 ID 기반 재발송/코드 확인·세션 조회 API와 신규 계정의 password AMR 권한 검사를 구현했다. FEATURE_SIGNUP 기본off이고 별도 클라우드 Auth/SMTP 설정이 필요하다. 로컬 실물 Auth·Mailpit 검증은 통과했으며 운영 메일과 프런트 가입 화면은 후속이다. [W9 API](api-contract.md#w9-이메일-가입-계약-검증-중), [직접 검증/CI](backend-completion.md#w9-구현직접-검증-ci-대기)를 구분한다.
+
+
+W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.
+
+현재 W9는 PR #17로 병합됐으며 W11은 [작업 추적](backend-completion.md)의 검증 단계다. 비공개 예상QA·미리보기·정정·일괄 생성 API와 기본off 플래그가 추가되었다. 실제 외부 모델 호출·프런트·W12 공개/관람은 완료 범위가 아니다.

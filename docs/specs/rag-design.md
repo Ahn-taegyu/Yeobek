@@ -4,7 +4,7 @@ id: SPEC-003
 title: 제품 RAG 설계
 description: 작가 승인 근거만 사용하는 관람객 Q&A의 구현 계약.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 rag_include: true
@@ -13,6 +13,30 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: gap-exclusion
+  resource: /references/user-gap-qa-exclusion.md
+  title: 관람 보완 요청의 Q&A 전환 제외
+- id: qa-policy
+  resource: /references/user-expected-qa-policy.md
+  title: 예상 Q&A 생성·검수 정책
+- id: figma-review
+  resource: /references/figma-review-v3.md
+  title: Figma W11 화면 직접 대조
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
+- id: v3-answers
+  resource: /references/user-v3-decisions.md
+  title: v3 범위와 Vercel Hobby 답변
+- id: review-answers
+  resource: /references/user-v3-review-decisions.md
+  title: 해설 수정·검수 화면·모의 게시 정책
+- id: v3
+  resource: /references/user-backend-plan-v3.md
+  title: 백엔드 v3 화면·리스크 보강
 - id: harness
   resource: /specs/ai-harness.md
   title: 제품 AI 실행 하네스 준비 범위
@@ -97,3 +121,37 @@ sources:
 | 공유 작가 원본 일반 수정/철회 | 수정은 공개 유지, 철회는 전체 참조 전시 차단 |
 
 실제 작가 자료가 없어서 아직 제품 답변 품질·한국어 인식·검색 정확도를 측정하지 않았다. 가상 자료 평가와 실제 파일럿을 분리한다.
+
+## F05 승인에서 F08 검색까지
+
+F04 해설과 작품별·전시 전체 예상 Q&A 및 F05 정정 답변은 편집 가능한 작업 버전으로 저장한다. F05 승인 시 대상 범위, 질문·답변 본문, 출처 및 버전을 고정한다. F07 게시에서 승인 항목과 근거를 검증해 활성 공개 버전에 연결한다. 관람 요청은 먼저 공개 전시·작품·활성 버전으로 후보를 제한한 후 승인 해설·승인 Q&A·정정 답변을 조회한다. 일치하는 승인 답변을 활용하고 자유 질문에도 관련 승인 답변을 생성·검증 근거로 사용할 수 있다. 미리보기 대화 전체, 미승인 초안 및 다른 전시 자료는 후보에서 제외한다.
+
+새 편집본은 기존 활성 공개본과 별도다. 승인 후에도 게시 전에는 관람에 사용하지 않는다. 교체 게시·철회 시 활성 버전 검증과 캐시/낭독 재검사로 이전 항목 사용을 막는다. 승인 Q&A는 자연스러운 관람 답변의 생성 근거로 사용하며 기본 작품 소개는 기존대로 승인 원문을 반환한다(SRC-050).
+ [D-017](../decisions/D-017-p0-feature-spec.md).
+
+
+# v3 변경분 연결
+
+v3 지시문 재작성에서 작가의 수정 지시문은 승인 근거로 취급하지 않는다. 이전 답변과 승인 근거로 재작성하고 범위를 벗어나면 거부한다. “정확해요” 평가는 승인·게시와 분리한다. 제품 AI는 작가가 제공한 작품 세계·활동 이력을 근거로 사용하되 이름·이메일·성별은 운영 자동화 프롬프트에 넣지 않는다. 해당 기능은 W11 후속이며 현재 구현 완료가 아니다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md), [진행 계획](backend-completion.md)을 따른다.
+
+
+## 후속 확정: 직접 수정과 작가 정정
+
+기본 미리 생성 작품 소개만 직접 편집하고, 나머지 답변은 지시문으로 수정한다. 기본 해설 원고 검수와 AI 미리보기는 별도 화면이며 명시적 승인·게시는 유지한다. 시험용 해설은 개발 시연만 허용하고 운영 게시를 차단한다. [후속 답변](../references/user-v3-review-decisions.md).
+
+구현 제안: 문체/분량 지시와 작가의 새 사실 정정을 구분한다. “그 이유가 아니라 … 때문이다”라는 정정은 작가 작성 원문과 대상 질문/작품·기존 답변 버전을 보존한 근거 후보로 만들고, 작가 검수 후 승인 근거로 연결한다. 명령문 자체를 즉시 승인 사실로 쓰거나 기존 공개 근거를 덮어쓰지 않는다. 승인된 정정이 없는 재작성은 기존 승인 근거 범위만 사용한다. W11에서 이 검수 경로를 구현·검증하기 전에는 동작 완료로 보지 않는다.
+
+
+W10 활동 이력 5개는 기존 작가 knowledge_documents에 저장되어 승인 전 원자료로 관리한다. 온보딩 fullName·Auth email·keywords·avatar는 별도 정형 필드이며 문서 근거로 자동 변환하지 않는다. 프로필 사진이나 전시 포스터를 연결하는 행위도 게시 승인이나 이미지 해석 근거 승인을 뜻하지 않는다.
+
+
+## W11 구현 경계
+
+작가 전용 예상 Q&A·미리보기는 선택 작품→전시→작가의 소유자 자료와 현재 승인 근거를 최대12개/8,000자 읽는다. 근거당2,000자를 넘는 원자료는 종료 부호가 있는 첫 문장이 상한 내에 있을 때만 발췌하고, 나머지는 자동 절단하지 않는다. 작가는 검수에서 실제 인용 body를 확인하고 별도 짧은 문서/PDF 발췌 근거를 입력·승인할 수 있다. OCR·PDF 자동 추출은 추가하지 않았다.
+
+후보 생성30초·출력3072토큰, 미리보기30초·1000토큰, 재작성 총65초 내 생성/독립평가 각각30초·1000/256토큰으로 제한한다. 모델은 지시문을 사실로 저장하지 못하고 인용ID는 전달된 근거에 한정된다. 재작성의 의미 검증은 다른 제공사 계열 모델의 grounded 판정이며 완전한 사실 검증을 보증하지 않는다. 사람 검수/승인은 유지한다. 실제 모델 품질·한국어 말투는 모의 검사로 입증하지 않았다.
+
+승인 QA의 관람 근거 반영, 공개 버전/캐시 무효화와 전시 문맥 질의는 W12다. W11은 private 생성·검수 API이며 게시되지 않은 항목을 관람객에게 전달하지 않는다.
+
+
+W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.

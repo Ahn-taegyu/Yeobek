@@ -2,7 +2,7 @@
 type: Specification
 id: SPEC-011
 title: MVP API 계약
-description: OP-01~22의 초기 기반 및 후속 HTTP 계약과 접근·버전 경계.
+description: OP-01~23의 초기 기반 및 후속 HTTP 계약과 접근·버전 경계.
 status: draft
 updated: '2026-11-14'
 tags: [yeobek, api, mvp]
@@ -13,6 +13,42 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: gap-exclusion
+  resource: /references/user-gap-qa-exclusion.md
+  title: 관람 보완 요청의 Q&A 전환 제외
+- id: qa-policy
+  resource: /references/user-expected-qa-policy.md
+  title: 예상 Q&A 생성·검수 정책
+- id: figma-review
+  resource: /references/figma-review-v3.md
+  title: Figma W11 화면 직접 대조
+- id: signup-contract
+  resource: /research/signup-auth-contract.md
+  title: W9 이메일 가입과 직접 로그인 경계
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
+- id: artist-questionnaire
+  resource: /references/user-artist-questionnaire.md
+  title: 작가 기본 작품 세계 세부 질문지
+- id: v3-answers
+  resource: /references/user-v3-decisions.md
+  title: v3 범위와 Vercel Hobby 답변
+- id: review-answers
+  resource: /references/user-v3-review-decisions.md
+  title: 해설 수정·검수 화면·모의 게시 정책
+- id: v3
+  resource: /references/user-backend-plan-v3.md
+  title: 백엔드 v3 화면·리스크 보강
+- id: v2
+  resource: /references/user-backend-plan-v2.md
+  title: 백엔드 완성 계획 v2
+- id: signup-policy
+  resource: /references/user-signup-security.md
+  title: 가입 이메일 인증 필수와 비밀번호 최소 8자
 - id: channel-auth
   resource: /references/user-channel-webhook-auth.md
   title: 채널톡 문의 웹훅 인증 선택
@@ -36,7 +72,7 @@ sources:
   title: 실제 개발 기반과 검증 범위
 - id: functional
   resource: /specs/functional-spec.md
-  title: MVP 기능명세와 OP-01~22
+  title: MVP 기능명세와 OP-01~23
 - id: data
   resource: /specs/data-model.md
   title: 최소 데이터 모델
@@ -52,11 +88,14 @@ sources:
 - id: decision
   resource: /decisions/D-011-knowledge-and-screens.md
   title: 내부 지식과 화면 요구
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 ---
 
 # 범위와 공통 계약
 
-[기능명세 OP-01~22](functional-spec.md#8-api-명세로-넘길-업무-계약)를 HTTP로 구체화한 계약이다. 초기 기반·W1·W4 글 게시 경로는 병합됐고 W5 글 채팅·보완 요청 경로를 연결했다. 그 밖의 후속 경로는 설계 제안이다. 검증 범위와 한계는 [개발 기반 현황](development-foundation.md)에 기록한다. [D-011](../decisions/D-011-knowledge-and-screens.md), [내부 지식](artist-knowledge.md), [데이터 모델](data-model.md), [채팅](chat-interaction.md)을 함께 적용한다.
+[기능명세 OP-01~23](functional-spec.md#8-api-명세로-넘길-업무-계약)를 HTTP로 구체화한 계약이다. OP-23 작가 직접 가입은 [D-016](../decisions/D-016-artist-auth.md)의 후속 경로이며 아래 경로 표에 없다. 초기 기반·W1·W4 글 게시 경로는 병합됐고 W5 글 채팅·보완 요청 경로를 연결했다. 그 밖의 후속 경로는 설계 제안이다. 검증 범위와 한계는 [개발 기반 현황](development-foundation.md)에 기록한다. [D-011](../decisions/D-011-knowledge-and-screens.md), [내부 지식](artist-knowledge.md), [데이터 모델](data-model.md), [채팅](chat-interaction.md)을 함께 적용한다.
 
 - JSON 성공 응답은 `{ "data": ..., "requestId": "UUID" }`, 오류는 `{ "error": { "code": "...", "message": "...", "retryable": true, "retryAfter": 5, "fields": {} }, "requestId": "UUID" }` 형태다. `retryAfter`(초)와 `fields`는 선택 사항이며, `retryAfter`가 있으면 `Retry-After` 헤더도 반환한다. `retryable`은 429·5xx와 409 `REQUEST_IN_PROGRESS`에서 true이되 서버 설정 오류는 false다. 오류는 비밀·내부 오류를 노출하지 않는다. 미디어 바이트는 예외다.
 - 리소스 ID와 생성 요청 ID는 UUID다. 생성 요청은 클라이언트가 안정적인 `id`를 생성해 재시도하며, 같은 소유자·ID·동일 입력은 기존 결과를 반환하고 다른 입력이면 409다. `requestId`는 추적용이고 리소스 ID와 구별한다. `POST` 생성 성공은 201, 동일 재시도는 200, 조회·변경은 200이다.
@@ -66,6 +105,8 @@ sources:
 - 입력은 서버에서 타입·길이·관계·UUID를 검사한다. 요청 크기와 횟수 제한을 적용한다. 관람 글 요청은 세션 전체 분 6회·전시 일일 1,000회를 DB 정책으로 원자 적용하며 인식·합성도 같은 한도를 공유한다. 녹음 30초/3MB, 질문 500자 등 상세 값은 [초기 상한](technology-stack.md#초기-상한과-실패-처리)을 따른다. 실제 한도와 오류 정책은 구현 시 검증한다.
 
 # W1 해설 작업 경로 (PR #5 병합)
+
+W10의 추가 입력 계약은 아래 별도 절을 적용한다. 기존 생성·수정 본문은 그대로 지원한다.
 
 | 경로 | 요청과 동작 |
 | --- | --- |
@@ -106,7 +147,9 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 기존 초안에 정확히 같은 출처 참조는 개별적으로 보존해 저장을 막지 않는다. 문서 응답의 `sourceWarnings`는 변경된 문서 출처에 `source_changed`와 현재 revision을, 사용할 수 없는 문서·자료 출처에 `source_unavailable`을 표시한다. 문서 경고에는 대상 `sectionId`, `sourceDocumentId`, `sourceSectionId`, `sourceRevision`이 포함된다. 새로 추가하거나 변경한 출처는 소유권·상위 범위·section·현재 revision 또는 자료의 ready 상태를 검증한다. DB P1001은 409 `SOURCE_REVISION_CONFLICT`, P1002는 400 `SOURCE_UNAVAILABLE`이다. W3부터 새 PDF 참조는 검증된 총 페이지 범위를 검사한다. 승인 근거는 material version을 고정한다. 기존 초안의 정확히 같은 참조와 기존 공개 스냅샷은 보존하며, 페이지 수가 확인되지 않은 PDF 근거는 새 승인·게시에서 거부한다.
 
-아래 필드는 현재 초기 API 계약이며 `?`는 생략 가능, `document`는 `{id, subjectType, subjectId, revision, sections, sourceRefs, sourceWarnings, updatedAt}`이다. HTTP 필드는 camelCase이고 DB의 snake_case와 서버에서 변환한다. `sections`는 `{id,body}` 배열이며 ID는 문서 내 안정적이다: 작가 `bio`/`practice`, 전시 `introduction`/`theme`, 작품 `description`/`notes`. `sourceRefs`는 빈 배열도 허용하며 직접 입력·자료·문서 출처를 해당 소유 범위에서 검증한다. 생성·수정의 `sections`, `sourceRefs`는 내부 문서 원본이며 정형 필드와 트랜잭션으로 저장한다. 프로필은 사전 생성된 계정당 하나다.
+아래 필드는 현재 초기 API 계약이며 `?`는 생략 가능, `document`는 `{id, subjectType, subjectId, revision, sections, sourceRefs, sourceWarnings, updatedAt}`이다. HTTP 필드는 camelCase이고 DB의 snake_case와 서버에서 변환한다. `sections`는 `{id,body}` 배열이며 ID는 문서 내 안정적이다: 작가 `bio`/`practice`, 전시 `introduction`/`theme`, 작품 `description`/`notes`. `sourceRefs`는 빈 배열도 허용하며 직접 입력·자료·문서 출처를 해당 소유 범위에서 검증한다. 생성·수정의 `sections`, `sourceRefs`는 내부 문서 원본이며 정형 필드와 트랜잭션으로 저장한다. 프로필은 계정당 하나이며 첫 프로필 조회 또는 첫 전시 생성 때 만든다. 현재 구현의 계정은 사전 생성 계정이고, 직접 가입 계정도 같은 규칙을 따르도록 설계한다.
+
+직접 가입(OP-23)의 경로·요청 형식은 미정이다. 설계 시 다음을 지킨다: 가입 응답에서 관리자 세션 쿠키를 설정하지 않고 SC-A01 직접 로그인으로 안내한다. 중복 이메일은 계정 존재를 드러내지 않는 안내(EX-27 제안)로 처리한다. 결과 불명·재시도는 같은 계정을 두 번 만들지 않는다. 비밀번호를 로그·업무 데이터에 남기지 않는다. 현재 로컬 Supabase 설정은 공개 가입이 꺼져 있으므로(`enable_signup = false`) 이메일 인증 필수·가입 비밀번호 8자 이상을 적용하는 설정과 확인 방식은 구현 시 공식 문서로 검증한다. 정책 자체는 SRC-042로 확정됐으며, Q-09의 나머지 항목만 미결정이다.
 
 | OP | 경로 | 입력 → `data` |
 | --- | --- | --- |
@@ -247,7 +290,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | `POST /api/admin/artworks/{id}/image` | `{expectedRevision,materialId:UUID 또는 null}` → 작품. 같은 작품의 ready 이미지만 지정 |
 | `POST /api/admin/artworks/{id}/delete` | `{expectedRevision}` → `{id,revision,deletedAt}`. 활성 공개본은 중지 중이어도 삭제 차단. 삭제 번호는 재사용 가능 |
 
-`upload`는 `{signedUrl,token,path,bucket,expiresAt}`이며 ready 재요청은 null이다. 프런트는 해당 staging 경로에 서명 업로드한 뒤 complete를 호출한다. `expiresAt`는 앱에서 완료 가능한 시각(초기 1시간)이며 Storage 토큰의 만료와 같지 않다. JPEG·PNG·WebP(3MiB), 비암호화 PDF(6MiB)를 지원하며 MIME·확장자·실제 바이트를 검사한다. 상한과 일일 예약 100회는 app_policies로 바꾼다. 재요청은 기존 예약 입력을 유지하며 한도를 중복 소비하지 않는다.
+`upload`는 `{signedUrl,token,path,bucket,expiresAt}`이며 ready 재요청은 null이다. 프런트는 해당 staging 경로에 서명 업로드한 뒤 complete를 호출한다. `expiresAt`는 앱에서 완료 가능한 시각(초기 1시간)이며 Storage 토큰의 만료와 같지 않다. JPEG·PNG·WebP(3MiB), 비암호화 PDF(6MiB)를 지원하며 MIME·확장자·실제 바이트를 검사한다. 일일 예약 100회와 더 낮은 크기 상한은 app_policies로 바꾼다. 3MiB/6MiB 기술 상한을 높이려면 코드·Storage migration도 함께 바꿔야 한다. 재요청은 기존 예약 입력을 유지하며 한도를 중복 소비하지 않는다.
 
 material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이지 수·이미지 치수·생성/수정/삭제 시각·cleanupPending을 포함한다. `cleanupPending=true`는 ready 자료의 임시 파일 또는 삭제 자료의 실제 파일 정리가 남았다는 뜻이다. ready는 게시 승인을 뜻하지 않는다. 파일의 신규 버전은 새 업로드 ID로 만들며 기존 final 객체를 덮어쓰지 않는다.
 
@@ -279,7 +322,7 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 
 타입 클라이언트는 전사 multipart와 낭독·미디어 Blob을 지원한다. 음성 바이너리의 `X-Yeobek-Mock`과 전사 응답의 `mock`은 모의 출처를 나타낸다. 전사 인식문은 수정·재시도를 위해 답변 보존 기간 동안만 서버에 저장하며 녹음 바이트는 저장하지 않는다. MP4 오디오 녹음의 서버 전달 파일명은 파트너 전사 어댑터에 맞춰 `recording.m4a`로 정규화한다. 정리 cron에는 `visitorAudio:{attempted,completed}`가 추가된다. 로컬 검사 근거는 [백엔드 작업 추적](backend-completion.md)에 기록한다. CI와 실제 제공사 호출, 한국어 음질 및 프런트 연결은 남아 있다.
 
-음성 두 경로의 60초 처리 기한에는 요청 본문 수신도 포함한다. Next.js `maxDuration=120`은 취소 후 DB 실패 확정·정리 기록을 위한 플랫폼 여유이며 생성 허용 시간을 늘리지 않는다. 같은 세션의 만료 답변은 공개 상태가 유지될 때 410 `ANSWER_EXPIRED`, 타인 세션이나 비공개 전시는 404다. 준비된 승인 음성의 파일 오류·해시 불일치는 오류로 반환하고 새 유료 합성을 시작하지 않는다. 확인된 실패는 새 요청 ID로 재시도하고, 진행 중/응답 유실/캐시 다운로드 오류에는 같은 ID를 재사용한다.
+음성 두 경로의 60초 처리 기한에는 요청 본문 수신도 포함한다. Next.js `maxDuration=90`은 취소 후 DB 실패 확정·정리 기록을 위한 플랫폼 여유이며 생성 허용 시간을 늘리지 않는다. 같은 세션의 만료 답변은 공개 상태가 유지될 때 410 `ANSWER_EXPIRED`, 타인 세션이나 비공개 전시는 404다. 준비된 승인 음성의 파일 오류·해시 불일치는 오류로 반환하고 새 유료 합성을 시작하지 않는다. 확인된 실패는 새 요청 ID로 재시도하고, 진행 중/응답 유실/캐시 다운로드 오류에는 같은 ID를 재사용한다.
 
 새 ID의 생성 음성 캐시 재사용은 생성 한도를 차감하지 않지만 원장 행이 무한히 늘지 않도록 세션당 분당 60개 초기 정책 `visitor_audio_cache_requests_per_minute`를 별도로 적용한다. 기존 요청 ID 조회는 이 한도에서도 재사용 가능하다. 60은 측정 전 구현 초기값이며 DB 정책에서 변경한다.
 
@@ -331,3 +374,133 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 사용자 개인 채팅의 새 메시지만 수신하고 봇·관리자·그룹·수정 이벤트는 무시한다. 채널·메시지·모의 여부로 중복을 구분하며 다른 내용의 중복은 409다. 오래되거나 미래인 메시지는 거부하고 빈 내용·지원하지 않는 내용이나 2,000자 초과는 자동 답변하지 않는다. 응답은 접수·중복·무시 여부만 반환한다.
 
 `POST /api/ops/support/bindings`는 동일 출처 인증과 운영자 권한 아래 채널 사용자와 작가를 명시적으로 연결하고 예상 revision으로 충돌을 방지한다. cron은 고정된 채팅 대상과 공개 도움말·연결된 계정 상태 근거를 사용하며, 민감 문의·근거 부족은 운영자에게 넘긴다. 생성 후와 발송 직전 문맥·정책·연결을 재확인한다. 만료는 처리 차단이며 저장된 문의의 물리 삭제 작업은 아직 없다. 로컬 인증·실제 DB와 모의 답변을 사용한 HTTP 통합 1개는 통과했다. 실제 제공사 호출과 최신 head CI는 미검증이다.
+
+## P0 개정과 현재 HTTP 구현
+
+[D-017](../decisions/D-017-p0-feature-spec.md)의 부분 저장·선택 입력, 승인 Q&A/정정의 공개 참조와 F08 소비는 변경 대상이다. 기존 API의 요청/응답과 구현 상태는 위에 기록된 계약을 따른다. 새 요청 필드나 경로는 후속 설계에서 정의한다.
+
+
+# v2 이행 기준 (D0)
+
+이 절은 v2 D0 당시 기록이다. 현재는 [작업 추적](backend-completion.md)의 D0 완료 → W13 → W10 → W9 → W11 → W12 순서를 적용한다. 기존 W8 진행 안내·채널톡 문의는 PR #11 (`2d7bea1`)로 최신 App/Knowledge CI 성공 후 병합됐으며 실제 외부 호출과 물리 보존 삭제 등 잔여는 미검증이다. 기존의 CI 대기 표현은 당시 기록이다. W2 후보·이력은 Draft PR #13에만 보존되어 main 계약으로 제공하지 않는다.
+
+OP-23 가입의 확정 정책은 이메일 인증 필수·비밀번호 최소 8자·확인 후 직접 로그인이다. 기존 계정 로그인에 새 가입 강도를 소급 적용하지 않는다. signup/session 경로, 확인·재발송 상세와 Supabase 연동은 W9 구현 전 공식 문서로 검증한다. 가입·미리보기·예상 Q&A·새 공개/관람 계약은 아직 미구현이며 현재 HTTP와 구분한다. D0는 새 제품 플래그를 활성화하지 않는다.
+
+# W10 P0 입력 계약 (검증 중)
+
+[질문지 SRC-043](../references/user-artist-questionnaire.md)를 반영했다. `src/lib/contracts/knowledge-sections.ts`가 주체별 ID·라벨·안내 질문·선택 여부·최대 길이의 원본이다. 기존 6개 section을 유지하고 작가 7개·전시 9개·작품 6개를 추가한다. 각 본문은 앞뒤 공백 제외 5,000 Unicode 코드 포인트, 출처 참조는 24개 이내다. 주체에 맞지 않는 section과 중복 ID는 DB에서 거부한다. `npm run knowledge:sections`는 신규 migration용 seed를 출력하고 `knowledge:sections:check`는 최신 seed와 선언의 불일치를 차단한다. 적용된 migration은 수정하지 않는다.
+
+인증을 먼저 확인하는 프로필·전시·작품·지식 저장 경로의 JSON 한도는 1MiB다. 기본 요청 한도는 64KiB를 유지한다. 실제 수신 바이트도 검사한다.
+
+| 경로/입력 | 추가 계약 |
+| --- | --- |
+| 기존 전시 POST/PATCH + `draft: true` | 제목·기간·장소가 비거나 날짜가 역순이어도 형식이 유효하면 저장. `startTime`·`endTime`은 HH:mm 또는 null |
+| `POST /api/admin/exhibitions/{id}/advance` | `{expectedRevision, step: "world" 또는 "artworks"}`. basic→world→artworks 순서, 필요한 값이 빠지면 200 `{advanced:false, exhibition, blockers:[{code,field}]}`. 성공은 advanced:true, 버전/단계 충돌은 409 |
+| 기존 작품 POST/PATCH + `draft: true` | 제목·크기·기법·자료를 부분 저장. `dimensionsUnit` 추가. 생성 number 생략 시 서버 할당, 수정 number 생략/null은 현재 초안 번호 유지 |
+| `POST /api/admin/exhibitions/{id}/artworks/reorder` | `{items:[{id,expectedRevision}]}`에 모든 활성 작품을 원하는 순서로 전달. 전체 ID·소유권·버전을 한 트랜잭션에서 검사하고 `{items:[작품]}` 반환. 누락/오래된 버전 409, 타인 전시 404 |
+
+전시 응답은 `draftTitle`, `startTime`, `endTime`, `authoringStep`을 추가한다. 기존 `title`은 문자열 표시값(비면 “제목 없는 전시”)이며 편집과 완료 검증은 `draftTitle`을 사용한다. 기존 전시는 authoringStep:null, P0 전시는 basic/world/artworks다. 기존 전시를 draft:true로 변환하는 경로는 아직 없고 409를 반환한다.
+
+작품 응답은 실제 `draftTitle`, `dimensionsUnit`, `draftNumber`를 추가하고 `title` 표시값은 유지한다. `draftNumber`가 null이면 기존 number를 초안 번호로 쓴다. 목록은 유효 초안 번호 순서다. 재정렬은 `draftNumber`만 바꾸며 기존 number·활성 공개본은 유지한다. 게시 시 초안 번호 반영은 W12에서 연결한다. 공통 응답 타입의 새 필드는 이전 서버와 호환을 위해 optional이며 새 DB serializer는 항상 반환한다.
+
+작가 응답의 `artWorldRegistered`는 practice 또는 새 작가 질문 중 하나라도 비어 있지 않으면 true다. bio만 작성했거나 프로필이 존재하는 것만으로 true가 되지 않는다. 승인 여부나 모든 문항 완료를 뜻하지 않는다.
+
+전이에는 전시명·시작/종료 날짜와 시간·장소·기간 순서를 검사한다. 선택 질문이 모두 비어도 다음 단계로 갈 수 있다. 초안 저장은 문서/정형 정보 CAS를 원자 적용하고 생략한 선택 텍스트는 null로 덮어쓰는 기존 계약을 유지한다. 작품 번호 생략은 위의 서버 할당 예외다. 미완성 P0 전시의 게시 snapshot 쓰기는 차단하며 자세한 공개 체크리스트·새 번호 적용은 W12 범위다. QR 제작은 최신 결정으로 MVP 제외다. 전시 생성 안내는 P0 world→artworks 완료에서 한 번 예약하고 임시저장 단계에서는 예약하지 않는다.
+
+
+# v3 변경분 연결
+
+v3 추가 경로/필드는 W13→W10→W9→W11→W12 순서로 확정한다. 기존 계약을 소급 변경하지 않는다. W10 v2 입력 계약은 Draft PR #15에 보존되어 main에는 아직 없다. v3 온보딩·비공개 포스터는 아래 W10 계약으로 구현·검증 중이다. 미리보기 지시문 수정 API와 공개 포스터/채팅 이미지 필드는 아직 미구현이다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md), [진행 계획](backend-completion.md)을 따른다.
+
+
+# W13 네트워크·업로드·오류 계약
+
+관람 유료 처리 전에 `consume_visitor_network_budget`(서비스 전용)이 HMAC 네트워크 식별자 기준 분당30/UTC일200 초기 한도를 적용한다. 세션 한도·전시 한도와 별개이며 쿠키를 바꿔도 합산한다. 네트워크/세션/requestId가 같고 전시·kind가 같으면 중복 차감하지 않는다. 이미 admission을 차감한 요청의 취소나 후속 실패는 환급하지 않는다. 다른 kind·전시에 ID를 재사용하면 충돌한다. 원본 IP는 DB나 앱 로그에 쓰지 않는다.
+
+429 `VISITOR_REQUEST_LIMIT`의 fields에는 `fallback: ["approved_narration", "published_audio"]`가 있다. `/api/chat`은 이 경우 새 answerId를 만들지 않는다. 프런트는 기존 공개 작품 GET의 narrationText와 공개 미디어 또는 이미 소유한 답변의 저장 승인 음성을 사용한다. 공개 철회·근거 철회 검사는 그대로 적용한다. `/api/speech`의 준비된 승인 음성 재사용은 네트워크/생성 한도보다 먼저 처리한다.
+
+`AI_INVALID_CONTEXT`(500)는 retryable=false이며 운영자가 승인 근거/문맥을 복구할 오류다. `SERVER_CONFIGURATION_ERROR`(503)도 자동 재시도 대상이 아니다. 기존 모호한 AI_FAILED와 구분한다.
+
+업로드 응답의 bucket은 이미지 `artist-material-staging` 또는 PDF `artist-material-pdf-staging`이다. 클라이언트는 이름을 하드코딩하지 않고 응답을 사용한다. Storage 자체가 각각3MiB/6MiB 실제 전송을 제한한다. 기존 bucket의 작은 PDF는 완료 호환을 유지하며 큰 PDF 대기 예약은 새 URL을 요청해야 한다. 이미 ready인 자료는 그대로 조회할 수 있다. 본문 PDF가 Next.js를 거치지 않는 signed upload를 사용한다.
+
+## W10 v3 온보딩·사진·홈 계약
+
+[Figma 직접 대조 SRC-049](../references/figma-authoring-v3.md)의 문구/키워드를 사용한다. 활동 이력 5개는 선택 section이며 `artWorldRegistered`를 켜지 않는다. 프런트는 `sectionDefinitions`와 `onboardingKeywordOptions`를 가져와 사용한다.
+
+| 경로 | 요청과 동작 |
+| --- | --- |
+| `PATCH /api/admin/profile/onboarding` | `{expectedRevision, fullName, displayName, keywords:{fields,moods,topics}, complete}`. 이름은 각 100 Unicode 코드 포인트 이내. complete:false는 이름 null과 빈 키워드를 허용. complete:true는 보이는 이름·작가명과 현재 Auth의 인증된 이메일 필요 |
+| `PATCH /api/admin/profile/avatar` | `{expectedRevision, materialId}`. 작가 범위 ready 이미지 연결, null은 해제 |
+| `PATCH /api/admin/exhibitions/{id}/poster` | `{expectedRevision, materialId}`. 해당 전시 범위 ready 이미지 연결, null은 해제 |
+| `GET /api/admin/exhibitions` | 기존 items + `{counts:{all,preparing,ongoing,ended}}`. 동일 조회의 dashboardStatus를 집계 |
+
+프로필은 fullName, keywords, onboardingCompletedAt, onboardingComplete, avatarMaterialId를 추가한다. 이메일은 기존 GET의 accountEmail로 읽으며 body로 수정하거나 별도 복제하지 않는다. 완료 시각은 최초 완료 이력이고 완료 여부는 현재 이름·작가명·이메일 인증 상태를 다시 검사한다. 기존 프로필 PATCH가 작가명을 지우면 완료 여부도 false가 된다. 온보딩 PATCH는 지식 문서를 수정하지 않는다.
+
+전시에는 posterMaterialId, periodState(unknown/upcoming/ongoing/ended), dashboardStatus(preparing/ongoing/ended)를 추가한다. [SRC-048](../references/user-dashboard-status-precedence.md)에 따라 draft/paused는 기간과 무관하게 preparing이다. published는 기간 내 ongoing, 종료 후 ended, 시작 전/기간 미완성은 preparing이다. 구현 정책: 현재 편집본의 날짜·시각을 Asia/Seoul로 계산하고 시작/종료 시각은 포함한다. 기존 날짜만 있는 전시는 해당 날짜 00:00부터 23:59:59.999999까지다. 상태 분류는 자동 게시·중지를 실행하지 않는다.
+
+사진·포스터는 기존 image 업로드를 각각 artist/exhibition 범위로 예약·전송·완료한 뒤 연결한다. ready/소유권/범위/해시/3MiB 및 더 낮은 정책 상한을 검사하며, 연결된 자료 삭제는 409 MATERIAL_IN_USE다. 해제 후 기존 삭제 API를 사용한다. 타인 또는 잘못된 범위는 404, CAS 충돌은 409다. W10은 소유자 비공개 경로이며 공개 포스터 snapshot/조회는 W12에서 연결한다.
+
+호환·배포: 새 응답 필드는 optional로 선언하여 새 클라이언트가 이전 서버를 읽게 하되 새 서버는 항상 반환한다. DB migration→서버→같은 section 카탈로그의 프런트 배포/새로고침 순서다. 기존 section ID는 유지하지만 새 ID를 모르는 구형 클라이언트는 새 section 응답을 거부할 수 있어 이 MVP에서는 동시 갱신이 필요하다. 기존 문서 저장은 전체 대체이며 생략된 section을 서버가 임의 보존하지 않는다. 배포 롤백도 이미 저장된 새 section을 읽을 수 있는 계약을 유지하고 DB 삭제/리셋은 하지 않는다.
+
+
+## W9 이메일 가입 계약 (검증 중)
+
+[공식 계약과 로컬 조사](../research/signup-auth-contract.md)를 따른다. FEATURE_SIGNUP은 기본 false이고 가입·재발송·코드 확인은 off일 때 같은 출처 요청에 404다. 로그인·로그아웃·세션 조회는 계속 제공한다. CI는 true를 명시하고 off 회귀도 별도로 검사한다. 브라우저의 직접 Supabase 계정 생성은 계속 금지한다.
+
+| 경로 | 입력/결과 |
+| --- | --- |
+| POST /api/auth/signup | `{email,password,passwordConfirmation,requestId}` → 202 `{status:"verification_required",authenticated:false}`. 이메일 trim/lowercase, 비밀번호 8 Unicode 문자 이상·72 UTF-8 bytes 이하, 일치 확인. 기존 로그인 스키마는 유지 |
+| POST /api/auth/resend | `{email,signupRequestId,requestId}` → 같은 202. 원래 가입 요청 ID와 미인증 계정이 일치할 때만 메일 전송 |
+| POST /api/auth/verify | `{email,code,signupRequestId,requestId}` → 200 `{status:"verified",authenticated:false}`. 숫자 6자리 코드; 올바르지 않음/만료/다른 가입시도는 400 INVALID_VERIFICATION_CODE |
+| GET /api/auth/session | `{authenticated:boolean}`. 실제 인증 장애는 429/503, 비로그인만 false. 프로필 지연 생성 없음 |
+
+공통: CSRF 같은 출처 검사, private/no-store, 검증 전 호출 한도, 오류 정제. 제공사 장애/결과 불명은 503 SIGNUP_UNAVAILABLE, 한도는 429 RATE_LIMITED와 Retry-After:60(복구 보장이 아닌 재시도 안내)이다. 정상 202 본문은 신규/중복/존재하지 않는 재발송을 구별하지 않으며 계정 생성 성공/메일 도착을 뜻하지 않는다. 응답 시간과 SMTP 실패까지 같다는 보장은 없다.
+
+signupRequestId는 최초 가입 입력의 requestId다. 생성 요청의 응답 유실 때 같은 입력과 같은 ID로 재시도하고, 이후 재발송·코드 확인에는 새 requestId와 원래 signupRequestId를 각각 사용한다. 새 ID로 원래 미인증 가입을 대신 확인할 수 없다. 최초 ID를 잃은 계정의 재설정/복구는 미구현이며 코드 입력만 반복하게 안내하지 않는다. 비밀번호는 확인 대기 단계로 갈 때 지우고 requestId는 복구에 필요한 동안 유지한다.
+
+이메일 확인 응답은 쿠키·토큰을 만들지 않는다. 제공사가 내부 생성한 확인 세션만 local scope로 폐기한다. 확인 이후 폐기/응답 실패 시 인증이 이미 완료됐을 수 있으므로 직접 로그인으로 확인한다. 신규 가입 계정의 관리자 API/RPC/RLS는 password AMR도 요구하여 OTP-only 토큰의 직접 접근을 차단한다. 기존 사전 발급 계정은 추가 AMR 조건을 적용하지 않는다. 사용자 입력의 user_metadata로 이 조건을 바꿀 수 없다.
+
+초기 구현 정책(사용자 확정 수치 아님): 네트워크 가입·재발송 합계10/분·60/시간, 인증60/분·300/시간; 이메일 가입·재발송5/시간, 인증10/시간. 같은 요청 ID도 한도에 포함한다. DB에는 HMAC 해시·UUID·kind·시각만 남기고48시간 후 최대1000개씩 purge한다. 원본 이메일/비밀번호/코드는 기록하지 않는다. 스케줄 실제 연결은 W7이며 정리 완료로 간주하지 않는다. 공개 Supabase 재발송은 제공사 자체 한도를 따르므로 앱 원장으로 모두 통제한다고 주장하지 않는다.
+
+배포 순서: 신규 migration180000/181000→Auth 설정(enable_signup:false,confirmations:true,min password8,OTP6,confirmation 코드 템플릿/SMTP)→서버→가입 플래그 활성화. 클라우드 Auth 설정은 이 커밋에서 원격 변경하지 않는다. 새 정책은 [키 당일 점검 대상](../research/signup-auth-contract.md)이다. 가입/선택/코드 입력 프런트는 이 백엔드 API와 별도 인계한다.
+
+
+# W11 예상 Q&A·미리보기·전시 일괄 생성
+
+[SRC-050](../references/user-expected-qa-policy.md), [Figma 4화면](../references/figma-review-v3.md)에 따른 소유자 전용 계약이다. 관람객 공개 Q&A 전달은 W12이며 이 단계에서 자동 공개하지 않는다. 새 플래그 `FEATURE_EXPECTED_QA`, `FEATURE_EXHIBITION_QA`, `FEATURE_PREVIEW_CHAT`, `FEATURE_QA_REWRITE`는 모두 기본 false다. 전시 Q&A 플래그는 전시 범위 생성만 제어하며 작품 Q&A와 별개다.
+
+| API | 요청·동작 |
+| --- | --- |
+| POST `/api/admin/exhibitions/{id}/qa/generations` | requestId, artworkId(null=전시), expectedRevision, expectedDocumentRevision. 최초201·동일요청200. 작품3/전시5개 상한, 근거 부족0개는 abstained/EVIDENCE_REQUIRED |
+| GET `/api/admin/qa/jobs/{id}`, POST `.../{id}/retry` | 소유자 조회·expectedAttempt/새 requestId로 명시적 재시도. GET은 모델 호출 없음 |
+| GET `/api/admin/exhibitions/{id}/qa?artworkId=…` | 생략하면 전시 항목만. 최신 버전·상태·개별 인용 원문 body/출처/해시 반환 |
+| POST `/api/admin/qa/{id}/approve`, `.../withdraw` | expectedVersion, 승인에는 evidencePins. 인용 원문과 정확히 일치하고 현재 승인된 근거만 허용 |
+| POST `/api/admin/exhibitions/{id}/evidence` | 작가/전시 범위의 근거 초안 입력. 작품 근거는 기존 작품 경로 사용 |
+| POST `/api/admin/evidence/{id}/approve` | version을 받아 기존 근거 승인 RPC 실행. 전시·정정 근거도 작품 선택 없이 승인 가능 |
+| POST `/api/admin/exhibitions/{id}/preview/chat` | requestId, artworkId(null=전시), question. 단일 질문별 비공개 문맥 생성, 최초201·재조회200 |
+| GET `/api/admin/preview/{id}`, POST `.../evaluations` | 평가 requestId, rating=accurate/needs_revision. 평가만으로 승인·공개하지 않음. 최근50개 조회, 평가 횟수는 검수 완료 조건 아님 |
+| POST `/api/admin/qa/corrections` | targetKind=preview/qa, targetId, targetVersion(QA만 버전), requestId, sourceLabel/sourceBody. 사실 정정을 별도 근거 초안으로 저장 |
+| POST `/api/admin/qa/rewrite` | 동일 대상 식별자+instruction+승인 evidencePins. 생성과 독립 평가 통과 후에도 새 draft이며 자동 적용/승인 안 함 |
+| GET `/api/admin/qa/rewrites/{id}`, POST `.../retry` | 원대상 정보와 job 조회, 새 requestId/expectedAttempt로 명시적 재시도. gap 대상은 허용하지 않음 |
+| POST `/api/admin/exhibitions/{id}/training` | requestId, expectedRevision.200; 작업 목록만 저장. 작품별 기본해설+예상QA, 전시QA는 해당 플래그가 켜졌을 때 포함 |
+| GET `/api/admin/training/{id}` | queued/running/completed와 자식별 상태. completed는 전부 성공을 뜻하지 않으며 각 결과코드 확인 |
+| POST `/api/admin/training/{id}/targets/{targetId}/run` | requestId, expectedAttempt(첫 실행0). 자식 한 건 실행, 같은 요청 재전송은 중복 생성 안 함. 배치별 실행중 한 건 제한 |
+| POST `/api/admin/gaps/{id}/recheck-close` | expectedPublicationId로 작가가 확인한 공개본을 고정해 종료. 재게시 자체는 기존 gap을 닫지 않음 |
+
+재작성 지시문은 근거가 아니다. 새 사실은 corrections→evidence 승인→rewrite→QA 승인→W12 명시적 게시 순서다. 공개본과 원문을 덮어쓰지 않는다. 미리보기는 현재 단일 질문 단위이며 이전 대화를 자동으로 모델에 전달하지 않는다.
+
+전시 묶음은 최대30작품의 스냅샷이며 프런트가 queued 자식을 순서대로 POST한다. GET 폴링이나 Vercel 응답 후 백그라운드 실행을 가정하지 않는다. 생성 결과를 기본 해설에 적용하는 기존 API와 QA 승인도 별도다. 원문/전시 revision이 바뀐 대기 대상은409이며 최신 revision으로 새 배치를 만든다. 재시도도 같은 배치의 실행 중인 형제와 병행할 수 없다.
+
+배포는190000→191000→192000→193000→194000을 먼저 적용하고 앱을 교체한다. 기존 공개·해설 API는 보존한다. 되돌릴 때 앱과 네 플래그를 끄고 추가 테이블을 보존한다. 적용 migration을 수정/삭제하거나 데이터 reset하지 않는다. 검증 결과와 미검증 항목은 [작업 추적](backend-completion.md)에 기록한다.
+
+
+W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.
+
+플래그는 기능 제공 범위이며 권한 경계를 대신하지 않는다. 전시QA 플래그를 꺼도 기존 전시 후보의 검수·철회는 가능하다. previewChat을 꺼도 이미 생성된 미리보기에서 정정/재작성을 할 수 있다. 실제 소유권·현재 근거 검증은 DB RPC에서 수행한다.
+
+
+## B용 승인 Q&A 게시 포트
+
+`get_approved_qa_for_publication(p_owner uuid,p_exhibition_id uuid,p_artwork_id uuid,p_allow_mock boolean default false)`는 service_role 전용이며 HTTP/일반 소유자에게 노출하지 않는다. artworkId=null은 전시 항목만, UUID는 그 작품 항목만 조회한다. 최신 버전이 approved이고 모든 evidencePins가 현재 유효한 항목만 반환한다. 최신 draft/withdrawn이면 이전 승인 버전을 새 게시 후보로 되돌려 쓰지 않는다. 기존 공개본의 유지·철회는 B 공개 계약이 별도로 처리한다.
+
+반환은 `[{id,version,exhibitionId,artworkId,scope,question,answer,contentHash,evidencePins:[{id,version}],mock,approvedAt}]`다. 소유자 ID·생성 원문 citations·이전 미리보기 답변·지시문은 포함하지 않는다. 기본은 mock 제외이고 개발 게시 여부는 신뢰된 서버 정책으로만 전달한다. 게시 SQL의 같은 트랜잭션에서 호출해야 작가별 게시 잠금과 검증이 스냅샷 쓰기까지 유지된다. 별도 HTTP에서 먼저 조회한 뒤 나중에 쓰는 방식은 금지한다. B가 공개 시 정확한 버전·핀을 보존하고 관람/미디어에서 철회를 재검사하며 모델 전달량12근거/8,000자 상한도 적용한다.

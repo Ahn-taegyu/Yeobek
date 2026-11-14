@@ -10,16 +10,28 @@ export async function authenticatedContext() {
   const { data, error } = await db.auth.getUser();
   if (error) throw authenticationError(error);
   if (!data.user) throw new ApiError(401, "UNAUTHENTICATED", "로그인이 필요합니다.");
+  if (Object.hasOwn(data.user.app_metadata, "yeobek_signup_request_id")) {
+    const message = "이메일 인증을 완료한 뒤 비밀번호로 직접 로그인해 주세요.";
+    if (!data.user.email_confirmed_at) throw new ApiError(401, "UNAUTHENTICATED", message);
+    const result = await db.auth.getClaims();
+    if (result.error) throw authenticationError(result.error, message);
+    const claims = result.data?.claims;
+    if (claims?.sub !== data.user.id || !Array.isArray(claims.amr) ||
+      !claims.amr.some(entry => entry && typeof entry === "object" && entry.method === "password")) {
+      throw new ApiError(401, "UNAUTHENTICATED", message);
+    }
+  }
   return { db, user: data.user };
 }
 
 export async function authenticatedDb() { return (await authenticatedContext()).db; }
 type Functions = Database["public"]["Functions"];
 export async function rpc<Name extends keyof Functions>(
-  db: DbClient, name: Name, args: Record<string, unknown>,
+  db: DbClient, name: Name, args: Record<string, unknown>, signal?: AbortSignal,
 ) {
   // HTTP schemas validate inputs; SQL validates relations and nullable arguments.
-  const { data, error } = await db.rpc(name, args as Functions[Name]["Args"]);
+  const request = db.rpc(name, args as Functions[Name]["Args"]);
+  const { data, error } = await (signal ? request.abortSignal(signal) : request);
   if (error) throw databaseError(error);
   return data;
 }

@@ -2,7 +2,7 @@
 type: Specification
 id: SPEC-016
 title: 백엔드 완성 작업 추적
-description: W0~W8 범위와 의존 순서 및 검증 경계.
+description: v3 D0 및 W0~W13의 범위·순서·검증 경계와 실제 진행 기록.
 status: draft
 updated: '2026-11-14'
 tags: [yeobek, backend, automation]
@@ -13,39 +13,159 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: parallel-author
+  resource: /references/user-backend-author-parallel-plan.md
+  title: 병렬 백엔드 A 범위
+- id: visitor-policy
+  resource: /references/user-visitor-tts-publication-policy.md
+  title: 자동 TTS와 관람 정책
+- id: gap-exclusion
+  resource: /references/user-gap-qa-exclusion.md
+  title: 관람 보완 요청의 Q&A 전환 제외
+- id: qa-policy
+  resource: /references/user-expected-qa-policy.md
+  title: 예상 Q&A 생성·검수 정책
+- id: figma-review
+  resource: /references/figma-review-v3.md
+  title: Figma W11 화면 직접 대조
+- id: signup-contract
+  resource: /research/signup-auth-contract.md
+  title: W9 이메일 가입과 직접 로그인 경계
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
+- id: questionnaire
+  resource: /references/user-artist-questionnaire.md
+  title: 작가 기본 작품 세계 세부 질문지
+- id: v3-answers
+  resource: /references/user-v3-decisions.md
+  title: v3 범위와 Vercel Hobby 답변
+- id: review-answers
+  resource: /references/user-v3-review-decisions.md
+  title: 해설 수정·검수 화면·모의 게시 정책
+- id: v3
+  resource: /references/user-backend-plan-v3.md
+  title: 백엔드 v3 화면·리스크 보강
+- id: v2
+  resource: /references/user-backend-plan-v2.md
+  title: 백엔드 완성 계획 v2
+- id: signup-policy
+  resource: /references/user-signup-security.md
+  title: 이메일 인증 필수와 비밀번호 8자 이상
+- id: p0
+  resource: /decisions/D-017-p0-feature-spec.md
+  title: Notion P0 개정
 - id: channel-auth
   resource: /references/user-channel-webhook-auth.md
   title: 채널톡 문의 웹훅 인증 선택
 - id: request
   resource: /references/user-backend-completion.md
   title: 백엔드 완성 계획 요청 원문
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
+- id: auth-timing
+  resource: /references/user-auth-signup-timing.md
+  title: 작가 직접 가입 마감 전 포함 결정
 ---
 
-# 범위와 상태
+# v3 범위와 실제 상태
 
-[사용자 요청](../references/user-backend-completion.md)의 목표는 화면과 키 입력만 남기도록 서버·DB·AI 연결을 완성하는 것이다. W0·W1·W3·W4·W5가 병합됐다. W8 업무 자동화는 구현 중이며 W2·W6·W7은 남아 있다. 전체 백엔드나 실서비스 완성을 뜻하지 않는다.
+[원 계획 SRC-033](../references/user-backend-completion.md)의 목표를 유지하며 [v2 SRC-041](../references/user-backend-plan-v2.md)를 바탕으로 [v3 SRC-044](../references/user-backend-plan-v3.md)를 우선 적용한다. 상세 근거는 [기능명세 P0·BR-16](functional-spec.md), [화면](screen-spec.md), [시나리오](user-scenarios.md), [데이터 모델 P0](data-model.md), [RAG 승인→검색](rag-design.md)이다. 각 묶음 시작 때 원문을 다시 읽고 요약과 다르면 원문을 우선한다.
 
-| 묶음 | 범위 | 상태 |
+| 묶음 | 실제 상태 | 남은 경계 |
 | --- | --- | --- |
-| W0 | 계약·정책·플래그·라우팅·모의 제공사·타입 클라이언트 | done (PR #4 CI 통과·병합) |
-| W1 | 작업 원장·해설 초안·추가 질문 | done ([PR #5](https://github.com/Ahn-taegyu/Yeobek/pull/5), `54437476`) |
-| W2 | 자료 정리 후보·원문 이력 | not_started |
-| W3 | 비공개 업로드·파일 검증·삭제 | done (PR #8 병합, 실제 Storage·HTTP·CI 검증) |
-| W4 | 근거·승인·음성·게시와 철회 | done (글 PR #6·음성 PR #9 CI 통과·병합, 실제 AI 품질 검증은 키 당일) |
-| W5 | 관람 채팅·음성·보완 요청 | done (글 PR #7·음성/미디어 PR #10 CI 통과·병합, 실제 음질은 키 당일) |
-| W6 | 운영 집계 API | not_started |
-| W7 | 통합 검증·시연 자료·프런트와 키 당일 인계 | not_started |
-| W8 | 운영 자동화 정책·이벤트·발송함·스티비/채널톡/Alt | in_progress (진행 안내 이벤트→AI→승인/자동→발송 모의 통합 검증, 문의 흐름 구현 중, 나머지 업무·Alt 웹훅 후속) |
+| W0 | done, PR #4 | 기존 계약 유지 |
+| W1 | done, PR #5 | 예상 Q&A는 W11이며 기존 followUpQuestions와 다름 |
+| W3 | done, PR #8 | OCR·자동 매칭 제외 |
+| W4 | done, PR #6·9 | P0 공개 계약 변경은 W12 |
+| W5 | done, PR #7·10 | P0 전시 문맥·출력 전환은 W12 |
+| W8 | in_progress, PR #11의 진행 안내·문의 범위 병합 | 예약 안내·Alt·요약·분류·브리핑·물리 삭제 등 잔여 |
+| W2 | in_progress, [Draft PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), `d276d9f`, 미병합 | W10 section 적용과 이력/만료 정합성 후 v3 순서에서 재개 |
+| D0 | done, PR #14 | main 861d27a, App·Knowledge CI 성공 |
+| W10 | done, PR #15, main dadc23b | v3 온보딩·사진/포스터·홈 상태, 전체 CI 성공 |
+| W13 | done, PR #16, main44bf7d3 | 리스크1·5·6·8·9 및 기한 반영, App·Knowledge CI 성공. 운영 적용은 W7 |
+| W9 | done, PR #17 | 직접 가입, 이메일 인증 필수·최소 8자 확정 |
+| W11 | in_progress | 예상 Q&A·검수·미리보기 |
+| W12 | not_started | 공개 체크리스트·접속 URL·관람 P0 (QR 제외) |
+| W6 | not_started | 운영 및 가입→전시→게시 집계 |
+| W7 | in_progress (기존 묶음 검사 누적) | 새 전체 흐름·시연 데이터·최종 인계는 미구현 |
 
-# 의존 순서와 검증
+전달 당시와 실제 차이: PR #12는 `23f6ee0`으로 `docs/p0-feature-spec`에 이미 병합됐으나 main에는 없었다. D0는 이 통합 브랜치와 main을 합친다. main의 SRC-035·036을 보존하고 기획 브랜치의 가입·직접 로그인 출처만 SRC-039·040으로 옮긴다. SRC-037·038은 유지한다. W2는 실제로 착수해 있었으므로 폐기하지 않고 Draft PR로 보존했다.
 
-W0 → W1 → W4 → W5 글 채팅·보완 요청을 우선한다. W3 이후 W4 음성과 W5 음성 경로를 연결하고, W8 기반과 안내·문의·전사 순으로 진행한다. W6·W2를 뒤따르게 하며 W7 검증을 각 묶음에서 누적한다. 일정이 부족하면 사용자 요청의 우선순위를 따르고 미구현은 명시한다.
+PR #11 head `6ca0cef`의 App checks `43549028404`·Knowledge checks `43549028410` 성공과 차단 리뷰 부재를 확인해 `2d7bea1`로 병합했다. 아래 과거 기록의 CI 대기·미연결 표현은 당시 상태다. 실제 외부 AI·발송 호출은 0회이며 서버 모의 검증과 실물 품질을 구분한다.
 
-각 묶음은 해당 계약·권한·DB/HTTP 검사와 lint·타입·단위·빌드를 확인한다. 전체 흐름은 모의 제공사 통합 검사로 확인하고 결과를 실제 호출과 구분한다. 키 수령 후 기능별 실호출과 사람 평가·지연 비교가 필요하다. 미실행 검사는 완료로 표시하지 않는다.
+# 순서와 검증
 
-# 미결정과 한계
+**최신 병렬 계획(SRC-054): A는 W11 → W2 → 업로드 파일 읽기, B는 인계·시연 데이터 → W12 → 최종 점검을 맡는다. 이전 직렬 계획의 W6·W8 잔여·Alt·브리핑·평가 통계는 이번 범위에서 제외한다.** W7의 검증 근거는 각 묶음에서 누적한다. 완료 묶음을 다시 만들지 않고 변경 차이만 새 migration·추가 필드로 구현한다.
 
-모델 ID·행사 키 권한·제공사 요청 형식·품질과 비용은 실측 전 미확정이다. 파트너 우선 원칙은 [D-015](../decisions/D-015-partner-priority.md)를 따른다. 운영 자동화의 외부 발송은 동의·정책·승인 경계를 지키며 실제 운영 적용과 구분한다. 작가 직접 가입은 마감 이후다.
+각 묶음은 migration → RPC·pgTAP → 저장소 어댑터·플레이북 → HTTP·통합 검사 → API·개발 기반·작업 추적·로그 순으로 정리한다. 경로·표·RPC 이름은 제안이며 기존 관례를 따른다. 전체 lint·typecheck·단위/DB/HTTP·build·knowledge verify는 최신 head CI로 확인하고 로컬은 좁은 재현과 기존 DB 전진 적용 등만 한다. 위임 diff를 직접 대조하고 오류를 피드백한 뒤 영향 검사를 재검증한다.
+
+# 남은 묶음의 수용 범위
+
+## W13 보안·운영 보강
+
+리스크 1 IP 해시 제한과 승인 해설/저장 음성 접근 유지, 5 개인정보·신규 플래그 기본 off, 6 이미지 3MiB/PDF 6MiB 전송 상한, 8 invalid_context 재시도 불가, 9 public RPC 전체 권한 카탈로그 대조 및 실행 시간/임대 간격을 먼저 구현한다. 상한·플래그 변경에는 CI·환경 예제·검사를 맞춘다. 원본 IP는 저장하지 않고 신뢰할 프록시 헤더와 실제 호스팅 요금제를 확인한다. 1·5·6·9는 마감 축소 대상이 아니다.
+
+
+## D0 문서 통합
+
+PR #12가 병합된 문서 브랜치를 main에 통합하고 ID 충돌·목차·로그·API·개발 기반을 양쪽 보존한다. 새 v2 원문 SRC-041과 가입 정책 SRC-042를 연결한다. Knowledge CI 성공과 교차 검토 후 병합하며 제품 구현 완료로 쓰지 않는다.
+
+## W10 입력 계약
+
+주체별 section ID·라벨·필수 여부·길이를 `src/lib/contracts/`의 단일 선언에서 파생시킨다. 기존 ID를 유지하며 전시 1단계 선택 3개·2단계 선택 6개, 작품 안내 질문 6개와 작가 공통 작품 세계를 원문대로 연결한다. 작가 질문 7개는 SRC-043을 반영하며 임의 필수 항목을 추가하지 않는다.
+
+전시 필수값이 비어도 임시저장하고 날짜·시간·작성 단계를 공개 상태와 분리한다. 1단계 다음/최종 완료에서 전시명·시작/종료 날짜와 시간·장소·기간 순서를 검증하고 조건별 사유를 반환한다. 2단계 선택 답변은 모두 비어도 통과한다. 작품은 부분 저장·임시 제목·크기 단위·초안 정렬을 제공하고 재정렬은 원자적으로 번호를 갱신한다. 활성 공개 번호는 게시 전까지 유지한다. PATCH 전체 값 저장/생략 null 계약은 유지한다. 홈은 작성 단계·작품 세계 등록 상태를 반환하고 W8 상태 조회 및 W12 미완성 게시 차단과 연결한다.
+
+## W9 직접 가입
+
+[확정 정책](../references/user-signup-security.md)은 **이메일 인증 필수, 가입 비밀번호 최소 8자, 가입·이메일 확인 후에도 직접 로그인**이다. 새 강도 규칙을 기존 계정 로그인에 소급 적용하지 않는다. 재설정·추가 강도·세션 수명·안내/동의는 미결정이다.
+
+signup/session API 이름은 제안이다. 공식 Supabase 문서로 가입 방식과 확인 동작을 검증하고 브라우저의 직접 Auth 가입 우회를 막는다. 응답에서 세션 쿠키를 설정하지 않고 자동 반환 세션도 관리자 접근에 사용하지 않는다. 계정 존재를 드러내지 않는 오류·결과 불명 복구·요청 중복과 정책 기반 호출 제한을 구현한다. 비밀번호·토큰을 로그·업무 원장·이벤트에 보관하지 않는다. 프로필은 기존 최초 홈 조회/전시 생성 시 계정당 하나만 지연 생성한다. `signup` off는 404, 기존 로그인은 유지한다. 가입 직후/확인 전 관리자 401, 확인 후 직접 로그인, 로그아웃 후 401·기존 계정 불변을 검사한다.
+
+## W11 예상 Q&A·검수·미리보기
+
+작품/전시 Q&A에 질문·답변 작업본·출처 ID/버전·기준 revision·내용 버전/해시·draft/approved/withdrawn·생성/정정/보완답변 출처를 보존한다. 승인은 특정 버전을 고정한다. 생성 작업은 기존 원장의 중복·한도·재시도를 사용하고 전시 일괄 시작은 대상별 예약과 묶음 상태 조회로 구현한다. 작가 보완 질문 `followUpQuestions`와 예상 Q&A의 이름·저장을 분리한다.
+
+목록·수정(새 작업본)·승인·철회와 review bundle 상태를 연결한다. 작가 미리보기는 인증·소유권을 확인하고 초안 문맥/관람 공개 캐시·한도를 분리한다. 응답별 평가·정정은 새 Q&A 작업본으로 검수하며 대화 전체를 공개 근거로 쓰지 않는다. 보완 질문 답변도 동일 검수 경로를 쓴다. `expectedQa`, `previewChat` 플래그를 준비한다. SRC-050에서 생성 세트당 작품 최대3·전시 최대5, 개별 승인·철회와 평가 횟수 조건 없음, 승인 Q&A를 생성 근거로 사용하는 기준을 확정했다.
+
+## W12 공개·관람 P0
+
+전시명·기간·장소·작품 1개 이상·번호 고유·승인 해설의 체크리스트와 보완 화면을 제공한다. 이미지는 선택이며 이미지 없이 게시를 허용한다(A3). 음성·필수 Q&A는 사용자 확인 전 기존 동작을 `voiceRequired`·정책값으로 유지한다. 기본 작품 세계와 참고 파일은 선택이다.
+
+승인 Q&A를 versioned 공개 스냅샷에 포함하고 이전 schemaVersion 읽기를 유지한다. 교체 게시·철회에서 근거·캐시·음성을 재검증한다. 공개 전시 주소와 번호·제목 라벨을 유지하며 QR 제작은 MVP에서 제외한다. 기존 응답 호환을 별도 필드/플래그로 유지한다. 작품 조회 API는 목록/정보용으로 남긴다. 공개 소개에 날짜·시간을 반환한다.
+
+`exhibitionScopeChat`이 켜지면 미선택/해제는 전시·작가 공통 승인 근거와 전시 Q&A를 사용한다. SRC-050에 따라 승인 Q&A는 생성 근거로 사용하고 기본 작품 소개의 승인문 직접 반환은 유지한다. 새 P0 흐름은 항상 글 답변을 반환하고 음소거에 따라 TTS를 요청한다. 기존 outputMode 의미는 변경하지 않는다. 작품 선택만으로 답변·해설·음성을 만들지 않는다. 선택 시 안내 음성 이행 플래그는 새 P0 흐름에서 기본 off로 둔다. 기존 구현은 질문 이후 선택 요청 문장의 낭독도 있으므로 실제 호출 조건을 확인하고 선택 동작과 혼동하지 않는다. STT 자동 전송·번호 단독 해석 미결정은 기존 동작(인식문 확인 후 전송)을 유지한다.
+
+## W8 잔여·W6
+
+가입 완료 거래성 안내, 검수 대기/미완성 초안 N일 안내, 승인 독촉·전시 종료 예약 안내를 추가한다. N은 정책값이며 진행 이름은 새 P0 단계에 맞춘다. 가입 폼에서 수신 동의를 받지 않고 홍보성은 동의 전 발송하지 않는다. 문의 본문의 물리 삭제·로그 정제, 보완 질문 요약이 남는다. Alt 웹훅/전사 가져오기는 W2 후에 후보로 연결하고 직접 원문을 덮어쓰지 않는다. 실패 분류·운영 브리핑도 후속이다.
+
+W6는 [원 계획 W6](../references/user-backend-completion.md)의 운영 집계와 운영자 전용 접근·기능 플래그 범위를 유지한다. 추가로 자동화 처리·자동 비율·개입 건수와 가입→전시 생성→게시 집계를 반환한다. 이메일·관람 질문·비공개 원문을 반환하지 않는다.
+
+## W2 보존 체크포인트
+
+[PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13)은 후보 생성·조회·명시적 적용·원문 이력, 작업 원장 중복 방지·원자적 완료를 보존한 Draft다. 부모 직접 단위·계약 92개, DB 46개, 실제 로컬 Auth·DB와 모의 AI HTTP 6개가 통과했다. 신규 131000으로 SQL 변수 참조 오류를 수정했다. 최초 head `4252478`의 Knowledge CI는 성공했으나 App CI는 테스트 fixture의 TypeScript 오류(TS2353)로 실패했으며 후속 d276d9f에서 수정해 App·Knowledge CI 성공을 확인했다. 구형 section 2개 제한, 후보/이력 FK와 만료 작업 정리의 정합성을 W10 이후 맞춰야 한다. 미병합이며 main 기능으로 표시하지 않는다. F03 인터뷰는 P1이므로 포함하지 않는다.
+
+## W7 검증·인계
+
+모의 전체 경로는 가입→이메일 확인→직접 로그인→홈→전시 2단계 임시저장/이어쓰기→작품/재정렬→해설·Q&A→검수/정정/승인→게시→공개 주소/전시 소개→전시·작품 채팅→보완/재게시다. 다른 계정 404, 승인 전/게시 전 데이터와 미리보기의 공개 노출 금지, 철회·캐시·TTS 재검사 및 플래그 off의 기존 흐름을 포함한다.
+
+`npm run db:seed:demo`는 계정·전시 1개·작품 3개와 승인 Q&A가 포함된 게시 상태를 준비한다. `frontend-handoff.md`는 SC-A01~A10·SC-V01~V06별 API·타입·상태·오류·플래그·모의를, `key-day-checklist.md`는 Auth 설정·실제 파트너/AI·음질·사람 평가·p50/p95·비용·플러그인 버전을 다룬다. 두 문서는 아직 미작성이다. section 목록 항목 추가/제거의 변경 용이성과 신규 플래그 off 회귀를 확인한다.
+
+# 미결정과 마감 조정
+
+일요일 아침(2026-11-15)이 마감이다. Q-09는 이메일 인증·8자만 확정됐고 나머지는 열어 둔다. W11 질문 수/검수 기준과 승인 Q&A 사용은 SRC-050에서 확정했다. W12 필수 승인·음성·STT/번호 정책은 해당 묶음 전에 질문한다. 답을 기다리는 동안 독립 작업을 하며 답이 없으면 기존 동작과 비활성 플래그를 유지한다.
+
+운영 자동화가 우선이면 W8 안내/요약·W6을 W11 미리보기 정정·전시 전체 Q&A보다 앞당길 수 있다. 줄이는 순서는 **지시문 재작성(직접 수정 유지) → 전시 전체 예상 Q&A → Alt → 브리핑 → W2**다. 축소한 기능은 플래그 off·미구현으로 인계한다. 현재 D0는 새 제품 플래그를 켜거나 끄지 않는다. 실물 모델·음성·행사 키·발송 품질은 미검증이며 모의 성공으로 대체하지 않는다.
+
+# 이전 구현·검증 기록
+
+아래는 시점별 기록이며 현재 상태는 위 표를 따른다.
 
 # W0 구현·검토한 계약
 
@@ -167,3 +287,104 @@ v2 전달 시 실제 로컬에서는 W2 작업을 시작한 상태였다. `feat/
 부모가 Sol SQL·하네스 diff와 계약을 직접 대조했다. 단위·계약 92개, 신규 DB 46개, 실제 로컬 Auth·DB와 모의 AI HTTP 6개가 통과했다. 실행 중 발견한 완료 SQL 변수 참조 오류는 이미 적용한 `130000`을 보존하고 신규 `131000`으로 고쳤다. 외부 AI 호출은 0회다. 계약 스냅샷은 신규 API 4개와 작업 조회·재시도의 organize 종류 추가다.
 
 **W2 완료 또는 병합 가능 상태로 보지 않는다.** v2 순서에 따라 D0·W10을 먼저 한다. 아직 구형 주체별 section 2개 계약이며 W10 목록으로 바꿔야 한다. 후보·이력 FK가 만료 작업 삭제에 미치는 영향과 이력 보존 정책, 최신 CI, 프런트 검수 연결이 남는다. 서버 경로는 이 Draft 브랜치에만 있고 main에 활성화하지 않는다.
+# W10 착수와 선행 검증
+
+D0 PR #14 head `5b82df1`에서 Knowledge `43551559157`·App `43551559186` 모두 성공하고 차단 리뷰가 없음을 확인해 `861d27a`로 병합했다. W2 Draft #13의 테스트 타입 오류는 `d276d9f`에서 수정했고 Knowledge `43551643125`·App `43551642854` 모두 성공했다. W2는 새 section/만료 정책 선행 때문에 계속 미병합이다.
+
+사용자는 W10의 작가 세부 질문 선택에 기존 자유 입력 유지 대신 질문지 전달을 선택했다. SRC-043의 7개 질문을 카탈로그에 추가하고 전시·작품 P0 원문과 함께 읽었다. 단계/부분 저장과 공개 번호 예약의 호환성을 검토 중이며 아직 W10 DB/HTTP 검증이나 병합을 완료하지 않았다.
+
+W10 구현을 직접 확인했다: catalog check, 단위/계약 70개, 기존 DB forward migration, pgTAP 35개, 실제 로컬 Auth·DB HTTP 5개 통과. SQL CASE 구문 오류를 최초 적용 rollback 후 수정했다. 입력은 draft:true opt-in, 기존 기본 플래그는 유지한다. 전체 CI·새 DB 타입 drift·최종 교차 검토와 병합은 대기다. 공개 번호 반영과 QR/관람 변경은 W12, 직접 가입은 W9 순서로 이어간다.
+
+사용자가 v3 변경분을 전달해 W10 진행분을 먼저 커밋·Draft PR로 보존하고 W13을 선행한다. 이 기록의 W10은 v2 범위이며 v3 온보딩·프로필·포스터·홈 집계까지 완료한 것이 아니다.
+
+PR #15의 첫 App CI는 기존 PDF 페이지 검증과 SQL 오류 코드 회귀를 발견했다. 공유 140000을 수정하지 않고 141000으로 검증을 복구했다. 부모의 기존 DB forward 적용과 영향 DB 검사 163개가 통과했으며 최신 전체 CI는 대기다. 이 수정도 W13 선행 뒤 재개할 W10 체크포인트에 포함한다.
+
+# v3 전환과 진행분 보존
+
+D0는 PR #14로 main 861d27a에 병합됐다. W2 PR #13의 TS2353은 d276d9f에서 수정됐고 App/Knowledge CI가 성공했다. W10 v2 범위는 [Draft PR #15](https://github.com/Ahn-taegyu/Yeobek/pull/15), b950557로 보존했다. 직접 단위/계약 70개·pgTAP 35개·로컬 Auth/DB HTTP 5개·문서 check를 통과했지만 아직 미병합이다. v3의 “W10 미착수/W2 CI 오류” 표와 이 점이 다르다. W13은 fix/backend-security-hardening에서 main 기준으로 진행 중이다.
+
+v3의 추가 수용 범위:
+
+- W10: Figma 질문 문구, 활동 이력 5개, 이름/작가명·키워드·온보딩 상태·사진, 전시 포스터·기간 상태/집계. 기존 자료와 section ID를 보존한다. 프로필 사진/포스터도 3MiB 제한과 공개 검사를 거친다. 순서와 공개 번호 적용 시점은 분리한다.
+- W9: 이메일 방식 유지·소셜 제외 확정. 인증 메일 재발송·만료 처리 최소 경로와 공식 발송 설정 확인을 추가한다.
+- W11: 전시 묶음 생성/진행 상태, 미리보기 평가와 지시문 재작성. 지시문은 근거가 아니며 평가만으로 승인하지 않는다. 재게시 보완 요청은 자동 종료 대신 재확인 필요로 바꾼다.
+- W12: 공개 포스터·작가 표시명·시각, 채팅 작품 이미지, 도슨트 “여운”, 명시적 승인/게시와 접속 URL. QR 제작은 MVP 제외. 모의 해설은 개발 시연만 허용하고 운영 게시를 차단한다.
+- W8: 채널톡 저장 대상 고정 검사, 보완 요약은 건수·정제 주제만/URL·개인정보 차단, 스티비 수신 거부 동기화 전 홍보 off, 작가 없는 이벤트의 운영자 편중 해소.
+- W7: Figma 화면 이름과 SC ID를 나란히 인계. 모델 ID, 인증 이메일 발송, 배포 환경 4.5MB 초과 미디어, 정리/자동화 스케줄 등록과 실행 시간 실제 점검. 설정하기 전 만료 데이터 물리 삭제를 완료로 표현하지 않는다.
+
+[SRC-045](../references/user-v3-decisions.md)와 [후속 답변](../references/user-v3-review-decisions.md)을 적용한다. 이름·작가명·이메일 필수, 나머지 온보딩 선택, 성별은 기본 미수집이다. 작품 이미지·연도·크기는 작품 편집에서 선택 입력, 전시 파일은 공통 참고 자료다. 다음 버튼에서 저장하고 임시저장 API를 유지한다. 홈은 준비중=미공개 또는 시작 전, 진행중=공개·기간 내, 종료=종료 시각 경과이며 미공개는 종료 시각이 지나도 준비중이 우선이다(SRC-048). 기본 해설은 직접 수정하고 그 외 답변은 지시문으로 수정하며 두 검수 화면을 분리한다. QR·별도 도슨트 화면 후보는 MVP에서 제외하되 기존 서버 계약과 명시적 승인·게시는 유지한다. R1은 본문/근거 삭제 RPC 설계만 문서화, R3은 PR에 사람 검토 지점을 남기고 기존 위임 기준으로 병합한다. “정확해요”는 기본에 따라 평가 기록이며 승인·게시를 대신하지 않는다. W10 작가 화면 8개는 SRC-049에서 직접 대조했다. W11·W12 화면은 각 묶음 시작 시 직접 확인한다. 축소 순서는 지시문 재작성(직접 수정 유지) → 전시 전체 Q&A → Alt → 브리핑 → W2다. 미구현/비활성은 인계에 그대로 쓴다.
+
+PR #15 후속 60f1113의 Knowledge 43554593053·App 43554593044가 모두 성공했다. 공개 PDF 검증/SQLSTATE 회귀는 141000에서 복구했고, 직접 영향 DB 163개도 통과했다. v3 W13 선행과 W10 추가 범위 때문에 Draft로 보존하며 아직 병합하지 않는다.
+
+
+# W13 구현·검증 기록 (병합 전)
+
+- 리스크 1: Vercel이 덮어쓴 단일 IP 헤더만 신뢰하고 HMAC 식별자로 제한한다. 서버 전용 `VISITOR_IP_HASH_SECRET`이 운영에 필요하다. 쿠키 교체와 무관한 네트워크 단위 초기 한도는 분당 30회/UTC 일일 200회다. 전시장 공유 NAT 용량은 실측 전 정책값이다. `/api/chat` 한도 응답은 429이며 프런트는 공개 작품 GET의 승인 해설과 공개 미디어/저장 음성을 계속 제공할 수 있다. 한도 오류의 fallback 필드로 안내한다.
+- 리스크 5: gaps·opsAggregation 및 앞으로 추가할 플래그는 기본 off. 기존 voiceRequired·followUpQuestions 기본 true는 유지한다. 예제 환경과 CI에 명시값을 넣었다.
+- 리스크 6: 150000 migration으로 이미지 staging 3MiB, 별도 PDF staging 6MiB, final 6MiB 제한. 선언 크기만 검사하지 않고 실제 signed transfer에도 적용한다. 기존 작은 PDF 완료 경로는 유지하고 큰 PDF 대기 예약은 URL을 재발급받아야 한다.
+- 리스크 8: invalid_context → AI_INVALID_CONTEXT, retryable=false. 입력/근거 복구 없이 자동 재시도하지 않도록 표시하며 명시적 작가 재시도 RPC 자체를 제거하지 않는다.
+- 리스크 9: public RPC 전체 시그니처와 PUBLIC/anon/authenticated/service_role 실행 권한을 기대 목록 100개와 대조한다. 이후 새 RPC마다 기대 목록을 갱신한다.
+- 실행 시간: Vercel Hobby+Fluid 선택. vercel.json의 fluid=true, 작가 생성 150초<임대180초, 관람 글110초<임대120초, 음성90초<임대120초. 내부 업무 기한은 각각120/75/60초다. 배포 실제 실행 시간 확인은 W7에 남는다.
+
+부모가 Sol의 실제 SQL·Storage diff를 읽고 범위/호환성을 대조했다. 별도 Sol 검토에서 찾은 음성 예약 전 취소 재확인·RPC abort 전달·scoped IPv6 정규화 오류를 보완했다. 직접 로컬 전진 migration, 네트워크 pgTAP 15개, 실제 Storage HTTP 6개, mock 관람 HTTP 7개, 관련 단위/계약 검사를 확인했다(마지막 IPv6 경계 포함 네트워크 단위 4개 통과). 전체 권한 검사는 W2/W10 RPC가 추가된 로컬 DB 대신 깨끗한 CI DB에서 확인한다. 전체 lint/type/unit/DB/HTTP/build/knowledge CI는 아직 대기다. 외부 AI·발송 호출은 0회, 운영 배포/스케줄도 미확인이다.
+
+
+W13 최초 head771766f의 Knowledge43556303790은 성공했고 App43556303720은 lint/type/unit 이후 RPC 권한 pgTAP의 반환 문자열 collation 오류로 중단됐다. 실제·기대 SELECT 열 모두 COLLATE C로 고쳤다. 부모가 실패 파일만 로컬 실행해 비교가 정상 수행됨을 확인했으며 로컬에는 W10의 advance_exhibition_step 등 추가 RPC가 있어 기대대로 목록 불일치로 실패한다. 권한 기대 목록을 약화하지 않고 새 head의 깨끗한 CI DB에서 전체 일치를 확인한다.
+
+
+## W13 병합과 W10 재개
+
+PR #16 head77c99ff의 App43556599236·Knowledge43556599214가 모두 성공하고 차단 리뷰가 없어 main44bf7d3으로 squash 병합했다. DB 권한 전체 대조·타입 drift·빌드·실제 로컬 API/mockAI HTTP가 CI에서 통과했다. W10 브랜치에 main을 병합하면서 양쪽 문서·SRC043~047과 코드/타입/계약 snapshot을 보존했다. 신규 실제 API 호출·운영 배포는 없으며 W10 v3 추가를 이어간다.
+
+## W10 v3 직접 검증과 병합 대기
+
+Figma 작가 화면 8개를 직접 읽어 SRC-049에 문구·선택지와 차이를 기록했다. SRC-048의 미공개 우선 분류를 적용했다. 온보딩/비공개 사진·포스터 API, 활동 이력 5개, 상태별 홈 집계와 기존 입력 계약을 연결했다. 이름·이메일·키워드는 AI 근거로 자동 복사하지 않는다. 사진/포스터 공개 snapshot은 W12 후속이다.
+
+부모가 Sol 구현의 실제 diff와 기존 SQL/HTTP를 대조하고 별도 Sol이 권한·동시성·호환성을 교차 검토했다. 검토에서 찾은 DATE→timestamp 초과 범위 오류를 날짜/시각 tuple 비교로 고쳤으며 두 극단 날짜 회귀를 추가했다. 새 counts는 이전 서버 읽기를 위해 optional로 선언했다. 170000/171000을 소유 로컬 DB에 전진 적용했고 DB 검사 147개, 단위/계약 78개, 기존 P0 HTTP 5개와 새 온보딩/실제 PNG Storage HTTP 1개가 통과했다. HTTP 최초 동시 실행에서는 Next 개발 manifest가 비어 500을 반환했으며 실패한 새 테스트만 단독 재실행해 통과했다. 전체 production HTTP와 타입 drift는 CI에서 확인한다.
+
+로컬 DB에는 W2 보존 migration이 있으므로 생성 타입에서 정확한 W2 차이만 제외했다. 새 DB 전체 RPC 109개 권한 대조·타입 drift·전체 회귀는 최신 PR #15 CI 대기다. 새 제품 플래그를 켜지 않았고 gaps/opsAggregation 기본 off는 유지한다. 실제 외부 AI/발송 0회, 운영 배포 미수행. 이름/메일 확인, 업로드 복합 FK와 삭제 잠금, 새 section을 모르는 구형 클라이언트의 동시 배포/새로고침 경계를 PR 사람 검토 지점으로 남긴다.
+
+
+## W10 병합과 W9 착수
+
+PR #15 head2852ab9의 App43558293735·Knowledge43558293909가 모두 성공했다. 전체 권한 목록·타입 drift·빌드·production HTTP·mock AI 회귀와 문서 verify를 확인하고 차단 리뷰 없이 main dadc23b로 squash 병합했다. W10 입력 계약은 완료, 프런트와 W11/W12 범위는 별도다. W9는 feat/artist-email-signup에서 이메일 방식으로 진행한다. BR-16·SC-A08/A09·UC20~23·P0 데이터/RAG 원문을 다시 읽었다. 공식 계약과 새 보안 경계는 [가입 조사](../research/signup-auth-contract.md)에 기록한다.
+
+
+## W9 구현·직접 검증 (CI 대기)
+
+서버 전용 미인증 계정 생성, 코드 재발송/확인, 세션 조회와 기본off signup 플래그를 연결했다. 공유 원문의 서버 전용 가입 조건 때문에 Auth enable_signup:false를 유지한다. min8·OTP6·코드 전용 메일은 설정파일에 명시했고 기존 로컬 데이터를 보존한 재시작으로 확인했다.
+
+Sol SQL/API 실제 diff를 부모가 기존 코드·원문과 대조하고 서로 교차검토했다. 초기 설계의 pending 사전등록 계정 활성화 위험을 발견해 최초 요청 nonce를 서버 app_metadata에 묶었다. 직접 Supabase OTP 토큰도 관리자 권한을 열지 못하도록 신규 가입 계정의 password AMR을 HTTP/RPC/RLS에서 검사한다. 기존 계정·익명 관람 계약은 유지한다. 개인정보/비밀번호를 운영 원장에 넣지 않는다.
+
+부모가 migration180000/181000 전진 적용, DB43+23개, 단위/계약89개, 실제 Auth·Mailpit·쿠키·동시 한도 통합1개를 확인했다. pgTAP 첫 실행의 잘못된 공개 근거 fixture는 현재 schema-v1 형식으로 고쳐 해당 파일만 재실행했다. 새 DB 타입 drift·111개 public RPC 권한 대조·전체 lint/type/DB/HTTP/build·knowledge verify는 CI 대기다. 운영 메일/배포/프런트 화면 미검증, 외부 AI/업무 발송0회. 신규 플래그 기본off·CI 명시on, off HTTP도 별도 실행해 가입/재발송/확인 404와 로그인·세션 유지가 통과했다. 최초 실행은 로컬 네트워크 sandbox 접근 거부였으며 동일 서버/검사를 허용 환경에서 실행했다. 비밀번호 추가 강도·재설정·세션 수명은 기존대로이며 최초 가입ID 유실 복구는 남았다.
+
+
+## W9 병합과 W11 착수
+
+PR #17 head13286f0의 App43560654686·Knowledge43560654694 성공 및 차단 리뷰 없음으로 main de06460에 squash 병합했다. 전체 권한 목록·타입 drift·production HTTP·mock/off 플래그·문서 verify를 확인했다. signup 기본off, 운영 SMTP·프런트는 미검증이다. 최초 가입ID 유실 복구와 비밀번호 재설정은 미구현이다.
+
+W11은 feat/expected-qa-review에서 SRC-050 결정과 SRC-051의 Figma4화면을 반영한다. 기능 P0·BR-16·화면·시나리오·데이터/RAG 원문을 직접 읽었다. 기존 AI 문맥 검증기가 W10 새 section ID와 2개를 넘는 section을 거부하는 문제를 발견해 공용 카탈로그 읽기 검증으로 보완한다. 생성 출처와 승인 근거의 본문·원문 버전을 대조하고, 배치 생성/조회와 실제 모델 실행을 분리하는 설계를 API/DB 담당이 교차 검토했다. 구현·직접검사·CI는 아직 진행 중이며 W11 완료가 아니다.
+
+
+## W11 구현·직접 검증 (CI 대기)
+
+SRC-050의 작품3/전시5 상한·항목별 승인/철회·평가횟수 비조건과 SRC-051 화면을 비공개 API로 연결했다. 전시 일괄 생성은 목록 저장/조회와 자식 실행을 분리하고, 기본 해설 적용·근거/QA 승인·게시는 자동화하지 않는다. 정정 근거 초안→승인→독립 평가 재작성 경로를 추가했다. 리스크2는 재게시 시 gap을 열어둔 채 새 공개본 재확인으로 처리하며 별도 종료 요청을 요구한다.
+
+부모가 Sol 두 담당의 실제 diff를 교차 대조했다. 기존 W2 job shape 보존, 생성 뒤 같은 원문 근거 승인 시 fingerprint 충돌, 근거의 임의 문자 절단, 검수용 exact body 누락과 배치별 개별 retry 우회를 보완했다. 적용된 migration은 수정하지 않고193000으로 마지막 제약을 추가했다. 전진 적용 성공, DB91개(처음87개+training15→19), W10 AI 입력1개·예상QA5개·HTTP 계약89개, 실제 Auth/DB+모의AI HTTP6개를 부모가 직접 확인했다. 최초 HTTP 배치 상태 기대201은 계약200으로 수정했다. 전체 최신 CI는 아직 대기다.
+
+기본 플래그는 expectedQa/exhibitionQa/previewChat/qaRewrite 모두off이며 개발 검증에서만 켰다. 실외부 AI 호출0회, 실제 품질·프런트·배포 스케줄은 미검증이다. W12 관람 승인QA 반영·공개 조건과 나머지 W8/W6/W2/W7은 미완료다.
+
+
+W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.
+
+
+W11 최종 교차검토 후194000으로 예약 시 생성 상한을 고정하고 잠금 대기 뒤 만료를 재확인했다. 실모델이 모의 이전 답변을 재작성하는 요청은 차단한다. SRC-052의 gap 전환 제외는 HTTP와 직접 RPC 모두 적용했다. 부모가194000 전진 적용·상한/모의/제외 DB42개와 최종 HTTP6개, 변경된 단위/계약101개를 직접 확인했다. 잠금 대기 중 만료의 실제 동시 실행 재현은 미수행이며 만료 후 콜백과 정적 잠금 순서를 검사했다. 최신 CI는 대기다.
+
+
+## 병렬 A 전환
+
+[SRC-054](../references/user-backend-author-parallel-plan.md)로 현재 목표가 바뀌었다. W11은 PR #18 a1df889로 커밋·공유됐고 App43563566225·Knowledge43563566258 전 단계가 성공했다. 목표 원문의 “미커밋/CI 미확인”과 다른 점이다. B용 서비스 승인QA 조회 RPC와 W11 인계를 보완한 최종 head로 다시 검증 후 병합한다. 이미 구현한 전시QA·학습묶음은 유지하고 기본off로 포함한다.
+
+A가 로컬 Supabase를 소유하고 전진 migration만 적용한다. B는 공개 게시/스냅샷/관람 채팅·frontend-handoff 전체·시연·키 당일 점검을 맡으며 A는 W11 절만 제공한다. 별도 검토 에이전트는 SQL/권한/migration만 담당한다. 최신 TTS/작품지칭 정책은 [SRC-055](../references/user-visitor-tts-publication-policy.md)에 기록해 B에게 전달했고 아직 현재 코드의 게시 음성 조건을 바꾼 것은 아니다.
+
+195000 서비스전용 승인QA 포트를 추가해 B에게 시그니처·반환형·같은 게시 트랜잭션 호출을 전달했다. 최신 main461d32f까지 확인했으며195000은 main 마지막181000보다 뒤다. 부모 전진 적용과 승인 조회 DB34개가 통과했고, 첫 fixture의 필수mock 누락을 바로잡았다. SQL/권한 독립 검토에 차단사항은 없었다. B 인계문서의 W11절을 추가하고 main461d32f를 합쳤다. 실제 게시 후 비공개 Q&A/미리보기의 관람 문맥·익명 응답 비노출과 게시 revision 변경 후 승인 거부를 포함한 DB24개가 통과했다. 최종 head CI·병합은 대기다.

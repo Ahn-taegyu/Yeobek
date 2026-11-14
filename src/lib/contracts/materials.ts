@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { boundedText } from "./chat";
+import { DEFAULT_POLICIES } from "../policy";
+
+export const materialByteLimits = { image: DEFAULT_POLICIES.image_max_bytes, pdf: DEFAULT_POLICIES.pdf_max_bytes } as const;
+export const materialStagingBuckets = { image: "artist-material-staging", pdf: "artist-material-pdf-staging" } as const;
 
 const id = z.uuid().toLowerCase();
 const version = z.number().int().positive().max(2147483647);
@@ -8,7 +12,9 @@ export const materialSubject = z.enum(["artist", "exhibition", "artwork"]);
 export const requestUploadSchema = z.strictObject({
   id, subjectType: materialSubject, subjectId: id, kind: z.enum(["image", "pdf"]),
   filename: boundedText(255).refine(value => !/[/\\\p{Cc}]/u.test(value)),
-  contentType: materialType, byteSize: z.number().int().min(1).max(50 * 1024 * 1024),
+  contentType: materialType, byteSize: z.number().int().min(1).max(materialByteLimits.pdf),
+}).refine(({ kind, byteSize }) => byteSize <= materialByteLimits[kind], {
+  path: ["byteSize"], message: "자료 종류별 파일 크기 한도를 확인해 주세요.",
 });
 export const completeUploadSchema = z.strictObject({ expectedVersion: version });
 export const deleteMaterialSchema = z.strictObject({ expectedVersion: version });
@@ -25,7 +31,7 @@ export const materialResponse = z.strictObject({
 });
 export const uploadResponse = z.strictObject({
   material: materialResponse,
-  upload: z.strictObject({ signedUrl: z.url(), token: z.string(), path: z.string(), bucket: z.literal("artist-material-staging"),
+  upload: z.strictObject({ signedUrl: z.url(), token: z.string(), path: z.string(), bucket: z.enum(materialStagingBuckets),
     expiresAt: z.iso.datetime({ offset: true }) }).nullable(),
 });
 export const materialListResponse = z.array(materialResponse);

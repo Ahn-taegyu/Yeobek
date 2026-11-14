@@ -1,0 +1,173 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+-- Keep argument types qualified when a signature uses a non-system type.
+set local search_path = pg_catalog, extensions;
+select plan(1);
+
+-- Inventory every public routine, including overloads. Review this list with
+-- every RPC migration. Early CRUD grants retain service_role from defaults.
+select results_eq(
+    $actual$
+    select (p.proname || '(' || oidvectortypes(p.proargtypes) || ')') collate "C" as signature,
+        has_function_privilege('anon', p.oid, 'EXECUTE') as anon_execute,
+        has_function_privilege('authenticated', p.oid, 'EXECUTE') as authenticated_execute,
+        has_function_privilege('service_role', p.oid, 'EXECUTE') as service_execute,
+        exists (
+            select 1 from aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) privilege
+            where privilege.grantee = 0 and privilege.privilege_type = 'EXECUTE'
+        ) as public_execute
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+    order by signature
+    $actual$,
+    $expected$
+    select signature collate "C" as signature, anon_execute, authenticated_execute, service_execute, public_execute
+    from (values
+    -- anon, authenticated, service_role
+    ('get_public_artwork(uuid, uuid)', true, true, true, false),
+    ('get_public_exhibition(uuid)', true, true, true, false),
+
+    ('get_approved_qa_for_publication(uuid, uuid, uuid, boolean)', false, false, true, false),
+
+    -- authenticated
+    ('create_qa_correction_evidence(text, uuid, integer, uuid, text, text)', false, true, false, false),
+    ('get_preview_answer(uuid)', false, true, false, false),
+    ('get_qa_rewrite_job(uuid)', false, true, false, false),
+    ('get_training_batch(uuid)', false, true, false, false),
+    ('record_preview_evaluation(uuid, uuid, text)', false, true, false, false),
+    ('approve_qa_item(uuid, integer, jsonb)', false, true, false, false),
+    ('get_expected_qa_job(uuid)', false, true, false, false),
+    ('list_qa_items(uuid, uuid)', false, true, false, false),
+    ('withdraw_qa_item(uuid, integer)', false, true, false, false),
+    ('advance_exhibition_step(uuid, integer, text)', false, true, false, false),
+    ('create_artwork_draft(uuid, uuid, integer, text, text, text, text, text, jsonb, jsonb)', false, true, false, false),
+    ('create_exhibition_draft(uuid, text, date, date, text, text, text, jsonb, jsonb)', false, true, false, false),
+    ('reorder_artworks(uuid, jsonb)', false, true, false, false),
+    ('set_artist_avatar(integer, uuid)', false, true, false, false),
+    ('set_exhibition_poster(uuid, integer, uuid)', false, true, false, false),
+    ('update_artist_onboarding(integer, text, text, jsonb, boolean)', false, true, false, false),
+    ('update_artwork_draft(uuid, integer, integer, text, text, text, text, text, integer, jsonb, jsonb)', false, true, false, false),
+    ('update_exhibition_draft(uuid, integer, text, date, date, text, text, text, integer, jsonb, jsonb)', false, true, false, false),
+    ('approve_evidence(uuid, integer)', false, true, false, false),
+    ('approve_narration(uuid, integer, jsonb)', false, true, false, false),
+    ('decide_outbox(uuid, integer, boolean)', false, true, false, false),
+    ('delete_artwork(uuid, integer)', false, true, false, false),
+    ('delete_material(uuid, integer)', false, true, false, false),
+    ('get_ai_job(uuid)', false, true, false, false),
+    ('get_contact_consents()', false, true, false, false),
+    ('get_narration_context(uuid)', false, true, false, false),
+    ('get_review_bundle(uuid)', false, true, false, false),
+    ('get_revoke_impact(uuid, integer)', false, true, false, false),
+    ('list_labels(uuid)', false, true, false, false),
+    ('list_materials(text, uuid)', false, true, false, false),
+    ('list_outbox(integer)', false, true, false, false),
+    ('list_outbox_page(integer, uuid, text)', false, true, false, false),
+    ('pause(uuid, integer, uuid)', false, true, false, false),
+    ('revoke_evidence(uuid, integer, text)', false, true, false, false),
+    ('save_narration_draft(uuid, integer, text, uuid)', false, true, false, false),
+    ('set_artwork_image(uuid, integer, uuid)', false, true, false, false),
+    ('set_contact_consent(text, boolean, integer)', false, true, false, false),
+    ('set_support_binding(text, text, uuid, boolean, integer)', false, true, false, false),
+    ('upsert_evidence(uuid, uuid, text, text, text, jsonb, uuid, integer)', false, true, false, false),
+
+    -- authenticated, service_role
+    ('create_artwork(uuid, uuid, integer, text, text, text, text, jsonb, jsonb)', false, true, true, false),
+    ('create_exhibition(uuid, text, date, date, text, jsonb, jsonb)', false, true, true, false),
+    ('get_artist_profile()', false, true, true, false),
+    ('get_artwork(uuid)', false, true, true, false),
+    ('get_exhibition(uuid)', false, true, true, false),
+    ('get_knowledge_document(text, uuid)', false, true, true, false),
+    ('list_artworks(uuid)', false, true, true, false),
+    ('list_exhibitions()', false, true, true, false),
+    ('update_artist_profile(integer, text, integer, jsonb, jsonb)', false, true, true, false),
+    ('update_artwork(uuid, integer, integer, text, text, text, text, integer, jsonb, jsonb)', false, true, true, false),
+    ('update_exhibition(uuid, integer, text, date, date, text, integer, jsonb, jsonb)', false, true, true, false),
+    ('update_knowledge_document(text, uuid, integer, jsonb, jsonb)', false, true, true, false),
+
+    -- service_role
+    ('claim_training_target(uuid, uuid, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('close_gap_recheck(uuid, uuid, uuid, boolean)', false, false, true, false),
+    ('complete_preview_answer(uuid, uuid, integer, jsonb)', false, false, true, false),
+    ('complete_qa_rewrite_job(uuid, uuid, integer, jsonb)', false, false, true, false),
+    ('create_training_batch(uuid, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('reserve_preview_answer(uuid, uuid, uuid, uuid, text, boolean)', false, false, true, false),
+    ('reserve_qa_rewrite_job(uuid, uuid, text, uuid, integer, text, jsonb, boolean)', false, false, true, false),
+    ('retry_qa_rewrite_job(uuid, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('complete_expected_qa_job(uuid, uuid, integer, jsonb)', false, false, true, false),
+    ('reserve_expected_qa_job(uuid, uuid, uuid, uuid, integer, integer, boolean)', false, false, true, false),
+    ('retry_expected_qa_job(uuid, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('consume_signup_budget(text, text, uuid, text)', false, false, true, false),
+    ('get_signup_verification_identity(text, uuid)', false, false, true, false),
+    ('acquire_notification_run(uuid, boolean)', false, false, true, false),
+    ('check_notification_dispatch(uuid, uuid, boolean, uuid)', false, false, true, false),
+    ('check_outbound_dispatch(uuid, uuid, boolean)', false, false, true, false),
+    ('check_publication_versions(uuid, jsonb)', false, false, true, false),
+    ('claim_automation_events(integer, boolean)', false, false, true, false),
+    ('claim_automation_notifications(integer, boolean)', false, false, true, false),
+    ('claim_channel_token(text, text, uuid)', false, false, true, false),
+    ('claim_notification_outbound(integer, boolean)', false, false, true, false),
+    ('claim_outbound_messages(integer, boolean)', false, false, true, false),
+    ('claim_support_events(integer, boolean, text)', false, false, true, false),
+    ('claim_support_outbound(integer, boolean, text)', false, false, true, false),
+    ('complete_ai_job(uuid, uuid, integer, jsonb)', false, false, true, false),
+    ('complete_audio_cleanup(uuid, uuid)', false, false, true, false),
+    ('complete_audio_job(uuid, uuid, integer, jsonb)', false, false, true, false),
+    ('complete_automation_event(uuid, integer, text, text, jsonb)', false, false, true, false),
+    ('complete_automation_job(uuid, uuid, integer, text, text, jsonb, jsonb, jsonb, integer)', false, false, true, false),
+    ('complete_channel_token(text, text, uuid, text, integer)', false, false, true, false),
+    ('complete_material_cleanup(uuid, uuid, integer)', false, false, true, false),
+    ('complete_notification_dispatch(uuid, uuid, text, text, text, boolean, uuid)', false, false, true, false),
+    ('complete_outbound_message(uuid, uuid, text, text, text)', false, false, true, false),
+    ('complete_support_job(uuid, uuid, integer, boolean, text, text, text, text, text, jsonb, jsonb, integer)', false, false, true, false),
+    ('complete_upload(uuid, uuid, integer, text, integer, text, integer, integer, integer)', false, false, true, false),
+    ('complete_visitor_audio_cleanup(uuid)', false, false, true, false),
+    ('complete_visitor_request(text, uuid, jsonb, text, jsonb)', false, false, true, false),
+    ('complete_visitor_voice(text, uuid, jsonb, text)', false, false, true, false),
+    ('consume_visitor_network_budget(text, text, uuid, uuid, text)', false, false, true, false),
+    ('dismiss_gap(uuid, uuid, boolean)', false, false, true, false),
+    ('enqueue_automation_event(text, text, text, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('get_audio_context(uuid, uuid, integer)', false, false, true, false),
+    ('get_notification_context(uuid, integer, boolean)', false, false, true, false),
+    ('get_public_media(uuid, text, boolean)', false, false, true, false),
+    ('get_public_media_refs(uuid[], boolean)', false, false, true, false),
+    ('get_support_context(uuid, integer, boolean)', false, false, true, false),
+    ('get_upload(uuid, uuid, boolean)', false, false, true, false),
+    ('get_visitor_answer_exhibition(text, uuid)', false, false, true, false),
+    ('is_publication_current(uuid, uuid, uuid, integer)', false, false, true, false),
+    ('list_audio_cleanup(integer)', false, false, true, false),
+    ('list_gaps(uuid, uuid, boolean)', false, false, true, false),
+    ('list_material_cleanup(integer)', false, false, true, false),
+    ('list_visitor_audio_cleanup(integer)', false, false, true, false),
+    ('load_publication_context(uuid, uuid, integer)', false, false, true, false),
+    ('load_visitor_answer(text, uuid)', false, false, true, false),
+    ('load_visitor_voice(text, uuid)', false, false, true, false),
+    ('publish(uuid, uuid, uuid, integer, jsonb, jsonb, boolean)', false, false, true, false),
+    ('publish_with_audio_config(uuid, uuid, uuid, integer, jsonb, jsonb, boolean, text, boolean)', false, false, true, false),
+    ('purge_expired()', false, false, true, false),
+    ('receive_support_inquiry(text, text, text, text, text, boolean, timestamp with time zone, boolean)', false, false, true, false),
+    ('record_gap(text, uuid, text, boolean)', false, false, true, false),
+    ('record_visitor_execution(text, uuid, jsonb, jsonb, integer)', false, false, true, false),
+    ('record_visitor_steps(text, uuid, jsonb)', false, false, true, false),
+    ('release_notification_run(uuid, boolean)', false, false, true, false),
+    ('request_upload(uuid, uuid, text, uuid, text, text, text, integer)', false, false, true, false),
+    ('reserve_ai_job(uuid, uuid, uuid, integer, integer, text)', false, false, true, false),
+    ('reserve_ai_job(uuid, uuid, uuid, integer, integer, text, boolean)', false, false, true, false),
+    ('reserve_audio_job(uuid, uuid, uuid, integer, uuid, text, boolean)', false, false, true, false),
+    ('reserve_automation_job(uuid, integer, boolean)', false, false, true, false),
+    ('reserve_visitor_request(text, uuid, uuid, text, boolean)', false, false, true, false),
+    ('reserve_visitor_voice(text, uuid, uuid, text, text, boolean, uuid, text)', false, false, true, false),
+    ('resume(uuid, uuid, integer, boolean, uuid)', false, false, true, false),
+    ('resume_with_audio_mode(uuid, uuid, integer, boolean, boolean, uuid)', false, false, true, false),
+    ('retry_ai_job(uuid, uuid, uuid, integer)', false, false, true, false),
+    ('retry_ai_job(uuid, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('retry_audio_job(uuid, uuid, uuid, integer, text, boolean)', false, false, true, false),
+    ('schedule_automation_notifications(integer, boolean)', false, false, true, false),
+    ('sync_audio_config(text, boolean)', false, false, true, false)
+    ) as expected(signature, anon_execute, authenticated_execute, service_execute, public_execute)
+    order by signature
+    $expected$,
+    'public routine signatures and effective EXECUTE privileges match the reviewed inventory'
+);
+
+select * from finish();
+rollback;

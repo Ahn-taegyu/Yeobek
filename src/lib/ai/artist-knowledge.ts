@@ -7,6 +7,7 @@ import { abortable, createDeadline } from "./deadline";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { section, sourceRef } from "../api/schemas";
+import { MAX_SECTIONS, sectionsFor } from "../contracts/knowledge-sections";
 import { assertNotCancelled, textHash } from "./context";
 import { codepoints } from "./contracts";
 import { capabilitiesFor, PLUGIN_VERSION, playbookPrompt } from "./plugin";
@@ -21,7 +22,7 @@ const sourceSchema = z.strictObject({ id: uuid, ownerId: uuid, artistId: uuid, s
   exhibitionId: uuid.nullable(), revision, text: z.string().min(1).refine(v => codepoints(v) <= 5000 && !v.includes("\u0000")), ref: sourceRef });
 const contextSchema = z.strictObject({ documentId: uuid, ownerId: uuid, artistId: uuid, subjectId: uuid,
   subjectType: subject, exhibitionId: uuid.nullable(), revision,
-  sections: z.array(section).max(2), sourceRefs: z.array(sourceRef).max(24), sources: z.array(sourceSchema).max(12) });
+  sections: z.array(section).max(MAX_SECTIONS), sourceRefs: z.array(sourceRef).max(24), sources: z.array(sourceSchema).max(12) });
 export type ArtistKnowledgeContext = z.infer<typeof contextSchema>;
 const selectionSchema = z.strictObject({ sections: z.array(z.strictObject({
   id: section.shape.id, sourceIds: z.array(uuid).min(1).max(12),
@@ -69,25 +70,28 @@ export function validateArtistKnowledgeContext(raw: unknown, actorId: string, do
   if (!parsed.success) throw new KnowledgeError("invalid_context");
   const context = parsed.data;
   if (context.ownerId !== actorId || context.documentId !== documentId) throw new KnowledgeError("unavailable");
-  const valid: readonly string[] = sectionIds[context.subjectType];
+  const valid = sectionsFor(context.subjectType);
   if ((context.subjectType === "artist" ? context.subjectId !== context.artistId || context.exhibitionId !== null : !context.exhibitionId) ||
     (context.subjectType === "exhibition" && context.subjectId !== context.exhibitionId) ||
     new Set(context.sections.map(s => s.id)).size !== context.sections.length ||
-    context.sections.some(s => !valid.includes(s.id)) || context.sourceRefs.some(ref => !context.sections.some(s => s.id === ref.sectionId))) {
+    context.sections.some(s => !valid.some(definition => definition.id === s.id)) ||
+    context.sourceRefs.some(ref => !context.sections.some(s => s.id === ref.sectionId))) {
     throw new KnowledgeError("invalid_context");
   }
   const seen = new Set<string>();
   let chars = 0;
   for (const source of context.sources) {
+    const ref = source.ref;
     const sameSubject = source.subjectType === context.subjectType && source.subjectId === context.subjectId;
     const allowedAncestor = (source.subjectType === "artist" && source.subjectId === context.artistId && source.exhibitionId === null) ||
       (source.subjectType === "exhibition" && context.subjectType === "artwork" && source.subjectId === context.exhibitionId);
     if (source.ownerId !== actorId || source.artistId !== context.artistId || (!sameSubject && !allowedAncestor) ||
       (source.subjectType === "artist" ? source.exhibitionId !== null : source.exhibitionId !== context.exhibitionId) ||
       seen.has(source.id) || !source.text.trim() ||
-      (source.ref.kind === "direct" && !sameSubject) ||
-      (source.ref.kind === "document" && (source.ref.sourceDocumentId === documentId || source.ref.sourceRevision !== source.revision ||
-        source.subjectType === context.subjectType || !(sectionIds[source.subjectType] as readonly string[]).includes(source.ref.sourceSectionId)))) {
+      (ref.kind === "direct" && !sameSubject) ||
+      (ref.kind === "document" && (ref.sourceDocumentId === documentId || ref.sourceRevision !== source.revision ||
+        source.subjectType === context.subjectType ||
+        !sectionsFor(source.subjectType).some(definition => definition.id === ref.sourceSectionId)))) {
       throw new KnowledgeError("invalid_context");
     }
     chars += codepoints(source.text); seen.add(source.id);

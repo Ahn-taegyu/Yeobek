@@ -4,7 +4,7 @@ id: D-008
 title: 일요일 MVP 기술 스택과 개발 기준
 description: Next.js·Supabase·Liner·OpenAI 음성과 작은 범위 검색으로 구현한다.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 - architecture
@@ -22,6 +22,9 @@ sources:
 - id: official
   resource: /references/stack-references.md
   title: 공식 기술 문서
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 decision_status: accepted
 decision_basis: delegated-selection
 review_status: under-review
@@ -59,3 +62,7 @@ review_status: under-review
 OpenAI 음성 두 호출은 오늘 확인한다. 선택 모델에 접근할 수 없으면 UI와 채팅 계약을 유지하고 음성 어댑터만 교체한다. Liner 행사 키의 실호출은 11/14 최우선 검증이다. 실패한 mock을 실제 기능이나 파트너 조건 충족으로 발표하지 않는다.
 
 세부 경계·상한은 [기술 스택](../specs/technology-stack.md), 날짜별 작업과 실패 시 대응은 [개발 순서](../product/delivery-plan.md)를 따른다.
+
+## 후속 인증 요구
+
+[D-016](D-016-artist-auth.md)에서 사전 생성 계정 전용 기준을 직접 가입·로그인 선택으로 변경했다. 기존 구현 현황은 [개발 기반](../specs/development-foundation.md)에서 확인한다.

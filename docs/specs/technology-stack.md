@@ -13,6 +13,12 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: v3-answers
+  resource: /references/user-v3-decisions.md
+  title: v3 범위와 Vercel Hobby 답변
+- id: review-answers
+  resource: /references/user-v3-review-decisions.md
+  title: 해설 수정·검수 화면·모의 게시 정책
 - id: partner-priority
   resource: /decisions/D-015-partner-priority.md
   title: 성능을 유지하는 파트너 API 우선
@@ -31,6 +37,9 @@ sources:
 - id: official
   resource: /references/stack-references.md
   title: 공식 기술 문서
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 decision_status: proposed
 ---
 
@@ -47,15 +56,15 @@ decision_status: proposed
 | 런타임·패키지 | Node 24.x, npm | 로컬 설치 버전 활용, `package-lock.json` 고정 |
 | 화면·서버 | Next.js 16.4 안정 버전 + TypeScript + App Router | 관리자 페이지·관람 채팅·Route Handlers를 한 프로젝트에 |
 | UI | Tailwind, React `useReducer` | 채팅 상태·입출력 모드; 전역 상태 라이브러리 추가 없음 |
-| DB·인증 | Supabase Postgres + Auth, `@supabase/supabase-js`, `@supabase/ssr` | 미리 만든 작가 계정의 이메일/비밀번호 로그인, SQL migration·RLS |
+| DB·인증 | Supabase Postgres + Auth, `@supabase/supabase-js`, `@supabase/ssr` | 작가 이메일/비밀번호 로그인(현재 사전 생성 계정, 직접 가입은 D-016 후속), SQL migration·RLS |
 | 파일 | Supabase private Storage | 작품 사진·원본 PDF·승인 해설 음성 |
 | 해설 초안·자료 정리 | Liner 우선 | 작가 검수 단계. 모델과 행사 키 권한 확인 |
 | 관람 Q&A·평가 | Liner 우선; EXAONE·OpenAI 비교 | 승인 근거 사용. 평가는 초안과 다른 모델 계열 |
 | 음성 인식 | Liner 우선; OpenAI 비교 | 녹음 파일 전사와 한국어 품질 확인 |
 | 음성 합성 | Liner 우선; Typecast·OpenAI 비교 | 승인 해설과 확정 답변의 음성; 품질·지연 확인 |
 | 브라우저 음성 | MediaRecorder, HTML audio | 버튼 녹음·인식문 확인·재생·정지 |
-| 검증·QR | Zod, `qrcode` | 서버 입력/모델 결과 검증, URL QR 출력 |
-| 배포 | Vercel, Node runtime; 상업/팀 주안은 Pro | DB와 가까운 리전. 무료 제약이 필수이면 Netlify 대안 비교 |
+| 검증 | Zod | 서버 입력/모델 결과 검증. QR 제작은 최신 사용자 결정으로 MVP 제외 |
+| 배포 | Vercel Hobby, Node runtime, Fluid | 사용자 확정. 실제 배포·스케줄·파일 응답 크기는 W7 검증 |
 
 Next/React/Tailwind의 세부 패치 조합은 프로젝트를 생성할 때 안정 템플릿이 설치한 호환 버전을 lockfile에 고정한다. 행사 중 메이저 버전을 바꾸지 않는다. ORM·LangChain·에이전트 프레임워크·Redis·벡터 DB·작업 큐는 첫 구현에 추가하지 않는다.
 
@@ -88,7 +97,7 @@ D-011의 DB 원본·AI용 내부 위키 요구로 기존 5개 저장 단위를 7
 
 논리 모델의 Evidence·Narration·Audio를 첫날부터 모두 개별 테이블로 분해하지 않는다. `publications`에 작은 승인 묶음을 저장하고, 음성 준비 후 활성 참조를 트랜잭션으로 교체한다. 수정은 초안에만 적용한다. 전체 버전 이력 편집 UI는 만들지 않는다.
 
-작가는 미리 만든 Auth 계정으로 로그인한다. 공개 회원가입·비밀번호 찾기 UI는 이번 시연 범위 밖이다. 서버 인증과 소유권/RLS를 적용하며 타인 자료 접근 차단은 두 번째 테스트 계정으로 확인한다. 관람객은 가입 없이 접근한다.
+현재 구현은 사전 생성된 Auth 계정 로그인이다. 직접 회원가입은 D-016의 후속 요구이며 비밀번호 찾기는 미정이다. 서버 인증과 소유권/RLS를 적용하며 타인 자료 접근 차단은 두 번째 테스트 계정으로 확인한다. 관람객은 가입 없이 접근한다.
 
 채팅 화면 기록은 탭의 `sessionStorage`에 보관한다. P2 분석 DB를 만들지 않는다. 서버 답변 상태의 유효기간은 음성 재시도·권한 재확인용 1시간으로 두고, 만료된 행은 읽지 않으며 요청/관리 정리 시 제거한다. 정리 전까지 DB에 남을 수 있으므로 1시간 내 물리 삭제를 보장한다고 표시하지 않는다. 시연 종료 후 관리자 정리도 수행한다. 원음은 STT 처리 후 앱에 저장하지 않는다. 외부 API의 보관 정책과 앱의 보관 정책은 별개다.
 
@@ -113,7 +122,7 @@ D-011의 DB 원본·AI용 내부 위키 요구로 기존 5개 저장 단위를 7
 
 # API 경계
 
-후속 API 명세는 [기능명세 v1.0의 OP-01~22](functional-spec.md#8-api-명세로-넘길-업무-계약)과 [예외 코드](user-scenarios.md#예외-처리-목록)를 입력으로 사용한다. 아래는 경로 묶음이며 개별 요청/응답 스키마가 아니다.
+후속 API 명세는 [기능명세 v1.0의 OP-01~23](functional-spec.md#8-api-명세로-넘길-업무-계약)과 [예외 코드](user-scenarios.md#예외-처리-목록)를 입력으로 사용한다. 아래는 경로 묶음이며 개별 요청/응답 스키마가 아니다.
 
 | 경로 묶음 | 역할 |
 | --- | --- |
@@ -153,3 +162,14 @@ D-011의 DB 원본·AI용 내부 위키 요구로 기존 5개 저장 단위를 7
 # 음성 선택과 검증
 
 전사·합성은 Liner 우선 경로와 비교 후보의 한국어 품질, 키 권한과 지연을 실측해 선택한다. 미검증 대안을 완료로 표시하지 않는다. 음성 실패 때 텍스트로 복구하되 네 입출력 조합의 실제 확인 전에는 MVP 완료로 표시하지 않는다. 음성에는 AI 생성임을 안내한다.
+
+## 작가 직접 가입 요구
+
+[D-016](../decisions/D-016-artist-auth.md)은 기존 사전 생성 계정 로그인에 더해 직접 가입을 요구한다. 가입·이메일 확인 후 직접 로그인, 이메일 인증 필수와 가입 비밀번호 8자 이상은 확정됐다. 인증 제공사의 세션 처리 방식·발송 설정·나머지 세션 정책은 구현 전에 검토한다. 기존 로그인 구현 현황은 [개발 기반](development-foundation.md)을 따른다.
+
+
+## Vercel Hobby 실행 조건 (W13)
+
+사용자가 [Hobby](../references/user-v3-decisions.md)를 선택했다. 저장소 vercel.json은 fluid=true를 명시한다. [공식 실행 제한](https://vercel.com/docs/functions/limitations)의 Hobby Fluid 최대300초 안에서 경로 기한을 더 짧게 설정하며 실제 배포에서 적용 여부를 W7에 확인한다. [fluid 설정](https://vercel.com/docs/project-configuration/vercel-json)은 배포 구성이고 현재 배포 완료를 뜻하지 않는다.
+
+[공식 요청 헤더](https://vercel.com/docs/headers/request-headers)에 따라 플랫폼이 덮어쓴 x-forwarded-for만 신뢰한다. 앱은 VERCEL=1에서 단일 IP를 검증해 HMAC 처리하고 운영 VISITOR_IP_HASH_SECRET을 요구한다. Vercel 이외 환경은 확인되지 않은 전달 헤더를 무시하고 공통 네트워크 한도를 쓴다. 운영 배포 전 secret을 설정해야 한다. 대형 PDF는 Supabase signed upload를 이용하며 4.5MB 초과 음성/미디어 응답과 cron 주기는 W7에서 실제 제약을 확인해야 한다.

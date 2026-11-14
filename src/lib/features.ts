@@ -6,9 +6,17 @@ const variables = {
   followUpQuestions: "FEATURE_FOLLOW_UP_QUESTIONS",
   opsAggregation: "FEATURE_OPS_AGGREGATION",
   voiceRequired: "FEATURE_VOICE_REQUIRED",
+  signup: "FEATURE_SIGNUP",
+  expectedQa: "FEATURE_EXPECTED_QA",
+  exhibitionQa: "FEATURE_EXHIBITION_QA",
+  previewChat: "FEATURE_PREVIEW_CHAT",
+  qaRewrite: "FEATURE_QA_REWRITE",
 } as const;
 export type Feature = keyof typeof variables;
 export type Features = Readonly<Record<Feature, boolean>>;
+// Privacy-related collection/aggregation needs an explicit opt-in. New flags
+// default off; existing publication safety and author questions stay compatible.
+const enabledByDefault = new Set<Feature>(["voiceRequired", "followUpQuestions"]);
 
 /** Server settings only. Request bodies must never override these values. */
 export function getFeatures(env: Readonly<Record<string, string | undefined>> = process.env): Features {
@@ -17,7 +25,7 @@ export function getFeatures(env: Readonly<Record<string, string | undefined>> = 
     if (value !== undefined && value !== "true" && value !== "false") {
       throw new ApiError(503, "SERVER_CONFIGURATION_ERROR", "서비스 연결 설정을 확인하고 있습니다.");
     }
-    return [feature, value !== "false"] as const;
+    return [feature, value === undefined ? enabledByDefault.has(feature as Feature) : value === "true"] as const;
   });
   return Object.freeze(Object.fromEntries(entries)) as Features;
 }

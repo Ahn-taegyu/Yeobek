@@ -3,9 +3,12 @@ import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { PDFDocument } from "pdf-lib";
 import { ApiError } from "../api/errors";
+import { materialByteLimits } from "../contracts/materials";
 
 // Technical parser safety caps, separate from configurable business byte limits.
-export const FILE_PARSER_LIMITS = Object.freeze({ imagePixels: 40_000_000, pdfPages: 10_000, maxBytes: 50 * 1024 * 1024 });
+export const FILE_PARSER_LIMITS = Object.freeze({ imagePixels: 40_000_000, pdfPages: 10_000 });
+// Shared reader also serves previously published media and generated audio.
+const maxStoredBytes = 50 * 1024 * 1024;
 export type MaterialFileMetadata = {
   contentType: string; byteSize: number; contentHash: string;
   pages: number | null; width: number | null; height: number | null;
@@ -16,7 +19,7 @@ const invalid = () => new ApiError(400, "INVALID_FILE", "파일 형식이나 내
 export async function validateMaterialFile(bytes: Uint8Array, expected: {
   kind: "image" | "pdf"; contentType: string; byteSize: number;
 }): Promise<MaterialFileMetadata> {
-  if (!bytes.length || bytes.length > FILE_PARSER_LIMITS.maxBytes || bytes.length !== expected.byteSize) throw invalid();
+  if (!bytes.length || bytes.length > materialByteLimits[expected.kind] || bytes.length !== expected.byteSize) throw invalid();
   const buffer = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const base = { byteSize: bytes.length, contentType: expected.contentType,
     contentHash: createHash("sha256").update(bytes).digest("hex") };
@@ -48,7 +51,7 @@ export async function validateMaterialFile(bytes: Uint8Array, expected: {
 /** Bounded read even when Storage omits or lies about Content-Length. */
 export async function readMaterialResponse(response: Response, maxBytes: number): Promise<Uint8Array> {
   if (!response.ok || !response.body) throw new ApiError(409, "UPLOAD_INCOMPLETE", "파일 전송이 완료되지 않았습니다.");
-  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > FILE_PARSER_LIMITS.maxBytes) throw invalid();
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > maxStoredBytes) throw invalid();
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
   let size = 0;

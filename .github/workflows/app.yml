@@ -19,6 +19,12 @@ jobs:
     timeout-minutes: 25
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      VISITOR_IP_HASH_SECRET: local-ci-only-network-hmac-secret-0123456789
+      FEATURE_GAPS: "false"
+      FEATURE_OPS_AGGREGATION: "false"
+      FEATURE_FOLLOW_UP_QUESTIONS: "true"
+      FEATURE_VOICE_REQUIRED: "true"
+      FEATURE_SIGNUP: "true"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -59,8 +65,14 @@ jobs:
       - name: Verify mock AI jobs in development mode
         env:
           AI_PROVIDER_MODE: mock
+          # Local tests emulate Vercel's trusted edge with stable fixture IPs.
+          VERCEL: "1"
           FEATURE_VOICE_REQUIRED: "false"
           FEATURE_GAPS: "true"
+          FEATURE_EXPECTED_QA: "true"
+          FEATURE_EXHIBITION_QA: "true"
+          FEATURE_PREVIEW_CHAT: "true"
+          FEATURE_QA_REWRITE: "true"
           CRON_SECRET: local-integration-only-0123456789abcdef
           TEST_CRON_SECRET: local-integration-only-0123456789abcdef
           APP_ORIGIN: http://localhost:3001
@@ -89,9 +101,10 @@ jobs:
           npm run test:automation
           npm run test:support
           npm run test:proposals
+          npm run test:qa
           kill "$mock_pid"
           wait "$mock_pid" || true
-          FEATURE_GAPS=false node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-gaps-off.log 2>&1 &
+          FEATURE_GAPS=false FEATURE_SIGNUP=false FEATURE_EXPECTED_QA=false FEATURE_EXHIBITION_QA=false FEATURE_PREVIEW_CHAT=false FEATURE_QA_REWRITE=false node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-gaps-off.log 2>&1 &
           mock_pid=$!
           for attempt in {1..60}; do
             if curl --silent --fail http://localhost:3001/api/health > /dev/null; then
@@ -104,6 +117,8 @@ jobs:
             sleep 1
           done
           TEST_GAPS_DISABLED_ONLY=true npm run test:visitor
+          TEST_SIGNUP_DISABLED_ONLY=true node --test tests/integration/signup.test.mjs
+          TEST_QA_DISABLED_ONLY=true npm run test:qa
       - name: Stop the disposable stack
         if: always()
         run: npm run db:stop

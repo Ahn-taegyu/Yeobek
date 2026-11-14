@@ -21,7 +21,7 @@ function persistedFailure(reservation: VisitorReservation): never {
   if (code === "CONTENT_CHANGED" || code === "NOT_FOUND") throw new ApiError(404, "NOT_FOUND", "공개 상태가 바뀌었습니다. 작품을 다시 선택해 주세요.");
   const statuses: Record<string, number> = { REQUEST_TIMEOUT: 504, SERVER_CONFIGURATION_ERROR: 503,
     REQUEST_CANCELLED: 499, RATE_LIMITED: 429, PROVIDER_UNAVAILABLE: 503, AI_INVALID_OUTPUT: 502,
-    AI_GENERATION_FAILED: 502, INTERNAL_ERROR: 500, INVALID_INPUT: 400, REVISION_CONFLICT: 409 };
+    AI_GENERATION_FAILED: 502, AI_INVALID_CONTEXT: 500, INTERNAL_ERROR: 500, INVALID_INPUT: 400, REVISION_CONFLICT: 409 };
   if (code && Object.hasOwn(statuses, code)) throw new ApiError(statuses[code], code, DOCENT_COPY.systemError);
   throw new ApiError(502, "AI_GENERATION_FAILED", DOCENT_COPY.systemError);
 }
@@ -36,10 +36,10 @@ export function publicVisitorReply(reply: SavedVisitorReply, gapsEnabled: boolea
 export async function answerVisitor(input: z.infer<typeof visitorChatRequest>, sessionHash: string, signal?: AbortSignal) {
   const mock = isMockMode();
   const features = getFeatures();
-  const worker = createWorkerSupabase({ timeoutMs: 15_000 });
+  const worker = createWorkerSupabase({ timeoutMs: 5000 });
   const store = createVisitorStore(worker, sessionHash);
   const publications = createPublicationStore(worker);
-  const deadline = createDeadline(120_000, signal);
+  const deadline = createDeadline(75_000, signal);
   const startedAt = performance.now();
   const usage: AiProviderTrace[] = [];
   const elapsedMs = () => Math.min(300_000, Math.round(performance.now() - startedAt));
