@@ -34,7 +34,7 @@ describe("approved narration and generated answer boundaries", () => {
     const s = setup("가".repeat(length));
     const reply = await s.harness.answer(syntheticRequest({ question: "재료는 무엇인가요?" }));
     expect(reply.source).toBe("generated");
-    expect(s.generator.generate).toHaveBeenCalledOnce();
+    expect(s.generator.generate).toHaveBeenCalledTimes(2);
   });
   it("rejects 2001 approved codepoints before generation or speech", async () => {
     const s = setup("🌙".repeat(2001));

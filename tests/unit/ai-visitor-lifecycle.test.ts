@@ -20,7 +20,7 @@ describe("visitor lifecycle integration boundaries", () => {
   it("reserves before reads and stores only after final publication recheck", async () => {
     const s = setup();
     const reply = await s.harness.answer(syntheticRequest());
-    expect(s.calls).toEqual(["reserve", "load", "recheck", "generate", "recheck", "store"]);
+    expect(s.calls).toEqual(["reserve", "load", "recheck", "generate", "recheck", "generate", "recheck", "store"]);
     expect(reply.steps.find(step => step.id === "request.reserve")?.status).toBe("done");
     expect(s.visitor.recordGap).not.toHaveBeenCalled();
   });

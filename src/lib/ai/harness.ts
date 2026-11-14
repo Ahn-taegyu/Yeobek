@@ -4,9 +4,10 @@ import { z } from "zod";
 import { answerJsonSchema, answerSchema, narrationDraftSchema, chatRequestSchema, type DocentReply, type ModelAnswer, type NarrationDraft, type PublicationContext,
   type ArtworkSelector, type PublicationRef, type PublicationStore, type SpeechSourceStore } from "./contracts";
 import { assertNotCancelled, HarnessError, resolveIntent, mentionedNumbers, selectEvidence, textHash, validateContext } from "./context";
-import { DOCENT_SYSTEM_PROMPT, PROMPT_VERSION } from "./prompts";
+import { DOCENT_EVIDENCE_REVIEW_PROMPT, DOCENT_SYSTEM_PROMPT, PROMPT_VERSION } from "./prompts";
 import type { AiSpeechProvider, AiTextProvider } from "./providers/types";
 import { capabilitiesFor, DOCENT_COPY } from "./plugin";
+import { AiError } from "./errors";
 import { PlaybookOrderError, startPlaybook } from "./playbook";
 import type { VisitorLifecycle } from "./visitor-lifecycle";
 
@@ -39,7 +40,7 @@ async function assertCurrent(recheck: PublicationStore["isCurrent"], ref: Public
   assertNotCancelled(signal);
 }
 
-/** One bounded text call. HTTP must bind visitor persistence; isolated model
+/** One text call and at most one evidence review. HTTP must bind visitor persistence; isolated model
  * evaluations may leave it unbound and record the skipped lifecycle explicitly. */
 export function createDocentHarness(deps: { publications: PublicationStore; text: AiTextProvider; visitor?: VisitorLifecycle; exhibitionScopeChat?: boolean }) {
   const caps = capabilitiesFor("visitor-answer", { publications: deps.publications, visitor: deps.visitor });
@@ -88,7 +89,7 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
           return { intent, selector, named, message: ambiguous ? DOCENT_COPY.chooseOne : DOCENT_COPY.chooseArtwork };
         });
         if (!resolved.selector) {
-          for (const id of ["publication.read", "publication.recheck", "evidence.select", "model.generate", "output.validate", "publication.recheck.final"] as const) flow.skip(id, "selection_required");
+          for (const id of ["publication.read", "publication.recheck", "evidence.select", "model.generate", "output.validate", "evidence.review", "publication.recheck.final"] as const) flow.skip(id, "selection_required");
           return await persist(fixed(resolved.message, "clarify"));
         }
         const selector = resolved.selector;
@@ -106,7 +107,7 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
           return context;
         });
         if (!context) {
-          for (const id of ["publication.recheck", "evidence.select", "model.generate", "output.validate", "publication.recheck.final"] as const) flow.skip(id, "number_unavailable");
+          for (const id of ["publication.recheck", "evidence.select", "model.generate", "output.validate", "evidence.review", "publication.recheck.final"] as const) flow.skip(id, "number_unavailable");
           return await persist(fixed(DOCENT_COPY.artworkUnavailable, "clarify"));
         }
         const ref = reference(context);
@@ -116,7 +117,7 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
           return persist(result);
         };
         if (resolved.intent === "narration") {
-          for (const id of ["evidence.select", "model.generate", "output.validate"] as const) flow.skip(id, "approved_narration");
+          for (const id of ["evidence.select", "model.generate", "output.validate", "evidence.review"] as const) flow.skip(id, "approved_narration");
           if (!context.narration) return await finish(fixed(DOCENT_COPY.noNarration, "insufficient_evidence", ref));
           return await finish({ ...base, publication: ref, source: "approved_narration", outcome: "answered",
             answer: context.narration.text, citations: [...context.narration.citations] });
@@ -124,26 +125,44 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
         // No image/pointing capability. With no verbal location, do not invent what
         // the visitor is pointing to. Rich prior conversation resolution is deferred.
         if (/^(?:이\s*작품(?:의)?\s*)?이\s*부분(?:에|은|이|에서)?\s*(?:그려진\s*(?:건|것은)\s*)?(?:뭐야|무엇인가요|뭔가요|설명해\s*줘)[.!?。]*$/u.test(request.question.trim())) {
-          for (const id of ["evidence.select", "model.generate", "output.validate"] as const) flow.skip(id, "verbal_location_required");
+          for (const id of ["evidence.select", "model.generate", "output.validate", "evidence.review"] as const) flow.skip(id, "verbal_location_required");
           return await finish(fixed(DOCENT_COPY.point, "clarify", ref));
         }
         const evidence = await flow.step("evidence.select", () => selectEvidence(context.evidence, request.question));
         if (!evidence.length) {
-          flow.skip("model.generate", "no_evidence"); flow.skip("output.validate", "no_evidence");
+          flow.skip("model.generate", "no_evidence"); flow.skip("output.validate", "no_evidence"); flow.skip("evidence.review", "no_evidence");
           return await finish(fixed(DOCENT_COPY.insufficient, "insufficient_evidence", ref));
         }
-        const generated = await flow.step("model.generate", async () => {
+        const allowedIds = evidence.map(item => item.id);
+        const modelInput = { question: request.question,
+          ...(context.artworkId === null ? { exhibition: { title: context.title } }
+            : { artwork: { number: context.number, title: context.title } }),
+          evidence: evidence.map(item => ({ id: item.id, version: item.version, sourceLabel: item.sourceLabel, body: item.body })) };
+        const generate = async (system: string, inputJson: string) => {
           assertNotCancelled(signal);
-          const result = await deps.text.generate({ system: DOCENT_SYSTEM_PROMPT, schema: answerJsonSchema, signal,
-            input: JSON.stringify({ question: request.question,
-              ...(context.artworkId === null ? { exhibition: { title: context.title } }
-                : { artwork: { number: context.number, title: context.title } }),
-              evidence: evidence.map(item => ({ id: item.id, version: item.version, sourceLabel: item.sourceLabel, body: item.body })) }),
-          });
+          const result = await deps.text.generate({ system, schema: answerJsonSchema, signal, input: inputJson });
           assertNotCancelled(signal);
           return result;
-        });
-        const answer = await flow.step("output.validate", () => validateAnswer(generated.output, evidence.map(item => item.id)));
+        };
+        const generated = await flow.step("model.generate", () => generate(DOCENT_SYSTEM_PROMPT, JSON.stringify(modelInput)));
+        let answer = await flow.step("output.validate", () => validateAnswer(generated.output, allowedIds));
+        if (answer.outcome !== "clarify") {
+          const reviewed = await flow.step("evidence.review", async () => {
+            await assertCurrent(caps["publication.recheck"], ref, signal);
+            try {
+              const second = await generate(DOCENT_EVIDENCE_REVIEW_PROMPT, JSON.stringify({ ...modelInput, previousAnswer: answer }));
+              return validateAnswer(second.output, allowedIds);
+            }
+            catch (error) {
+              assertNotCancelled(signal);
+              if (error instanceof HarnessError && error.code === "invalid_output") return null;
+              // An unavailable optional review must not replace the initial response.
+              if (error instanceof AiError && error.code !== "cancelled" && error.code !== "timeout") return null;
+              throw error;
+            }
+          });
+          if (reviewed) answer = reviewed;
+        } else flow.skip("evidence.review", "clarification_required");
         if (answer.outcome !== "answered") return await finish(fixed(
           answer.outcome === "clarify" ? DOCENT_COPY.clarify : DOCENT_COPY.insufficient, answer.outcome, ref));
         // Returning only validated fields keeps provider responses, prompts and keys
