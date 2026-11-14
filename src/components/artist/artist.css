@@ -91,3 +91,14 @@ body:has(.artist-screen) > main { width: 100%; }
 .artist-screen details { border-bottom: 1px solid #eaeaeb; padding-block: 10px; }
 .artist-screen summary { cursor: pointer; padding-block: 8px; }
 .artist-date { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, .75fr); gap: 8px; }
+
+.artist-screen select { width: 100%; border: 1px solid #eaeaeb; border-radius: 17px; background: #f5f5f5; padding: 10px 16px; color: inherit; font: inherit; }
+.artist-learning { display: grid; gap: 12px; }
+.artist-learning progress { width: 100%; accent-color: #432f2e; }
+.artist-preview { margin-block: 18px; display: grid; gap: 10px; }
+.artist-preview p { white-space: pre-wrap; color: #121215; margin: 0; }
+.artist-preview .artist-question { justify-self: end; padding: 8px 14px; border-radius: 24px; background: #d0bca4; }
+.artist-preview-image { max-width: 100%; max-height: 240px; width: auto; height: auto; object-fit: contain; border-radius: 14px; }
+.artist-sheet { position: fixed; inset: auto 0 0; margin: 0 auto; width: min(450px, 100%); max-height: 85dvh; overflow: auto; border: 0; border-radius: 24px 24px 0 0; padding: 20px; background: white; }
+.artist-sheet::backdrop { background: #12121580; }
+.artist-sheet dd { white-space: pre-wrap; border-radius: 12px; background: #f5f5f5; padding: 8px 12px; margin: 0 0 10px; }
