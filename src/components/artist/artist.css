@@ -100,31 +100,49 @@ body:has(.artist-screen) > main { width: 100%; }
 .artist-workflow-choice { display: flex; align-items: center; gap: 10px; min-height: 44px; }
 .artist-screen .artist-workflow-choice input[type="checkbox"] { flex: 0 0 18px; width: 18px; height: 18px; accent-color: var(--artist-accent); }
 .artist-workflow-link { display: inline-flex; align-items: center; min-height: 44px; }
+/* AI learning (Figma 183:1280): a 390px stage laid out at the design's coordinates, centred and clipped at the edges. */
 .artist-learning {
-  min-height: calc(100dvh - 44px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
+  position: relative;
+  margin: -12px -20px calc(-1 * max(32px, env(safe-area-inset-bottom)));
+  min-height: 100dvh;
+  display: grid;
+  align-content: start;
+  overflow: clip;
+  background: linear-gradient(to top, #f7f7f7 21.86%, #fff3de 92.6%);
   text-align: center;
-  background: linear-gradient(var(--yeobek-cream), var(--yeobek-field));
-  border-radius: var(--yeobek-radius-card);
-  padding: 24px 12px;
 }
-.artist-learning-names { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; }
-.artist-learning-names > * { background: white; padding: 6px 12px; border-radius: var(--yeobek-radius-pill); }
-.artist-learning-names strong { font-size: 20px; }
-.artist-learning-art { position: relative; display: flex; justify-content: center; align-items: flex-start; padding-top: 10px; width: min(100%, 350px); min-height: 285px; overflow: clip; }
-.artist-learning-image { width: 36%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--yeobek-radius-field); transform: rotate(-12deg); z-index: 1; }
-.artist-learning-image:nth-child(2) { margin-inline-start: -10%; transform: translateY(12px) rotate(10deg); }
-.artist-learning-image:nth-child(3) { margin-inline-start: -14%; transform: translateY(26px) rotate(-3deg); }
-.artist-learning-shadow, .artist-learning-shadow-inner { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); max-width: none; }
-.artist-learning-shadow-inner { bottom: 20px; }
-.artist-learning-lens { position: absolute; bottom: 34px; right: 8px; z-index: 2; }
-.artist-learning progress { width: 100%; accent-color: var(--yeobek-coffee); }
-/* The star spreads ~10% past its box while thinking; keep that room so it never clips neighbours. */
-.artist-learning-star { margin-block: 8px; animation: yeobek-appear var(--yeobek-motion-screen) var(--yeobek-motion-ease) both; }
+.artist-learning-stage { position: relative; width: 390px; height: 664px; margin-inline: calc(50% - 195px); }
+.artist-learning-stage > * { position: absolute; }
+.artist-learning-card {
+  left: var(--x); top: var(--y); width: 143.6px; height: 204.6px;
+  translate: -50% -50%; rotate: var(--r); transform: skewX(.74deg);
+  border-radius: 16px; overflow: hidden; background: #e8e3d8; box-shadow: 0 0 3.6px #0003;
+}
+.artist-learning-card-1 { --x: 154px; --y: 382.1px; --r: -10.15deg; }
+.artist-learning-card-2 { --x: 258.7px; --y: 419.1px; --r: 15.23deg; }
+.artist-learning-card-3 { --x: 195.7px; --y: 466.3px; --r: 2.25deg; width: 157.6px; height: 113.4px; box-shadow: none; transform: none; }
+.artist-learning-image { display: block; width: 100%; height: 100%; object-fit: cover; }
+.artist-learning-shadow, .artist-learning-shadow-inner { left: 50%; translate: -50%; max-width: none; }
+.artist-learning-shadow { top: 530px; }
+.artist-learning-shadow-inner { top: 546px; }
+.artist-learning-chip {
+  left: var(--x); top: var(--y); translate: -50% -50%; rotate: var(--r);
+  display: flex; align-items: center; height: 54px; padding: 6px 16px; border-radius: 80px;
+  background: #fff; color: #121215; font-size: 20px; font-weight: 500; line-height: 1.38; white-space: nowrap;
+}
+.artist-learning-chip-title { --x: 202.5px; --y: 196px; height: 68px; padding: 7px 21px; border-radius: 100px; font-size: 25.19px; z-index: 1; }
+.artist-learning-chip-artist { --x: 32.5px; --y: 177.6px; --r: 5deg; height: 50px; border-radius: 84px; background: #fffc; font-size: 21.17px; }
+.artist-learning-chip-a { --x: 301.4px; --y: 155.7px; --r: -.79deg; background: #fff9; }
+.artist-learning-chip-b, .artist-learning-chip-c { height: 47px; padding: 5px 14px; border-radius: 70px; font-size: 17.75px; opacity: .5; }
+.artist-learning-chip-b { --x: 125.9px; --y: 152.2px; --r: 10.58deg; }
+.artist-learning-chip-c { --x: 378.7px; --y: 194.5px; --r: 5deg; height: 42px; }
+/* The logo box is square; the artwork is 177x160, so it sits 8.5px lower than its box. */
+.artist-learning-star { left: 188px; top: 426.5px; z-index: 2; line-height: 0; }
+.artist-learning-copy { display: grid; justify-items: center; gap: 14px; padding: 0 20px 48px; }
+.artist-learning-copy h2 { margin: 0; color: #734120; font-size: 24px; font-weight: 600; line-height: 1.34; }
+.artist-screen .artist-learning-copy h2 { margin: 0; font-size: 24px; font-weight: 600; }
+.artist-learning-copy p { margin: -4px 0 0; color: #98989c; font-size: 14px; line-height: 1.44; }
+.artist-learning-copy .artist-actions { width: min(100%, 350px); }
 .artist-preview { margin-block: 18px; display: grid; gap: 10px; }
 .artist-preview p { white-space: pre-wrap; color: var(--yeobek-ink); margin: 0; }
 .artist-preview .artist-question { justify-self: end; padding: 8px 14px; border-radius: 24px; background: var(--yeobek-tan); }

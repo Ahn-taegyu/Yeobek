@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { ApiClientError, requestApi } from "@/lib/client";
 import { forgetArtistPage, loadArtistPage } from "@/lib/client/artist-navigation";
@@ -9,8 +10,7 @@ import { AiStarLogo } from "@/components/ui/ai-star/ai-star-logo";
 
 import type { PreviewAnswer, QaRewriteJob } from "@/lib/contracts/qa";
 import { ArtistLink, errorMessage, Field, Header, Loading, PrivateImage, useArtistLoad } from "./ui";
-import { artworkListKey, exhibitionKey, loadArtworkList, loadExhibitionOverview, overviewKey } from "./navigation-data";
-import { FlowSteps } from "./flow-steps";
+import { artworkListKey, exhibitionKey, loadArtworkList, loadExhibitionOverview, loadProfile, overviewKey, profileKey } from "./navigation-data";
 import listStyles from "./review-list.module.css";
 import previewStyles from "./preview.module.css";
 
@@ -43,7 +43,7 @@ function useReviewData(id: string) {
   });
 }
 
-/** Step 1 ends here: training only. `reflect` comes from the interview screen to retrain with approved answers. */
+/** Step 1 ends here. `reflect` comes from review to retrain with edits and interview answers, then return to review. */
 export function Learning({ id, interviewEnabled = false, reflect = false }: { id: string; interviewEnabled?: boolean; reflect?: boolean }) {
   const result = useReviewData(id);
   const loadLatest = useCallback(async (signal: AbortSignal) =>
@@ -53,16 +53,24 @@ export function Learning({ id, interviewEnabled = false, reflect = false }: { id
   const batch = updatedBatch === undefined ? latest.data : updatedBatch;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [retrainFrom, setRetrainFrom] = useState<string>();
   const operation = useRef<AbortController | null>(null);
   const creationId = useRef<string | null>(null);
   const targetRequests = useRef(new Map<string, { requestId: string; expectedAttempt: number }>());
-  useEffect(() => () => operation.current?.abort(), []);
+  const autoStarted = useRef(false);
+  const retrainFrom = useRef<string | null>(null);
+  const [started, setStarted] = useState(false);
+  const profile = useArtistLoad(loadProfile, profileKey);
+  const router = useRouter();
+  useEffect(() => () => {
+    operation.current?.abort();
+    autoStarted.current = false;
+  }, []);
 
   async function run(startNew = false) {
     if (!result.data || batch === undefined || operation.current) return;
     const controller = new AbortController();
     operation.current = controller;
+    setStarted(true);
     setBusy(true);
     setError("");
     try {
@@ -122,52 +130,82 @@ export function Learning({ id, interviewEnabled = false, reflect = false }: { id
   const needsMaterial = batch?.targets.some(item => item.status === "abstained");
   const expired = batch?.targets.some(item => item.resultCode === "JOB_EXPIRED");
   const incomplete = batch?.status === "completed" && completed !== batch.targets.length;
-  const done = batch?.status === "completed" && !busy;
-  // A reflection retrain counts only once a new batch replaced the one shown on arrival.
-  const reflected = !reflect || (retrainFrom !== undefined && batch?.id !== retrainFrom);
-  const next = interviewEnabled && !reflect ? "interview" : "verification";
-  return <>
-    <Header title="여운 학습" back={root(id)} />
-    <FlowSteps current={1} interviewEnabled={interviewEnabled} />
-    {!result.data ? <Loading {...result} /> : <section className="artist-learning yeobek-appear">
-      <div className="artist-learning-names">
-        {batch?.artistName && <span>{batch.artistName}</span>}
-        <strong>{result.data.exhibition.title}</strong>
-        {result.data.works.slice(0, 3).map(work => <span key={work.id}>{work.title}</span>)}
-      </div>
-      <div className="artist-learning-art" aria-hidden="true">
-        {result.data.works.flatMap(work => work.imageMaterialId ? [work.imageMaterialId] : []).slice(0, 3).map(id =>
-          <PrivateImage key={id} materialId={id} alt="" className="artist-learning-image" />)}
-        <Image className="artist-learning-shadow" src="/yeobek/learning-shadow.svg" width={418} height={83} alt="" unoptimized />
-        <Image className="artist-learning-shadow-inner" src="/yeobek/learning-shadow-inner.svg" width={158} height={39} alt="" unoptimized />
-        <Image className="artist-learning-lens" src="/yeobek/learning-lens.svg" width={137} height={137} alt="" unoptimized />
-      </div>
-      <h2 role="status">{busy || running ? "여운이 정보를 학습하고 있어요" : "여운 학습시키기"}</h2>
-      {result.data.works.length ? <>
-        {busy || running
-          ? <AiStarLogo className="artist-learning-star" state="thinking" size={72}
-            label={batch ? `학습 진행 ${completed}/${batch.targets.length}` : "학습 준비 중"} />
-          : batch && <progress aria-label="최근 학습 진행" max={batch.targets.length || 1} value={completed} />}
-        {batch === undefined && <Loading {...latest} />}
-        {batch !== undefined && (!batch || running || expired || batch.targets.some(canRunTarget)) && <button className="artist-action" disabled={busy} onClick={() => void run()}>
-          {busy ? "학습 중…" : running ? "진행 확인" : batch ? "다시 시도" : "여운 학습시키기"}
-        </button>}
-        {incomplete && <p role="status">{needsMaterial ? "학습을 마치지 못했어요. 전시 자료를 확인해주세요." : "일부 학습을 마치지 못했어요. 다시 시도해주세요."}</p>}
-        {done && !reflected && <>
-          <p>인터뷰 답변과 수정한 내용을 기본 소개와 예상 질문에 반영하려면 다시 학습해야 해요.</p>
-          <div className="artist-flow-actions">
-            <button className="artist-action" onClick={() => { setRetrainFrom(batch.id); void run(true); }}>수정한 내용으로 다시 학습하기</button>
-            <ArtistLink className="artist-action secondary" href={`${root(id)}/verification`}>반영 없이 검토로</ArtistLink>
-          </div>
-        </>}
-        {done && reflected && <div className="artist-actions">
-          {!expired && !reflect && <button className="artist-action secondary" onClick={() => void run(true)}>새로 학습시키기</button>}
-          <ArtistLink className="artist-action" href={`${root(id)}/${next}`}>{next === "interview" ? "다음: AI 인터뷰" : "다음: 검토"}</ArtistLink>
-        </div>}
-      </> : <p>먼저 작품을 등록해주세요.</p>}
+  const hasQuestions = batch?.targets.some(item => item.kind === "expected_qa" && item.status === "succeeded");
+  const done = batch?.status === "completed" && !incomplete && !expired;
+  const canRun = batch !== undefined && (!batch || running || expired || batch.targets.some(canRunTarget));
+  const works = result.data?.works ?? [];
+
+  // Entering the screen starts learning; there is no start button in the design.
+  // Coming from review to retrain starts a new batch even when the latest one is complete.
+  const wantsRetrain = reflect && batch?.status === "completed";
+  useEffect(() => {
+    if (autoStarted.current || !result.data || !works.length || (!canRun && !wantsRetrain)) return;
+    autoStarted.current = true;
+    if (wantsRetrain) retrainFrom.current = batch.id;
+    void run(wantsRetrain);
+  });
+
+  // A finished batch moves on by itself: to the interview first, or back to review after a retrain.
+  useEffect(() => {
+    if (!done || !batch || busy || batch.id === retrainFrom.current) return;
+    if (reflect && !retrainFrom.current) return; // wait for the retrain to start
+    router.replace(`${root(id)}/${interviewEnabled && !reflect ? "interview" : "verification"}`);
+  }, [done, batch, busy, id, router, interviewEnabled, reflect]);
+
+  // Until the automatic start has happened, a runnable or still-loading batch counts as in progress.
+  const pending = !started && !latest.error && works.length > 0 && (batch === undefined || canRun);
+  const thinking = busy || running || done || pending;
+  const chips = learningChips(result.data?.exhibition.title, batch?.artistName ?? profile.data?.displayName, works, profile.data?.keywords);
+  const images = works.flatMap(work => work.imageMaterialId ? [work.imageMaterialId] : []).slice(0, 3);
+  return !result.data ? <Loading {...result} /> : <section className="artist-learning yeobek-appear" aria-busy={thinking}>
+    <div className="artist-learning-stage" aria-hidden="true">
+      {images.map((materialId, index) => <div key={materialId} className={`artist-learning-card artist-learning-card-${index + 1}`}>
+        <PrivateImage materialId={materialId} alt="" className="artist-learning-image" />
+      </div>)}
+      <Image className="artist-learning-shadow" src="/yeobek/learning-shadow.svg" width={418} height={83} alt="" unoptimized />
+      <Image className="artist-learning-shadow-inner" src="/yeobek/learning-shadow-inner.svg" width={158} height={39} alt="" unoptimized />
+      {chips.map(([slot, text]) => <span key={slot} className={`artist-learning-chip artist-learning-chip-${slot}`}>{text}</span>)}
+      <div className="artist-learning-star"><AiStarLogo state={thinking ? "thinking" : "idle"} size={177} label="" /></div>
+    </div>
+    <div className="artist-learning-copy">
+      {works.length ? thinking ? <>
+        <h2 role="status">여운에게 전달해주고 있어요</h2>
+        <p>작가님이 들려주신 이야기를 바탕으로<br />관람객에게 전할 답변을 준비하고 있어요</p>
+      </> : <>
+        <h2 role="status">{incomplete ? "학습을 마치지 못했어요" : "여운에게 전달하지 못했어요"}</h2>
+        <p>{incomplete && needsMaterial ? "전시 자료를 확인한 뒤 다시 시도해주세요." : "잠시 후 다시 시도해주세요."}</p>
+      </> : <>
+        <h2>먼저 작품을 등록해주세요</h2>
+        <p>작품이 있어야 여운이 이야기를 배울 수 있어요.</p>
+      </>}
+      {batch === undefined && latest.error && <Loading {...latest} />}
       {error && <p className="error" role="alert">{error}</p>}
-    </section>}
-  </>;
+      {!thinking && works.length > 0 && <div className="artist-actions">
+        {canRun && <button className="artist-action" onClick={() => void run()}>다시 시도</button>}
+        {incomplete && !expired && <button className="artist-action secondary" onClick={() => void run(true)}>새로 학습시키기</button>}
+        {incomplete && hasQuestions && <ArtistLink className="artist-action secondary" href={`${root(id)}/faq`}
+          prepare={() => loadArtistPage(faqKey(id), signal => loadFaq(id, signal))}>생성된 질문 보기</ArtistLink>}
+      </div>}
+    </div>
+  </section>;
+}
+
+type Keywords = NonNullable<Awaited<ReturnType<typeof loadProfile>>["keywords"]>;
+type ChipSlot = "title" | "artist" | "a" | "b" | "c";
+
+/** Exhibition title in the middle, the artist, then artwork titles topped up with the artist's leading keywords. */
+function learningChips(title: string | undefined, artist: string | null | undefined,
+  works: { id: string; title: string }[], keywords?: Keywords): [ChipSlot, string][] {
+  const name = artist?.trim();
+  const extras = [...new Set([
+    ...works.map(work => work.title.trim()),
+    ...(keywords ? [...keywords.moods, ...keywords.topics, ...keywords.fields] : []),
+  ].filter(Boolean))].slice(0, 3);
+  return [
+    ...(title ? [["title", title] as [ChipSlot, string]] : []),
+    ...(name ? [["artist", name.endsWith("작가") ? name : `${name} 작가`] as [ChipSlot, string]] : []),
+    ...extras.map((text, index) => [(["a", "b", "c"] as const)[index], text] as [ChipSlot, string]),
+  ];
 }
 
 const faqKey = (id: string) => `faq:${id}`;
