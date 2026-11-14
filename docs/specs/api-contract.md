@@ -527,3 +527,9 @@ PR #13의 구현 계약이며 최종 CI·병합 전에는 main에서 호출 가�
 `GET /api/admin/exhibitions/{id}/publication`은 소유자에게 `{exhibitionId,revision,exhibitionBlockingCodes,artworks:[{artworkId,revision,blockingCodes}]}`를 반환한다. 다른 작가 전시는 404다. 전시명·기간·장소·작품 부재는 각각 `EXHIBITION_TITLE_REQUIRED`, `EXHIBITION_PERIOD_REQUIRED`, `EXHIBITION_PLACE_REQUIRED`, `ARTWORK_REQUIRED`로 표시한다. 역전된 기간은 `EXHIBITION_PERIOD_INVALID`, 공개 작가명 누락은 `ARTIST_NAME_REQUIRED`다. 작품별 기존 승인·근거·번호 조건은 `blockingCodes`에 남긴다. 저장 음성·Q&A 개수는 기본 게시 필수가 아니다.
 
 조회는 준비 안내이며 게시 권한을 예약하지 않는다. POST 게시 시 같은 조건을 다시 확인하고 전시 차단은 409 `PUBLICATION_BLOCKED`, `fields.exhibition` 배열로 반환한다. 준비 안 된 작품은 기존 `fields[artworkId]` 형식을 유지한다. 선택한 작품만 게시할 수 있으며 다른 미완성 작품은 자동 포함하지 않는다.
+
+### 모의 해설 게시 경계 (PR #25, 병합 전)
+
+모의 생성 해설은 개발 모드에서만 게시한다. 저장할 때 sourceJobId의 결과와 본문 일치를 확인하고, 비공개 revision/해시 기록으로 출처를 보존한다. 수동 수정이나 작업 원장 만료로 모의 표시가 사라지지 않는다. 검증된 live 작업 결과를 저장하고 재승인하면 새 원고로 교체할 수 있다. 운영 게시 요청은 409 `PUBLICATION_BLOCKED`, 해당 작품의 `MOCK_NARRATION_NOT_ALLOWED` 사유를 반환한다. 기존 모의 공개본을 남기는 전시 정보만의 게시도 거부한다. 재개는 구형 RPC도 같은 차단을 적용하며 409다.
+
+공개본의 모의 여부는 게시 때 고정하므로 이후 작업본 수정은 이전 성공 요청의 재전송 결과를 바꾸지 않는다. 운영 설정에서는 과거 모의 게시 요청의 재전송도 거부한다. migration은 보존된 작업 결과로 기존 출처를 복구하며, 적용 전에 이미 작업 원장과 출처를 모두 삭제한 과거 데이터의 기원을 추론하지 않는다. 그런 데이터가 있는 환경은 운영 전 원고 출처를 별도로 확인해야 한다.

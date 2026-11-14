@@ -74,8 +74,9 @@ export async function changePublication(db: DbClient, actorId: string, exhibitio
     const worker = createWorkerSupabase();
     const voiceRequired = getFeatures().voiceRequired;
     let voice: ReturnType<typeof speechIdentity> | null = null;
+    let mock: boolean;
     try {
-      isMockMode(); // Reject a production mock configuration even for text-only publication.
+      mock = isMockMode(); // Text provenance uses runtime mode even when TTS is not configured.
     } catch (error) {
       const failure = normalizeAiOutcome(error);
       throw new ApiError(failure.status, failure.code, "음성 제공 설정을 확인해 주세요.");
@@ -89,7 +90,7 @@ export async function changePublication(db: DbClient, actorId: string, exhibitio
     }
     const fields = { requestId: input.requestId, expectedRevision: input.expectedRevision, artworks: input.artworks, intro: input.intro };
     const raw = await rpc(worker, "publish_with_audio_config", { p_owner: actorId, p_exhibition_id: exhibitionId,
-      p_voice_required: voiceRequired, p_voice_fingerprint: voice?.fingerprint ?? null, p_mock: voice?.mock ?? false, ...rpcArgs(fields) });
+      p_voice_required: voiceRequired, p_voice_fingerprint: voice?.fingerprint ?? null, p_mock: mock, ...rpcArgs(fields) });
     const envelope = decodeDatabase(z.object({ blocked: z.array(z.object({ artworkId: z.uuid(), reasons: z.array(z.string()) })),
       created: z.boolean(), exhibitionBlocked: z.array(z.string()).default([]) }), raw);
     if (envelope.exhibitionBlocked.length) throw new ApiError(409, "PUBLICATION_BLOCKED", "전시의 게시 준비를 확인해 주세요.",
