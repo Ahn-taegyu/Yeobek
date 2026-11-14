@@ -21,6 +21,7 @@ const sourceSchema = z.strictObject({ id: uuid, ownerId: uuid, artistId: uuid, s
   exhibitionId: uuid.nullable(), revision, text: z.string().min(1).refine(v => codepoints(v) <= 5000 && !v.includes("\u0000")), ref: sourceRef });
 const contextSchema = z.strictObject({ documentId: uuid, ownerId: uuid, artistId: uuid, subjectId: uuid,
   subjectType: subject, exhibitionId: uuid.nullable(), revision,
+  materialMock: z.literal(true).optional(),
   sections: z.array(section).max(MAX_SECTIONS), sourceRefs: z.array(sourceRef).max(24), sources: z.array(sourceSchema).max(12) });
 export type ArtistKnowledgeContext = z.infer<typeof contextSchema>;
 const selectionSchema = z.strictObject({ sections: z.array(z.strictObject({
@@ -192,7 +193,7 @@ export function createArtistKnowledgeHarness(actorId: string, deps: {
           const result = await abortable(deadline.signal, active => deps.text.generate({
             system: playbookPrompt("artist-organize"), schema: organizationJsonSchema, signal: active, maxOutputTokens: 4096,
             input: JSON.stringify({ subjectType: context.subjectType,
-              allowedSections: sectionsFor(context.subjectType).map(({ id, prompt }) => ({ id, prompt })),
+              allowedSections: sectionsFor(context.subjectType).map(({ id, prompt, maxLength }) => ({ id, prompt, maxLength })),
               sources: context.sources.map(({ id, text }) => ({ id, text })) }),
           }));
           usage.push(result.trace);

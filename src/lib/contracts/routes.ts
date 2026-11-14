@@ -1,4 +1,5 @@
 import { previewChatSchema, previewAnswerResponse, previewEvaluationSchema, previewEvaluationResponse, qaRewriteSchema, qaRewriteJobResponse, qaCorrectionEvidenceSchema } from "./qa";
+import { materialReadRequest, materialReadResponse, materialExtractionResponse } from "./material-extraction";
 import { createTrainingBatchSchema, runTrainingTargetSchema, trainingBatchResponse } from "./qa";
 import { expectedQaGenerateSchema, expectedQaJobResponse, qaListQuery, qaItemsResponse, qaItemResponse, approveQaItemSchema, withdrawQaItemSchema } from "./qa";
 import { createExhibitionBody, updateExhibitionBody, createArtworkBody, updateArtworkBody,
@@ -49,6 +50,8 @@ const publicArtworkParams = byId.extend({ artworkId: uuid });
 
 export const routes = {
   generateProposal: { method: "POST", path: "/api/admin/knowledge/{id}/proposals", params: byId, body: generateProposalSchema, response: successEnvelope(organizeJobResponse), statuses: [200, 201] },
+  extractMaterial: { method: "POST", path: "/api/admin/materials/{id}/extract", params: byId, body: materialReadRequest, response: successEnvelope(materialExtractionResponse), statuses: [200] },
+  getMaterialRead: { method: "GET", path: "/api/admin/material-reads/{id}", params: byId, response: successEnvelope(materialReadResponse), statuses: [200] },
   getProposal: { method: "GET", path: "/api/admin/proposals/{id}", params: byId, response: successEnvelope(proposalResponse), statuses: [200] },
   applyProposal: { method: "POST", path: "/api/admin/proposals/{id}/apply", params: byId, body: applyProposalSchema, response: successEnvelope(appliedProposalResponse), statuses: [200] },
   listDocumentHistory: { method: "GET", path: "/api/admin/knowledge/{id}/history", params: byId, query: historyQuery, response: successEnvelope(historyResponse), statuses: [200] },

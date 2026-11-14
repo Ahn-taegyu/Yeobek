@@ -1,5 +1,7 @@
 # 기술 선택 재검토
 
+- [작가 참고 파일 읽기](material-reader.md) — 로컬 PDF·Liner 파일 입력·W2 검수와 비용 경계. 실제 호출0회.
+
 - [W9 이메일 가입·직접 로그인 경계](signup-auth-contract.md) — 서버 전용 가입, 최초 요청 연결, OTP/비밀번호 세션 구별과 로컬 검증.
 
 - **W8 준비:** [업무 자동화 제공사 계약](automation-provider-contracts.md) — 스티비 발송 접수, 채널톡 인증 방식 구분, Alt 읽기·서명·삭제 통지. 구현·실호출 전 조사.
