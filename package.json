@@ -37,6 +37,7 @@
     "test:visitor": "node --test tests/integration/mock/visitor.test.mjs",
     "test:automation": "node --test tests/integration/mock/automation.test.mjs",
     "test:support": "node --test tests/integration/mock/support.test.mjs",
+    "test:proposals": "node --test tests/integration/mock/proposals.test.mjs",
     "test:qa": "node --test tests/integration/mock/qa.test.mjs",
     "db:env": "node scripts/local-env.mjs",
     "db:artist": "node scripts/local-artist.mjs",

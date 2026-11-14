@@ -1,5 +1,10 @@
 # 출처와 보존본
 
+- [답변 시 자동 TTS와 작품 지칭·게시 정책](user-visitor-tts-publication-policy.md) — SRC-055, 글 우선 게시·질문의 작품 선택·다음 게시 번호 적용.
+- [병렬 백엔드 A 작가 흐름 목표](user-backend-author-parallel-plan.md) — SRC-054, 담당 경계와 인계 조건.
+
+- [병렬 백엔드 완료 조건·최신 상태 반영 요청](user-parallel-backend-completion.md) — SRC-053, 작업별 완료 증거와 결정 동기화.
+
 - [AI 하네스 PR3 재검토 요청 원문](user-pr3-rereview.md) — 3~4단계 범위 설명과 PR 재검토 요청.
 
 - [Claude AI 하네스 PR2 검토 메모 원문](claude-ai-harness-review-notes.md) — 과거 재현·pstack 대응의 원자료.

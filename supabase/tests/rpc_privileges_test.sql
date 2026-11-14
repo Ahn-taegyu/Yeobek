@@ -24,6 +24,13 @@ select results_eq(
     select signature collate "C" as signature, anon_execute, authenticated_execute, service_execute, public_execute
     from (values
     -- anon, authenticated, service_role
+    ('get_organize_context(uuid)', false, true, false, false),
+    ('load_proposal(uuid)', false, true, false, false),
+    ('commit_proposal(uuid, boolean)', false, true, false, false),
+    ('list_document_history(uuid, integer, integer)', false, true, false, false),
+    ('reserve_organize_job(uuid, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('retry_organize_job(uuid, uuid, uuid, integer, boolean)', false, false, true, false),
+    ('complete_organize_job(uuid, uuid, integer, jsonb)', false, false, true, false),
     ('get_public_artwork(uuid, uuid)', true, true, true, false),
     ('get_public_exhibition(uuid)', true, true, true, false),
 

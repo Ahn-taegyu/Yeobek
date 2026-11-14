@@ -131,7 +131,7 @@ STT는 `requestApi("transcribe", {body:{requestId,exhibitionId,file}})`의 multi
 
 # 예상 Q&A·미리보기·지시문 수정 — W11, A 담당
 
-PR #18의 구현 계약이다. 병합 전에는 배포된 main에서 호출 가능하다고 가정하지 않는다. 전체 경로는 [W11 API 계약](api-contract.md#w11-예상-qa미리보기전시-일괄-생성), 요청·응답 타입은 `contracts/qa.ts`와 `routes.ts`를 따른다. 인증 쿠키와 같은 출처가 필요하고 다른 작가 자료는404다.
+PR #18은 main40564e6에 병합됐다. 배포 환경에서 해당 버전과 플래그 활성화를 확인한다. 전체 경로는 [W11 API 계약](api-contract.md#w11-예상-qa미리보기전시-일괄-생성), 요청·응답 타입은 `contracts/qa.ts`와 `routes.ts`를 따른다. 인증 쿠키와 같은 출처가 필요하고 다른 작가 자료는404다.
 
 `FEATURE_EXPECTED_QA`, `FEATURE_EXHIBITION_QA`, `FEATURE_PREVIEW_CHAT`, `FEATURE_QA_REWRITE`는 기본false다. Expected QA·일괄 생성은 expectedQa, 전시 범위 생성은 추가exhibitionQa, 미리보기는previewChat, 재작성은expectedQa+qaRewrite가 필요하다. 플래그off는404이며 임의로 다른 API로 우회하지 않는다.
 
@@ -169,6 +169,17 @@ HTTP200/201도 job.status가failed/abstained일 수 있다. `resultCode`를 확�
 ## 전시 일괄 학습
 
 이미 구현된 묶음은 유지하며 기본off다. `createTrainingBatch`({requestId,expectedRevision})는 목록만 저장하고 `getTrainingBatch`는 모델을 실행하지 않는다. 프런트는 `runTrainingTarget`에 params={id:batchId,targetId}, body={requestId,expectedAttempt:0}을 한 건씩 보낸다. 재시도는 실제target.attempt를 기준으로 하며 성공 후 같은 요청은재실행하지 않는다. 배치가completed라도 자식실패를 확인한다. 원문 변경409면 최신 전시로 새배치를 만든다. 기본해설 결과의 적용/승인은 기존 원고 화면에서 별도로 한다.
+
+# 자료 정리 후보 — W2, A 담당
+
+PR #13 최종 CI·병합 대기 계약이다. 별도 후보 검수 화면은 디자인 범위 밖이며 호출만으로 자동 적용하지 않는다. `contracts/proposals.ts`의 generateProposalSchema/proposalResponse/historyResponse를 사용한다. [W2 API](api-contract.md#w2-작가-자료-정리-후보이력)에 전체 계약이 있다.
+
+1. 문서 GET의 id/revision으로 `generateProposal`(params.id=문서, body={requestId,expectedDocumentRevision})을 호출한다. 같은 요청 재전송은 UUID를 유지한다.
+2. `getJob`에서 kind=organize/status/resultCode를 확인하고 succeeded의 result.proposalId로 `getProposal`을 조회한다. before/proposed/changes와 mock을 보여 준다.
+3. 사용자가 검토한 뒤 `applyProposal`(body={reviewed:true})을 보낸다. 적용 후 문서를 다시 조회한다. 적용은 승인·게시를 대신하지 않는다.
+4. `listDocumentHistory`(params.id=문서, query={limit:"50",beforeRevision:선택})로 원문/출처를 확인한다. 페이지 커서는 nextBeforeRevision이다.
+
+오류:401 로그인,404 대상 없음/다른 작가,400 미검수·잘못된 입력,409 revision 충돌→최신 자료로 새 후보,410 PROPOSAL_EXPIRED→새 후보,429 일일 한도. GET이나 적용 재전송은 모델을 다시 실행하지 않는다. W10 여러 section은 보존하지만 한 생성의 근거는12개/8,000자로 제한되므로 전체 자료 처리 완료로 표시하지 않는다. 적용된 이력은 작업 원장 만료 뒤에도 남고, 만료된 미적용 본문은 정리된다. 이 API는 파일 내용을 추출하는 기능이 아니다.
 
 # 파일 읽기 — 예정(A 담당)
 

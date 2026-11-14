@@ -103,6 +103,7 @@ jobs:
           npm run test:audio
           npm run test:automation
           npm run test:support
+          npm run test:proposals
           npm run test:demo
           npm run test:qa
           node --test tests/integration/mock/exhibition-chat.test.mjs
