@@ -27,6 +27,9 @@ export const approvalSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("narration"), expectedRevision: revision,
     citations: z.array(evidencePin).min(1).max(12) }),
 ]);
+export const upsertExhibitionEvidenceSchema = upsertEvidenceSchema.refine(value => value.scope !== "artwork",
+  { path: ["scope"], message: "전시 또는 작가 범위의 근거를 입력해 주세요." });
+export const approveEvidenceSchema = z.strictObject({ version: revision });
 export const publicationSchema = z.discriminatedUnion("action", [
   z.strictObject({ action: z.literal("publish"), requestId: uuid, expectedRevision: revision,
     artworks: z.array(z.strictObject({ artworkId: uuid, expectedRevision: revision })).max(100),
@@ -57,6 +60,7 @@ export const narrationApprovalResponse = z.object({
   citations: z.array(evidencePin), approvedBy: uuid, approvedAt: timestamp,
 });
 export const approvalResponse = z.union([evidenceResponse, narrationApprovalResponse]);
+const qaStateCounts = z.strictObject({ draft: z.number().int().nonnegative(), approved: z.number().int().nonnegative(), withdrawn: z.number().int().nonnegative() });
 export const reviewResponse = z.object({
   artwork: artworkResponse, evidence: z.array(evidenceResponse), approval: narrationApprovalResponse.nullable(),
   audio: z.object({ id: uuid, state: z.enum(["pending", "ready", "failed", "revoked"]), approvalId: uuid,
@@ -64,6 +68,7 @@ export const reviewResponse = z.object({
   publication: z.object({ id: uuid, version: revision, number: z.number().int(),
     approvedAt: timestamp, revokedAt: timestamp.nullable() }).nullable(),
   blockingCodes: z.array(z.string()),
+  expectedQa: z.strictObject({ artwork: qaStateCounts, exhibition: qaStateCounts }).optional(),
   exhibitionPublicIntro: z.object({ bio: evidencePin.nullable(), introduction: evidencePin.nullable(), theme: evidencePin.nullable() }),
 });
 export const publishedResponse = z.object({

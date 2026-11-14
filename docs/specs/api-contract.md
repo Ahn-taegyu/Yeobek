@@ -13,6 +13,15 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: gap-exclusion
+  resource: /references/user-gap-qa-exclusion.md
+  title: 관람 보완 요청의 Q&A 전환 제외
+- id: qa-policy
+  resource: /references/user-expected-qa-policy.md
+  title: 예상 Q&A 생성·검수 정책
+- id: figma-review
+  resource: /references/figma-review-v3.md
+  title: Figma W11 화면 직접 대조
 - id: signup-contract
   resource: /research/signup-auth-contract.md
   title: W9 이메일 가입과 직접 로그인 경계
@@ -454,3 +463,44 @@ signupRequestId는 최초 가입 입력의 requestId다. 생성 요청의 응답
 초기 구현 정책(사용자 확정 수치 아님): 네트워크 가입·재발송 합계10/분·60/시간, 인증60/분·300/시간; 이메일 가입·재발송5/시간, 인증10/시간. 같은 요청 ID도 한도에 포함한다. DB에는 HMAC 해시·UUID·kind·시각만 남기고48시간 후 최대1000개씩 purge한다. 원본 이메일/비밀번호/코드는 기록하지 않는다. 스케줄 실제 연결은 W7이며 정리 완료로 간주하지 않는다. 공개 Supabase 재발송은 제공사 자체 한도를 따르므로 앱 원장으로 모두 통제한다고 주장하지 않는다.
 
 배포 순서: 신규 migration180000/181000→Auth 설정(enable_signup:false,confirmations:true,min password8,OTP6,confirmation 코드 템플릿/SMTP)→서버→가입 플래그 활성화. 클라우드 Auth 설정은 이 커밋에서 원격 변경하지 않는다. 새 정책은 [키 당일 점검 대상](../research/signup-auth-contract.md)이다. 가입/선택/코드 입력 프런트는 이 백엔드 API와 별도 인계한다.
+
+
+# W11 예상 Q&A·미리보기·전시 일괄 생성
+
+[SRC-050](../references/user-expected-qa-policy.md), [Figma 4화면](../references/figma-review-v3.md)에 따른 소유자 전용 계약이다. 관람객 공개 Q&A 전달은 W12이며 이 단계에서 자동 공개하지 않는다. 새 플래그 `FEATURE_EXPECTED_QA`, `FEATURE_EXHIBITION_QA`, `FEATURE_PREVIEW_CHAT`, `FEATURE_QA_REWRITE`는 모두 기본 false다. 전시 Q&A 플래그는 전시 범위 생성만 제어하며 작품 Q&A와 별개다.
+
+| API | 요청·동작 |
+| --- | --- |
+| POST `/api/admin/exhibitions/{id}/qa/generations` | requestId, artworkId(null=전시), expectedRevision, expectedDocumentRevision. 최초201·동일요청200. 작품3/전시5개 상한, 근거 부족0개는 abstained/EVIDENCE_REQUIRED |
+| GET `/api/admin/qa/jobs/{id}`, POST `.../{id}/retry` | 소유자 조회·expectedAttempt/새 requestId로 명시적 재시도. GET은 모델 호출 없음 |
+| GET `/api/admin/exhibitions/{id}/qa?artworkId=…` | 생략하면 전시 항목만. 최신 버전·상태·개별 인용 원문 body/출처/해시 반환 |
+| POST `/api/admin/qa/{id}/approve`, `.../withdraw` | expectedVersion, 승인에는 evidencePins. 인용 원문과 정확히 일치하고 현재 승인된 근거만 허용 |
+| POST `/api/admin/exhibitions/{id}/evidence` | 작가/전시 범위의 근거 초안 입력. 작품 근거는 기존 작품 경로 사용 |
+| POST `/api/admin/evidence/{id}/approve` | version을 받아 기존 근거 승인 RPC 실행. 전시·정정 근거도 작품 선택 없이 승인 가능 |
+| POST `/api/admin/exhibitions/{id}/preview/chat` | requestId, artworkId(null=전시), question. 단일 질문별 비공개 문맥 생성, 최초201·재조회200 |
+| GET `/api/admin/preview/{id}`, POST `.../evaluations` | 평가 requestId, rating=accurate/needs_revision. 평가만으로 승인·공개하지 않음. 최근50개 조회, 평가 횟수는 검수 완료 조건 아님 |
+| POST `/api/admin/qa/corrections` | targetKind=preview/qa, targetId, targetVersion(QA만 버전), requestId, sourceLabel/sourceBody. 사실 정정을 별도 근거 초안으로 저장 |
+| POST `/api/admin/qa/rewrite` | 동일 대상 식별자+instruction+승인 evidencePins. 생성과 독립 평가 통과 후에도 새 draft이며 자동 적용/승인 안 함 |
+| GET `/api/admin/qa/rewrites/{id}`, POST `.../retry` | 원대상 정보와 job 조회, 새 requestId/expectedAttempt로 명시적 재시도. gap 대상은 허용하지 않음 |
+| POST `/api/admin/exhibitions/{id}/training` | requestId, expectedRevision.200; 작업 목록만 저장. 작품별 기본해설+예상QA, 전시QA는 해당 플래그가 켜졌을 때 포함 |
+| GET `/api/admin/training/{id}` | queued/running/completed와 자식별 상태. completed는 전부 성공을 뜻하지 않으며 각 결과코드 확인 |
+| POST `/api/admin/training/{id}/targets/{targetId}/run` | requestId, expectedAttempt(첫 실행0). 자식 한 건 실행, 같은 요청 재전송은 중복 생성 안 함. 배치별 실행중 한 건 제한 |
+| POST `/api/admin/gaps/{id}/recheck-close` | expectedPublicationId로 작가가 확인한 공개본을 고정해 종료. 재게시 자체는 기존 gap을 닫지 않음 |
+
+재작성 지시문은 근거가 아니다. 새 사실은 corrections→evidence 승인→rewrite→QA 승인→W12 명시적 게시 순서다. 공개본과 원문을 덮어쓰지 않는다. 미리보기는 현재 단일 질문 단위이며 이전 대화를 자동으로 모델에 전달하지 않는다.
+
+전시 묶음은 최대30작품의 스냅샷이며 프런트가 queued 자식을 순서대로 POST한다. GET 폴링이나 Vercel 응답 후 백그라운드 실행을 가정하지 않는다. 생성 결과를 기본 해설에 적용하는 기존 API와 QA 승인도 별도다. 원문/전시 revision이 바뀐 대기 대상은409이며 최신 revision으로 새 배치를 만든다. 재시도도 같은 배치의 실행 중인 형제와 병행할 수 없다.
+
+배포는190000→191000→192000→193000→194000을 먼저 적용하고 앱을 교체한다. 기존 공개·해설 API는 보존한다. 되돌릴 때 앱과 네 플래그를 끄고 추가 테이블을 보존한다. 적용 migration을 수정/삭제하거나 데이터 reset하지 않는다. 검증 결과와 미검증 항목은 [작업 추적](backend-completion.md)에 기록한다.
+
+
+W11 후속 확정: [SRC-052](../references/user-gap-qa-exclusion.md)에 따라 관람 보완 요청→Q&A 전환은 이번 MVP에서 제외한다. 위의 기획/과거 기록에 있는 gap 재작성·정정 대상은 현재 제공하지 않는다. 작가 미리보기와 기존 Q&A 수정, 보완 요청 조회·재게시 후 확인/종료는 유지한다.
+
+플래그는 기능 제공 범위이며 권한 경계를 대신하지 않는다. 전시QA 플래그를 꺼도 기존 전시 후보의 검수·철회는 가능하다. previewChat을 꺼도 이미 생성된 미리보기에서 정정/재작성을 할 수 있다. 실제 소유권·현재 근거 검증은 DB RPC에서 수행한다.
+
+
+## B용 승인 Q&A 게시 포트
+
+`get_approved_qa_for_publication(p_owner uuid,p_exhibition_id uuid,p_artwork_id uuid,p_allow_mock boolean default false)`는 service_role 전용이며 HTTP/일반 소유자에게 노출하지 않는다. artworkId=null은 전시 항목만, UUID는 그 작품 항목만 조회한다. 최신 버전이 approved이고 모든 evidencePins가 현재 유효한 항목만 반환한다. 최신 draft/withdrawn이면 이전 승인 버전을 새 게시 후보로 되돌려 쓰지 않는다. 기존 공개본의 유지·철회는 B 공개 계약이 별도로 처리한다.
+
+반환은 `[{id,version,exhibitionId,artworkId,scope,question,answer,contentHash,evidencePins:[{id,version}],mock,approvedAt}]`다. 소유자 ID·생성 원문 citations·이전 미리보기 답변·지시문은 포함하지 않는다. 기본은 mock 제외이고 개발 게시 여부는 신뢰된 서버 정책으로만 전달한다. 게시 SQL의 같은 트랜잭션에서 호출해야 작가별 게시 잠금과 검증이 스냅샷 쓰기까지 유지된다. 별도 HTTP에서 먼저 조회한 뒤 나중에 쓰는 방식은 금지한다. B가 공개 시 정확한 버전·핀을 보존하고 관람/미디어에서 철회를 재검사하며 모델 전달량12근거/8,000자 상한도 적용한다.

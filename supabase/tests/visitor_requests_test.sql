@@ -160,8 +160,16 @@ from publications where id = '30000000-0000-0000-0000-000000000001';
 update artworks set active_publication_id = (select id from publications where version = 2
     and artwork_id = '20000000-0000-0000-0000-000000000001')
 where id = '20000000-0000-0000-0000-000000000001';
-select is((select status from qa_gaps where id = current_setting('test.gap')::uuid),'answered','republish resolves earlier open gaps');
+select is((select status from qa_gaps where id = current_setting('test.gap')::uuid),'open','republish leaves earlier open gaps unresolved');
+select is((select recheck_publication_id from qa_gaps where id = current_setting('test.gap')::uuid),
+    '30000000-0000-0000-0000-000000000002'::uuid,'republish pins the new publication for manual recheck');
 set local role service_role;
+select throws_ok($$select close_gap_recheck('00000000-0000-0000-0000-000000000001',current_setting('test.gap')::uuid,
+    '30000000-0000-0000-0000-000000000001',true)$$,'40001','Gap publication changed','a stale recheck close is denied');
+select is(close_gap_recheck('00000000-0000-0000-0000-000000000001',current_setting('test.gap')::uuid,
+    '30000000-0000-0000-0000-000000000002',true)->>'status','dismissed','author closes the pinned recheck explicitly');
+select is(close_gap_recheck('00000000-0000-0000-0000-000000000001',current_setting('test.gap')::uuid,
+    '30000000-0000-0000-0000-000000000002',true)->>'status','dismissed','same recheck close may be replayed');
 select is(load_visitor_answer(current_setting('test.sid'),current_setting('test.id1')::uuid),null,'previous publication answer is unavailable');
 select is(complete_visitor_request(current_setting('test.sid'),current_setting('test.stale')::uuid,
     current_setting('test.reply1')::jsonb || jsonb_build_object('answerId',current_setting('test.stale'),

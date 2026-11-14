@@ -28,8 +28,11 @@ export const gapResponse = z.strictObject({
   id, exhibitionId: id, artworkId: id, publicationId: id, publicationVersion: z.number().int().positive(),
   question: boundedText(AI_LIMITS.question), count: z.number().int().positive(),
   status: z.enum(["open", "answered", "dismissed"]),
+  needsRecheck: z.literal(true).optional(),
+  recheckPublicationId: id.optional(), recheckAt: z.iso.datetime({ offset: true }).optional(),
   createdAt: z.iso.datetime({ offset: true }), expiresAt: z.iso.datetime({ offset: true }),
 });
+export const closeGapRecheckSchema = z.strictObject({ expectedPublicationId: id });
 export const gapListResponse = z.array(gapResponse);
 export const checkVersionsRequest = z.strictObject({ publications: z.array(publicationRefSchema.omit({ exhibitionId: true })).max(100) });
 export const checkVersionsResponse = z.strictObject({ publications: z.array(publicationRefSchema.extend({ current: z.boolean() })).max(100) });
