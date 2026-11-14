@@ -873,6 +873,9 @@ isOneToOne: false
 "complete_preview_answer":
 { Args: { "p_answer_id": string,"p_attempt": number,"p_owner": string,"p_result": Json }; Returns: Json
                            },
+"complete_preview_voice":
+{ Args: { "p_audio": string,"p_failure": string,"p_id": string,"p_owner": string,"p_result": Json }; Returns: Json
+                           },
 "complete_qa_rewrite_job":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
                            },
@@ -1056,6 +1059,9 @@ isOneToOne: false
 "list_visitor_audio_cleanup":
 { Args: { "p_limit"?: number }; Returns: Json
                            },
+"load_preview_voice":
+{ Args: { "p_id": string,"p_owner": string }; Returns: Json
+                           },
 "load_proposal":
 { Args: { "p_id": string }; Returns: Json
                            },
@@ -1129,6 +1135,9 @@ isOneToOne: false
                            },
 "reserve_preview_answer":
 { Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_mock": boolean,"p_owner": string,"p_question": string,"p_request_id": string }; Returns: Json
+                           },
+"reserve_preview_voice":
+{ Args: { "p_answer": string,"p_exhibition": string,"p_hash": string,"p_kind": string,"p_mock": boolean,"p_owner": string,"p_request": string }; Returns: Json
                            },
 "reserve_qa_rewrite_job":
 { Args: { "p_evidence_pins": Json,"p_instruction": string,"p_mock": boolean,"p_owner": string,"p_request_id": string,"p_target_id": string,"p_target_kind": string,"p_target_version": number }; Returns: Json

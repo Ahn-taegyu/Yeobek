@@ -11,6 +11,7 @@ const variables = {
   exhibitionQa: "FEATURE_EXHIBITION_QA",
   exhibitionScopeChat: "FEATURE_EXHIBITION_SCOPE_CHAT",
   previewChat: "FEATURE_PREVIEW_CHAT",
+  previewExperience: "FEATURE_PREVIEW_EXPERIENCE",
   qaRewrite: "FEATURE_QA_REWRITE",
   materialExtraction: "FEATURE_MATERIAL_EXTRACTION",
   artworkInterview: "FEATURE_ARTWORK_INTERVIEW",

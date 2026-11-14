@@ -13,6 +13,9 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: author-experience
+  resource: /references/user-author-experience-parallel.md
+  title: 작가 검수·체험 개선과 AI 인터뷰 병렬 구현 요청
 - id: api-rollout
   resource: /references/user-api-rollout-publication.md
   title: API 적용 수정 계획과 최소 게시 UI 구현 요청
@@ -579,6 +582,25 @@ P0 전시(`authoringStep` 비어 있지 않음)는 `artworks` 단계와 기존 �
 `GET /api/cron/purge`는 기존 `POST /api/cron/purge`와 같은 Bearer `CRON_SECRET` 인증, 만료 행/파일 정리 및 응답 envelope를 사용한다. 인증 실패 시 worker/DB/Storage 정리를 실행하지 않으며 응답을 캐시하지 않는다. 기존 POST 계약·호출자는 유지하고 typed contract에 purgeExpiredScheduled GET만 추가한다. GET은 서버 스케줄러용이며 작가/관람 클라이언트에 비밀값을 전달하지 않는다. HEAD/OPTIONS 등 부수 요청은 정리를 실행하면 안 된다.
 
 이번 변경은 실제 스케줄 등록이나 배포를 수행하지 않는다. 운영 연결 시 Vercel GET 호출·하루 1회 주기·실패 복구를 별도 점검한다. 자동화 발송 POST는 이 변경 대상이 아니다.
+
+## 작가 전용 관람형 초안 체험 (B2)
+
+[D-018](../decisions/D-018-author-experience.md)에 따라 `FEATURE_PREVIEW_EXPERIENCE`는 기본false다. `previewExperience`와 기존 `previewChat`이 모두 켜지고 `qa` 쿼리가 없을 때만 작가 preview 페이지가 새 `AuthorPreviewExperience`를 사용한다. 꺼진 경우와 질문별 `qa` 진입은 기존 검수 화면을 유지한다.
+
+체험은 기존 관람 화면의 작품 선택·대화·녹음·재생 UI를 공통으로 사용한다. 공개 관람은 기존 API를 유지하고, 체험은 getExhibition/listArtworks/getProfile의 현재 저장된 초안과 private material 이미지를 읽는다. 질문은 기존 previewChat을 사용하며 번호 입력은 해당 초안 작품으로 연결한다. 공개 API에 초안 객체·자료 ID·미리보기 답변을 보내지 않는다. 전사 후에는 작가가 글을 확인하고 직접 전송한다. 기본 음소거이며 음성 사용 비용 안내를 표시한다.
+
+| 메서드·경로 | 계약 |
+| --- | --- |
+| POST `/api/admin/exhibitions/{id}/preview/transcribe` | transcribePreview. multipart requestId/exhibitionId/file, 경로와 exhibitionId 일치. 기존 녹음 3MiB·형식 검증, transcribeResponse(편집 가능한 transcript, mock, overLimit) 반환 |
+| POST `/api/admin/preview/{id}/speech` | speakPreviewAnswer. id는 저장된 미리보기 답변, JSON requestId. 소유한 성공 답변만 audio/mpeg 최대2MiB 반환. 클라이언트에서 임의 낭독 본문을 받지 않음 |
+
+두 API는 previewExperience+previewChat, 같은 출처와 작가 인증을 요구한다. off404, 미인증401, 타 계정·삭제 전시·만료/없는 답변404, 입력 충돌409, 음성 원장 만료410, 한도429이며 모든 성공/오류/음성 응답에 private/no-store를 적용한다. 공개 관람 음성 API는 미리보기 답변 ID를 받아도 비공개 음성을 반환하지 않는다.
+
+20261115020000은 전용 비공개 음성 원장과 서비스 역할 전용 reserve/complete/load RPC를 추가한다. 전사 녹음은 저장하지 않고 인식 결과와 낭독 MP3 바이트만 최대24시간 보관한다. 음성은 공개 Storage에 저장되지 않으며 기존 purge 호출이 만료 원장·바이트를 최대1000건씩 함께 정리한다. 클라이언트에는 저장 경로·원장 객체·base64를 노출하지 않는다.
+
+소유자별 최근24시간 신규 STT/TTS 예약을 합산20회로 제한한다. 이는 기존 작가 글 생성 한도와 별도이며, 성공·실패 예약 모두 포함한다. 같은 입력·requestId는 한도와 모델 호출을 추가 소비하지 않으며 입력이 바뀌면409다. 처리 중·응답 유실의 재생은 같은 ID, 원장의 실패가 확정된 PREVIEW_VOICE_FAILED 응답 후 다음 명시적 재생만 새 ID로 처리한다. timeout·응답 검증 실패처럼 완료 여부가 불명확한 오류는 같은 ID를 유지한다. 120초 lease와 요청60초 기한을 사용하고, 완료 및 반환 시 전시·미리보기 답변의 접근 가능성을 다시 확인한다.
+
+배포는 migration 적용 후 앱을 교체하고 플래그는 명시적으로 켠다. 되돌릴 때 새 플래그를 끄고 추가 원장을 유지하며 기존 purge로 만료분을 정리한다. 운영 배포·실외부 음성 호출은 이 구현 검증에 포함하지 않는다. UI 모의 화면과 제공사 모의 계약 검증은 실제 녹음 인식률·음질·비용 확인을 대신하지 않는다.
 
 ## 작품 글 인터뷰 계약 (F-024)
 
