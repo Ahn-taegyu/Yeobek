@@ -5,8 +5,8 @@
 ## 최신 상태와 결정 (2026-11-14 확인)
 
 - W13·W10·W9는 각각 PR #16(`44bf7d3`)·#15(`dadc23b`)·#17(`de06460`)로 병합됐다. GitHub PR 상태와 로컬 이력을 대조했다. W9의 `signup`은 기본 off이며 운영 SMTP·프런트·가입 ID 유실 복구·비밀번호 재설정은 완료 범위 밖이다.
-- W11은 PR #18로 병합됐다. 전시 Q&A·학습 묶음 API와 서비스 RPC·프런트 인계를 포함한다. 검사 SHA와 B의 후속 연결은 아래 표를 따른다.
-- W2는 [PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13)으로 병합됐다(`9c6efbf`). 파일 읽기는 별도 후속 범위다.
+- W11은 PR #18 main40564e6으로 병합됐다. 전시 Q&A·학습 묶음 API도 기본off로 보존했고 최종 CI·B 서비스 포트·인계를 확인했다.
+- W2는 [PR #13](https://github.com/Ahn-taegyu/Yeobek/pull/13), 검사 head351156f·병합9c6efbf로 완료됐다. W10·후보/이력 FK·만료 보완과 최신 CI를 확인했다.
 - [SRC-050](../docs/references/user-expected-qa-policy.md): 생성 세트당 **작품 최대 3개·전시 최대 5개**, 근거 부족 시 일부/빈 세트 허용. Q&A별 승인·철회, 평가 횟수는 완료 조건이 아니며 승인 Q&A는 관람 답변 생성의 근거로 사용한다.
 - [SRC-046](../docs/references/user-v3-review-decisions.md): 기본 작품 소개만 직접 편집하고 나머지는 지시문으로 새 작업본을 만든다. 해설 검수와 미리보기는 별도 화면이며 모의 해설의 운영 게시는 차단한다.
 - [SRC-052](../docs/references/user-gap-qa-exclusion.md): **관람 보완 요청→정정 근거/Q&A 전환은 이번 MVP 제외**. 작가 미리보기·기존 Q&A 재작성과 보완 요청 조회·재게시 후 확인/종료는 유지한다.
@@ -20,9 +20,9 @@
 | W2 | [#13](https://github.com/Ahn-taegyu/Yeobek/pull/13) 병합 `9c6efbf`, 검사 head `351156f`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43567373083)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43567373169) 성공 | W10 section·후보/이력 보존 반영. 파일 읽기·프런트 후보 검수·운영 cron은 별도 |
 | 프런트 인계 초안 | [#20](https://github.com/Ahn-taegyu/Yeobek/pull/20) 병합 `461d32f`, 검사 head `f0d49e9` App·Knowledge 성공 | W12 계약과 최종 통합 인계 추가 |
 | 시연 데이터 기반 | [#23](https://github.com/Ahn-taegyu/Yeobek/pull/23) 병합 `0facdbc`, 검사 head `605a7aa`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43566211707)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43566211687) 성공 | 승인 Q&A 3개 추가는 #25에 구현·CI 성공, 아직 미병합 |
-| W12·키 당일 점검표 | [Draft #25](https://github.com/Ahn-taegyu/Yeobek/pull/25), 검사 head `4b77931`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43568377482)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43568377434) 성공, 미병합 | 이미지 선택·공개 시각/포스터·채팅 이미지·승인 Q&A v2/v1 호환·전시 공통 채팅 구현. 전체 게시 체크리스트·모의 해설 운영 차단·작품 지칭/다음 게시 번호·최종 통합 수용 증거 보완 |
+| W12·키 당일 점검표 | [Draft #25](https://github.com/Ahn-taegyu/Yeobek/pull/25), 검사 head `6b95af8`; [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43570582243)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43570582245) 성공, 미병합 | 게시 체크리스트·모의 해설 운영 차단·다음 게시 번호까지 구현/회귀 성공. 제목 지칭·가입→관람/TTS 단일 흐름과 #28 통합은 후속 CI/병합 대기 |
 
-CI 성공은 위 검사 head에 한정한다. 작업 중인 게시 체크리스트(222000 migration·GET API)는 미커밋·미검증이며 위 성공에 포함하지 않는다. 파일 읽기와 실제 키 검증은 완료 증거가 없다. 완료 조건 문서의 최초 보강은 [#27](https://github.com/Ahn-taegyu/Yeobek/pull/27)로 병합됐다(`514347b`, #19 대체).
+CI 성공은 위 검사 head에 한정한다. 후속 `606bebc`는 [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571824061)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571823941) 모두 성공했고 가입→인증→작성/검수→게시→관람/TTS 단일 모의 HTTP 흐름을 확인했다. main #28 통합 `ed05119`는 별도 최신 CI 대상이다. 파일 읽기는 #28의 head `04facaac` [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147499)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147654) 성공 후 병합됐다. 실제 키·프런트 UI는 미검증이다. 완료 조건의 최초 보강은 [#27](https://github.com/Ahn-taegyu/Yeobek/pull/27) 병합 `514347b`(#19 대체)다.
 
 - [SRC-055](../docs/references/user-visitor-tts-publication-policy.md): **승인 글로 먼저 게시하고 관람객이 음성을 켜면 답변 시 TTS를 생성한다.** 저장 음성·Q&A 개수·평가 횟수는 게시 필수가 아니다. 승인 Q&A는 생성 근거로만 사용한다.
 - STT 인식문은 확인 후 전송한다. 질문이 명확히 지칭한 작품/번호는 답변 대상과 상단 선택에 함께 반영하고, 잘못된 번호·모호한 지칭은 추측하지 않는다. 초안 번호 변경은 다음 명시적 게시부터 공개본에 적용한다.
@@ -136,3 +136,9 @@ SRC-055에 따라 Q&A 개수·평가 횟수와 저장 음성은 게시 필수가
 묶음마다 5줄 이내: 병합 SHA, 확인한 검사와 CI, 켠/끈 플래그, 기본값으로 처리한 결정, B나 프런트에 넘길 것.
 나머지 규칙은 AGENTS.md와 docs/collaboration.md를 따른다.
 ```
+
+## A 완료 갱신 (2026-11-14)
+
+W11 #18(40564e6), W2 #13(9c6efbf), 파일 읽기 #28(4f7faee)이 병합됐다. #28 최종 head04facaa의 [App](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147499)·[Knowledge](https://github.com/Ahn-taegyu/Yeobek/actions/runs/43571147654)가 성공했다. 직접 전진 적용·SQL 교차 검토·모의 HTTP·권한/출처·기본off 검증은 [완료 표](../docs/specs/backend-completion.md#a-최종-완료인계-2026-11-14)를 따른다. 위 시간표·복사 프롬프트의 작업 순서는 최초 계획이며 완료 묶음을 다시 만들지 않는다.
+
+materialExtraction 기본off. 파일 읽기는 W2 후보까지만 만들며 명시적 적용·승인·게시를 대체하지 않는다. 프런트 후보 검수 화면이 없으므로 사용자 화면의 파일 학습은 숨긴다. 실외부 AI/TTS/발송0회. B의 W12·최종 인계·실물 키 검증은 별도이며 완료로 합산하지 않는다.

@@ -539,7 +539,7 @@ PR #13은 최종 head351156f의 App·Knowledge 성공 후 main9c6efbf로 병합�
 작품 재정렬은 `draftNumber`만 바꾸며 관람 번호와 라벨·기존 답변 참조는 유지한다. 다음 명시적 게시에서 선택된 작품의 초안 번호를 새 공개본에 고정한다. 두 공개 작품의 번호를 바꾸려면 두 작품을 같은 게시 요청에 포함한다. 기존 공개 번호의 작품을 선택하지 않으면 `NUMBER_CONFLICT`이며 부분 적용하지 않는다. 일시중지된 작품 번호도 예약을 유지한다. 조회 체크리스트의 작품별 번호 충돌은 단일 작품 기준이며, 관련 작품을 함께 게시하면 배치 검증에서 다시 판단한다. 교체 전 공개본은 활성 참조에서 제외돼 이전 답변·음성의 현재 버전 재검사가 실패한다.
 # 파일 읽기와 W2 후보
 
-feat/material-extraction의 구현 계약이며 최신 CI·병합 전이다. [요청 SRC-054](../references/user-backend-author-parallel-plan.md), [제공사 조사](../research/material-reader.md)가 근거다. 생성 결과의 자동 적용·승인·게시는 없다.
+PR #28은 main4f7faee로 병합됐다. 최종 head04facaa의 App43571147499·Knowledge43571147654 성공을 확인했다. [요청 SRC-054](../references/user-backend-author-parallel-plan.md), [제공사 조사](../research/material-reader.md)가 근거다. 생성 결과의 자동 적용·승인·게시는 없다.
 
 | requestApi | 경로·요청 | 응답 |
 | --- | --- | --- |

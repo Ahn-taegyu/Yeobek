@@ -51,4 +51,4 @@ Liner 공식 Chat completions는 inline base64 이미지와 PDF를 지원한다.
 
 부모가 실제 생성한 텍스트·빈·혼합 PDF, 모의 이미지/스캔, 파일·페이지 상한과 잘못된 모델 출력 거부를 검사했다. 제공사 HTTP는 가짜 fetch 응답으로 payload 형태를 확인했다. 기존 DB 전진 적용과 pgTAP31개, RPC 권한 목록1개를 소유 컨테이너에서 확인했다. 별도 Sol SQL 검토의 캐시 모드/동일 해시 alias/typed scope/NULL 검증/이미지 쪽 범위 지적을 적용 전에 수정했다.
 
-전체 HTTP·빌드·타입·새 DB 회귀는 최신 PR CI 확인 전이다. 실제 외부 AI 호출0회, 실물 한국어 읽기 품질·비용·지연·프런트 후보 화면은 완료 범위가 아니다. [API 계약](../specs/api-contract.md#파일-읽기와-w2-후보)과 [프런트 인계](../specs/frontend-handoff.md#파일-읽기--a-담당)를 함께 본다.
+PR #28 최종 head04facaa의 App43571147499·Knowledge43571147654가 성공했고 main4f7faee에 병합됐다. CI 로그에서 실제 로컬 Auth·Storage·DB와 모의 AI를 사용한 업로드→읽기→W2 후보→명시적 적용, 재전송, 타 계정, 플래그off 검사를 확인했다. 새 DB988개·타입 drift·빌드도 통과했다. 실제 외부 AI 호출0회, 실물 한국어 읽기 품질·비용·지연·프런트 후보 화면은 완료 범위가 아니다. [API 계약](../specs/api-contract.md#파일-읽기와-w2-후보)과 [프런트 인계](../specs/frontend-handoff.md#파일-읽기--a-담당)를 함께 본다.
