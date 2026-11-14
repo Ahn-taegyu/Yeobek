@@ -2,6 +2,8 @@
 
 ## 2026-11-14
 
+- **테스트 Preview 배포 연결**: Vercel `yeobek-test`의 GitHub 연결을 점검하고 `main`의 Preview 배포 조건과 고정 주소를 기록했다. [사용자 요청](references/user-vercel-preview-main.md).
+
 - **반 고흐 입력 비교**: 빈칸·1인칭·상세 사실·반복 분량의 다섯 조건을 실제 Liner로 비교하고 과잉 보류와 평가자 오판을 보존했다. 로컬 계정의 작품 18개 질문을 채운 뒤 생성·검수·승인·재게시 및 관람 재검증을 수행했다. [요청](references/user-vangogh-input-quality.md), [결과와 한계](research/vangogh-input-quality.md). 제품 코드·원격 설정 변경 없음.
 
 - **Liner 실호출 후속**: 재작성 평가의 추론 포함 토큰 예산, Gemini PCM→MP3 변환, 공통 도슨트 설정을 반영했다. 소량 비교에 따라 Luna 생성·Sonnet 평가를 초기 기본으로 선택하고 인용 ID 오타·근거 부족 상태의 실측 문제를 보강했다. [사용자 요청](references/user-liner-voice-evaluation.md), [측정 범위와 한계](research/liner-docent-live-validation.md).
