@@ -381,7 +381,9 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
         setMuted(!muted);
         if (!muted) stopAudio();
         else unlockAudio();
-      }}><Image src="/yeobek/visitor-toolbar-sound.svg" alt="" width={25} height={25} />{muted && <span aria-hidden="true">×</span>}</button>
+      }}>{muted ? <svg aria-hidden="true" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#121215" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 5 6 9H3v6h3l5 4V5Z" /><path d="m16 9 5 6m0-6-5 6" />
+      </svg> : <Image src="/yeobek/visitor-toolbar-sound.svg" alt="" width={25} height={25} />}</button>
       <span className={active ? styles.artworkTitle : styles.brand}>{active ? `${active.number}. ${active.title}` : brand.name}</span>
       <button className={styles.textButton} aria-expanded={picker !== null}
         onClick={() => transitionScreen(() => setPicker(picker ? null : "row"))}>{picker ? "닫기" : "작품 선택"}</button>
@@ -439,15 +441,18 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       {busy === "transcribe" && <p role="status">음성을 글로 바꾸고 있어요.</p>}
       <form onSubmit={submit}>
         <input aria-label="질문" placeholder="자유롭게 질문해보세요" value={question}
-          onChange={event => setQuestion(event.target.value)} disabled={busy === "chat" || busy === "transcribe"} />
-        {question.trim() && <button className={styles.send} type="submit"
-          disabled={Boolean(busy) || tooLong || recording.state !== "idle"}>보내기</button>}
-        <button className={styles.mic} type="button" disabled={Boolean(busy) || recording.state === "requesting"}
+          onChange={event => setQuestion(event.target.value)} disabled={busy === "chat" || busy === "transcribe" || recording.state !== "idle"} />
+        {question.trim() ? <button className={styles.mic} type="submit" aria-label="메시지 전송"
+          disabled={Boolean(busy) || tooLong || recording.state !== "idle"}>
+          <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 19V5m-6 6 6-6 6 6" />
+          </svg>
+        </button> : <button className={styles.mic} type="button" disabled={Boolean(busy) || recording.state === "requesting"}
           aria-label={recording.state === "recording" ? "녹음 종료" : "음성 녹음"}
           onClick={() => {
             if (recording.state === "recording") recording.stop();
             else { setError(""); void recording.start(); }
-          }}>{recording.state === "recording" ? "■" : <Image src="/yeobek/visitor-wave.svg" alt="" width={24} height={24} />}</button>
+          }}>{recording.state === "recording" ? "■" : <Image src="/yeobek/visitor-wave.svg" alt="" width={24} height={24} />}</button>}
       </form>
     </div>
   </section>;
