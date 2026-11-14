@@ -1,5 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
+import sharp from "sharp";
 import { z } from "zod";
 import { rpc } from "../api/db";
 import { ApiError } from "../api/errors";
@@ -8,7 +9,7 @@ import { createWorkerSupabase } from "../supabase/worker";
 import { mediaBinary, publicMediaReferences } from "../contracts/media";
 import { isMockMode } from "../ai/routing";
 import { normalizeAiOutcome } from "../ai/outcome";
-import { readMaterialResponse } from "./validate";
+import { FILE_PARSER_LIMITS, readMaterialResponse } from "./validate";
 
 const metadata = z.strictObject({ publicationId: z.uuid(), exhibitionId: z.uuid(), artworkId: z.uuid(),
   version: z.number().int().positive(), kind: z.enum(["image", "audio", "poster"]),
@@ -60,7 +61,7 @@ export async function attachVisitorImage<T extends { publication: { publicationI
 
 /** No redirect or public signed URL: every delivery checks the current snapshot
  * before fetching bytes and immediately before returning them. */
-export async function readPublicMedia(id: string, kind: "image" | "audio" | "poster", signal?: AbortSignal) {
+export async function readPublicMedia(id: string, kind: "image" | "audio" | "poster", signal?: AbortSignal, width?: number) {
   const publicationId = id.toLowerCase();
   const worker = createWorkerSupabase({ timeoutMs: 15_000 });
   const mock = publicMediaMockMode();
@@ -99,6 +100,14 @@ export async function readPublicMedia(id: string, kind: "image" | "audio" | "pos
   const current = await load();
   if (current.storageKey !== source.storageKey || current.contentHash !== source.contentHash) throw unavailable();
   assertActive();
+  if (width && kind !== "audio") {
+    // Thumbnails and previews do not need the original upload (often several MB).
+    const resized = await sharp(bytes, { limitInputPixels: FILE_PARSER_LIMITS.imagePixels })
+      .rotate().resize({ width, withoutEnlargement: true }).webp({ quality: 75 }).toBuffer();
+    assertActive();
+    return new Response(new Uint8Array(resized).buffer, { headers: { "Content-Type": "image/webp",
+      "Content-Length": String(resized.length), "X-Yeobek-Mock": String(source.mock) } });
+  }
   return new Response(bytes.buffer as ArrayBuffer, { headers: { "Content-Type": source.contentType,
     "Content-Length": String(bytes.length), "X-Yeobek-Mock": String(source.mock) } });
 }

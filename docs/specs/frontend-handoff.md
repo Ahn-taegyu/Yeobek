@@ -4,7 +4,7 @@ id: SPEC-017
 title: 프런트엔드 API 인계
 description: 병합된 서버 계약에 대응하는 화면별 API·상태·오류·플래그와 미구현 경계.
 status: draft
-updated: '2026-11-14'
+updated: '2026-11-15'
 tags: [yeobek, frontend, api, handoff]
 rag_include: true
 generated:
@@ -85,7 +85,7 @@ JSON 성공은 `{data, requestId}`, 실패는 `{error:{code,message,retryable,fi
 | SC-A09 회원가입·코드 확인 | POST `/api/auth/signup` `signup`, POST `/api/auth/resend` `resendSignup`, POST `/api/auth/verify` `verifySignup` | `signup.ts`: `signupSchema`, `resendSignupSchema`, `verifySignupSchema`, `signupPendingResponse`, `signupVerifiedResponse` | 202 verification_required → 200 verified, 항상 authenticated:false. `INVALID_VERIFICATION_CODE`, `SIGNUP_UNAVAILABLE`; signup 기본 off |
 | SC-A10 작품 세계 | GET/PATCH `/api/admin/profile` `getProfile/updateProfile`; GET/PATCH `/api/admin/knowledge/{id}` `getKnowledge/updateKnowledge` | `requests.ts`: `profileSchema`, `updateKnowledgeSchema`; `responses.ts`: `accountProfileResponse`, `documentResponse` | `artWorldRegistered`, `sourceWarnings`; `SOURCE_UNAVAILABLE`. section은 `knowledge-sections.ts` 카탈로그 사용 |
 | SC-V01 통합 채팅 | POST `/api/chat` `chat`, POST `/api/transcribe` `transcribe`, POST `/api/speech` `speech`, POST `/api/public/exhibitions/{id}/versions/check` `checkVersions` | `visitor.ts`: `visitorChatRequest`, `SavedVisitorReply`, `visitorReplyResponse`, `checkVersionsRequest/Response`; `voice.ts`: `transcribeRequest/Response`, `speechRequest` | answered/clarify/insufficient_evidence, `REQUEST_IN_PROGRESS`, `ANSWER_EXPIRED`; gaps 기본 off. 전시 공통 질문은 exhibitionScopeChat 기본 off, 답변 이미지·제목 선택은 W12 #25 |
-| SC-V02 작품 목록·전체보기 | GET `/api/public/exhibitions/{id}` `getPublicExhibition` | `responses.ts`: `publicExhibitionResponse` | `artworks`로 목록/클라이언트 검색. 선택만으로 chat/speech 호출하지 않음 |
+| SC-V02 작품 목록·전체보기 | GET `/api/public/exhibitions/{id}` `getPublicExhibition` | `responses.ts`: `publicExhibitionResponse` | `artworks`로 목록/클라이언트 검색. 다른 작품 선택 시 `번호. 작품명`을 `intent: narration`으로 chat 1회(SRC-070). 목록 썸네일은 `?kind=image&w=320` |
 | SC-V03 근거 패널 | 채팅 응답 `citations`, `publication`; `checkVersions` | `visitor.ts`: `visitorReplyResponse`, `publicationRefSchema` | 현재 API는 인용 ID만 제공하며 비공개 근거 본문 조회 API는 없음. 임의 관리자 호출 금지. current:false면 이전 답변 사용 중지 |
 | SC-V04 이용 불가 | 공개 조회 API의 404, `checkVersions` | `responses.ts`: `apiErrorEnvelope`; `visitor.ts`: `checkVersionsResponse` | 미공개/중지/삭제/잘못된 주소 구분 없이 이용 불가 안내. 네트워크 오류와 구분 |
 | SC-V05 전시 소개 | GET `/api/public/exhibitions/{id}` `getPublicExhibition` | `responses.ts`: `publicExhibitionResponse` | 현재 title/artistDisplayName/startDate/endDate/place/artistBio/introduction/theme/artworks. W12 #25는 poster/startTime/endTime 추가 |
