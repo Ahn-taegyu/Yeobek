@@ -25,6 +25,9 @@ sources:
 - id: notion
   resource: https://app.notion.com/p/4163559f0529809aa720d75f9266cfbc
   title: Notion F13 회원가입 및 로그인
+- id: backend-plan
+  resource: /references/user-backend-completion.md
+  title: 직접 가입을 마감 이후로 둔 백엔드 계획 요청
 ---
 
 # 확정 요구
@@ -37,6 +40,6 @@ D-008의 사전 생성 계정 전용 기준은 이 요구로 대체한다. 기�
 
 # 현재 구현과 남은 정책
 
-[개발 기반 현황](../specs/development-foundation.md)의 사전 생성 계정 로그인·로그아웃은 기존 구현이다. 직접 가입·선택 화면·가입 직후 세션 처리와 관련 수용 검증은 후속 작업이다. 이 문서는 구현 완료를 뜻하지 않는다.
+[개발 기반 현황](../specs/development-foundation.md)의 사전 생성 계정 로그인·로그아웃은 기존 구현이다. 직접 가입·선택 화면·가입 직후 세션 처리와 관련 수용 검증은 후속 작업이다. 이 문서는 구현 완료를 뜻하지 않는다. [백엔드 완성 계획 요청](../references/user-backend-completion.md)은 직접 가입을 마감 이후로 두었으므로, 이 결정은 요구 내용을 확정할 뿐 마감 전 구현 시점은 정하지 않는다([기능명세 Q-10](../specs/functional-spec.md#10-미결정-사항과-인계)).
 
 이메일 인증·소셜 로그인·비밀번호 길이와 강도·계정 복구·세션 수명·안내/동의 정책은 미결정이다. 세부 가입 상태 및 API는 [기능명세 BR-16](../specs/functional-spec.md#br-16-작가-가입인증계정-처리)과 [화면 명세](../specs/screen-spec.md#작가-인증-화면-연결)를 따른다.

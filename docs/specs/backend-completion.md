@@ -16,6 +16,9 @@ sources:
 - id: request
   resource: /references/user-backend-completion.md
   title: 백엔드 완성 계획 요청 원문
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 ---
 
 # 범위와 상태
@@ -42,7 +45,7 @@ W0 → W1 → W4 → W5 글 채팅·보완 요청을 우선한다. W3 이후 W4 
 
 # 미결정과 한계
 
-모델 ID·행사 키 권한·제공사 요청 형식·품질과 비용은 실측 전 미확정이다. 파트너 우선 원칙은 [D-015](../decisions/D-015-partner-priority.md)를 따른다. 운영 자동화의 외부 발송은 동의·정책·승인 경계를 지키며 실제 운영 적용과 구분한다. 작가 직접 가입은 마감 이후다.
+모델 ID·행사 키 권한·제공사 요청 형식·품질과 비용은 실측 전 미확정이다. 파트너 우선 원칙은 [D-015](../decisions/D-015-partner-priority.md)를 따른다. 운영 자동화의 외부 발송은 동의·정책·승인 경계를 지키며 실제 운영 적용과 구분한다. 작가 직접 가입은 [요청 원문](../references/user-backend-completion.md)에 따라 마감 이후로 두었다. 이후 [D-016](../decisions/D-016-artist-auth.md)이 직접 가입·로그인 선택을 확정 요구로 기록했다. 기능명세 OP-23은 W0~W8에 배정되지 않았고 not_started다. 마감 전 구현 여부는 미결정(기능명세 Q-10)이다.
 
 # W0 구현·검토한 계약
 

@@ -34,6 +34,9 @@ sources:
 - id: direction
   resource: /references/user-build-direction.md
   title: 사용자 최신 개발 방향
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 ---
 
 # 현재 기준
@@ -107,6 +110,6 @@ prerequisite는 최초 목록에 독립 이름이 없지만 필요한 전시/권
 
 ## 작가 인증 요구
 
-[D-016](../decisions/D-016-artist-auth.md)에 따라 직접 회원가입과 로그인 선택을 MVP 흐름에 포함한다. 가입 후 자동 로그인 없이 직접 로그인한다. 기존 로그인은 구현되어 있으며 직접 가입의 구현·수용 검증은 후속이다.
+[D-016](../decisions/D-016-artist-auth.md)에 따라 직접 회원가입과 로그인 선택을 MVP 흐름에 포함한다. 가입 후 자동 로그인 없이 직접 로그인한다. 기존 로그인은 구현되어 있으며 직접 가입의 구현·수용 검증은 후속이다. 다만 [백엔드 완성 계획](../specs/backend-completion.md#미결정과-한계)은 직접 가입을 마감 이후로 두었으므로, 마감 전에 구현할지는 [기능명세 Q-10](../specs/functional-spec.md#10-미결정-사항과-인계)에서 결정한다.
 
 현행 P0 및 Notion 기능 대응은 [기능명세](../specs/functional-spec.md#notion-p0-기능-연결)를 따른다. 기존 기능 ID와 원안 우선순위는 이력 및 상세 설계 참조로 사용한다.

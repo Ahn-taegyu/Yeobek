@@ -43,6 +43,9 @@ sources:
 - id: local
   resource: https://supabase.com/docs/guides/local-development
   title: Supabase 로컬 개발
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 ---
 
 # 현재 범위

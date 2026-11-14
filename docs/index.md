@@ -32,8 +32,8 @@ okf_version: "0.2"
 
 - [우선순위](product/mvp-priorities.md) — 사용자 원안과 이번 단계.
 - [기능명세 v1.0](specs/functional-spec.md) — 범위·권한·입력·상태·API 업무 계약.
-- [화면 상세](specs/screen-spec.md) — 와이어프레임 기준이 되는 13개 논리 화면·버튼·표시 상태.
-- [사용자 시나리오와 예외](specs/user-scenarios.md) — 19개 흐름·26개 예외·수용 기준.
+- [화면 상세](specs/screen-spec.md) — 와이어프레임 기준이 되는 16개 논리 화면(작가 인증 포함)·버튼·표시 상태.
+- [사용자 시나리오와 예외](specs/user-scenarios.md) — 23개 흐름·27개 예외·수용 기준.
 - [통합 도슨트 채팅](specs/chat-interaction.md) — 해설·질문·작품 문맥과 독립적인 네 입출력 조합.
 - [AI용 작가 지식](specs/artist-knowledge.md) — 내부 문서·출처·연결·승인 검색, 사용자용 위키와 구분.
 - [기술 스택](specs/technology-stack.md) — Next.js·Supabase와 최신 AI 역할 권고, 입력/저장/API 경계.

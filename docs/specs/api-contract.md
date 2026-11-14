@@ -2,7 +2,7 @@
 type: Specification
 id: SPEC-011
 title: MVP API 계약
-description: OP-01~22의 초기 기반 및 후속 HTTP 계약과 접근·버전 경계.
+description: OP-01~23의 초기 기반 및 후속 HTTP 계약과 접근·버전 경계.
 status: draft
 updated: '2026-11-14'
 tags: [yeobek, api, mvp]
@@ -33,7 +33,7 @@ sources:
   title: 실제 개발 기반과 검증 범위
 - id: functional
   resource: /specs/functional-spec.md
-  title: MVP 기능명세와 OP-01~22
+  title: MVP 기능명세와 OP-01~23
 - id: data
   resource: /specs/data-model.md
   title: 최소 데이터 모델
@@ -49,11 +49,14 @@ sources:
 - id: decision
   resource: /decisions/D-011-knowledge-and-screens.md
   title: 내부 지식과 화면 요구
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 ---
 
 # 범위와 공통 계약
 
-[기능명세 OP-01~22](functional-spec.md#8-api-명세로-넘길-업무-계약)를 HTTP로 구체화한 계약이다. 초기 기반·W1·W4 글 게시 경로는 병합됐고 W5 글 채팅·보완 요청 경로를 연결했다. 그 밖의 후속 경로는 설계 제안이다. 검증 범위와 한계는 [개발 기반 현황](development-foundation.md)에 기록한다. [D-011](../decisions/D-011-knowledge-and-screens.md), [내부 지식](artist-knowledge.md), [데이터 모델](data-model.md), [채팅](chat-interaction.md)을 함께 적용한다.
+[기능명세 OP-01~23](functional-spec.md#8-api-명세로-넘길-업무-계약)를 HTTP로 구체화한 계약이다. OP-23 작가 직접 가입은 [D-016](../decisions/D-016-artist-auth.md)의 후속 경로이며 아래 경로 표에 없다. 초기 기반·W1·W4 글 게시 경로는 병합됐고 W5 글 채팅·보완 요청 경로를 연결했다. 그 밖의 후속 경로는 설계 제안이다. 검증 범위와 한계는 [개발 기반 현황](development-foundation.md)에 기록한다. [D-011](../decisions/D-011-knowledge-and-screens.md), [내부 지식](artist-knowledge.md), [데이터 모델](data-model.md), [채팅](chat-interaction.md)을 함께 적용한다.
 
 - JSON 성공 응답은 `{ "data": ..., "requestId": "UUID" }`, 오류는 `{ "error": { "code": "...", "message": "...", "retryable": true, "retryAfter": 5, "fields": {} }, "requestId": "UUID" }` 형태다. `retryAfter`(초)와 `fields`는 선택 사항이며, `retryAfter`가 있으면 `Retry-After` 헤더도 반환한다. `retryable`은 429·5xx와 409 `REQUEST_IN_PROGRESS`에서 true이되 서버 설정 오류는 false다. 오류는 비밀·내부 오류를 노출하지 않는다. 미디어 바이트는 예외다.
 - 리소스 ID와 생성 요청 ID는 UUID다. 생성 요청은 클라이언트가 안정적인 `id`를 생성해 재시도하며, 같은 소유자·ID·동일 입력은 기존 결과를 반환하고 다른 입력이면 409다. `requestId`는 추적용이고 리소스 ID와 구별한다. `POST` 생성 성공은 201, 동일 재시도는 200, 조회·변경은 200이다.
@@ -103,7 +106,9 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 
 기존 초안에 정확히 같은 출처 참조는 개별적으로 보존해 저장을 막지 않는다. 문서 응답의 `sourceWarnings`는 변경된 문서 출처에 `source_changed`와 현재 revision을, 사용할 수 없는 문서·자료 출처에 `source_unavailable`을 표시한다. 문서 경고에는 대상 `sectionId`, `sourceDocumentId`, `sourceSectionId`, `sourceRevision`이 포함된다. 새로 추가하거나 변경한 출처는 소유권·상위 범위·section·현재 revision 또는 자료의 ready 상태를 검증한다. DB P1001은 409 `SOURCE_REVISION_CONFLICT`, P1002는 400 `SOURCE_UNAVAILABLE`이다. W3부터 새 PDF 참조는 검증된 총 페이지 범위를 검사한다. 승인 근거는 material version을 고정한다. 기존 초안의 정확히 같은 참조와 기존 공개 스냅샷은 보존하며, 페이지 수가 확인되지 않은 PDF 근거는 새 승인·게시에서 거부한다.
 
-아래 필드는 현재 초기 API 계약이며 `?`는 생략 가능, `document`는 `{id, subjectType, subjectId, revision, sections, sourceRefs, sourceWarnings, updatedAt}`이다. HTTP 필드는 camelCase이고 DB의 snake_case와 서버에서 변환한다. `sections`는 `{id,body}` 배열이며 ID는 문서 내 안정적이다: 작가 `bio`/`practice`, 전시 `introduction`/`theme`, 작품 `description`/`notes`. `sourceRefs`는 빈 배열도 허용하며 직접 입력·자료·문서 출처를 해당 소유 범위에서 검증한다. 생성·수정의 `sections`, `sourceRefs`는 내부 문서 원본이며 정형 필드와 트랜잭션으로 저장한다. 프로필은 사전 생성된 계정당 하나다.
+아래 필드는 현재 초기 API 계약이며 `?`는 생략 가능, `document`는 `{id, subjectType, subjectId, revision, sections, sourceRefs, sourceWarnings, updatedAt}`이다. HTTP 필드는 camelCase이고 DB의 snake_case와 서버에서 변환한다. `sections`는 `{id,body}` 배열이며 ID는 문서 내 안정적이다: 작가 `bio`/`practice`, 전시 `introduction`/`theme`, 작품 `description`/`notes`. `sourceRefs`는 빈 배열도 허용하며 직접 입력·자료·문서 출처를 해당 소유 범위에서 검증한다. 생성·수정의 `sections`, `sourceRefs`는 내부 문서 원본이며 정형 필드와 트랜잭션으로 저장한다. 프로필은 계정당 하나이며 첫 프로필 조회 또는 첫 전시 생성 때 만든다. 현재 구현의 계정은 사전 생성 계정이고, 직접 가입 계정도 같은 규칙을 따르도록 설계한다.
+
+직접 가입(OP-23)의 경로·요청 형식은 미정이다. 설계 시 다음을 지킨다: 가입 응답에서 관리자 세션 쿠키를 설정하지 않고 SC-A01 직접 로그인으로 안내한다. 중복 이메일은 계정 존재를 드러내지 않는 안내(EX-27 제안)로 처리한다. 결과 불명·재시도는 같은 계정을 두 번 만들지 않는다. 비밀번호를 로그·업무 데이터에 남기지 않는다. 현재 로컬 Supabase 설정은 공개 가입이 꺼져 있으므로(`enable_signup = false`) 구현 시 설정 변경과 이메일 확인 정책(Q-09)을 함께 결정한다.
 
 | OP | 경로 | 입력 → `data` |
 | --- | --- | --- |

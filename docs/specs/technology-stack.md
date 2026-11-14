@@ -31,6 +31,9 @@ sources:
 - id: official
   resource: /references/stack-references.md
   title: 공식 기술 문서
+- id: artist-auth
+  resource: /decisions/D-016-artist-auth.md
+  title: 작가 직접 회원가입과 로그인 선택 진입
 decision_status: proposed
 ---
 
@@ -47,7 +50,7 @@ decision_status: proposed
 | 런타임·패키지 | Node 24.x, npm | 로컬 설치 버전 활용, `package-lock.json` 고정 |
 | 화면·서버 | Next.js 16.4 안정 버전 + TypeScript + App Router | 관리자 페이지·관람 채팅·Route Handlers를 한 프로젝트에 |
 | UI | Tailwind, React `useReducer` | 채팅 상태·입출력 모드; 전역 상태 라이브러리 추가 없음 |
-| DB·인증 | Supabase Postgres + Auth, `@supabase/supabase-js`, `@supabase/ssr` | 미리 만든 작가 계정의 이메일/비밀번호 로그인, SQL migration·RLS |
+| DB·인증 | Supabase Postgres + Auth, `@supabase/supabase-js`, `@supabase/ssr` | 작가 이메일/비밀번호 로그인(현재 사전 생성 계정, 직접 가입은 D-016 후속), SQL migration·RLS |
 | 파일 | Supabase private Storage | 작품 사진·원본 PDF·승인 해설 음성 |
 | 해설 초안·자료 정리 | Liner 우선 | 작가 검수 단계. 모델과 행사 키 권한 확인 |
 | 관람 Q&A·평가 | Liner 우선; EXAONE·OpenAI 비교 | 승인 근거 사용. 평가는 초안과 다른 모델 계열 |
@@ -113,7 +116,7 @@ D-011의 DB 원본·AI용 내부 위키 요구로 기존 5개 저장 단위를 7
 
 # API 경계
 
-후속 API 명세는 [기능명세 v1.0의 OP-01~22](functional-spec.md#8-api-명세로-넘길-업무-계약)과 [예외 코드](user-scenarios.md#예외-처리-목록)를 입력으로 사용한다. 아래는 경로 묶음이며 개별 요청/응답 스키마가 아니다.
+후속 API 명세는 [기능명세 v1.0의 OP-01~23](functional-spec.md#8-api-명세로-넘길-업무-계약)과 [예외 코드](user-scenarios.md#예외-처리-목록)를 입력으로 사용한다. 아래는 경로 묶음이며 개별 요청/응답 스키마가 아니다.
 
 | 경로 묶음 | 역할 |
 | --- | --- |
