@@ -37,6 +37,10 @@ sources:
 
 공개 주소는 기존 `listLabels` RPC/HTTP가 반환하는 **`/exhibitions/{exhibitionId}`**, 작품 주소는 **`/exhibitions/{exhibitionId}/artworks/{artworkId}`**를 유지한다. `/visit/{exhibitionId}`는 화면 구현 후보였으며 기존 공개 주소를 바꾸는 서버 계약이 아니다. 프런트가 `/visit` 아래에 화면을 만들면 기존 `/exhibitions` 주소에서 동일 화면으로 연결하는 경로를 제공한다. 서버 API 주소는 `/api/public/exhibitions/{id}`다. QR 제작은 이번 범위 밖이며 라벨 API는 유지한다.
 
+## 작가 화면 이동과 조회
+
+작가 홈·프로필·전시·검토·게시 화면은 탭 메모리에서 조회 결과를 최대 2분 재사용한다. 홈은 브라우저가 여유 있을 때 첫 전시 데이터를 읽는다. 주요 링크는 페이지를 미리 불러오고 마우스, 키보드 포커스, 터치로 이동을 시작할 때 필요한 조회도 시작한다. 같은 조회가 진행 중이면 결과를 함께 쓴다. 저장 요청 전후와 로그인·로그아웃 시 기록을 비우고, 다른 탭에도 변경을 알린다. 공개 전시는 철회 상태를 확인할 수 있도록 접속마다 공개 API로 조회한다. [사용자 요청](../references/user-session-navigation.md).
+
 계약 원천: `src/lib/contracts/routes.ts`, 각 Zod 스키마, `src/lib/client/index.ts`. 아래 스키마 이름으로 `z.input<typeof schema>`(요청), `z.output<typeof schema>`(응답)를 얻거나 `requestApi` 추론을 사용한다. 임의로 HTTP 타입을 복제하지 않는다.
 
 # 공통 호출·오류·플래그

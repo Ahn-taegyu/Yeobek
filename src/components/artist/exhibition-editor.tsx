@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import { transitionScreen } from "@/components/ui/motion";
-import Link from "next/link";
 import { useCallback, useRef, useState, type FormEvent } from "react";
 import { requestApi } from "@/lib/client";
+import { forgetArtistPage, loadArtistPage } from "@/lib/client/artist-navigation";
 import { sectionDefinitions } from "@/lib/contracts/knowledge-sections";
-import { errorMessage, Field, Header, Loading, PrivateImage, Questions, sectionsFrom, Steps, useArtistLoad } from "./ui";
+import { ArtistLink, errorMessage, Field, Header, Loading, PrivateImage, Questions, sectionsFrom, Steps, useArtistLoad } from "./ui";
+import { artworkListKey, exhibitionKey, loadExhibition, loadExhibitionMaterials, loadExhibitionOverview, materialsKey, overviewKey } from "./navigation-data";
 import { uploadMaterial } from "./upload";
 
 type Exhibition = Awaited<ReturnType<typeof requestApi<"getExhibition">>>["data"];
@@ -26,10 +27,14 @@ function explain(error: unknown) {
 }
 
 export function ExhibitionEditor({ id }: { id?: string }) {
-  const load = useCallback(async (signal: AbortSignal) => id
-    ? (await requestApi("getExhibition", { params: { id }, signal })).data : null, [id]);
-  const result = useArtistLoad(load);
-  if (result.data === undefined) return <><Header title={id ? "전시 정보" : "새 전시 등록하기"} /><Loading {...result} /></>;
+  if (!id) return <ExhibitionSteps initial={null} />;
+  return <ExistingExhibition key={id} id={id} />;
+}
+
+function ExistingExhibition({ id }: { id: string }) {
+  const load = useCallback((signal: AbortSignal) => loadExhibition(id, signal), [id]);
+  const result = useArtistLoad(load, exhibitionKey(id));
+  if (!result.data) return <><Header title="전시 정보" /><Loading {...result} /></>;
   return <ExhibitionSteps initial={result.data} />;
 }
 
@@ -137,14 +142,8 @@ function ExhibitionMaterials({ exhibition, onChange, onBack }: {
   exhibition: Exhibition; onChange: (value: Exhibition) => void; onBack: () => void;
 }) {
   const id = exhibition.id;
-  const load = useCallback(async (signal: AbortSignal) => {
-    const [artworks, materials] = await Promise.all([
-      requestApi("listArtworks", { params: { id }, signal }),
-      requestApi("listMaterials", { query: { subjectType: "exhibition", subjectId: id }, signal }),
-    ]);
-    return { works: artworks.data.items, materials: materials.data };
-  }, [id]);
-  const result = useArtistLoad(load);
+  const load = useCallback((signal: AbortSignal) => loadExhibitionMaterials(id, signal), [id]);
+  const result = useArtistLoad(load, materialsKey(id), () => forgetArtistPage(artworkListKey(id)));
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
@@ -216,9 +215,12 @@ function ExhibitionMaterials({ exhibition, onChange, onBack }: {
     {error && <p className="error" role="alert">{error}</p>}
     <div className="artist-actions">
       <button className="artist-action secondary" onClick={onBack}>이전</button>
-      <Link className="artist-action" href={`/artist/exhibitions/${id}/learning`}>여운 학습시키기</Link>
-      <Link className="artist-action secondary" href={`/artist/exhibitions/${id}/review`}>기본 해설 검토</Link>
-      <Link className="artist-action secondary" href={`/artist/exhibitions/${id}/publication`}>전시 게시 관리</Link>
+      <ArtistLink className="artist-action" href={`/artist/exhibitions/${id}/learning`}
+        prepare={() => loadArtistPage(overviewKey(id), signal => loadExhibitionOverview(id, signal))}>여운 학습시키기</ArtistLink>
+      <ArtistLink className="artist-action secondary" href={`/artist/exhibitions/${id}/review`}
+        prepare={() => import("./narration-review").then(({ prepareNarrationReview }) => prepareNarrationReview(id, result.data?.works[0]?.id))}>기본 해설 검토</ArtistLink>
+      <ArtistLink className="artist-action secondary" href={`/artist/exhibitions/${id}/publication`}
+        prepare={() => import("./publication").then(({ preparePublication }) => preparePublication(id))}>전시 게시 관리</ArtistLink>
     </div>
   </section>;
 }

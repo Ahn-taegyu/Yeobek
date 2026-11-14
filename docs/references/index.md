@@ -92,3 +92,4 @@
 - [Preview 가입 인증 메일을 스티비로 발송](user-stibee-signup.md) — SRC-059.
 
 - [무료 AI 제공사 시험 요청](user-free-ai-providers.md) — SRC-060.
+- [같은 세션에서 페이지 이동 시 미리 불러온 데이터 사용](user-session-navigation.md) — SRC-061.
