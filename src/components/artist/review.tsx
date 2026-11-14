@@ -221,6 +221,8 @@ function SavedQa({ id, artworkId, qaId }: { id: string; artworkId?: string; qaId
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [correction, setCorrection] = useState<{ id: string; version: number; approved: boolean }>();
+  const pendingCorrection = useRef<{ key: string; requestId: string } | null>(null);
   const pendingRewrite = useRef<{ key: string; requestId: string } | null>(null);
   const item = result.data?.item;
   const evidence = result.data?.evidence ?? [];
@@ -233,6 +235,8 @@ function SavedQa({ id, artworkId, qaId }: { id: string; artworkId?: string; qaId
     return matching ? { id: matching.id, version: matching.version } : direct;
   }) ?? [];
   const pins = [...new Map(matches.flatMap(pin => pin ? [[pin.id, pin] as const] : [])).values()];
+  const rewritePins = correction?.approved ? [...pins.slice(0, AI_LIMITS.evidenceCount - 1),
+    { id: correction.id, version: correction.version }] : pins;
   const completePins = !!item && matches.every(Boolean) && pins.length === item.citations.length;
 
   async function act(fn: () => Promise<void>) {
@@ -244,17 +248,39 @@ function SavedQa({ id, artworkId, qaId }: { id: string; artworkId?: string; qaId
   function refresh() { forgetArtistPage(faqKey(id)); result.retry(); }
   function rewrite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!item || !pins.length || !instruction.trim()) return;
+    if (!item || !rewritePins.length || !instruction.trim()) return;
     void act(async () => {
-      const key = JSON.stringify([item.id, item.version, instruction.trim(), pins]);
+      const key = JSON.stringify([item.id, item.version, instruction.trim(), rewritePins]);
       if (pendingRewrite.current?.key !== key) pendingRewrite.current = { key, requestId: crypto.randomUUID() };
       const { data } = await requestApi("rewriteQa", { body: { targetKind: "qa", targetId: item.id,
-        targetVersion: item.version, requestId: pendingRewrite.current.requestId, instruction: instruction.trim(), evidencePins: pins } });
-      if (data.status === "succeeded") { pendingRewrite.current = null; setInstruction(""); setNotice("새 답변 초안을 만들었어요. 검토 후 사용해주세요."); refresh(); }
+        targetVersion: item.version, requestId: pendingRewrite.current.requestId, instruction: instruction.trim(), evidencePins: rewritePins } });
+      if (data.status === "succeeded") { pendingRewrite.current = null; setCorrection(undefined); setInstruction(""); setNotice("새 답변 초안을 만들었어요. 검토 후 사용해주세요."); refresh(); }
       else {
         if (data.status !== "running") pendingRewrite.current = null;
         setNotice(data.status === "running" ? "답변을 준비 중이에요. 잠시 후 다시 확인해주세요." : `답변을 만들지 못했어요: ${statuses[data.status]}`);
       }
+    });
+  }
+  function saveCorrection(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!item || correction) return;
+    const form = new FormData(event.currentTarget);
+    const sourceLabel = String(form.get("sourceLabel") ?? "").trim();
+    const sourceBody = String(form.get("sourceBody") ?? "").trim();
+    if (!sourceLabel || !sourceBody) return;
+    void act(async () => {
+      const key = JSON.stringify([item.id, item.version, sourceLabel, sourceBody]);
+      if (pendingCorrection.current?.key !== key) pendingCorrection.current = { key, requestId: crypto.randomUUID() };
+      const { data } = await requestApi("createQaCorrectionEvidence", { body: { targetKind: "qa", targetId: item.id,
+        targetVersion: item.version, requestId: pendingCorrection.current.requestId, sourceLabel, sourceBody } });
+      setCorrection({ id: data.id, version: data.version, approved: data.state === "approved" });
+    });
+  }
+  function approveCorrection() {
+    if (!correction) return;
+    void act(async () => {
+      const { data } = await requestApi("approveEvidence", { params: { id: correction.id }, body: { version: correction.version } });
+      setCorrection({ id: data.id, version: data.version, approved: data.state === "approved" });
     });
   }
   function decide(action: "approve" | "withdraw") {
@@ -268,7 +294,7 @@ function SavedQa({ id, artworkId, qaId }: { id: string; artworkId?: string; qaId
           await requestApi("withdrawQaItem", { params: { id: item.id }, body: { expectedVersion: version } });
         }
       }
-      setNotice(action === "approve" ? "답변을 승인했어요. 공개 반영은 게시 과정에서 이루어져요." : "답변 사용을 중지했어요.");
+      setNotice(action === "approve" ? "답변을 승인했어요. 공개 반영은 게시 과정에서 이루어져요." : "확인한 답변 버전의 사용을 중지했어요.");
       refresh();
     });
   }
@@ -284,14 +310,23 @@ function SavedQa({ id, artworkId, qaId }: { id: string; artworkId?: string; qaId
             <p className="artist-note">{matches[index] ? "연결된 근거 · 현재 승인 상태 확인 필요" : "승인 근거 확인 필요"}</p>
             <details><summary>근거 보기</summary><p className="artist-workflow-text">{citation.body}</p></details>
           </li>)}</ul>
+        <details>
+          <summary>새 사실을 근거로 추가</summary>
+          {!correction ? <form onSubmit={saveCorrection}>
+            <Field label="근거 이름"><input name="sourceLabel" maxLength={100} required disabled={busy} /></Field>
+            <Field label="추가할 근거"><textarea name="sourceBody" maxLength={2000} required disabled={busy} /></Field>
+            <button className="artist-action secondary" disabled={busy}>근거 초안 저장</button>
+          </form> : correction.approved ? <p role="status">승인한 근거를 재작성에 사용할 수 있어요.</p> :
+            <button className="artist-action secondary" disabled={busy} onClick={approveCorrection}>추가한 근거 승인</button>}
+        </details>
         <form onSubmit={rewrite} aria-busy={busy}>
           <Field label="수정할 내용·추가 정보"><textarea value={instruction} onChange={event => setInstruction(event.target.value)}
             maxLength={2000} required disabled={busy} /></Field>
           <p>새 사실은 근거로 추가해 승인한 뒤 답변에 반영할 수 있어요.</p>
           {result.data.evidenceLoadFailed ? <div role="alert">현재 근거를 불러오지 못했어요.{" "}
             <button type="button" className="artist-action secondary" disabled={busy} onClick={refresh}>다시 확인</button>
-          </div> : !pins.length && <p>지금 답변을 수정하려면 인용 근거를 먼저 승인해주세요.</p>}
-          <button className="artist-action" disabled={busy || !pins.length}>답변 다시 쓰기</button>
+          </div> : !rewritePins.length && <p>지금 답변을 수정하려면 근거를 먼저 승인해주세요.</p>}
+          <button className="artist-action" disabled={busy || !rewritePins.length}>답변 다시 쓰기</button>
         </form>
         {!completePins && <p>답변의 모든 인용 근거를 승인하고 최신 상태로 확인해야 사용할 수 있어요.</p>}
         {!!result.data.approvedVersions.length && <p>사용 중지하면 이전에 승인된 답변도 사용을 중지해요.</p>}
