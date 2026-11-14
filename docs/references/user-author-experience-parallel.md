@@ -9,7 +9,7 @@ tags: [yeobek, requirements]
 rag_include: false
 generated:
   by: codex/gpt-6
-  at: '2026-11-14T23:10:00+09:00'
+  at: '2026-11-14T22:19:00+09:00'
 sources: []
 evidence: user-stated
 ---
