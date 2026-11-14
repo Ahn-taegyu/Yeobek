@@ -28,11 +28,15 @@
 .intro p { color: #46454c; margin: 0; font-size: 14px; }
 .intro .description { margin-top: 14px; white-space: pre-wrap; }
 /* The intro never grows past the screen: the poster shrinks and the description scrolls in a fixed box. */
-.intro { height: 100dvh; min-height: 0; overflow: hidden; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 16px; }
+.intro { height: 100dvh; min-height: 0; overflow: hidden; align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 10px; padding-top: max(24px, env(safe-area-inset-top)); padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+/* Give the poster most of the leftover height: compact title spacing and a shorter description box. */
+.intro h1 { margin-top: 0; }
 .intro > div { width: 100%; min-height: 0; }
 .intro .description {
   --fade: 2.4em;
-  height: clamp(4.8em, 16dvh, 9.6em);
+  height: clamp(4.2em, 11dvh, 7.2em);
+  margin-top: 8px;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-bottom: var(--fade);
