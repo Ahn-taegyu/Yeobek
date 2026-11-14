@@ -312,6 +312,8 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 
 `ops-notify`는 상태와 작품 집계만 모델에 전달하고 구조화 출력·인용·형식·현재 상태를 검사한다. 제목·작가 원자료·관람 질문·주소를 입력하지 않는다. 상태가 변경되면 안내를 중단하고, 발송 직전에도 대상 상태를 확인한다. 기본은 draft이고 운영자가 검토한다. 인용 ID 검사가 문장의 모든 의미적 적합성을 증명하는 것은 아니며 실제 품질은 키 입력 후 평가한다.
 
+발송 검사에서 null 허가를 받으면 현재 배치를 종료한다. 발송 간격 때문에 approved로 반환된 메시지를 같은 배치에서 다시 예약하지 않으며 다음 cron에서 처리한다. 이 경우 `dispatch.skipped`가 증가하고, null 허가 뒤의 다른 대기 메시지도 다음 실행으로 넘어간다.
+
 # W8 채널톡 토큰 내부 계약
 
 `claim_channel_token(app_id,channel_id,claim)`와 `complete_channel_token(app_id,channel_id,claim,sealed,expires_in)`은 service-role 전용 RPC다. 브라우저용 HTTP 경로와 타입 클라이언트에는 추가하지 않는다. 예약 결과는 `cached`(암호문), `refresh`(기존 암호문 또는 null), `busy`, `limited` 중 하나다. 앱별 잠금으로 채널 전체의 발급/갱신 예약을 30분에 10회까지 제한하고, 채널 lease는 30초다. 예약 재사용 방지도 같은 30분 창이며 캐시 재사용은 예약을 소비하지 않는다.

@@ -69,7 +69,10 @@ export async function dispatchOutbox(deps: { store: OutboxDispatchStore; mail: M
       let raw: unknown;
       try { raw = await deps.store.check(claim.id, claim.attempt, options.mock); }
       catch { await complete("failed", "DISPATCH_CHECK_FAILED"); continue; }
-      if (raw === null) { summary.skipped++; continue; }
+      // A pacing guard may put this unissued message back in approved. A new
+      // claim in the same batch would acquire it again, then the duplicate-ID
+      // guard would leave that new lease stranded in sending. Retry next batch.
+      if (raw === null) { summary.skipped++; break; }
       const parsed = permitSchema.safeParse(raw);
       if (!parsed.success || parsed.data.id !== claim.id || parsed.data.attempt !== claim.attempt || parsed.data.mock !== options.mock) {
         await complete("failed", "INVALID_DISPATCH_PERMIT");

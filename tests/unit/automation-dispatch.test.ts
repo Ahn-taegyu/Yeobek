@@ -182,6 +182,23 @@ describe("outbox dispatch", () => {
     expect(s.send).toHaveBeenCalledOnce();
   });
 
+  it("leaves a pacing-deferred message approved for the next batch without reclaiming its lease", async () => {
+    const s = setup();
+    let state = "approved";
+    s.deps.store.claim.mockImplementation(async () => { state = "sending"; return [item]; });
+    // check_notification_dispatch returns an unissued, paced claim to approved.
+    s.check.mockImplementation(async () => { state = "approved"; return null; });
+    const result = await dispatchOutbox(s.deps, { ...options, limit: 5 });
+    expect(state).toBe("approved");
+    expect(result).toMatchObject({ skipped: 1, accepted: 0 });
+    expect(s.deps.store.claim).toHaveBeenCalledOnce();
+    expect(s.send).not.toHaveBeenCalled();
+    expect(s.complete).not.toHaveBeenCalled();
+    s.check.mockResolvedValue(permit);
+    expect(await dispatchOutbox(s.deps, { ...options, limit: 1 })).toMatchObject({ accepted: 1 });
+    expect(s.send).toHaveBeenCalledOnce();
+  });
+
   it("does not check or send a claim from the other mode", async () => {
     const s = setup();
     s.deps.store.claim.mockResolvedValue([{ ...item, mock: false }]);
