@@ -77,26 +77,58 @@ it("replays scores, benchmarks concurrency, or measures actual final answers", a
         !pair.judgment || pair.rows.some(r => !r.answer || r.error)) throw new Error("credit_frozen_answers_invalid");
       for (const row of pair.rows) validateAnswer(row.answer, selections[i][row.arm].selectedIds);
     }
-    writeFileSync(resolve(".ai-eval/bivia-rejudge-reservation.json"), JSON.stringify({ output, sourceHash: sha256(raw),
-      judgeCalls: 60, remainingEstimatedUsd: 3 - source.linerUsage.reservedUsd }), { flag: "wx" });
-    const revisedBudget = createCreditBudget(3 - source.linerUsage.reservedUsd);
-    const judge = revisedBudget.wrap(createLinerTextProvider({ apiKey: process.env.LINER_API_KEY, model: LINER_MODELS.judge }), "judge");
     const revised: typeof answers = [];
+    const resumeRaw = process.env.BIVIA_JUDGE_RESUME ? readFileSync(process.env.BIVIA_JUDGE_RESUME, "utf8") : null;
+    const resume = resumeRaw ? JSON.parse(resumeRaw) as { originalAnswerReportHash: string; provenance: typeof provenance;
+      correctedJudgeUsage: typeof credit.ledger; answers: typeof answers; judgeFailedAttempts?: { questionId: string; error: string }[] } : null;
+    const prior = resume?.correctedJudgeUsage ?? { calls: { generator: 0, judge: 0 }, inputTokens: 0, outputTokens: 0,
+      estimatedUsd: 0, reservedUsd: 0, usageUnknownCalls: 0, stopped: false };
+    const failures = resume?.judgeFailedAttempts ?? resume?.answers.filter(p => p?.judgeError).map(p => ({ questionId: p.questionId, error: p.judgeError! })) ?? [];
+    if (resume) {
+      if (resume.originalAnswerReportHash !== sha256(raw) || resume.provenance.judgePromptHash !== provenance.judgePromptHash ||
+        resume.provenance.judgeSchemaHash !== provenance.judgeSchemaHash || resume.provenance.models.judge !== LINER_MODELS.judge ||
+        failures.length > 2 || prior.calls.generator !== 0 || !Number.isSafeInteger(prior.calls.judge) || prior.calls.judge > 62 ||
+        !Number.isFinite(prior.reservedUsd) || prior.reservedUsd < 0) throw new Error("credit_resume_invalid");
+      for (const pair of resume.answers) {
+        if (!pair?.judgment || pair.judgeError) continue;
+        const i = cases.findIndex(c => c.id === pair.questionId);
+        if (i < 0 || revised[i] || JSON.stringify(pair.rows) !== JSON.stringify(source.answers[i].rows) ||
+          JSON.stringify(pair.blindOrder) !== JSON.stringify(source.answers[i].blindOrder)) throw new Error("credit_resume_invalid");
+        qualitySchema.parse(pair.judgment); revised[i] = structuredClone(pair);
+      }
+    }
+    const completedBeforeResume = revised.filter(Boolean).length;
+    const remainingUsd = 3 - source.linerUsage.reservedUsd - prior.reservedUsd;
+    const revisedBudget = createCreditBudget(remainingUsd);
+    const reservationName = resumeRaw ? `bivia-rejudge-reservation-${sha256(resumeRaw).slice(0, 16)}.json` : "bivia-rejudge-reservation.json";
+    writeFileSync(resolve(`.ai-eval/${reservationName}`), JSON.stringify({ output, sourceHash: sha256(raw),
+      judgeCalls: 60 - completedBeforeResume, remainingEstimatedUsd: remainingUsd }), { flag: "wx" });
+    const judge = revisedBudget.wrap(createLinerTextProvider({ apiKey: process.env.LINER_API_KEY, model: LINER_MODELS.judge }), "judge");
+    const concurrency = resume ? 2 : 3;
     function saveRejudged() {
-      const a = source.linerUsage, b = revisedBudget.ledger;
+      const a = source.linerUsage, next = revisedBudget.ledger;
+      const b = { calls: { generator: 0, judge: prior.calls.judge + next.calls.judge },
+        inputTokens: prior.inputTokens + next.inputTokens, outputTokens: prior.outputTokens + next.outputTokens,
+        estimatedUsd: prior.estimatedUsd + next.estimatedUsd, reservedUsd: prior.reservedUsd + next.reservedUsd,
+        usageUnknownCalls: prior.usageUnknownCalls + next.usageUnknownCalls, stopped: next.stopped };
       writeFileSync(resolve(output, "report.json"), JSON.stringify({ ...source, createdAt: new Date().toISOString(),
         originalAnswerProvenance: source.provenance, provenance, originalAnswerReportHash: sha256(raw),
-        judgeCorrection: "Supplied trusted artwork title/number missing from first judge input. All 60 frozen pairs rejudged at concurrency 3; no generation or Bivia calls.",
+        design: { ...(source.design as Record<string, unknown>), retries: undefined, automaticRetries: 0, manualJudgeRetryCount: failures.length },
+        judgeCorrection: "Supplied trusted artwork title/number missing from first judge input. All 60 frozen pairs rejudged; no generation or Bivia calls.",
+        judgeExecution: { concurrency, completedBeforeResume, resumeHash: resumeRaw ? sha256(resumeRaw) : null },
+        judgeFailedAttempts: [...failures, ...revised.filter(p => p?.judgeError).map(p => ({ questionId: p.questionId, error: p.judgeError! }))],
         originalLinerUsage: a, correctedJudgeUsage: b, stopped, answers: revised,
         linerUsage: { calls: { generator: a.calls.generator, judge: a.calls.judge + b.calls.judge }, inputTokens: a.inputTokens + b.inputTokens,
           outputTokens: a.outputTokens + b.outputTokens, estimatedUsd: a.estimatedUsd + b.estimatedUsd, reservedUsd: a.reservedUsd + b.reservedUsd,
           usageUnknownCalls: a.usageUnknownCalls + b.usageUnknownCalls, stopped: b.stopped } }, null, 2) + "\n");
     }
     saveRejudged();
-    let cursor = 0, completed = 0;
+    let cursor = 0, completed = completedBeforeResume;
     async function worker() {
       while (!stopped && cursor < source.answers.length) {
-        const i = cursor++, pair = structuredClone(source.answers[i]); delete pair.judgment; delete pair.judgeTrace;
+        const i = cursor++;
+        if (revised[i]?.judgment) continue;
+        const pair = structuredClone(source.answers[i]); delete pair.judgment; delete pair.judgeTrace;
         revised[i] = pair;
         try {
           const X = pair.rows.find(r => r.arm === pair.blindOrder[0])!.answer!, Y = pair.rows.find(r => r.arm === pair.blindOrder[1])!.answer!;
@@ -106,7 +138,7 @@ it("replays scores, benchmarks concurrency, or measures actual final answers", a
         completed++; saveRejudged(); console.log(JSON.stringify({ rejudgedPairs: completed, newCalls: revisedBudget.ledger.calls.judge, stopped }));
       }
     }
-    await Promise.all(Array.from({ length: 3 }, worker));
+    await Promise.all(Array.from({ length: concurrency }, worker));
     saveRejudged();
     if (stopped) throw new Error(`Rejudging stopped: ${stopped}; report saved.`);
     return;

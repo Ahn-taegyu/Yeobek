@@ -16,8 +16,8 @@ const bench = JSON.parse(benchRaw), report = JSON.parse(answerRaw);
 if (bench.schemaVersion !== 2 || report.schemaVersion !== 2 || bench.stopped || report.stopped ||
   bench.mode !== "benchmark-free" || report.mode !== "answers-credit" || bench.benchmark.length !== 12 ||
   bench.biviaUsage.calls !== 288 || report.answers.length !== 60 || report.selections.length !== 60 ||
-  report.linerUsage.calls.generator !== 120 || report.linerUsage.calls.judge !== (report.judgeCorrection ? 120 : 60) ||
-  (report.judgeCorrection && report.correctedJudgeUsage.calls.judge !== 60) ||
+  report.linerUsage.calls.generator !== 120 || report.linerUsage.calls.judge !== (report.judgeCorrection ? 120 + report.judgeFailedAttempts.length : 60) ||
+  (report.judgeCorrection && report.correctedJudgeUsage.calls.judge !== 60 + report.judgeFailedAttempts.length) ||
   bench.provenance.corpusHash !== report.provenance.corpusHash) throw new Error("Only complete matching runs can be exported.");
 const fields = ["grounded", "complete", "appropriateOutcome", "citationsSupport", "clear"];
 const pass = q => fields.every(k => q[k] === true);
@@ -61,10 +61,14 @@ const retrieval = Object.fromEntries(["A", "C1", "C2"].map(arm => {
   return [arm, { answerable: rows.length, allGroupsFound: rows.filter(r => r[arm].metrics.allGroups).length,
     groupRecall: mean(rows.map(r => r[arm].metrics.groupRecall)), precision: mean(rows.map(r => r[arm].metrics.precision)) }];
 }));
+const generationUsd = Object.fromEntries(["A", "C2"].map(arm => [arm, perQuestion.reduce((sum, row) =>
+  sum + (row[arm].usage.inputTokens * report.provenance.prices.generator.input + row[arm].usage.outputTokens * report.provenance.prices.generator.output) / 1_000_000, 0)]));
+const biviaListUsdPerQuestion = bench.biviaUsage.billableTokens / bench.benchmark.length * .042 / 1_000_000;
 const artifact = { schemaVersion: 2, completedAt: report.createdAt,
   provenance: report.provenance, benchmarkProvenance: bench.provenance,
   originalAnswerProvenance: report.originalAnswerProvenance,
   originalAnswerReportHash: report.originalAnswerReportHash, judgeCorrection: report.judgeCorrection,
+  judgeFailedAttempts: report.judgeFailedAttempts, judgeExecution: report.judgeExecution,
   privateReportHashes: { answers: hash(answerRaw), benchmark: hash(benchRaw) },
   scope: report.scope, design: report.design, retrieval, benchmarkMs: benchmark,
   answerQuality: summarize(perQuestion), byCategory: Object.fromEntries([...new Set(perQuestion.map(r => r.category))].map(category => [category, summarize(perQuestion.filter(r => r.category === category))])),
@@ -72,7 +76,11 @@ const artifact = { schemaVersion: 2, completedAt: report.createdAt,
     artworkClusterBootstrap95: { lower: quantile(samples, .025), upper: quantile(samples, .975), clusters: clusters.length, repetitions: 10000, seed: 20261114 } },
   biviaUsage: bench.biviaUsage, linerUsage: report.linerUsage,
   originalLinerUsage: report.originalLinerUsage, correctedJudgeUsage: report.correctedJudgeUsage,
-  costNote: "Bivia used the checked free allowance. Liner usage is authorized; USD is a published-price estimate, not verified cash billing.",
+  productionPriceProjection: { generationUsd, generationMeanUsd: { A: generationUsd.A / 60, C2: generationUsd.C2 / 60 },
+    biviaListUsdPerQuestion, c2MeanUsdIncludingBivia: generationUsd.C2 / 60 + biviaListUsdPerQuestion,
+    ratioToA: (generationUsd.C2 / 60 + biviaListUsdPerQuestion) / (generationUsd.A / 60),
+    note: "List-price projection for 24 score calls per question, excluding experiment judging; Bivia was actually free. Not an invoice or an end-to-end latency measurement." },
+  costNote: "Bivia used the checked free allowance. Liner USD covers reported tokens only, excludes usage-unknown requests, and is not verified cash billing. Reservations retain the failed-request allowance.",
   limitations: ["One sample per answer; synthetic previously observed regression set.", "Automated judge, not independent human acceptance.",
     "Grounding flags can penalize retrieval-caused missing facts; they are not a hallucination count.",
     "Benchmark covers six dev questions. Cached answer run does not measure end-to-end live Bivia latency.",
