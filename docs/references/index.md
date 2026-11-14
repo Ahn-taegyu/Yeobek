@@ -96,3 +96,5 @@
 - [Liner 재작성·음성 수정과 도슨트 모델 통일](user-liner-voice-evaluation.md) — SRC-062.
 
 - [SRC-063 작가 검수·체험 개선과 AI 인터뷰 병렬 구현 요청](user-author-experience-parallel.md).
+
+- [SRC-064 모든 분담 채팅의 난이도별 Terra·Luna 위임](user-terra-luna-delegation.md).
