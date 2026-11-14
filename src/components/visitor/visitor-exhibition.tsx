@@ -354,7 +354,7 @@ export function ExhibitionExperience({ exhibition, initialArtworkId, transport, 
       </article>), ...(asking ? [<article className={`${styles.turn} yeobek-appear`} key={asking.id}>
         <p className={styles.bubble}>{asking.question}</p>
         <AiStarLogo className={`${styles.thinking}${asking.leaving ? ` ${styles.thinkingDone}` : ""}`}
-          state="thinking" size={40} label="" />
+          state="thinking" size={64} label="" />
         <p className="sr-only" role="status">답변을 준비하고 있어요.</p>
       </article>] : [])]}
     </div>

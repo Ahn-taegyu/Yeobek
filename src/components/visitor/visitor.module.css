@@ -109,7 +109,7 @@ span.answerImage { display: none; }
 .turn .textButton { justify-self: start; }
 
 /* Thinking star under the visitor's bubble: fades in, then fades out once the answer is ready. */
-.thinking { justify-self: start; margin: 6px 4px; animation: visitor-fade-in 320ms var(--yeobek-motion-ease) both; transition: opacity 280ms ease, transform 280ms ease; }
+.thinking { justify-self: start; margin: 8px 6px; animation: visitor-fade-in 320ms var(--yeobek-motion-ease) both; transition: opacity 280ms ease, transform 280ms ease; }
 .thinkingDone { opacity: 0; transform: scale(.92); }
 /* Answer reveal: words of each rendered line share a delay, so lines fade in top to bottom. */
 .revealWord { display: inline-block; animation: visitor-line-in 420ms var(--yeobek-motion-ease) both; }
