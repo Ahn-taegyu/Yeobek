@@ -66,5 +66,9 @@ content_path = "./supabase/templates/confirmation.html"
 [edge_runtime]
 enabled = false
 
+[functions.stibee-signup-email]
+verify_jwt = false
+entrypoint = "./functions/stibee-signup-email/index.js"
+
 [analytics]
 enabled = false
