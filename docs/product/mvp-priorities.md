@@ -4,7 +4,7 @@ id: P-002
 title: MVP 우선순위와 확정 범위
 description: 사용자 원안·추가 결정·상세 설계 제안을 분리한 구현 기준.
 status: draft
-updated: '2026-11-13'
+updated: '2026-11-14'
 tags:
 - mawd
 rag_include: true
@@ -104,3 +104,7 @@ prerequisite는 최초 목록에 독립 이름이 없지만 필요한 전시/권
 5. **시각 질문:** 말·글 지칭과 승인된 부위 설명을 사용한다. 이미지 부분 선택·카메라는 사용자 확정 후순위이고, 이미지 AI 분석도 일요일 일정 밖이다.
 
 [^answers]: [사용자 추가 응답](../references/user-answers.md).
+
+## 작가 인증 요구
+
+[D-016](../decisions/D-016-artist-auth.md)에 따라 직접 회원가입과 로그인 선택을 MVP 흐름에 포함한다. 가입 후 자동 로그인 없이 직접 로그인한다. 기존 로그인은 구현되어 있으며 직접 가입의 구현·수용 검증은 후속이다.

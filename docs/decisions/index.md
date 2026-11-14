@@ -18,3 +18,5 @@
 - [D-011 AI용 내부 지식과 필수 화면](D-011-knowledge-and-screens.md) — accepted; DB 원본·작가/전시 분리·요청 화면. 세부 배치는 제안.
 
 - [D-013 작가 해설 후보와 비교 평가](D-013-narration-candidates.md) — accepted; 기술 수치는 제안.
+
+- [D-016 작가 직접 회원가입과 로그인 선택](D-016-artist-auth.md) — accepted. 기존 사전 계정 전용 기준을 변경하며 직접 가입은 구현 전.
