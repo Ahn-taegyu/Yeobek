@@ -29,3 +29,4 @@
 현행 P0 및 Notion 기능 대응은 [기능명세](../specs/functional-spec.md#notion-p0-기능-연결)를 따른다. 기존 기능 ID와 원안 우선순위는 이력 및 상세 설계 참조로 사용한다.
 
 - [F-024 사진 기반 작품 글 인터뷰](F-024-artwork-text-interview.md) — MVP, 구현 중; 기본 꺼짐.
+- [F-025 전시 대화형 인터뷰](F-025-exhibition-chat-interview.md) — MVP, 구현 중; F-024 플래그 공유.

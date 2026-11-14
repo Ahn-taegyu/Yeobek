@@ -106,3 +106,4 @@
 - [작품 선택 시 기본 소개와 썸네일 압축](user-visitor-select-intro.md) — SRC-070.
 - [기본 소개 음성 항상 미리 생성](user-narration-audio-pregenerate.md) — SRC-071.
 - [AI 정보 검색 방식 점검과 관람 근거 선택 개선](user-visitor-evidence-selection.md) — SRC-072.
+- [Figma 인터뷰·검토 와이어프레임과 전시 인터뷰 진행](user-figma-review-interview.md) — SRC-073.

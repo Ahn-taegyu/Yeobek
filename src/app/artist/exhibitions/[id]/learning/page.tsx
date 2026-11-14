@@ -6,5 +6,5 @@ export default async function LearningPage({ params, searchParams }: {
 }) {
   const [{ id }, { next }] = await Promise.all([params, searchParams]);
   const interviewEnabled = getFeatures().artworkInterview;
-  return <Learning id={id} interviewEnabled={interviewEnabled} reflect={interviewEnabled && next === "review"} />;
+  return <Learning id={id} interviewEnabled={interviewEnabled} reflect={next === "review"} />;
 }

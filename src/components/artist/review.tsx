@@ -11,6 +11,8 @@ import type { PreviewAnswer, QaRewriteJob } from "@/lib/contracts/qa";
 import { ArtistLink, errorMessage, Field, Header, Loading, PrivateImage, useArtistLoad } from "./ui";
 import { artworkListKey, exhibitionKey, loadArtworkList, loadExhibitionOverview, overviewKey } from "./navigation-data";
 import { FlowSteps } from "./flow-steps";
+import listStyles from "./review-list.module.css";
+import previewStyles from "./preview.module.css";
 
 type Batch = Awaited<ReturnType<typeof requestApi<"getTrainingBatch">>>["data"];
 type Target = Batch["targets"][number];
@@ -152,9 +154,9 @@ export function Learning({ id, interviewEnabled = false, reflect = false }: { id
         </button>}
         {incomplete && <p role="status">{needsMaterial ? "학습을 마치지 못했어요. 전시 자료를 확인해주세요." : "일부 학습을 마치지 못했어요. 다시 시도해주세요."}</p>}
         {done && !reflected && <>
-          <p>인터뷰에서 승인한 답변을 해설과 예상 질문에 반영하려면 다시 학습해야 해요.</p>
+          <p>인터뷰 답변과 수정한 내용을 기본 소개와 예상 질문에 반영하려면 다시 학습해야 해요.</p>
           <div className="artist-flow-actions">
-            <button className="artist-action" onClick={() => { setRetrainFrom(batch.id); void run(true); }}>답변 반영해 학습시키기</button>
+            <button className="artist-action" onClick={() => { setRetrainFrom(batch.id); void run(true); }}>수정한 내용으로 다시 학습하기</button>
             <ArtistLink className="artist-action secondary" href={`${root(id)}/verification`}>반영 없이 검토로</ArtistLink>
           </div>
         </>}
@@ -184,22 +186,53 @@ async function loadFaq(id: string, signal: AbortSignal) {
   return latestVisibleQaItems(items);
 }
 
+/** Figma 119: expected visitor questions as an accordion; saving approves reviewed drafts that cite approved evidence. */
 export function Faq({ id }: { id: string }) {
   const load = useCallback((signal: AbortSignal) => loadFaq(id, signal), [id]);
   const result = useArtistLoad(load, faqKey(id), () => forgetArtistPage(artworkListKey(id)));
   const preparePreview = () => loadArtistPage(overviewKey(id), signal => loadExhibitionOverview(id, signal));
-  return <div className="artist-faq yeobek-appear">
-    <Header title="자주하는 질문" back={`${root(id)}/verification`} />
-    {result.data ? <>
-      {result.data.length ? <ul>{result.data.map(item => {
+  const [open, setOpen] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const drafts = result.data?.filter(item => item.state === "draft") ?? [];
+  const ready = drafts.filter(item => item.citations.every(citation => citation.evidenceId));
+  async function save() {
+    if (busy || !ready.length) return;
+    setBusy(true); setError(""); setNotice("");
+    try {
+      for (const item of ready) await requestApi("approveQaItem", { params: { id: item.id }, body: { expectedVersion: item.version,
+        evidencePins: [...new Map(item.citations.map(c => [c.evidenceId!, { id: c.evidenceId!, version: c.version }])).values()] } });
+      forgetArtistPage(faqKey(id)); result.retry();
+      setNotice(drafts.length > ready.length ? `${ready.length}개를 저장했어요. 근거 확인이 필요한 질문은 질문별로 검토해 주세요.` : "수정 내용을 저장했어요.");
+    } catch (cause) { setError(errorMessage(cause)); }
+    finally { setBusy(false); }
+  }
+  return <div className={listStyles.screen}>
+    <Header title="관람객 예상 질문" back={`${root(id)}/verification`} />
+    {!result.data ? <Loading {...result} /> : !result.data.length ? <p className="artist-note">등록된 예상 질문이 없어요.</p> :
+      <ul className={`${listStyles.list} ${listStyles.qa}`}>{result.data.map(item => {
+        const expanded = open === item.id;
         const params = new URLSearchParams({ qa: item.id });
         if (item.artworkId) params.set("work", item.artworkId);
-        return <li key={item.id}><ArtistLink href={`${root(id)}/preview?${params}`} prepare={preparePreview}>
-          <span>{item.question}</span><span aria-hidden="true">›</span>
-        </ArtistLink></li>;
-      })}</ul> : <p>등록된 예상 질문이 없어요.</p>}
-      <ArtistLink className="artist-action" href={`${root(id)}/preview`} prepare={preparePreview}>여운 답변 미리보기</ArtistLink>
-    </> : <Loading {...result} />}
+        return <li key={item.id} className={listStyles.item}>
+          <button type="button" aria-expanded={expanded} onClick={() => setOpen(expanded ? null : item.id)}>
+            <span>{item.question}{item.state === "draft" && <span className={listStyles.badge}>검토 중</span>}</span>
+            <Image className={listStyles.chevron} src="/yeobek/review-chevron.svg" alt="" width={19} height={19} />
+          </button>
+          {expanded && <div className={listStyles.body}>
+            <p>{item.answer}</p>
+            <div className={listStyles.actions}>
+              <ArtistLink href={`${root(id)}/preview?${params}`} prepare={preparePreview}>답변 수정하기</ArtistLink>
+            </div>
+          </div>}
+        </li>;
+      })}</ul>}
+    <div className={listStyles.footer}>
+      {notice && <p role="status">{notice}</p>}
+      {error && <p className="error" role="alert">{error}</p>}
+      <button className={listStyles.save} disabled={busy || !ready.length} onClick={() => void save()}>{busy ? "저장 중…" : "수정 내용 저장하기"}</button>
+    </div>
   </div>;
 }
 
@@ -358,6 +391,7 @@ function GeneralPreview({ id, initialArtworkId }: { id: string; initialArtworkId
   const [answer, setAnswer] = useState<PreviewAnswer | null>(null);
 
   const [editing, setEditing] = useState(false);
+  const [rating, setRating] = useState<"accurate" | "needs_revision" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const pending = useRef<{ question: string; artworkId: string; requestId: string } | null>(null);
@@ -386,7 +420,7 @@ function GeneralPreview({ id, initialArtworkId }: { id: string; initialArtworkId
         return;
       }
       setAnswer(data);
-
+      setRating(null);
       setEditing(false);
       setQuestion("");
       pending.current = null;
@@ -400,37 +434,46 @@ function GeneralPreview({ id, initialArtworkId }: { id: string; initialArtworkId
         params: { id: answer.id }, body: { rating: value, requestId: crypto.randomUUID() },
       });
 
+      setRating(value);
       setEditing(value === "needs_revision");
     });
   }
 
   const work = result.data?.works.find(item => item.id === (answer?.artworkId ?? artworkId));
-  return <>
-    <Header title="AI 답변 미리보기" back={`${root(id)}/faq`} />
+  return <div className={previewStyles.screen}>
+    <Header title="여운 답변 미리보기" back={`${root(id)}/verification`} />
     {!result.data ? <Loading {...result} /> : <>
-      {answer && <section className="artist-preview yeobek-appear" aria-live="polite">
-        <p className="artist-question">{answer.question}</p>
-        {work?.imageMaterialId && <PrivateImage key={work.imageMaterialId} materialId={work.imageMaterialId} alt={work.title} className="artist-preview-image" />}
-        {answer.result ? <>
-          <p>{answer.result.answer}</p>
-
-          <p>이 답변이 정확한가요?</p>
-          <div className="artist-actions">
-            <button className="artist-action" disabled={busy} onClick={() => evaluate("accurate")}>정확해요</button>
-            <button className="artist-action secondary" disabled={busy} onClick={() => evaluate("needs_revision")}>수정이 필요해요</button>
-          </div>
-
-        </> : <p>답변을 만들지 못했어요. 다른 질문을 입력해주세요.</p>}
-      </section>}
-      <form onSubmit={ask} aria-busy={busy}>
-        <Field label="질문"><input value={question} onChange={event => setQuestion(event.target.value)}
-          placeholder="자유롭게 질문해보세요" maxLength={AI_LIMITS.question} disabled={busy} required /></Field>
-        <button className="artist-action" disabled={busy}>{busy ? "처리 중…" : "보내기"}</button>
-      </form>
-      {error && <p className="error" role="alert">{error}</p>}
+      <div className={previewStyles.log} aria-live="polite">
+        {!answer && <p className={previewStyles.empty}>관람객처럼 질문해 여운의 답변을 확인해 보세요.</p>}
+        {answer && <section className={`${previewStyles.turn} yeobek-appear`}>
+          <p className={previewStyles.question}>{answer.question}</p>
+          {work?.imageMaterialId && <PrivateImage key={work.imageMaterialId} materialId={work.imageMaterialId} alt={work.title} className={previewStyles.image} />}
+          {answer.result ? <>
+            <p className={previewStyles.answer}>{answer.result.answer}</p>
+            <div className={previewStyles.rate}>
+              <p>이 답변이 정확한가요?</p>
+              <div>
+                <button aria-pressed={rating === "accurate"} disabled={busy} onClick={() => evaluate("accurate")}>정확해요</button>
+                <button aria-pressed={rating === "needs_revision"} disabled={busy} onClick={() => evaluate("needs_revision")}>수정이 필요해요</button>
+              </div>
+            </div>
+          </> : <p className={previewStyles.answer}>답변을 만들지 못했어요. 다른 질문을 입력해주세요.</p>}
+        </section>}
+      </div>
+      <div className={previewStyles.composer}>
+        {error && <p className="error" role="alert">{error}</p>}
+        {busy && !error && <p role="status">답변을 준비하고 있어요.</p>}
+        <form onSubmit={ask} aria-busy={busy}>
+          <input aria-label="질문" value={question} onChange={event => setQuestion(event.target.value)}
+            placeholder="자유롭게 질문해보세요" maxLength={AI_LIMITS.question} disabled={busy} required />
+          <button className={previewStyles.send} disabled={busy || !question.trim()} aria-label="질문 보내기">
+            <Image src="/yeobek/visitor-wave.svg" alt="" width={24} height={24} />
+          </button>
+        </form>
+      </div>
       {editing && answer?.result && <Rewrite key={answer.id} answer={answer} onClose={() => setEditing(false)} />}
     </>}
-  </>;
+  </div>;
 }
 
 function Rewrite({ answer, onClose }: { answer: PreviewAnswer; onClose: () => void }) {
@@ -485,18 +528,20 @@ function Rewrite({ answer, onClose }: { answer: PreviewAnswer; onClose: () => vo
     });
   }
 
-  return <dialog ref={dialog} className="artist-sheet" onCancel={event => { event.preventDefault(); close(); }} aria-labelledby="rewrite-title">
-    <div className="artist-actions">
+  return <dialog ref={dialog} className={previewStyles.sheet} onCancel={event => { event.preventDefault(); close(); }} aria-labelledby="rewrite-title">
+    <div className={previewStyles.sheetHead}>
       <h2 id="rewrite-title">AI 답변 수정</h2>
-      <button className="artist-sheet-close" aria-label="닫기" onClick={close}>×</button>
+      <button aria-label="닫기" onClick={close}><Image src="/yeobek/review-close.svg" alt="" width={42} height={42} /></button>
     </div>
-    <dl><dt>질문</dt><dd>{answer.question}</dd><dt>여운 답변</dt><dd>{answer.result?.answer}</dd></dl>
+    <div className={previewStyles.field}><span>질문</span><p className={previewStyles.box}>{answer.question}</p></div>
+    <div className={previewStyles.field}><span>여운 답변</span><p className={previewStyles.box}>{answer.result?.answer}</p></div>
     <form onSubmit={rewrite}>
-      <Field label="수정한 내용"><textarea name="instruction" maxLength={2000} required disabled={busy} /></Field>
-      {!pins.length && <p>이 답변은 지금 수정할 수 없어요.</p>}
-      <button className="artist-action" disabled={busy || !pins.length}>수정 내용 저장하기</button>
+      <label className={previewStyles.field}><span>수정한 내용</span>
+        <textarea name="instruction" maxLength={2000} required disabled={busy} placeholder="어떻게 고치면 좋을지 적어 주세요." /></label>
+      {!pins.length && <p role="status">이 답변은 지금 수정할 수 없어요.</p>}
+      <button className={previewStyles.saveButton} disabled={busy || !pins.length}>{busy ? "저장 중…" : "수정 내용 저장하기"}</button>
     </form>
-    {job && <p role="status">{job.status === "succeeded" ? "수정한 내용을 저장했어요." : statuses[job.status]}</p>}
+    {job && <p role="status">{job.status === "succeeded" ? "수정한 답변을 예상 질문에 저장했어요." : statuses[job.status]}</p>}
     {(error || existing.error) && <p className="error" role="alert">{error || existing.error}</p>}
   </dialog>;
 }

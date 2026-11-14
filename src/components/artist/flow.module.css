@@ -1,0 +1,12 @@
+/* Figma 118: review hub. */
+.hub { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; justify-items: center;
+  padding: 132px 40px max(38px, env(safe-area-inset-bottom)); background: linear-gradient(0deg, #f7f7f7 60.4%, #fff3de 109%); }
+.hub h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -.72px; color: #121215; text-align: center; }
+.main, .sub { display: grid; width: min(310px, 100%); }
+.main { gap: 21px; align-content: start; margin-top: 133px; }
+.sub { gap: 18px; }
+.main a, .sub a { display: flex; align-items: center; justify-content: center; border-radius: 80px; font-size: 15px; font-weight: 500;
+  letter-spacing: -.3px; text-decoration: none; }
+.main a { min-height: 60px; background: #734120; color: #fff3de; }
+.sub a { min-height: 50px; background: #fff3de; color: #734120; }
+.note { margin: 12px 0 0; font-size: 13px; color: #68686d; text-align: center; }

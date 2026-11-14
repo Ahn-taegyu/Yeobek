@@ -602,6 +602,16 @@ P0 전시(`authoringStep` 비어 있지 않음)는 `artworks` 단계와 기존 �
 
 배포는 migration 적용 후 앱을 교체하고 플래그는 명시적으로 켠다. 되돌릴 때 새 플래그를 끄고 추가 원장을 유지하며 기존 purge로 만료분을 정리한다. 운영 배포·실외부 음성 호출은 이 구현 검증에 포함하지 않는다. UI 모의 화면과 제공사 모의 계약 검증은 실제 녹음 인식률·음질·비용 확인을 대신하지 않는다.
 
+## 전시 대화형 인터뷰 계약 (F-025)
+
+`FEATURE_ARTWORK_INTERVIEW`를 함께 쓴다(꺼지면 404). 소유 작가만 접근하며 타 계정은 404다.
+
+| 작업 | 경로 | 동작 |
+| --- | --- | --- |
+| 조회 | `GET /api/admin/exhibitions/{id}/interview` | `{exhibitionId,requiredCount,batchSize,generating,questions}`. 질문은 `{id,seq,question,answer,status,version}`이며 `status`는 `pending/answered/skipped` |
+| 질문 생성 | `POST /api/admin/exhibitions/{id}/interview/generations` | body `{requestId}`. 처음 10개, 이후 대기 질문이 5개 이하일 때 5개씩(전체 최대 50). 응답 `{job,interview}`. 대기 질문이 더 많거나 생성 중이면 409 `JOB_ATTEMPT_CONFLICT`. 작가 일일 생성 한도에 포함 |
+| 답변 | `PATCH /api/admin/exhibitions/{id}/interview/answers/{questionId}` | `{action:"save",expectedVersion,answer}`(최대 2000자) 또는 `{action:"skip",expectedVersion}`. 저장한 답변은 승인 전시 근거가 되고, 다시 답하거나 건너뛰면 이전 근거를 철회한다. 응답은 조회와 같다 |
+
 ## 작품 글 인터뷰 계약 (F-024)
 
 서버 기능 플래그 `FEATURE_ARTWORK_INTERVIEW`는 기본 꺼짐이다. 꺼진 상태에서 아래 인터뷰 경로는 실행할 수 없다. 인터뷰 기능을 켜더라도 인증된 소유 작가만 대상 작품에 접근하며, 타 계정의 조회·생성·답변 변경은 404다.

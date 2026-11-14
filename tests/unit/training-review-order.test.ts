@@ -3,12 +3,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import InterviewPage from "@/app/artist/exhibitions/[id]/interview/page";
 import LearningPage from "@/app/artist/exhibitions/[id]/learning/page";
 import VerificationPage from "@/app/artist/exhibitions/[id]/verification/page";
-import { InterviewHub, VerificationHub } from "@/components/artist/flow";
+import { ExhibitionInterviewChat } from "@/components/artist/exhibition-interview";
+import { VerificationHub } from "@/components/artist/flow";
 import { Learning } from "@/components/artist/review";
 import { VerificationLinks, type TrainingBatch } from "@/components/artist/verification-links";
 vi.mock("server-only", () => ({}));
 vi.mock("@/components/artist/review", () => ({ Learning: () => null }));
-vi.mock("@/components/artist/flow", () => ({ InterviewHub: () => null, VerificationHub: () => null }));
+vi.mock("@/components/artist/flow", () => ({ VerificationHub: () => null }));
+vi.mock("@/components/artist/exhibition-interview", () => ({ ExhibitionInterviewChat: () => null }));
 const redirect = vi.hoisted(() => vi.fn((url: string) => { throw new Error(`redirect:${url}`); }));
 vi.mock("next/navigation", () => ({ redirect }));
 afterEach(() => vi.unstubAllEnvs());
@@ -49,29 +51,26 @@ describe("separate information/training, interview and review screens", () => {
       [`/artist/exhibitions/${id}/preview`, "학습된 여운 체험하기"],
     ]);
   });
-  it("keeps training as its own screen and only reflects interview answers when the flag is on", async () => {
+  it("keeps training as its own screen and retrains with edits from review", async () => {
     const learning = (next?: string) => LearningPage({ params: Promise.resolve({ id }), searchParams: Promise.resolve({ next }) });
     vi.stubEnv("FEATURE_ARTWORK_INTERVIEW", "true");
     expect((await learning()).type).toBe(Learning);
     expect((await learning()).props).toEqual({ id, interviewEnabled: true, reflect: false });
     expect((await learning("review")).props).toEqual({ id, interviewEnabled: true, reflect: true });
     vi.stubEnv("FEATURE_ARTWORK_INTERVIEW", "false");
-    expect((await learning("review")).props).toEqual({ id, interviewEnabled: false, reflect: false });
+    expect((await learning("review")).props).toEqual({ id, interviewEnabled: false, reflect: true });
   });
   it("opens the interview screen only with the flag, otherwise goes straight to review", async () => {
     vi.stubEnv("FEATURE_ARTWORK_INTERVIEW", "true");
     const page = await InterviewPage({ params: Promise.resolve({ id }) });
-    expect(page.type).toBe(InterviewHub);
-    expect(page.props).toEqual({ id });
+    expect(page.type).toBe(ExhibitionInterviewChat);
+    expect(page.props).toEqual({ id, voice: false });
     vi.stubEnv("FEATURE_ARTWORK_INTERVIEW", "false");
     await expect(InterviewPage({ params: Promise.resolve({ id }) })).rejects.toThrow(`redirect:/artist/exhibitions/${id}/verification`);
   });
-  it("renders review as its own screen with the interview flag for its back link", async () => {
-    for (const flag of ["true", "false"]) {
-      vi.stubEnv("FEATURE_ARTWORK_INTERVIEW", flag);
-      const page = await VerificationPage({ params: Promise.resolve({ id }) });
-      expect(page.type).toBe(VerificationHub);
-      expect(page.props).toEqual({ id, interviewEnabled: flag === "true" });
-    }
+  it("renders review as its own screen", async () => {
+    const page = await VerificationPage({ params: Promise.resolve({ id }) });
+    expect(page.type).toBe(VerificationHub);
+    expect(page.props).toEqual({ id });
   });
 });
