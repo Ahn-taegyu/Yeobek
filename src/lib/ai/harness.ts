@@ -1,5 +1,5 @@
 import "server-only";
-import { mentionedArtworks } from "./artwork-mentions";
+import { mentionedArtworks, normalizeArtworkTitle } from "./artwork-mentions";
 import { z } from "zod";
 import { answerJsonSchema, answerSchema, narrationDraftSchema, chatRequestSchema, type DocentReply, type ModelAnswer, type NarrationDraft, type PublicationContext,
   type ArtworkSelector, type PublicationRef, type PublicationStore, type SpeechSourceStore } from "./contracts";
@@ -85,7 +85,7 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
             : named ? { exhibitionId: request.exhibitionId, artworkId: named.id }
             : request.artworkId ? { exhibitionId: request.exhibitionId, artworkId: request.artworkId }
             : deps.exhibitionScopeChat && intent === "question" ? { exhibitionId: request.exhibitionId, artworkId: null } : null;
-          return { intent, selector, message: ambiguous ? DOCENT_COPY.chooseOne : DOCENT_COPY.chooseArtwork };
+          return { intent, selector, named, message: ambiguous ? DOCENT_COPY.chooseOne : DOCENT_COPY.chooseArtwork };
         });
         if (!resolved.selector) {
           for (const id of ["publication.read", "publication.recheck", "evidence.select", "model.generate", "output.validate", "publication.recheck.final"] as const) flow.skip(id, "selection_required");
@@ -100,7 +100,10 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
             if ("number" in selector) return null;
             throw new HarnessError("publication_unavailable");
           }
-          return validateContext(loaded, selector);
+          const context = validateContext(loaded, selector);
+          if (resolved.named && (context.artworkId !== resolved.named.id ||
+              normalizeArtworkTitle(context.title) !== normalizeArtworkTitle(resolved.named.title))) return null;
+          return context;
         });
         if (!context) {
           for (const id of ["publication.recheck", "evidence.select", "model.generate", "output.validate", "publication.recheck.final"] as const) flow.skip(id, "number_unavailable");

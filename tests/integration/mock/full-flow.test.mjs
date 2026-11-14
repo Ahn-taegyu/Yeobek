@@ -87,7 +87,7 @@ test("mock acceptance: signup, verify, login, authoring, generation, review, pub
     }
   }
   await artist(`/api/admin/qa/${qa.id}/approve`, { expectedVersion: qa.version, evidencePins: pins });
-  const preview = await artist(ep + "/preview/chat", { requestId: randomUUID(), artworkId: work.id, question: "어떤 재료로 표현했나요?" });
+  const preview = await artist(ep + "/preview/chat", { requestId: randomUUID(), artworkId: work.id, question: "수채 물감으로 표현했나요?" });
   assert.equal(preview.status, "succeeded");
   await artist(`/api/admin/preview/${preview.id}/evaluations`, { requestId: randomUUID(), rating: "needs_revision" });
   const rewritten = await artist("/api/admin/qa/rewrite", { targetKind: "preview", targetId: preview.id, targetVersion: null,

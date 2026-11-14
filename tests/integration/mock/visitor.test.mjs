@@ -144,7 +144,7 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
   });
 
   await t.test("an explicit public title selects the answer and image target", async () => {
-    const reply = await visitor("/api/chat", payload({ artworkId: null, question: "푸른 달은 어떤 재료인가요?" }));
+    const reply = await visitor("/api/chat", payload({ artworkId: null, question: "푸른 달의 재료를 알려주세요." }));
     assert.equal(reply.outcome, "answered");
     assert.equal(reply.publication.artworkId, artwork.id);
     assert.deepEqual(reply.image, { id: reply.publication.publicationId, kind: "image" });

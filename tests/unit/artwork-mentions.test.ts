@@ -23,7 +23,7 @@ describe("public artwork title mentions", () => {
     expect(mentionedArtworks("작품 ‘달 [1]’은?", [{ ...labels[0], title: "달 [1]" }]).matches).toHaveLength(1);
   });
   function setup(entries = labels) {
-    const publications = { listLabels: vi.fn(async () => entries), load: vi.fn(async () => syntheticPublication()), isCurrent: vi.fn(async () => true) };
+    const publications = { listLabels: vi.fn(async () => entries), load: vi.fn(async () => ({ ...syntheticPublication(), title: labels[0].title })), isCurrent: vi.fn(async () => true) };
     const text = { generate: vi.fn(async () => ({ output: { answer: "종이와 물감입니다.", citations: [ids.evidence], outcome: "answered" },
       trace: { provider: "openai" as const, model: "fake" } })) };
     return { publications, text, harness: createDocentHarness({ publications, text }) };
@@ -34,6 +34,13 @@ describe("public artwork title mentions", () => {
     expect(s.publications.load).toHaveBeenCalledWith({ exhibitionId: ids.exhibition, artworkId: ids.artwork }, undefined);
     expect(reply.publication?.artworkId).toBe(ids.artwork);
     expect(reply.outcome).toBe("answered");
+  });
+  it("does not answer a title that changed between label lookup and snapshot load", async () => {
+    const s = setup();
+    s.publications.load.mockResolvedValue({ ...syntheticPublication(), title: "다른 제목" });
+    const reply = await s.harness.answer({ ...syntheticRequest(), question: "푸른 달은 어떤 재료인가요?" });
+    expect(reply.outcome).toBe("clarify");
+    expect(s.text.generate).not.toHaveBeenCalled();
   });
   it.each(["푸른 달과 작품 ‘달’의 재료는?", "19번 작품 푸른 달의 재료는?", "작품 ‘없는 제목’은 무엇인가요?", "푸른 달과 작품 ‘없는 제목’의 의미는?"])("clarifies ambiguous or inconsistent selection: %s", async question => {
     const s = setup();
