@@ -46,6 +46,14 @@ function ArtImage({ artwork, className, decorative = false }: { artwork: Artwork
     : <span className={className} aria-hidden="true">{artwork.number}</span>;
 }
 
+function OptionalImage({ id, kind, className, alt }: { id: string; kind: "poster" | "image"; className: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return <Image unoptimized className={className} src={`/api/media/${id}?kind=${kind}`}
+    width={kind === "poster" ? 233 : 352} height={kind === "poster" ? 392 : 180}
+    alt={alt} onError={() => setFailed(true)} />;
+}
+
 export function VisitorExhibition({ exhibitionId, initialArtworkId }: {
   exhibitionId: string;
   initialArtworkId?: string;
@@ -303,8 +311,8 @@ function Visit({ exhibition: initialExhibition, initialArtworkId, showWorks, onU
 
   if (!entered) return <section data-visitor className={styles.intro}>
     <div className={styles.brand}>{brand.name}</div>
-    {exhibition.poster && <Image unoptimized className={styles.poster}
-      src={`/api/media/${exhibition.poster.id}?kind=poster`} width={233} height={392} alt={`${exhibition.title} 포스터`} />}
+    {exhibition.poster && <OptionalImage key={exhibition.poster.id} id={exhibition.poster.id} kind="poster"
+      className={styles.poster} alt={`${exhibition.title} 포스터`} />}
     <div>
       <h1>{exhibition.title}</h1>
       <p>{exhibition.artistDisplayName}</p>
@@ -360,8 +368,8 @@ function Visit({ exhibition: initialExhibition, initialArtworkId, showWorks, onU
         <p className={styles.bubble}>{question}</p>
         {retiredAnswers.has(reply.answerId) ? <p>이 답변은 현재 안내할 수 없어요.</p> : <>
           {reply.image === undefined && artwork?.image && <ArtImage key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
-          {reply.image && <Image unoptimized className={styles.answerImage}
-            src={`/api/media/${reply.image.id}?kind=image`} width={352} height={180} alt={artwork?.title ?? "작품 이미지"} />}
+          {reply.image && <OptionalImage key={reply.image.id} id={reply.image.id} kind="image"
+            className={styles.answerImage} alt={artwork?.title ?? "작품 이미지"} />}
           <p className={styles.answer}>{reply.source === "fixed" && reply.outcome === "clarify" &&
             reply.answer === "해당 번호의 공개 작품을 찾을 수 없습니다. 번호를 확인하거나 다른 작품을 선택해 주세요."
             ? "이 작품은 지금 온라인 안내를 제공하지 않아요. 작품 목록에서 안내 중인 다른 작품을 볼 수 있어요."
