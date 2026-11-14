@@ -172,7 +172,7 @@ HTTP200/201도 job.status가failed/abstained일 수 있다. `resultCode`를 확�
 
 # 자료 정리 후보 — W2, A 담당
 
-PR #13 최종 CI·병합 대기 계약이다. 별도 후보 검수 화면은 디자인 범위 밖이며 호출만으로 자동 적용하지 않는다. `contracts/proposals.ts`의 generateProposalSchema/proposalResponse/historyResponse를 사용한다. [W2 API](api-contract.md#w2-작가-자료-정리-후보이력)에 전체 계약이 있다.
+PR #13은 main9c6efbf로 병합됐다(최종 head351156f App·Knowledge 성공). 별도 후보 검수 화면은 디자인 범위 밖이며 호출만으로 자동 적용하지 않는다. `contracts/proposals.ts`의 generateProposalSchema/proposalResponse/historyResponse를 사용한다. [W2 API](api-contract.md#w2-작가-자료-정리-후보이력)에 전체 계약이 있다.
 
 1. 문서 GET의 id/revision으로 `generateProposal`(params.id=문서, body={requestId,expectedDocumentRevision})을 호출한다. 같은 요청 재전송은 UUID를 유지한다.
 2. `getJob`에서 kind=organize/status/resultCode를 확인하고 succeeded의 result.proposalId로 `getProposal`을 조회한다. before/proposed/changes와 mock을 보여 준다.
@@ -181,9 +181,15 @@ PR #13 최종 CI·병합 대기 계약이다. 별도 후보 검수 화면은 디
 
 오류:401 로그인,404 대상 없음/다른 작가,400 미검수·잘못된 입력,409 revision 충돌→최신 자료로 새 후보,410 PROPOSAL_EXPIRED→새 후보,429 일일 한도. GET이나 적용 재전송은 모델을 다시 실행하지 않는다. W10 여러 section은 보존하지만 한 생성의 근거는12개/8,000자로 제한되므로 전체 자료 처리 완료로 표시하지 않는다. 적용된 이력은 작업 원장 만료 뒤에도 남고, 만료된 미적용 본문은 정리된다. 이 API는 파일 내용을 추출하는 기능이 아니다.
 
-# 파일 읽기 — 예정(A 담당)
+# 파일 읽기 — A 담당
 
-현재 업로드는 원본 보관·명시적 근거 연결이며 텍스트 추출/이미지 읽기 완료가 아니다. A가 병합 여부·플래그·이용 안내·후보 적용 계약을 이 절에 인계한다.
+feat/material-extraction 구현·CI 대기다. `materialExtraction` 기본off. 업로드 완료 후 학습 버튼의 명시적 POST만 파일을 읽는다. `extractMaterial`·`getMaterialRead`의 정확한 입력과 상태는 [API 계약](api-contract.md#파일-읽기와-w2-후보)을 따른다. 조회 경로의 id는 클라이언트 requestId이며 read.id가 아니다.
+
+- 안내: “학습시키기를 누르면 참고 파일의 글을 읽어 정리 후보를 만듭니다. 스캔 PDF·참고 이미지는 AI 제공사로 전송됩니다. 후보를 확인하고 적용해야 설명 근거로 사용할 수 있습니다.”
+- 텍스트 PDF 로컬 추출도 후속 W2 분류는 모델 호출이다. 파일 읽기와 분류는 각각 작가 일일 한도를 사용한다. 후보 문맥12개/8,000자 한도로 전체 도록 반영을 보장하지 않는다.
+- running이면 같은 requestId로 상태 조회한다. succeeded+proposalJob이면 기존 W2 getJob/getProposal을 사용한다. 파일 읽기는 완료됐는데 후보 작업이 없다면 같은 POST를 재전송해 복구한다. failed/purged는 자동 재시도하지 않고 수동 입력을 안내한다. EMPTY는 읽을 글이 없는 결과다.
+- 모의 결과는 실제 파일 내용이 아니라는 표시를 유지한다. 승인과 게시를 대신하지 않는다. 기존 캐시 조회는 플래그off에도 소유자만 가능하며 off는 새 읽기 실행을 막는다.
+- **후보 검수 화면은 이번 프런트 디자인 범위에서 제외돼 있다.** 화면이 없으면 추출 기능을 켠 것만으로 사용자 학습 흐름이 완성되지 않는다. 후보 확인·명시적 적용을 지원하기 전까지 화면의 파일 학습 기능은 숨기고 “업로드 파일은 참고 자료로 보관되고, AI는 입력한 답변으로 학습합니다”로 안내한다. API/개발 시연 검증과 사용자 화면 완성을 구분한다.
 
 # 공개 확장과 시연 데이터 (W12/W7, B 담당)
 

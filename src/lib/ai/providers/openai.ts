@@ -11,6 +11,7 @@ import type {
 } from "./types";
 
 import { recordingExtension, RECORDING_CONTENT_TYPES } from "./recording";
+import { mediaDataUrl, mediaJsonBody } from "./media";
 
 export { MAX_RECORDING_BYTES } from "./recording";
 
@@ -52,14 +53,19 @@ export function createOpenAiTextProvider(
   options: AiProviderOptions = {},
 ): AiTextProvider {
   return {
-    async generate({ system, input, schema, signal, maxOutputTokens }) {
+    async generate({ system, input, schema, signal, maxOutputTokens, media }) {
+      if (media) jsonBody({ system, input, schema });
+      const content = media ? [{ role: "user", content: [{ type: "input_text", text: input },
+        media.contentType === "application/pdf"
+          ? { type: "input_file", filename: "source.pdf", file_data: mediaDataUrl(media) }
+          : { type: "input_image", image_url: mediaDataUrl(media), detail: "auto" }] }] : input;
       const response = await requestJson({
         url: OPENAI_RESPONSES_URL,
         headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" },
-        body: jsonBody({
+        body: (media ? mediaJsonBody : jsonBody)({
           model: config.model,
           instructions: system,
-          input,
+          input: content,
           reasoning: { effort: "low" },
           max_output_tokens: outputTokenLimit(maxOutputTokens, 1600),
           store: false,

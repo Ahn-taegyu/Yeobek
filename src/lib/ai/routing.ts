@@ -8,6 +8,7 @@ const linerDraft = AI_MODELS.draft;
 const defaults = {
   draft: linerDraft,
   organize: linerDraft,
+  material: "google/gemini-3.8-flash",
   automation: linerDraft,
   judge: "google/gemini-3.8-flash",
   qa: "openai/gpt-6-luna",
@@ -35,7 +36,8 @@ export function isMockMode(env: AiEnvironment = process.env): boolean {
 export function resolveAiRoute(capability: AiCapability, env: AiEnvironment = process.env): Route {
   if (isMockMode(env)) return { provider: "mock", model: "mock-" + capability };
   const providers: readonly LiveAiProvider[] = capability === "tts" ? speechProviders :
-    capability === "stt" ? transcriptionProviders : capability === "automation" ? ["liner"] : textProviders;
+    capability === "stt" ? transcriptionProviders : capability === "automation" ? ["liner"] :
+    capability === "material" ? ["liner", "openai"] : textProviders;
   const configured = env["AI_ROUTE_" + capability.toUpperCase()]?.trim();
   const legacySpeech = capability === "tts" ? env.AI_TTS_PROVIDER?.trim() : undefined;
   const selection = configured || legacySpeech || "liner";

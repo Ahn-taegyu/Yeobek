@@ -6,6 +6,7 @@ import { jsonBody, objectValue, outputTokenLimit, parseJson, providerTrace, requ
 import type { AiProviderOptions, AiTextProvider, AiSpeechProvider, AiTranscriptionProvider } from "./types";
 
 import { recordingExtension, RECORDING_CONTENT_TYPES } from "./recording";
+import { mediaDataUrl, mediaJsonBody } from "./media";
 
 const LINER_COMPLETIONS_URL = "https://platform.liner.com/api/v1/chat/completions";
 
@@ -14,13 +15,17 @@ export function createLinerTextProvider(
   options: AiProviderOptions = {},
 ): AiTextProvider {
   return {
-    async generate({ system, input, schema, signal, maxOutputTokens }) {
+    async generate({ system, input, schema, signal, maxOutputTokens, media }) {
+      if (media) jsonBody({ system, input, schema });
+      const content = media ? [{ type: "text", text: input }, media.contentType === "application/pdf"
+        ? { type: "file", file: { filename: "source.pdf", file_data: mediaDataUrl(media) } }
+        : { type: "image_url", image_url: { url: mediaDataUrl(media) } }] : input;
       const response = await requestJson({
         url: LINER_COMPLETIONS_URL,
         headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" },
-        body: jsonBody({
+        body: (media ? mediaJsonBody : jsonBody)({
           model: config.model,
-          messages: [{ role: "system", content: system }, { role: "user", content: input }],
+          messages: [{ role: "system", content: system }, { role: "user", content }],
           max_completion_tokens: outputTokenLimit(maxOutputTokens, 4096),
           store: false,
           response_format: {

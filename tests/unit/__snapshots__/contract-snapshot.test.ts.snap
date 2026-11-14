@@ -7266,6 +7266,305 @@ exports[`HTTP route contracts > snapshots evidenceImpact 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots extractMaterial 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "consentToRead": {
+        "const": true,
+        "type": "boolean",
+      },
+      "documentId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "expectedDocumentRevision": {
+        "exclusiveMinimum": 0,
+        "maximum": 2147483647,
+        "type": "integer",
+      },
+      "expectedVersion": {
+        "exclusiveMinimum": 0,
+        "maximum": 2147483647,
+        "type": "integer",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "requestId",
+      "documentId",
+      "expectedVersion",
+      "expectedDocumentRevision",
+      "consentToRead",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/materials/{id}/extract",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "proposalJob": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "artworkId": {
+                    "type": "null",
+                  },
+                  "attempt": {
+                    "exclusiveMinimum": 0,
+                    "maximum": 2147483647,
+                    "type": "integer",
+                  },
+                  "createdAt": {
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                    "type": "string",
+                  },
+                  "documentId": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "expectedDocumentRevision": {
+                    "exclusiveMinimum": 0,
+                    "maximum": 2147483647,
+                    "type": "integer",
+                  },
+                  "expectedRevision": {
+                    "type": "null",
+                  },
+                  "expiresAt": {
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                    "type": "string",
+                  },
+                  "id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "kind": {
+                    "const": "organize",
+                    "type": "string",
+                  },
+                  "mock": {
+                    "type": "boolean",
+                  },
+                  "requestId": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "result": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "mock": {
+                            "type": "boolean",
+                          },
+                          "proposalId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "proposalId",
+                          "mock",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "type": "null",
+                      },
+                    ],
+                  },
+                  "resultCode": {
+                    "type": [
+                      "string",
+                      "null",
+                    ],
+                  },
+                  "routing": {
+                    "enum": [
+                      "author",
+                      "operator",
+                      "none",
+                    ],
+                    "type": "string",
+                  },
+                  "status": {
+                    "enum": [
+                      "running",
+                      "succeeded",
+                      "abstained",
+                      "failed",
+                      "cancelled",
+                    ],
+                    "type": "string",
+                  },
+                  "strategy": {
+                    "type": "null",
+                  },
+                  "updatedAt": {
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "id",
+                  "kind",
+                  "artworkId",
+                  "documentId",
+                  "requestId",
+                  "mock",
+                  "expectedRevision",
+                  "expectedDocumentRevision",
+                  "attempt",
+                  "strategy",
+                  "status",
+                  "routing",
+                  "resultCode",
+                  "result",
+                  "createdAt",
+                  "updatedAt",
+                  "expiresAt",
+                ],
+                "type": "object",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "read": {
+            "additionalProperties": false,
+            "properties": {
+              "chunkCount": {
+                "maximum": 60,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "method": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "text_pdf",
+                      "vision",
+                    ],
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "mock": {
+                "type": "boolean",
+              },
+              "pageCount": {
+                "maximum": 20,
+                "minimum": 1,
+                "type": "integer",
+              },
+              "resultCode": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "OK",
+                      "EMPTY",
+                      "READ_FAILED",
+                      "SOURCE_CHANGED",
+                      "EXPIRED",
+                    ],
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "status": {
+                "enum": [
+                  "running",
+                  "succeeded",
+                  "failed",
+                  "purged",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "status",
+              "mock",
+              "pageCount",
+              "chunkCount",
+              "method",
+              "resultCode",
+            ],
+            "type": "object",
+          },
+        },
+        "required": [
+          "read",
+          "proposalJob",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots generateAudio 1`] = `
 {
   "body": {
@@ -11360,6 +11659,121 @@ exports[`HTTP route contracts > snapshots getMaterial 1`] = `
         "required": [
           "material",
           "download",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots getMaterialRead 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/material-reads/{id}",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "chunkCount": {
+            "maximum": 60,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "method": {
+            "anyOf": [
+              {
+                "enum": [
+                  "text_pdf",
+                  "vision",
+                ],
+                "type": "string",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "mock": {
+            "type": "boolean",
+          },
+          "pageCount": {
+            "maximum": 20,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "resultCode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "OK",
+                  "EMPTY",
+                  "READ_FAILED",
+                  "SOURCE_CHANGED",
+                  "EXPIRED",
+                ],
+                "type": "string",
+              },
+              {
+                "type": "null",
+              },
+            ],
+          },
+          "status": {
+            "enum": [
+              "running",
+              "succeeded",
+              "failed",
+              "purged",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "status",
+          "mock",
+          "pageCount",
+          "chunkCount",
+          "method",
+          "resultCode",
         ],
         "type": "object",
       },

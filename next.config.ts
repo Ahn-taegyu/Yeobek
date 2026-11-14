@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   agentRules: false,
   poweredByHeader: false,
+  serverExternalPackages: ["pdfjs-dist"],
   // Legacy Channel webhooks carry a secret query token. Never print that URL.
   logging: { incomingRequests: { ignore: [/\/api\/webhooks\/channeltalk(?:[/?]|$)/] } },
   async headers() {

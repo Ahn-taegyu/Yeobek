@@ -24,6 +24,9 @@ select results_eq(
     select signature collate "C" as signature, anon_execute, authenticated_execute, service_execute, public_execute
     from (values
     -- anon, authenticated, service_role
+    ('reserve_material_read(uuid, uuid, uuid, integer, uuid, integer, boolean)', false, false, true, false),
+    ('complete_material_read(uuid, uuid, uuid, text, jsonb, text)', false, false, true, false),
+    ('get_material_read(uuid)', false, true, false, false),
     ('get_organize_context(uuid)', false, true, false, false),
     ('load_proposal(uuid)', false, true, false, false),
     ('commit_proposal(uuid, boolean)', false, true, false, false),

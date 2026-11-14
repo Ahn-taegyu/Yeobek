@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { localStatus } from "../../../scripts/local-supabase.mjs";
+import { PDFDocument, StandardFonts } from "pdf-lib";
+import sharp from "sharp";
 
 const base = process.env.TEST_APP_ORIGIN || "http://localhost:3001";
 assert.ok(["localhost", "127.0.0.1"].includes(new URL(base).hostname));
@@ -36,6 +38,60 @@ test("author organization proposals retain reviewed history through actual HTTP 
   const docPath = `/api/admin/knowledge/${artwork.document.id}`;
   const input = { requestId: randomUUID(), expectedDocumentRevision: artwork.document.revision };
   let proposalId;
+  if (process.env.TEST_MATERIAL_DISABLED_ONLY === "true") {
+    assert.equal((await request(`/api/admin/materials/${randomUUID()}/extract`, {
+      requestId: randomUUID(), documentId: exhibition.document.id, expectedVersion: 1,
+      expectedDocumentRevision: exhibition.document.revision, consentToRead: true,
+    })).status, 404);
+    assert.equal((await request(docPath)).status, 200);
+    return;
+  }
+
+  await t.test("explicit file read creates private PDF/image proposals and reuses the hash", async () => {
+    const anonymous = createClient(status.API_URL, status.ANON_KEY, { auth: { persistSession: false } });
+    for (const kind of ["pdf", "image"]) {
+      const target = (await request("/api/admin/exhibitions", { id: randomUUID(), title: `자료 읽기 ${kind}`, sections: [], sourceRefs: [] })).data;
+      let bytes;
+      if (kind === "pdf") {
+        const pdf = await PDFDocument.create();
+        const font = await pdf.embedFont(StandardFonts.Helvetica);
+        pdf.addPage().drawText("Private catalogue text", { font, size: 12 });
+        bytes = await pdf.save();
+      } else bytes = await sharp({ create: { width: 8, height: 8, channels: 3, background: "white" } }).png().toBuffer();
+      const materialId = randomUUID(); const mime = kind === "pdf" ? "application/pdf" : "image/png";
+      const upload = await request("/api/admin/uploads", { id: materialId, subjectType: "exhibition", subjectId: target.id,
+        kind, filename: kind === "pdf" ? "source.pdf" : "reference.png", contentType: mime, byteSize: bytes.length });
+      assert.equal(upload.status, 201, JSON.stringify(upload));
+      const transfer = upload.data.upload;
+      const sent = await anonymous.storage.from(transfer.bucket).uploadToSignedUrl(transfer.path, transfer.token, bytes, { contentType: mime });
+      assert.equal(sent.error, null);
+      assert.equal((await request(`/api/admin/uploads/${materialId}/complete`, { expectedVersion: 1 })).status, 200);
+      const path = `/api/admin/materials/${materialId}/extract`;
+      const body = { requestId: randomUUID(), documentId: target.document.id, expectedVersion: 1,
+        expectedDocumentRevision: target.document.revision, consentToRead: true };
+      assert.equal((await request(path, { ...body, consentToRead: false })).status, 400);
+      assert.equal((await request(path, body, { user: 1 })).status, 404);
+      const read = await request(path, body);
+      assert.equal(read.status, 200, JSON.stringify(read));
+      assert.equal(read.data.read.status, "succeeded", JSON.stringify(read));
+      assert.equal(read.data.read.method, kind === "pdf" ? "text_pdf" : "vision");
+      assert.equal(read.data.proposalJob.status, "succeeded", JSON.stringify(read));
+      const candidateId = read.data.proposalJob.result.proposalId;
+      const candidate = await request(`/api/admin/proposals/${candidateId}`);
+      const refs = candidate.data.proposed.sourceRefs.filter(ref => ref.kind === "material");
+      assert.ok(refs.some(ref => ref.materialId === materialId));
+      if (kind === "pdf") assert.equal(refs[0].pageStart, 1); else assert.ok(!Object.hasOwn(refs[0], "pageStart"));
+      assert.deepEqual((await request(`/api/admin/knowledge/${target.document.id}`)).data.sections, []);
+      assert.equal((await request(`/api/public/exhibitions/${target.id}`)).status, 404);
+      assert.equal((await request(`/api/admin/material-reads/${body.requestId}`)).data.id, read.data.read.id);
+      assert.equal((await request(`/api/admin/material-reads/${body.requestId}`, undefined, { user: 1 })).status, 404);
+      const replay = await request(path, body);
+      assert.equal(replay.data.read.id, read.data.read.id);
+      assert.equal(replay.data.proposalJob.id, read.data.proposalJob.id);
+      assert.equal((await request(`/api/admin/proposals/${candidateId}/apply`, { reviewed: true })).status, 200);
+      assert.ok((await request(`/api/admin/knowledge/${target.document.id}`)).data.sections.length > 0);
+    }
+  });
 
   await t.test("parallel request replay creates one candidate without changing the document", async () => {
     const responses = await Promise.all([request(docPath + "/proposals", input), request(docPath + "/proposals", input)]);

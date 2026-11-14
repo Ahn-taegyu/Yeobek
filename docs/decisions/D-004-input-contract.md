@@ -4,7 +4,7 @@ id: D-004
 title: 도록 입력과 파일 범위
 description: PDF 접수와 자동 추출·OCR·작품 매칭을 구분한다.
 status: draft
-updated: '2026-11-12'
+updated: '2026-11-14'
 tags:
 - mawd
 rag_include: true
@@ -12,6 +12,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:38:57+09:00'
 sources:
+- id: parallel
+  resource: /references/user-backend-author-parallel-plan.md
+  title: 작가 흐름 병렬 계획과 파일 읽기 추가
 - id: user
   resource: /references/user-mvp.md
   title: 최신 사용자 MVP 우선순위
@@ -29,7 +32,7 @@ decision_status: partial
 
 # 결정 상태
 
-**partial** — 사용자가 위임한 일정·스택 선택에 따라 일요일 구현은 PDF 보관·수동 발췌 연결로 정했다. 장기 자동 추출·OCR 수준은 미확정이다. [D-008](D-008-technology-stack.md).
+**partial** — 최신 [SRC-054](../references/user-backend-author-parallel-plan.md)는 텍스트 PDF 로컬 추출·스캔/참고 이미지 모델 읽기→검수 후보를 첫 마감 범위에 추가했다. 일정 부족 시에만 제외할 수 있다. 작품 자동 매칭·사진 의미 해석·OCR 라이브러리는 포함하지 않는다. 아래 수동 입력 설명은 기존 기반이며 자동 적용·승인을 뜻하지 않는다. 구현과 실물 검증 상태는 [파일 읽기](../research/material-reader.md)를 따른다.
 
 # 내용
 
