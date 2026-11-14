@@ -63,6 +63,7 @@ select results_eq(
     ('get_ai_job(uuid)', false, true, false, false),
     ('get_contact_consents()', false, true, false, false),
     ('get_narration_context(uuid)', false, true, false, false),
+    ('get_publication_checklist(uuid)', false, true, false, false),
     ('get_review_bundle(uuid)', false, true, false, false),
     ('get_revoke_impact(uuid, integer)', false, true, false, false),
     ('list_labels(uuid)', false, true, false, false),

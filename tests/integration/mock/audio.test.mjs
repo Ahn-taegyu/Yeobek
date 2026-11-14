@@ -56,6 +56,7 @@ test("approved narration creates private mock audio through HTTP and Storage", a
     sections: [], sourceRefs: [],
   }, { method: "PATCH" });
   const exhibition = await artist("/api/admin/exhibitions", {
+    startDate: "2026-11-14", endDate: "2026-11-15", place: "검사 전시장",
     id: randomUUID(), title: "음성 검사 전시", sections: [], sourceRefs: [],
   }, { expected: 201 });
   const exhibitionPath = `/api/admin/exhibitions/${exhibition.id}`;

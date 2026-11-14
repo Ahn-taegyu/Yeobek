@@ -64,6 +64,7 @@ test("visitor chat through real publication, cookie sessions and mock AI", async
     sections: [{ id: "bio", body: "공개되지 않는 작가 기록" }], sourceRefs: [],
   }, { method: "PATCH" });
   const exhibition = await artist("/api/admin/exhibitions", {
+    startDate: "2026-11-14", endDate: "2026-11-15", place: "검사 전시장",
     id: randomUUID(), title: "관람 테스트 전시", sections: [], sourceRefs: [],
   }, { expected: 201 });
   const exhibitPath = `/api/admin/exhibitions/${exhibition.id}`;

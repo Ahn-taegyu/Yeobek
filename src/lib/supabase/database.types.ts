@@ -938,6 +938,9 @@ isOneToOne: false
 "get_qa_rewrite_job":
 { Args: { "p_job_id": string }; Returns: Json
                            },
+"get_publication_checklist":
+{ Args: { "p_exhibition_id": string }; Returns: Json
+                           },
 "get_review_bundle":
 { Args: { "p_artwork_id": string }; Returns: Json
                            },

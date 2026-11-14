@@ -16,6 +16,8 @@ select set_config('test.review_qa_source',upsert_evidence(current_setting('test.
     'exhibition','Owner source','Artist chose mineral pigments.','{"kind":"direct"}',null,null)->>'id',true);
 select approve_evidence(current_setting('test.review_qa_source')::uuid,1);
 
+reset role;
+update public.exhibitions set start_date='2026-11-14',end_date='2026-11-15',place='Test gallery';
 set local role service_role;
 select set_config('test.review_qa_preview',reserve_preview_answer(current_setting('test.review_qa_owner')::uuid,
     current_setting('test.review_qa_exhibition')::uuid,null,current_setting('test.review_qa_request')::uuid,

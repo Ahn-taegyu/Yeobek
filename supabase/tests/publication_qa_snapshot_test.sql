@@ -75,6 +75,8 @@ select ('80000000-0000-0000-0000-' || lpad(n::text,12,'0'))::uuid,1,
     jsonb_build_array(jsonb_build_object('id',current_setting('test.evidence1'),'version',1)),
     case when n=2 then now()-interval '1 day' when n<>3 then now() end,case when n=4 then now() end
 from generate_series(1,105) n;
+reset role;
+update public.exhibitions set start_date='2026-11-14',end_date='2026-11-15',place='Test gallery';
 set local role service_role;
 select set_config('test.publish1',publish('00000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001',
     '40000000-0000-0000-0000-000000000001',1,current_setting('test.select1')::jsonb,

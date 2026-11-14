@@ -521,3 +521,9 @@ PR #13의 구현 계약이며 최종 CI·병합 전에는 main에서 호출 가�
 인증·같은 출처가 필요하고 다른 작가의 문서·후보·이력은404다. 미검수 적용400, 원자료 변경409, 만료 미적용 후보410 `PROPOSAL_EXPIRED`, 일일 작업 한도429다. 생성은 기존 author_jobs_per_day에 W11과 합산된다. 입력 근거는 최대12개/8,000자이고 전체 문서는 별도 보존된다. 자료가 많으면 선택되지 않은 항목까지 처리됐다고 표시하지 않는다.
 
 220000은 공유한130000/131000을 보존하는 후속 migration이다. 작업 원장 만료와 후보 보존을 분리하고 mock을 후보에 보관한다. 적용된 후보·이력은 작업 정리 후에도 보존한다. 만료된 미적용 후보는 cron 호출당 최대1000개 본문/이전본문/출처를 비우고 최소 식별·만료 tombstone을 남겨410을 유지한다. 운영 cron 연결은 별도 점검이며 삭제 완료 시각을 보장하지 않는다. 정리 후보는 비공개이며 적용 후에도 별도 근거 승인·게시를 거친다.
+
+## W12 게시 준비 조회 (PR #25, 병합 전)
+
+`GET /api/admin/exhibitions/{id}/publication`은 소유자에게 `{exhibitionId,revision,exhibitionBlockingCodes,artworks:[{artworkId,revision,blockingCodes}]}`를 반환한다. 다른 작가 전시는 404다. 전시명·기간·장소·작품 부재는 각각 `EXHIBITION_TITLE_REQUIRED`, `EXHIBITION_PERIOD_REQUIRED`, `EXHIBITION_PLACE_REQUIRED`, `ARTWORK_REQUIRED`로 표시한다. 역전된 기간은 `EXHIBITION_PERIOD_INVALID`, 공개 작가명 누락은 `ARTIST_NAME_REQUIRED`다. 작품별 기존 승인·근거·번호 조건은 `blockingCodes`에 남긴다. 저장 음성·Q&A 개수는 기본 게시 필수가 아니다.
+
+조회는 준비 안내이며 게시 권한을 예약하지 않는다. POST 게시 시 같은 조건을 다시 확인하고 전시 차단은 409 `PUBLICATION_BLOCKED`, `fields.exhibition` 배열로 반환한다. 준비 안 된 작품은 기존 `fields[artworkId]` 형식을 유지한다. 선택한 작품만 게시할 수 있으며 다른 미완성 작품은 자동 포함하지 않는다.

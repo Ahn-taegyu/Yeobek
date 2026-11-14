@@ -6,7 +6,7 @@ import { camelize } from "./http";
 import { rpcArgs } from "./schemas";
 import { artworkResponse } from "../contracts/responses";
 import { approvalSchema, evidenceResponse, narrationApprovalResponse, publicationSchema,
-  publishedResponse, publicationStateResponse, reviewResponse, upsertEvidenceSchema } from "../contracts/publication";
+  publishedResponse, publicationStateResponse, publicationChecklistResponse, reviewResponse, upsertEvidenceSchema } from "../contracts/publication";
 import { getFeatures } from "../features";
 import { createWorkerSupabase } from "../supabase/worker";
 import { speechIdentity } from "../ai/voice";
@@ -28,6 +28,12 @@ async function publicationWorker() {
   if (error) throw databaseError(error);
   if (!data) throw new ApiError(503, "SERVER_CONFIGURATION_ERROR", "게시 정책 설정을 확인하고 있습니다.");
   return worker;
+}
+
+export async function loadPublicationChecklist(db: DbClient, exhibitionId: string) {
+  await rpc(db, "get_exhibition", { p_id: exhibitionId });
+  await publicationWorker();
+  return decodeDatabase(publicationChecklistResponse, await rpc(db, "get_publication_checklist", { p_exhibition_id: exhibitionId }));
 }
 
 export async function loadReview(db: DbClient, artworkId: string) {
@@ -85,7 +91,9 @@ export async function changePublication(db: DbClient, actorId: string, exhibitio
     const raw = await rpc(worker, "publish_with_audio_config", { p_owner: actorId, p_exhibition_id: exhibitionId,
       p_voice_required: voiceRequired, p_voice_fingerprint: voice?.fingerprint ?? null, p_mock: voice?.mock ?? false, ...rpcArgs(fields) });
     const envelope = decodeDatabase(z.object({ blocked: z.array(z.object({ artworkId: z.uuid(), reasons: z.array(z.string()) })),
-      created: z.boolean() }), raw);
+      created: z.boolean(), exhibitionBlocked: z.array(z.string()).default([]) }), raw);
+    if (envelope.exhibitionBlocked.length) throw new ApiError(409, "PUBLICATION_BLOCKED", "전시의 게시 준비를 확인해 주세요.",
+      { exhibition: envelope.exhibitionBlocked });
     if (envelope.blocked.length) throw new ApiError(409, "PUBLICATION_BLOCKED", "선택한 작품의 게시 준비를 확인해 주세요.",
       Object.fromEntries(envelope.blocked.map(item => [item.artworkId, item.reasons])));
     return { ...decodeDatabase(publishedResponse, raw), _created: envelope.created };

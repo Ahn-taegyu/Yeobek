@@ -62,6 +62,8 @@ select set_config('test.select2','[{"artwork_id":"20000000-0000-0000-0000-000000
 select set_config('test.intro1',jsonb_build_object('bio',jsonb_build_object('id',current_setting('test.evidence1'),'version',1),
     'introduction',null,'theme',null)::text,true);
 
+reset role;
+update public.exhibitions set start_date='2026-11-14',end_date='2026-11-15',place='Test gallery';
 set local role service_role;
 select is(publish('00000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000001',1,
     current_setting('test.select1')::jsonb || '[{"artwork_id":"20000000-0000-0000-0000-000000000002","expected_revision":1}]'::jsonb,
