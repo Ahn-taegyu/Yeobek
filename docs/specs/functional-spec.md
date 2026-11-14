@@ -14,6 +14,9 @@ generated:
   at: '2026-11-12T14:49:23+09:00'
 decision_status: proposed
 sources:
+- id: author-experience
+  resource: /references/user-author-experience-parallel.md
+  title: 작가 검수·체험 개선과 AI 인터뷰 병렬 구현 요청
 - id: gap-exclusion
   resource: /references/user-gap-qa-exclusion.md
   title: 관람 보완 요청의 Q&A 전환 제외

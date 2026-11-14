@@ -10,7 +10,7 @@ rag_include: true
 generated:
   by: codex/gpt-6
   at: '2026-11-14T22:19:00+09:00'
-source_priority: prerequisite
+source_priority: unspecified
 proposed_phase: MVP
 decision_status: accepted
 work_status: in_progress

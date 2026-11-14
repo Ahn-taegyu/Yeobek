@@ -13,6 +13,9 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: author-experience
+  resource: /references/user-author-experience-parallel.md
+  title: 작가 검수·체험 개선과 AI 인터뷰 병렬 구현 요청
 - id: v3-scope
   resource: /references/user-v3-decisions.md
   title: v3 온보딩·입력·화면 범위 결정
