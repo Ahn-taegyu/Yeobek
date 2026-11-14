@@ -96,3 +96,4 @@
 - [Liner 재작성·음성 수정과 도슨트 모델 통일](user-liner-voice-evaluation.md) — SRC-062.
 
 - [SRC-063 작가 검수·체험 개선과 AI 인터뷰 병렬 구현 요청](user-author-experience-parallel.md).
+- [반 고흐 입력 완성도·정보량 비교와 재게시](user-vangogh-input-quality.md) — SRC-064.
