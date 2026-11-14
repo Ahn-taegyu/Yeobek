@@ -9,7 +9,7 @@
 - [F-005 해설·채팅 답변 음성 출력](F-005-audio.md) — 원안 P1, 현재 MVP.
 - [F-006 승인 자료 기반 AI 질의응답](F-006-qa.md) — 원안 P1, 현재 MVP.
 - [F-007 숫자 라벨로 작품 선택](F-007-number-label.md) — 원안 P1, 현재 MVP.
-- [F-008 전시 QR 배포](F-008-qr.md) — 원안 P1, 현재 MVP.
+- [F-008 전시 QR 배포](F-008-qr.md) — 원안 P1, 현재 Hold.
 - [F-009 NFC 태그로 작품 선택](F-009-nfc.md) — 원안 P1, 현재 Later.
 - [F-010 위치 기반 작품 선택](F-010-location.md) — 원안 P1, 현재 Hold.
 - [F-011 관람객 작품 목록·정보](F-011-artwork-list.md) — 원안 P1, 현재 MVP.

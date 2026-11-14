@@ -55,6 +55,26 @@ test("actual private Storage upload, validation, owner isolation and cleanup", a
     assert.equal(sent.error, null);
   }
   let image;
+  await t.test("image and PDF limits reject actual signed Storage transfers", async () => {
+    const imageLimit = 3 * 1024 * 1024;
+    const pdfLimit = 6 * 1024 * 1024;
+    for (const { kind, filename, contentType, limit, bucket } of [
+      { kind: "image", filename: "size.png", contentType: "image/png", limit: imageLimit, bucket: "artist-material-staging" },
+      { kind: "pdf", filename: "size.pdf", contentType: "application/pdf", limit: pdfLimit, bucket: "artist-material-pdf-staging" },
+    ]) {
+      const input = { id: randomUUID(), subjectType: "artwork", subjectId: work.id, kind, filename, contentType };
+      await artist("/api/admin/uploads", { ...input, byteSize: limit + 1 }, { expected: 400 });
+      const reserved = await artist("/api/admin/uploads", { ...input, byteSize: limit }, { expected: 201 });
+      assert.equal(reserved.upload.bucket, bucket);
+      const staging = anonymous.storage.from(bucket);
+      assert.ok((await staging.uploadToSignedUrl(reserved.upload.path, reserved.upload.token,
+        Buffer.alloc(limit + 1), { contentType })).error, "Storage must reject the bytes before completion");
+      assert.equal((await staging.uploadToSignedUrl(reserved.upload.path, reserved.upload.token,
+        Buffer.alloc(limit), { contentType })).error, null, "the object size limit is inclusive");
+      assert.ok((await staging.download(reserved.upload.path)).error, "staging remains private");
+      await artist(`/api/admin/materials/${input.id}`, { expectedVersion: 1 }, { method: "DELETE" });
+    }
+  });
   await t.test("real PNG becomes ready only after complete, replay is stable, final bytes are immutable", async () => {
     const { body, result } = await reserve(png);
     const id = body.id;
@@ -97,6 +117,13 @@ test("actual private Storage upload, validation, owner isolation and cleanup", a
       filename: "도록.pdf", kind: "pdf", contentType: "application/pdf" });
     await send(prepared.result, bytes, "application/pdf");
     assert.equal((await artist(`/api/admin/uploads/${prepared.body.id}/complete`, { expectedVersion: 1 })).pages, 2);
+    const legacy = await reserve(bytes, { filename: "legacy.pdf", kind: "pdf", contentType: "application/pdf" });
+    const legacyBucket = worker.storage.from("artist-material-staging");
+    const oldToken = await legacyBucket.createSignedUploadUrl(legacy.result.upload.path, { upsert: false });
+    assert.equal(oldToken.error, null);
+    assert.equal((await anonymous.storage.from("artist-material-staging").uploadToSignedUrl(
+      oldToken.data.path, oldToken.data.token, bytes, { contentType: "application/pdf" })).error, null);
+    assert.equal((await artist(`/api/admin/uploads/${legacy.body.id}/complete`, { expectedVersion: 1 })).pages, 2);
     const input = { expectedRevision: show.document.revision, sections: [{ id: "introduction", body: "도록에서 발췌" }],
       sourceRefs: [{ kind: "material", sectionId: "introduction", materialId: prepared.body.id, pageStart: 1, pageEnd: 3 }] };
     await artist(`/api/admin/knowledge/${show.document.id}`, input, { method: "PATCH", expected: 400 });

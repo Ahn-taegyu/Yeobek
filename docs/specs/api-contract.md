@@ -13,6 +13,15 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: v3-answers
+  resource: /references/user-v3-decisions.md
+  title: v3 범위와 Vercel Hobby 답변
+- id: review-answers
+  resource: /references/user-v3-review-decisions.md
+  title: 해설 수정·검수 화면·모의 게시 정책
+- id: v3
+  resource: /references/user-backend-plan-v3.md
+  title: 백엔드 v3 화면·리스크 보강
 - id: v2
   resource: /references/user-backend-plan-v2.md
   title: 백엔드 완성 계획 v2
@@ -258,7 +267,7 @@ JSON 요청 상한은 64KiB이며 실제 수신 바이트도 제한한다. 출�
 | `POST /api/admin/artworks/{id}/image` | `{expectedRevision,materialId:UUID 또는 null}` → 작품. 같은 작품의 ready 이미지만 지정 |
 | `POST /api/admin/artworks/{id}/delete` | `{expectedRevision}` → `{id,revision,deletedAt}`. 활성 공개본은 중지 중이어도 삭제 차단. 삭제 번호는 재사용 가능 |
 
-`upload`는 `{signedUrl,token,path,bucket,expiresAt}`이며 ready 재요청은 null이다. 프런트는 해당 staging 경로에 서명 업로드한 뒤 complete를 호출한다. `expiresAt`는 앱에서 완료 가능한 시각(초기 1시간)이며 Storage 토큰의 만료와 같지 않다. JPEG·PNG·WebP(3MiB), 비암호화 PDF(6MiB)를 지원하며 MIME·확장자·실제 바이트를 검사한다. 상한과 일일 예약 100회는 app_policies로 바꾼다. 재요청은 기존 예약 입력을 유지하며 한도를 중복 소비하지 않는다.
+`upload`는 `{signedUrl,token,path,bucket,expiresAt}`이며 ready 재요청은 null이다. 프런트는 해당 staging 경로에 서명 업로드한 뒤 complete를 호출한다. `expiresAt`는 앱에서 완료 가능한 시각(초기 1시간)이며 Storage 토큰의 만료와 같지 않다. JPEG·PNG·WebP(3MiB), 비암호화 PDF(6MiB)를 지원하며 MIME·확장자·실제 바이트를 검사한다. 일일 예약 100회와 더 낮은 크기 상한은 app_policies로 바꾼다. 3MiB/6MiB 기술 상한을 높이려면 코드·Storage migration도 함께 바꿔야 한다. 재요청은 기존 예약 입력을 유지하며 한도를 중복 소비하지 않는다.
 
 material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이지 수·이미지 치수·생성/수정/삭제 시각·cleanupPending을 포함한다. `cleanupPending=true`는 ready 자료의 임시 파일 또는 삭제 자료의 실제 파일 정리가 남았다는 뜻이다. ready는 게시 승인을 뜻하지 않는다. 파일의 신규 버전은 새 업로드 ID로 만들며 기존 final 객체를 덮어쓰지 않는다.
 
@@ -290,7 +299,7 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 
 타입 클라이언트는 전사 multipart와 낭독·미디어 Blob을 지원한다. 음성 바이너리의 `X-Yeobek-Mock`과 전사 응답의 `mock`은 모의 출처를 나타낸다. 전사 인식문은 수정·재시도를 위해 답변 보존 기간 동안만 서버에 저장하며 녹음 바이트는 저장하지 않는다. MP4 오디오 녹음의 서버 전달 파일명은 파트너 전사 어댑터에 맞춰 `recording.m4a`로 정규화한다. 정리 cron에는 `visitorAudio:{attempted,completed}`가 추가된다. 로컬 검사 근거는 [백엔드 작업 추적](backend-completion.md)에 기록한다. CI와 실제 제공사 호출, 한국어 음질 및 프런트 연결은 남아 있다.
 
-음성 두 경로의 60초 처리 기한에는 요청 본문 수신도 포함한다. Next.js `maxDuration=120`은 취소 후 DB 실패 확정·정리 기록을 위한 플랫폼 여유이며 생성 허용 시간을 늘리지 않는다. 같은 세션의 만료 답변은 공개 상태가 유지될 때 410 `ANSWER_EXPIRED`, 타인 세션이나 비공개 전시는 404다. 준비된 승인 음성의 파일 오류·해시 불일치는 오류로 반환하고 새 유료 합성을 시작하지 않는다. 확인된 실패는 새 요청 ID로 재시도하고, 진행 중/응답 유실/캐시 다운로드 오류에는 같은 ID를 재사용한다.
+음성 두 경로의 60초 처리 기한에는 요청 본문 수신도 포함한다. Next.js `maxDuration=90`은 취소 후 DB 실패 확정·정리 기록을 위한 플랫폼 여유이며 생성 허용 시간을 늘리지 않는다. 같은 세션의 만료 답변은 공개 상태가 유지될 때 410 `ANSWER_EXPIRED`, 타인 세션이나 비공개 전시는 404다. 준비된 승인 음성의 파일 오류·해시 불일치는 오류로 반환하고 새 유료 합성을 시작하지 않는다. 확인된 실패는 새 요청 ID로 재시도하고, 진행 중/응답 유실/캐시 다운로드 오류에는 같은 ID를 재사용한다.
 
 새 ID의 생성 음성 캐시 재사용은 생성 한도를 차감하지 않지만 원장 행이 무한히 늘지 않도록 세션당 분당 60개 초기 정책 `visitor_audio_cache_requests_per_minute`를 별도로 적용한다. 기존 요청 ID 조회는 이 한도에서도 재사용 가능하다. 60은 측정 전 구현 초기값이며 DB 정책에서 변경한다.
 
@@ -350,6 +359,22 @@ material은 ID·주체·종류·상태·파일명·MIME·크기·버전·페이�
 
 # v2 이행 기준 (D0)
 
-[작업 추적](backend-completion.md)의 D0 → W10 → W9 → W11 → W12 순서를 적용한다. 기존 W8 진행 안내·채널톡 문의는 PR #11 (`2d7bea1`)로 최신 App/Knowledge CI 성공 후 병합됐으며 실제 외부 호출과 물리 보존 삭제 등 잔여는 미검증이다. 기존의 CI 대기 표현은 당시 기록이다. W2 후보·이력은 Draft PR #13에만 보존되어 main 계약으로 제공하지 않는다.
+이 절은 v2 D0 당시 기록이다. 현재는 [작업 추적](backend-completion.md)의 D0 완료 → W13 → W10 → W9 → W11 → W12 순서를 적용한다. 기존 W8 진행 안내·채널톡 문의는 PR #11 (`2d7bea1`)로 최신 App/Knowledge CI 성공 후 병합됐으며 실제 외부 호출과 물리 보존 삭제 등 잔여는 미검증이다. 기존의 CI 대기 표현은 당시 기록이다. W2 후보·이력은 Draft PR #13에만 보존되어 main 계약으로 제공하지 않는다.
 
 OP-23 가입의 확정 정책은 이메일 인증 필수·비밀번호 최소 8자·확인 후 직접 로그인이다. 기존 계정 로그인에 새 가입 강도를 소급 적용하지 않는다. signup/session 경로, 확인·재발송 상세와 Supabase 연동은 W9 구현 전 공식 문서로 검증한다. 가입·미리보기·예상 Q&A·새 공개/관람 계약은 아직 미구현이며 현재 HTTP와 구분한다. D0는 새 제품 플래그를 활성화하지 않는다.
+
+
+# v3 변경분 연결
+
+v3 추가 경로/필드는 W13→W10→W9→W11→W12 순서로 확정한다. 기존 계약을 소급 변경하지 않는다. W10 v2 입력 계약은 Draft PR #15에 보존되어 main에는 아직 없다. v3 온보딩·포스터·미리보기 지시문 수정 API와 공개 포스터/채팅 이미지 필드는 아직 미구현이다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md), [진행 계획](backend-completion.md)을 따른다.
+
+
+# W13 네트워크·업로드·오류 계약
+
+관람 유료 처리 전에 `consume_visitor_network_budget`(서비스 전용)이 HMAC 네트워크 식별자 기준 분당30/UTC일200 초기 한도를 적용한다. 세션 한도·전시 한도와 별개이며 쿠키를 바꿔도 합산한다. 네트워크/세션/requestId가 같고 전시·kind가 같으면 중복 차감하지 않는다. 이미 admission을 차감한 요청의 취소나 후속 실패는 환급하지 않는다. 다른 kind·전시에 ID를 재사용하면 충돌한다. 원본 IP는 DB나 앱 로그에 쓰지 않는다.
+
+429 `VISITOR_REQUEST_LIMIT`의 fields에는 `fallback: ["approved_narration", "published_audio"]`가 있다. `/api/chat`은 이 경우 새 answerId를 만들지 않는다. 프런트는 기존 공개 작품 GET의 narrationText와 공개 미디어 또는 이미 소유한 답변의 저장 승인 음성을 사용한다. 공개 철회·근거 철회 검사는 그대로 적용한다. `/api/speech`의 준비된 승인 음성 재사용은 네트워크/생성 한도보다 먼저 처리한다.
+
+`AI_INVALID_CONTEXT`(500)는 retryable=false이며 운영자가 승인 근거/문맥을 복구할 오류다. `SERVER_CONFIGURATION_ERROR`(503)도 자동 재시도 대상이 아니다. 기존 모호한 AI_FAILED와 구분한다.
+
+업로드 응답의 bucket은 이미지 `artist-material-staging` 또는 PDF `artist-material-pdf-staging`이다. 클라이언트는 이름을 하드코딩하지 않고 응답을 사용한다. Storage 자체가 각각3MiB/6MiB 실제 전송을 제한한다. 기존 bucket의 작은 PDF는 완료 호환을 유지하며 큰 PDF 대기 예약은 새 URL을 요청해야 한다. 이미 ready인 자료는 그대로 조회할 수 있다. 본문 PDF가 Next.js를 거치지 않는 signed upload를 사용한다.

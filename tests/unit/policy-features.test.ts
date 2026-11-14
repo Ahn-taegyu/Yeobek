@@ -8,6 +8,7 @@ describe("application policies", () => {
   it("keeps migration seed and typed defaults aligned", () => {
     const sql = ["20261114020000_app_policies.sql", "20261114030000_ai_jobs.sql", "20261114040000_evidence_approval.sql", "20261114060000_material_uploads.sql", "20261114085000_visitor_voice_limits.sql", "20261114090000_automation_foundation.sql", "20261114091000_automation_jobs.sql"]
       .concat("20261114100200_notification_runner.sql")
+      .concat("20261114160000_visitor_network_limits.sql")
       .map(file => readFileSync(`supabase/migrations/${file}`, "utf8")).join("\n");
     const seeded = Object.fromEntries(Array.from(sql.matchAll(/\('([a-z_]+)',\s*(\d+)\)/g), ([, key, value]) => [key, Number(value)]));
     expect(seeded).toEqual(DEFAULT_POLICIES);
@@ -22,9 +23,13 @@ describe("application policies", () => {
 describe("server feature settings", () => {
   it("isolates optional features and rejects disabled routes", () => {
     const features = getFeatures({ FEATURE_GAPS: "false", FEATURE_VOICE_REQUIRED: "false" });
-    expect(features).toEqual({ gaps: false, voiceRequired: false, followUpQuestions: true, opsAggregation: true });
+    expect(features).toEqual({ gaps: false, voiceRequired: false, followUpQuestions: true, opsAggregation: false });
     expect(() => requireFeature("gaps", features)).toThrowError(expect.objectContaining({ status: 404 }));
     expect(() => requireFeature("followUpQuestions", features)).not.toThrow();
+  });
+  it("does not collect visitor questions or aggregate by default", () => {
+    expect(getFeatures({})).toEqual({ gaps: false, voiceRequired: true, followUpQuestions: true, opsAggregation: false });
+    expect(getFeatures({ FEATURE_GAPS: "true", FEATURE_OPS_AGGREGATION: "true" })).toMatchObject({ gaps: true, opsAggregation: true });
   });
   it("rejects misspelled flags rather than silently exposing a disabled feature", () => {
     for (const value of ["flase", "", "   "]) {

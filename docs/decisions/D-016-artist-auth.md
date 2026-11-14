@@ -13,6 +13,9 @@ generated:
 decision_status: accepted
 decision_basis: user-confirmed
 sources:
+- id: v3
+  resource: /references/user-backend-plan-v3.md
+  title: 백엔드 v3 화면·리스크 보강
 - id: user
   resource: /references/user-artist-auth.md
   title: 사용자 전달 작가 인증 결정
@@ -50,4 +53,4 @@ D-008의 사전 생성 계정 전용 기준은 이 요구로 대체한다. 기�
 
 [개발 기반 현황](../specs/development-foundation.md)의 사전 생성 계정 로그인·로그아웃은 기존 구현이다. 직접 가입·선택 화면·가입 직후 세션 처리와 관련 수용 검증은 후속 작업이다. 이 문서는 구현 완료를 뜻하지 않는다. [백엔드 완성 계획 요청](../references/user-backend-completion.md)은 직접 가입을 마감 이후로 두었으나, 사용자가 [마감 전 포함](../references/user-auth-signup-timing.md)을 결정했다. 선택 화면·직접 가입·가입 후 직접 로그인은 마감 전 구현 범위이며 아직 구현·검증 전이다.
 
-소셜 로그인, 비밀번호 추가 강도 규칙과 재설정, 인증 메일 재발송, 계정 복구, 세션 수명, 안내·동의 정책은 미결정이다. 세부 가입 상태 및 API는 [기능명세 BR-16](../specs/functional-spec.md#br-16-작가-가입인증계정-처리)과 [화면 명세](../specs/screen-spec.md#작가-인증-화면-연결)를 따른다.
+[v3 A1 확정](../references/user-backend-plan-v3.md)에 따라 소셜 로그인은 이번 범위에서 제외하고 이메일+비밀번호를 유지한다. Figma의 소셜 버튼은 디자인 수정 대상이다. 비밀번호 추가 강도 규칙과 재설정, 인증 메일 재발송, 계정 복구, 세션 수명, 안내·동의 정책은 미결정이다. 세부 가입 상태 및 API는 [기능명세 BR-16](../specs/functional-spec.md#br-16-작가-가입인증계정-처리)과 [화면 명세](../specs/screen-spec.md#작가-인증-화면-연결)를 따른다.
