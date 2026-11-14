@@ -1,0 +1,12 @@
+.panel {
+  border: 1px solid #dedbd4;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 0 auto 16px;
+  max-width: 640px;
+}
+
+.panel p { margin: 0 0 8px; font-size: 0.875rem; }
+.panel nav { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.panel a { font-size: 0.875rem; padding-block: 4px; }
+.panel a[aria-current="page"] { font-weight: 700; }

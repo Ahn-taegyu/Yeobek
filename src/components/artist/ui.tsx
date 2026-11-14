@@ -18,12 +18,12 @@ export function ArtistLink({ prepare, ...props }: ComponentProps<typeof Link> & 
   return <Link {...props} prefetch onPointerEnter={preload} onPointerDown={preload} onFocus={preload} />;
 }
 
-export function Header({ title, back = "/artist" }: { title: string; back?: string }) {
+export function Header({ title, back = "/artist", backIcon = "/yeobek/artist-back.svg" }: { title: string; back?: string; backIcon?: string }) {
   const exhibitionId = /^\/artist\/exhibitions\/([0-9a-f-]{36})$/i.exec(back)?.[1];
   const prepare = back === "/artist" ? () => loadArtistPage(homeKey, loadHome)
     : exhibitionId ? () => prepareExhibition(exhibitionId) : undefined;
   return <div className="artist-header">
-    <ArtistLink href={back} prepare={prepare} aria-label="뒤로"><Image alt="" width={28} height={28} src="/yeobek/artist-back.svg" /></ArtistLink>
+    <ArtistLink href={back} prepare={prepare} aria-label="뒤로"><Image alt="" width={28} height={28} src={backIcon} loading="eager" /></ArtistLink>
     <h1>{title}</h1>
   </div>;
 }
@@ -38,13 +38,14 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   return <label className="artist-field"><span>{label}</span>{children}</label>;
 }
 
-export function Questions({ definitions, document, short = false }: {
+export function Questions({ definitions, document, short = false, placeholders }: {
   definitions: readonly { id: string; prompt: string; maxLength: number }[];
   document?: Document;
   short?: boolean;
+  placeholders?: Readonly<Record<string, string>>;
 }) {
   return definitions.map(({ id, prompt, maxLength }) => <Field key={id} label={prompt}>
-    <textarea name={id} maxLength={maxLength} data-short={short || undefined}
+    <textarea name={id} maxLength={maxLength} data-short={short || undefined} placeholder={placeholders?.[id]}
       defaultValue={document?.sections.find(item => item.id === id)?.body ?? ""} />
   </Field>);
 }

@@ -1,5 +1,6 @@
+import styles from "@/components/artist/artist-figma.module.css";
 import { ArtistWorld } from "@/components/artist/onboarding";
 
 export default function WorldPage() {
-  return <ArtistWorld />;
+  return <div className={styles.formScreen}><ArtistWorld /></div>;
 }
