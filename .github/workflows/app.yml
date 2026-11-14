@@ -37,6 +37,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:demo:guards
       - run: npm run db:start
       - run: npm run db:test
       - run: npm run db:types
@@ -96,6 +97,7 @@ jobs:
           npm run test:audio
           npm run test:automation
           npm run test:support
+          npm run test:demo
           kill "$mock_pid"
           wait "$mock_pid" || true
           FEATURE_GAPS=false FEATURE_SIGNUP=false node node_modules/next/dist/bin/next dev --webpack --hostname 127.0.0.1 --port 3001 > /tmp/yeobek-gaps-off.log 2>&1 &
