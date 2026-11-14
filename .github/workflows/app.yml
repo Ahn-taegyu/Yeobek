@@ -23,6 +23,8 @@ jobs:
       FEATURE_GAPS: "false"
       FEATURE_OPS_AGGREGATION: "false"
       FEATURE_FOLLOW_UP_QUESTIONS: "true"
+      # Explicit legacy-policy regression; default/text-first behavior is covered
+      # by policy unit tests and the false-configured mock publication HTTP run.
       FEATURE_VOICE_REQUIRED: "true"
       FEATURE_SIGNUP: "true"
     steps:

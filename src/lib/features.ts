@@ -11,8 +11,9 @@ const variables = {
 export type Feature = keyof typeof variables;
 export type Features = Readonly<Record<Feature, boolean>>;
 // Privacy-related collection/aggregation needs an explicit opt-in. New flags
-// default off; existing publication safety and author questions stay compatible.
-const enabledByDefault = new Set<Feature>(["voiceRequired", "followUpQuestions"]);
+// default off. Approved text can publish before stored audio is prepared;
+// deployments can still explicitly opt into the older stored-audio requirement.
+const enabledByDefault = new Set<Feature>(["followUpQuestions"]);
 
 /** Server settings only. Request bodies must never override these values. */
 export function getFeatures(env: Readonly<Record<string, string | undefined>> = process.env): Features {

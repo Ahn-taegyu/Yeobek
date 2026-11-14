@@ -76,7 +76,7 @@ test("publish approved evidence and revoke its use across exhibitions through HT
     const linked = await admin.from("artworks").update({ image_material_id: id }).eq("id", work.id).eq("owner_id", owners[0]);
     assert.equal(linked.error, null);
   }
-  await attachFixtureImage(firstWork);
+  // W12: the first prepared work deliberately has no image.
   await attachFixtureImage(secondWork);
 
   const documentSource = { kind: "document", sourceDocumentId: savedProfile.document.id,
@@ -123,7 +123,7 @@ test("publish approved evidence and revoke its use across exhibitions through HT
       artworks: [...publishFirst.artworks, { artworkId: unready.id, expectedRevision: unready.revision }],
     }, { expected: 409 });
     assert.equal(blocked.code, "PUBLICATION_BLOCKED");
-    assert.ok(blocked.fields[unready.id].includes("IMAGE_REQUIRED"));
+    assert.ok(blocked.fields[unready.id].includes("NARRATION_APPROVAL_REQUIRED"));
     await request(publicPath(first.id), undefined, { user: null, expected: 404 });
     const review = await request(artworkPath(firstWork) + "/review");
     assert.deepEqual(review.blockingCodes, []);
@@ -148,6 +148,7 @@ test("publish approved evidence and revoke its use across exhibitions through HT
     const workPath = `${publicPath(first.id)}/artworks/${firstWork.id}`;
     const publicWork = await request(workPath, undefined, { user: null });
     assert.equal(publicWork.narrationText, excerpt);
+    assert.equal(publicWork.image, null, "image-free publication remains readable");
     assert.equal("imageKey" in publicWork, false);
     assert.equal("audioKey" in publicWork, false);
     await request(`${publicPath(first.id)}/artworks/${unready.id}`, undefined, { user: null, expected: 404 });

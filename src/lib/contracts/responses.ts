@@ -88,6 +88,7 @@ export const publicArtworkResponse = publicArtworkSummary.extend({ narrationText
 export const publicExhibitionResponse = z.object({
   id, ...dateRange, title: z.string(), artistDisplayName: z.string(),
   artistBio: nullableText, introduction: nullableText, theme: nullableText,
+  startTime: nullableText.optional(), endTime: nullableText.optional(),
   artworks: z.array(publicArtworkSummary),
 });
 
