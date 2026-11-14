@@ -12,6 +12,9 @@ generated:
   by: codex/gpt-6
   at: '2026-11-12T14:12:26+09:00'
 sources:
+- id: articul8-comparison
+  resource: /references/user-articul8-comparison.md
+  title: 현재 구조·Numa·Bivia 비교 계획 요청
 - id: knowledge-screens
   resource: /decisions/D-011-knowledge-and-screens.md
   title: AI용 내부 지식·DB 원본과 필수 화면 요구
@@ -40,6 +43,8 @@ decision_status: proposed
 구체적인 수행 입력·대체 흐름·합격 조건은 [사용자 시나리오 UC-01~23 / 수용 기준 AC-01~23](../specs/user-scenarios.md)에 있다. 네 입출력 조합은 해설과 Q&A를 각각 검사하며, 공개 철회·버전 교체·응답 지연·타인 접근도 포함한다. 추가로 작가 공통 정보의 두 전시 재사용·철회, 온보딩의 QR 대상 보존, 작품 정보 탐색/선택 구분을 확인한다. 명세 작성 시점의 AC는 모두 미실행이며 문서 검증과 제품 검증을 구별한다.
 
 # MVP 관찰
+
+검색·문서 준비 방식의 후속 비교는 [P-006 현재 구조·Numa·Bivia 비교 계획](articul8-comparison-plan.md)을 따른다. 동일 생성 LLM과 승인 근거로 검색 효과를 먼저 보고, 동일 원자료로 준비·검수 시간을 따로 측정한다. Bivia의 근거 재정렬과 Numa의 전처리/선택적 검색은 실험 후보이며 현재 MVP의 채택 결정이나 측정 결과가 아니다.
 
 | 지표 | 측정 | 주의 |
 | --- | --- | --- |

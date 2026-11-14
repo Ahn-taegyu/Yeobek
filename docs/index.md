@@ -45,6 +45,7 @@ okf_version: "0.2"
 - [검토 결과](product/review-findings.md) — 충돌·불필요한 복잡성·누락.
 - [제품 방향](product/overview.md) — 사업안 비교·가설.
 - [검증 계획](product/validation-plan.md) — 실측 방법·검증 한계.
+- [현재 구조·Numa·Bivia 비교 계획](product/articul8-comparison-plan.md) — 동일 LLM·승인 근거 비교, 문서 준비 시간·비용, 계정/API 선행 조건. 채택·실행 전 제안.
 
 # 개념 목록
 
