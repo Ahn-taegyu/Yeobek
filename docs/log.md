@@ -2,6 +2,8 @@
 
 ## 2026-11-14
 
+- **관람 채팅 공개 중지 작품 안내 구분**: SRC-063에 따라 공개 목록에 없는 번호 중 같은 공개 전시에서 게시된 적이 있고 삭제되지 않은 작품은 `artworkPaused`, 게시된 적 없는 번호는 `artworkUnavailable`로 답한다. 신규235900 `was_artwork_number_published`와 `publication.history` capability를 추가하고 플러그인0.15.0을 생성했다. 프런트의 서버 문구 비교를 제거하고, 재확인으로 선택 작품이 사라지면 진행 중 답변·낭독을 취소한다. 화면 명세 SC-V04와 프런트 인계를 갱신했다. 외부 AI/TTS 호출0회.
+
 - **Liner 실호출 후속**: 재작성 평가의 추론 포함 토큰 예산, Gemini PCM→MP3 변환, 공통 도슨트 설정을 반영했다. 소량 비교에 따라 Luna 생성·Sonnet 평가를 초기 기본으로 선택하고 인용 ID 오타·근거 부족 상태의 실측 문제를 보강했다. [사용자 요청](references/user-liner-voice-evaluation.md), [측정 범위와 한계](research/liner-docent-live-validation.md).
 
 - **작가 화면 이동 조회 개선**: 작가 홈·프로필·전시·검토 화면이 최근 읽은 데이터를 재사용하고 링크에 마우스를 올리거나 키보드로 이동할 때 필요한 데이터를 미리 읽는다. 저장이 진행 중이면 완료 후 조회하며, 로그인 상태가 바뀌면 이전 조회를 폐기한다. [사용자 요청](references/user-session-navigation.md).

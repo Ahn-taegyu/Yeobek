@@ -141,7 +141,7 @@ describe("playbook capabilities", () => {
     const author = { loadOwnedContext: vi.fn() };
     const proposals = { storeProposal: vi.fn(), loadOwnedProposal: vi.fn(), commitOwnedProposal: vi.fn() };
     const capabilities = capabilitiesFor("visitor-answer", { publications, author, proposals });
-    expect(Object.keys(capabilities)).toEqual(["request.reserve", "publication.list", "publication.read", "publication.recheck", "answer.store", "gap.record"]);
+    expect(Object.keys(capabilities)).toEqual(["request.reserve", "publication.list", "publication.read", "publication.recheck", "publication.history", "answer.store", "gap.record"]);
     expect(Object.isFrozen(capabilities)).toBe(true);
     await expect(capabilities["publication.read"]({ exhibitionId: ids.exhibition, artworkId: ids.artwork })).resolves.toBe(publication);
     await expect(capabilities["publication.recheck"](publication)).resolves.toBe(true);

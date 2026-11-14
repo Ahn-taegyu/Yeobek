@@ -131,6 +131,24 @@ describe("visitor chat intent and artwork selection", () => {
     expect(s.text.generate).not.toHaveBeenCalled();
   });
 
+  it.each(["19", "19번 재료는?"])("separates a paused work from a never-published number: %s", async question => {
+    const paused = setup();
+    const history = vi.fn(async () => true);
+    const pausedHarness = createDocentHarness({ publications: { ...paused.publications, wasNumberPublished: history }, text: paused.text });
+    paused.publications.load.mockResolvedValue(null as never);
+    const pausedReply = await pausedHarness.answer(syntheticRequest({ question }));
+    expect(history).toHaveBeenCalledWith(ids.exhibition, 19, undefined);
+    expect(pausedReply).toMatchObject({ source: "fixed", outcome: "clarify", publication: null });
+    expect(pausedReply.answer).toContain("온라인 안내를 제공하지 않아요");
+
+    const missing = setup();
+    const missingHarness = createDocentHarness({ publications: { ...missing.publications, wasNumberPublished: vi.fn(async () => false) }, text: missing.text });
+    missing.publications.load.mockResolvedValue(null as never);
+    const missingReply = await missingHarness.answer(syntheticRequest({ question }));
+    expect(missingReply.answer).toContain("해당 번호의 공개 작품을 찾을 수 없습니다");
+    expect(missing.text.generate).not.toHaveBeenCalled();
+  });
+
   it("still rejects an unavailable selected ID without a number", async () => {
     const s = setup(); s.publications.load.mockResolvedValue(null as never);
     await expect(s.harness.answer(syntheticRequest())).rejects.toMatchObject({ code: "publication_unavailable" });

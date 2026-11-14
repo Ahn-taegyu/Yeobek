@@ -1161,6 +1161,9 @@ isOneToOne: false
 "upsert_evidence":
 { Args: { "p_artwork_id": string,"p_body": string,"p_evidence_id"?: string,"p_exhibition_id": string,"p_expected_version"?: number,"p_scope": string,"p_source": Json,"p_source_label": string }; Returns: Json
                            },
+"was_artwork_number_published":
+{ Args: { "p_exhibition_id": string,"p_number": number }; Returns: boolean
+                           },
 "withdraw_qa_item":
 { Args: { "p_expected_version": number,"p_item_id": string }; Returns: Json
                            }

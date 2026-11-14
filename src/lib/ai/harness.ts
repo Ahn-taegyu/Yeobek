@@ -107,7 +107,11 @@ export function createDocentHarness(deps: { publications: PublicationStore; text
         });
         if (!context) {
           for (const id of ["publication.recheck", "evidence.select", "model.generate", "output.validate", "publication.recheck.final"] as const) flow.skip(id, "number_unavailable");
-          return await persist(fixed(DOCENT_COPY.artworkUnavailable, "clarify"));
+          // A number that was published here before is a work on the wall whose online guide
+          // is paused; only a never-published number is reported as not found.
+          const paused = "number" in selector && !resolved.named && caps["publication.history"]
+            ? await caps["publication.history"](selector.exhibitionId, selector.number, signal) : false;
+          return await persist(fixed(paused ? DOCENT_COPY.artworkPaused : DOCENT_COPY.artworkUnavailable, "clarify"));
         }
         const ref = reference(context);
         await flow.step("publication.recheck", () => assertCurrent(caps["publication.recheck"], ref, signal));
@@ -174,7 +178,7 @@ export async function speakVerifiedReply(input: { sessionId: string; answerId: s
   if (!reply.publication) {
     // Before selecting a work, only these server-owned navigation messages may
     // be spoken. The store rechecks session TTL and the exhibition public gate.
-    const navigation: readonly string[] = [DOCENT_COPY.chooseOne, DOCENT_COPY.chooseArtwork, DOCENT_COPY.artworkUnavailable];
+    const navigation: readonly string[] = [DOCENT_COPY.chooseOne, DOCENT_COPY.chooseArtwork, DOCENT_COPY.artworkUnavailable, DOCENT_COPY.artworkPaused];
     if (reply.source !== "fixed" || reply.outcome !== "clarify" || reply.citations.length || !navigation.includes(reply.answer)) {
       throw new HarnessError("invalid_output");
     }

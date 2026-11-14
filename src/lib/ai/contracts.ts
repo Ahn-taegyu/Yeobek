@@ -79,6 +79,8 @@ export interface PublicationStore {
   listLabels?(exhibitionId: string, signal?: AbortSignal): Promise<PublicArtworkLabel[]>;
   load(selector: ArtworkSelector, signal?: AbortSignal): Promise<unknown | null>;
   isCurrent(ref: PublicationRef, signal?: AbortSignal): Promise<boolean>;
+  /** True when this public exhibition once published the number and the artwork still exists (now paused). */
+  wasNumberPublished?(exhibitionId: string, number: number, signal?: AbortSignal): Promise<boolean>;
 }
 
 export type DocentReply = ModelAnswer & {

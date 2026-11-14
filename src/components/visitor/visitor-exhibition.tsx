@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { transitionScreen } from "@/components/ui/motion";
 import { brand } from "@/components/ui/brand";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState, type FormEvent } from "react";
 import { ApiClientError, requestApi } from "@/lib/client";
 import { AI_LIMITS, codepoints } from "@/lib/contracts/chat";
 import type { ChatRequestInput } from "@/lib/contracts/chat";
@@ -46,40 +46,74 @@ function ArtImage({ artwork, className, decorative = false }: { artwork: Artwork
     : <span className={className} aria-hidden="true">{artwork.number}</span>;
 }
 
+function OptionalImage({ id, kind, className, alt }: { id: string; kind: "poster" | "image"; className: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return <Image unoptimized className={className} src={`/api/media/${id}?kind=${kind}`}
+    width={kind === "poster" ? 233 : 352} height={kind === "poster" ? 392 : 180}
+    alt={alt} onError={() => setFailed(true)} />;
+}
+
 export function VisitorExhibition({ exhibitionId, initialArtworkId }: {
   exhibitionId: string;
   initialArtworkId?: string;
 }) {
-  const [load, setLoad] = useState<{ exhibition?: Exhibition; error?: string; unavailable?: boolean }>({});
+  const [load, setLoad] = useState<
+    | { status: "loading" | "unavailable" | "error" }
+    | { status: "ready"; exhibition: Exhibition }
+  >({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
+  const [showWorks, setShowWorks] = useState(false);
+  const markUnavailable = useCallback(() => setLoad({ status: "unavailable" }), []);
   useEffect(() => {
     const controller = new AbortController();
     void loadExhibition(exhibitionId, controller.signal).then(exhibition => {
-      if (controller.signal.aborted) return;
-      if (initialArtworkId && !exhibition.artworks.some(work => work.id === initialArtworkId)) {
-        setLoad({ unavailable: true });
-      } else setLoad({ exhibition });
+      if (!controller.signal.aborted) setLoad({ status: "ready", exhibition });
     }).catch(error => {
-      if (!controller.signal.aborted) setLoad({ error: message(error), unavailable: unavailable(error) });
+      if (!controller.signal.aborted) setLoad({ status: unavailable(error) ? "unavailable" : "error" });
     });
     return () => controller.abort();
-  }, [exhibitionId, initialArtworkId, attempt]);
+  }, [exhibitionId, attempt]);
 
-  if (load.unavailable) return <section data-visitor className={styles.state}>
-    <h1>전시를 볼 수 없어요</h1><p>공개된 전시인지 확인하거나 전시장에서 안내한 주소로 다시 접속해주세요.</p>
+  function retry() {
+    setLoad({ status: "loading" });
+    setAttempt(previous => previous + 1);
+  }
+
+  if (load.status === "error") return <section data-visitor className={styles.state}>
+    <h1>전시를 불러오지 못했어요</h1><p role="alert">연결을 확인한 뒤 다시 시도해주세요.</p>
+    <button className={styles.primary} onClick={retry}>다시 시도</button>
   </section>;
-  if (load.error) return <section data-visitor className={styles.state}>
-    <h1>전시를 불러오지 못했어요</h1><p role="alert">{load.error}</p>
-    <button className={styles.primary} onClick={() => { setLoad({}); setAttempt(attempt + 1); }}>다시 시도</button>
+  if (load.status === "unavailable" || (load.status === "ready" && load.exhibition.artworks.length === 0)) {
+    return <section data-visitor className={styles.state}>
+      <h1>현재 이용할 수 없는 전시예요</h1><p>전시장 안내를 확인해주세요.</p>
+      <button className={styles.primary} onClick={retry}>공개 상태 다시 확인</button>
+    </section>;
+  }
+  if (load.status !== "ready") {
+    return <section data-visitor className={styles.state} role="status">전시를 불러오는 중이에요.</section>;
+  }
+
+  const artworkUnavailable = initialArtworkId && !load.exhibition.artworks.some(work => work.id === initialArtworkId);
+  if (artworkUnavailable && !showWorks) return <section data-visitor className={styles.state}>
+    <h1>이 작품은 현재 안내할 수 없어요</h1>
+    <button className={styles.primary} onClick={() => transitionScreen(() => setShowWorks(true))}>공개 작품 목록 보기</button>
   </section>;
-  if (!load.exhibition) return <section data-visitor className={styles.state} role="status">전시를 불러오는 중이에요.</section>;
-  return <Visit exhibition={load.exhibition} initialArtworkId={initialArtworkId} />;
+  return <Visit exhibition={load.exhibition} initialArtworkId={artworkUnavailable ? undefined : initialArtworkId}
+    showWorks={showWorks} onUnavailable={markUnavailable} />;
 }
 
-function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initialArtworkId?: string }) {
-  const [entered, setEntered] = useState(Boolean(initialArtworkId));
+function Visit({ exhibition: initialExhibition, initialArtworkId, showWorks, onUnavailable }: {
+  exhibition: Exhibition;
+  initialArtworkId?: string;
+  showWorks: boolean;
+  onUnavailable: () => void;
+}) {
+  const [exhibition, setExhibition] = useState(initialExhibition);
+  const [retiredAnswers, setRetiredAnswers] = useState<ReadonlySet<string>>(() => new Set());
+  const [entered, setEntered] = useState(Boolean(initialArtworkId) || showWorks);
   const [selected, setSelected] = useState(initialArtworkId ?? null);
-  const [picker, setPicker] = useState<"row" | "grid" | null>(null);
+  const [picker, setPicker] = useState<"row" | "grid" | null>(showWorks ? "grid" : null);
   const [search, setSearch] = useState("");
   const [question, setQuestion] = useState("");
   const [voiceDraft, setVoiceDraft] = useState(false);
@@ -92,6 +126,10 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
   const contextSequence = useRef(0);
   const audio = useRef<HTMLAudioElement | null>(null);
   const audioUrl = useRef<string | null>(null);
+  const playingAnswer = useRef<string | null>(null);
+  const retiredAnswerIds = useRef(new Set<string>());
+  const currentTurns = useRef(turns);
+  const selectedNow = useRef(selected);
   const mutedNow = useRef(false);
   const transcript = useRef<HTMLDivElement>(null);
   const active = exhibition.artworks.find(work => work.id === selected);
@@ -103,8 +141,75 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
   }, []);
 
   useEffect(() => {
+    selectedNow.current = selected;
+  }, [selected]);
+
+  useEffect(() => {
+    currentTurns.current = turns;
     transcript.current?.scrollTo({ top: transcript.current.scrollHeight });
   }, [turns]);
+
+  // A paused artwork leaves the public list: drop it exactly like a manual deselection,
+  // cancelling its pending answer and narration so nothing late reappears.
+  const clearRemovedSelection = useEffectEvent((latest: Exhibition) => {
+    if (selectedNow.current && !latest.artworks.some(work => work.id === selectedNow.current)) clearSelection();
+  });
+
+  useEffect(() => {
+    if (!entered) return;
+    const controller = new AbortController();
+    let checking = false;
+
+    async function refresh() {
+      if (checking || document.hidden) return;
+      checking = true;
+      try {
+        const latest = await loadExhibition(initialExhibition.id, controller.signal);
+        if (controller.signal.aborted) return;
+        if (!latest.artworks.length) {
+          onUnavailable();
+          return;
+        }
+        setExhibition(latest);
+        clearRemovedSelection(latest);
+
+        const publishedTurns = currentTurns.current.flatMap(({ reply }) =>
+          reply.publication && !retiredAnswerIds.current.has(reply.answerId) ? [{ answerId: reply.answerId, publication: reply.publication }] : []);
+        const retired: string[] = [];
+        for (let start = 0; start < publishedTurns.length; start += 100) {
+          const batch = publishedTurns.slice(start, start + 100);
+          const { data } = await requestApi("checkVersions", {
+            params: { id: latest.id }, signal: controller.signal,
+            body: { publications: batch.map(({ publication: { artworkId, publicationId, version } }) =>
+              ({ artworkId, publicationId, version })) },
+          });
+          for (const { answerId, publication } of batch) {
+            if (!data.publications.some(item => item.current && item.artworkId === publication.artworkId &&
+              item.publicationId === publication.publicationId && item.version === publication.version)) retired.push(answerId);
+          }
+        }
+        if (!controller.signal.aborted && retired.length) {
+          for (const answerId of retired) retiredAnswerIds.current.add(answerId);
+          if (playingAnswer.current && retiredAnswerIds.current.has(playingAnswer.current)) stopAudio();
+          setRetiredAnswers(new Set(retiredAnswerIds.current));
+        }
+      } catch (error) {
+        if (!controller.signal.aborted && unavailable(error)) onUnavailable();
+      } finally {
+        checking = false;
+      }
+    }
+
+    const timer = window.setInterval(() => void refresh(), 10000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [entered, initialExhibition.id, onUnavailable]);
 
   async function run(kind: NonNullable<typeof busy>, action: (signal: AbortSignal) => Promise<void>) {
     if (operation.current) return;
@@ -125,26 +230,33 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
   function stopAudio() {
     audio.current?.pause();
     audio.current = null;
+    playingAnswer.current = null;
     if (audioUrl.current) URL.revokeObjectURL(audioUrl.current);
     audioUrl.current = null;
   }
 
   async function play(answerId: string, signal: AbortSignal) {
-    if (mutedNow.current) return;
+    if (mutedNow.current || retiredAnswerIds.current.has(answerId)) return;
     stopAudio();
     const blob = await requestApi("speech", { body: { requestId: crypto.randomUUID(), answerId }, signal });
-    if (signal.aborted || mutedNow.current) return;
+    if (signal.aborted || mutedNow.current || retiredAnswerIds.current.has(answerId)) return;
     const url = URL.createObjectURL(blob);
     audioUrl.current = url;
     const player = new Audio(url);
     audio.current = player;
+    playingAnswer.current = answerId;
     player.onended = () => { if (audio.current === player) stopAudio(); };
+    player.onerror = () => {
+      if (audio.current !== player) return;
+      stopAudio();
+      setError("답변을 재생하지 못했어요. 다시 시도해주세요.");
+    };
     try {
       await player.play();
     } catch {
       if (audio.current === player) {
         stopAudio();
-        throw new Error("Audio playback failed");
+        setError("답변을 재생하지 못했어요. 다시 시도해주세요.");
       }
     }
   }
@@ -159,19 +271,32 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
     });
   }, setError);
 
+  function togglePicker() {
+    transitionScreen(() => setPicker(picker ? null : "row"));
+  }
+
+  function resetConversationContext() {
+    contextSequence.current += 1;
+    pendingChat.current = null;
+    operation.current?.abort();
+    operation.current = null;
+    stopAudio();
+    setBusy(null);
+    setError("");
+  }
+
+  function clearSelection() {
+    resetConversationContext();
+    selectedNow.current = null;
+    setSelected(null);
+  }
+
   function select(work: Artwork) {
-    const nextId = work.id;
-    if (nextId !== selected) {
-      contextSequence.current += 1;
-      pendingChat.current = null;
-      operation.current?.abort();
-      operation.current = null;
-      stopAudio();
-      setBusy(null);
-      setError("");
-    }
+    const nextId = selected === work.id ? null : work.id;
+    if (nextId !== selected) resetConversationContext();
+    selectedNow.current = nextId;
     setSelected(nextId);
-    setPicker(null);
+    if (nextId !== null) setPicker(null);
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -180,7 +305,7 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
     if (!text || codepoints(text) > AI_LIMITS.question || recording.state !== "idle") return;
     void run("chat", async signal => {
       const input = {
-        exhibitionId: exhibition.id, artworkId: selected,
+        exhibitionId: exhibition.id, artworkId: active?.id ?? null,
         question: text, contextSequence: contextSequence.current,
         inputMode: voiceDraft ? "voice" : "text", outputMode: mutedNow.current ? "text" : "voice",
       } satisfies Omit<ChatRequestInput, "requestId">;
@@ -206,8 +331,8 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
 
   if (!entered) return <section data-visitor className={styles.intro}>
     <div className={styles.brand}>{brand.name}</div>
-    {exhibition.poster && <Image unoptimized className={styles.poster}
-      src={`/api/media/${exhibition.poster.id}?kind=poster`} width={233} height={392} alt={`${exhibition.title} 포스터`} />}
+    {exhibition.poster && <OptionalImage key={exhibition.poster.id} id={exhibition.poster.id} kind="poster"
+      className={styles.poster} alt={`${exhibition.title} 포스터`} />}
     <div>
       <h1>{exhibition.title}</h1>
       <p>{exhibition.artistDisplayName}</p>
@@ -228,9 +353,12 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
         setMuted(!muted);
         if (!muted) stopAudio();
       }}><Image src="/yeobek/visitor-sound.svg" alt="" width={24} height={24} />{muted && <span aria-hidden="true">×</span>}</button>
-      <span className={styles.brand}>{active ? `${active.number}. ${active.title}` : brand.name}</span>
-      <button className={styles.textButton} aria-expanded={picker !== null}
-        onClick={() => transitionScreen(() => setPicker(picker ? null : "row"))}>{picker ? "닫기" : "작품 선택"}</button>
+      {active
+        ? <button type="button" className={styles.artworkTitle} aria-expanded={picker !== null}
+            onClick={togglePicker}>{active.number}. {active.title}</button>
+        : <span className={styles.brand}>{brand.name}</span>}
+      <button type="button" className={styles.textButton} aria-expanded={picker !== null}
+        onClick={togglePicker}>{picker ? "닫기" : "작품 선택"}</button>
     </div>
     {picker && <section className={styles.picker} aria-label="작품 목록">
       <div className={styles.pickerHeading}><h2>작품 목록</h2>
@@ -241,11 +369,10 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
         placeholder="작품 검색" value={search} onChange={event => setSearch(event.target.value)} />
         <Image src="/yeobek/visitor-search.svg" alt="" width={24} height={24} /></div>}
 
-      {exhibition.artworks.length === 0 && <p>공개된 작품이 아직 없어요.</p>}
-      {picker === "grid" && exhibition.artworks.length > 0 && !shown.length && <p>검색 결과가 없어요.</p>}
+      {picker === "grid" && !shown.length && <p>검색 결과가 없어요. 전시장에 있는 작품 중 온라인 안내가 제공되지 않는 작품도 있어요.</p>}
       <ul className={picker === "grid" ? styles.grid : styles.strip}>
         {(picker === "grid" ? shown : exhibition.artworks).map(work => <li key={work.id}>
-          <button className={styles.tile} aria-pressed={selected === work.id} onClick={() => transitionScreen(() => select(work))}>
+          <button className={styles.tile} aria-pressed={active?.id === work.id} onClick={() => transitionScreen(() => select(work))}>
             <ArtImage artwork={work} className={styles.thumbnail} decorative />
             <span>{work.number}. {work.title}</span>
           </button>
@@ -259,13 +386,15 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
       </div>}
       {turns.map(({ question, reply, artwork }) => <article className={`${styles.turn} yeobek-appear`} key={reply.answerId}>
         <p className={styles.bubble}>{question}</p>
-        {reply.image === undefined && artwork?.image && <ArtImage key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
-        {reply.image && <Image unoptimized className={styles.answerImage}
-          src={`/api/media/${reply.image.id}?kind=image`} width={352} height={180} alt={artwork?.title ?? "작품 이미지"} />}
-        <p className={styles.answer}>{reply.answer}</p>
-        {reply.notice && <p>{reply.notice}</p>}
-        {!muted && <button className={styles.textButton} disabled={busy !== null}
-          onClick={() => void run("speech", signal => play(reply.answerId, signal))}>답변 듣기</button>}
+        {retiredAnswers.has(reply.answerId) ? <p>이 답변은 현재 안내할 수 없어요.</p> : <>
+          {reply.image === undefined && artwork?.image && <ArtImage key={artwork.image.id} artwork={artwork} className={styles.answerImage} />}
+          {reply.image && <OptionalImage key={reply.image.id} id={reply.image.id} kind="image"
+            className={styles.answerImage} alt={artwork?.title ?? "작품 이미지"} />}
+          <p className={styles.answer}>{reply.answer}</p>
+          {reply.notice && <p>{reply.notice}</p>}
+          {!muted && <button className={styles.textButton} disabled={busy !== null || recording.state !== "idle"}
+            onClick={() => void run("speech", signal => play(reply.answerId, signal))}>답변 듣기</button>}
+        </>}
       </article>)}
       {busy === "chat" && <p role="status">답변을 준비하고 있어요.</p>}
     </div>
@@ -283,7 +412,11 @@ function Visit({ exhibition, initialArtworkId }: { exhibition: Exhibition; initi
           aria-label={recording.state === "recording" ? "녹음 종료" : "음성 녹음"}
           onClick={() => {
             if (recording.state === "recording") recording.stop();
-            else { setError(""); void recording.start(); }
+            else {
+              stopAudio();
+              setError("");
+              void recording.start();
+            }
           }}>{recording.state === "recording" ? "■" : <Image src="/yeobek/visitor-wave.svg" alt="" width={24} height={24} />}</button>
       </form>
     </div>

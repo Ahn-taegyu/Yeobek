@@ -34,5 +34,11 @@ export function createPublicationStore(worker: DbClient): PublicationStore {
       assertNotCancelled(signal);
       return result === true;
     },
+    async wasNumberPublished(exhibitionId, number, signal) {
+      assertNotCancelled(signal);
+      const result = await rpc(worker, "was_artwork_number_published", { p_exhibition_id: exhibitionId, p_number: number });
+      assertNotCancelled(signal);
+      return result === true;
+    },
   };
 }
