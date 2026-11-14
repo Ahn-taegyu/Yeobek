@@ -30,7 +30,7 @@ export function NarrationReview({ id, batchId, initialArtworkId }: { id: string;
   const root = `/artist/exhibitions/${id}`;
 
   return <>
-    <Header title="기본 해설 검토" back={root} />
+    <Header title="기본 해설 검토" back={`${root}/verification`} />
     {!result.data ? <Loading {...result} /> : <div className="artist-workflow yeobek-appear">
       {work ? <>
         <Field label="작품"><select aria-label="작품" value={work.id} onChange={event => setArtworkId(event.target.value)}>

@@ -3,8 +3,18 @@
   "version": "0.14.0",
   "instructions": "instructions.md",
   "messages": "messages.json",
-  "skills": ["retrieve-wiki", "review-visitor-evidence", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa", "read-material", "artwork-interview"],
+  "skills": ["retrieve-wiki", "review-visitor-evidence", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa", "read-material", "artwork-interview", "exhibition-interview"],
   "playbooks": {
+    "exhibition-interview": {
+      "skills": ["exhibition-interview"],
+      "tools": [],
+      "steps": [
+        { "id": "job.reserve" },
+        { "id": "model.generate" },
+        { "id": "output.validate" },
+        { "id": "job.complete" }
+      ]
+    },
     "artwork-interview": {
       "skills": ["artwork-interview"],
       "tools": [],

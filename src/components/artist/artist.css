@@ -181,3 +181,12 @@ body:has(.artist-screen) > main { width: 100%; }
 .artist-sheet > .artist-actions { display: grid; grid-template-columns: 44px 1fr 44px; margin: 0 0 12px; align-items: center; }
 .artist-sheet h2 { grid-column: 2; text-align: center; margin: 0; }
 .artist-sheet-close { grid-column: 3; justify-content: center; align-items: center; padding: 0; height: 44px; background: var(--yeobek-field); color: #666; border-radius: var(--yeobek-radius-pill); font-size: 24px; }
+.artist-flow { display: flex; justify-content: center; gap: 8px; list-style: none; margin: 0 0 16px; padding: 0; font-size: 13px; color: #68686d; }
+.artist-flow li { display: flex; align-items: center; gap: 4px; }
+.artist-flow li + li::before { content: ""; width: 12px; height: 1px; background: var(--yeobek-line); margin-right: 4px; }
+.artist-flow span { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: var(--yeobek-radius-pill); background: var(--yeobek-line); font-size: 12px; }
+.artist-flow [aria-current] { color: inherit; font-weight: 600; }
+.artist-flow [aria-current] span { background: var(--artist-accent); color: #fff; }
+.artist-learning .artist-actions .artist-action { white-space: nowrap; }
+.artist-flow-actions { display: grid; gap: 8px; margin-top: 16px; }
+.artist-flow-actions .artist-action { width: 100%; text-align: center; }

@@ -4,7 +4,7 @@ id: D-018
 title: 작가 검수·체험 개선과 사진 기반 글 인터뷰
 description: 현재 사용자 요청의 다섯 구현 범위와 인터뷰 네 가지 기준.
 status: draft
-updated: '2026-11-14'
+updated: '2026-11-15'
 tags: [yeobek, author-experience]
 rag_include: true
 generated:
@@ -15,11 +15,20 @@ sources:
 - id: request
   resource: /references/user-author-experience-parallel.md
   title: 작가 검수·체험 개선과 AI 인터뷰 병렬 구현 요청
+- id: order
+  resource: /references/user-training-interview-review-order.md
+  title: 학습 후 AI 인터뷰와 검증 순서 요청
+- id: screens
+  resource: /references/user-separate-flow-screens.md
+  title: 정보·학습, 인터뷰, 검토를 별도 화면으로 나누는 요청
+- id: figma
+  resource: /references/user-figma-review-interview.md
+  title: Figma 인터뷰·검토 와이어프레임 반영
 ---
 
 # 결정
 
-[사용자 요청](../references/user-author-experience-parallel.md)에 따라 근거는 접어서 표시하고, 최근 학습 조회와 상시 질문·체험 진입을 제공한다. 예상 Q&A는 지시문 기반 재작성과 개별 사용·중지를 지원한다. 체험은 관람 컴포넌트를 재사용하되 작가 인증 아래 초안과 미리보기 전용 음성 API를 사용한다.
+[사용자 요청](../references/user-author-experience-parallel.md)에 따라 근거는 접어서 표시하고, 최근 학습 조회와 질문·체험 진입을 제공한다. 진입은 아래 작성 순서에 따라 완료된 학습 결과가 있을 때만 표시한다. 예상 Q&A는 지시문 기반 재작성과 개별 사용·중지를 지원한다. 체험은 관람 컴포넌트를 재사용하되 작가 인증 아래 초안과 미리보기 전용 음성 API를 사용한다.
 
 # 인터뷰의 네 가지 구현 기준
 
@@ -39,3 +48,20 @@ sources:
 결정 기록 → B의 최근 학습 조회 API 선행 병합 → A·B·C 각 PR. B migration은 20261115000000~20261115005959, C는 20261115010000~20261115015959를 사용한다. 로컬 Supabase는 C만 소유하고 B는 DB 회귀를 CI로 확인한다. review.tsx는 A만 편집하며 공유 계약은 담당 항목만 추가한다. 병합 직전 최신 main 통합과 해당 head CI·교차 검토가 필요하다.
 
 기능 완료·운영 활성화를 이 결정만으로 주장하지 않는다. 실제 외부 호출 품질과 음성 비용은 구현 검증 기록에서 구분한다.
+
+# 작성 순서 (2026-11-15)
+
+[순서 요청](../references/user-training-interview-review-order.md)에 따라 전시 작성은 작품 등록 → 학습 → AI 인터뷰 → 반영 재학습 → 검증 순서로 안내한다.
+
+[화면 분리 요청](../references/user-separate-flow-screens.md)에 따라 세 절차는 서로 다른 화면이며 공통 단계 표시(1 정보·학습, 2 AI 인터뷰, 3 검토)로 연결한다.
+
+1. **정보·학습**: 전시 편집 1~3단계에서 정보를 입력하고 `여운 학습시키기`로 학습 화면(`/learning`)에 들어간다. 학습 화면은 학습 진행과 다시 학습만 다루고, 완료되면 `다음`으로 인터뷰 화면(플래그가 꺼져 있으면 검토 화면)에 간다. 전시 편집 화면에는 검토 링크를 두지 않는다.
+2. **AI 인터뷰**(`/interview`): 작품별 인터뷰 진입과 질문·승인 수를 보여준다. 작품별 인터뷰 화면은 이 화면으로 돌아온다. 승인 답변이 있으면 `답변 반영해 다시 학습`로 학습 화면(`?next=review`)에 가서 새 학습을 시작하고, 그 학습이 끝나면 검토 화면으로 이어진다. 반영 없이 `다음: 검토`로도 넘어갈 수 있다. 승인 답변은 다음 학습에서만 해설·예상 질문 근거가 된다.
+3. **검토**(`/verification`): 기본 해설 검토, 자주하는 질문, 학습된 여운 체험하기와 전시 게시 관리를 모은다. 각 검토 화면의 뒤로 가기는 이 화면으로 돌아온다.
+
+인터뷰·검토 화면은 최근 학습 묶음이 완료되지 않았으면 학습 화면으로 안내한다. 마지막 학습 이후 승인된 답변인지 판별하는 시각 정보는 계약에 없으므로, 인터뷰 화면은 승인 답변이 있는 동안 반영 재학습을 안내한다. 기본 해설 검토·자주하는 질문·체험 화면에 직접 주소로 들어가는 경로는 막지 않으며, 학습 결과가 없으면 각 화면의 기존 빈 상태가 표시된다.
+
+# Figma 인터뷰·검토 화면 (2026-11-15)
+
+[Figma 반영 요청](../references/user-figma-review-interview.md)에 따라 2·3 화면을 Figma 114~119·36·85로 바꾼다. 인터뷰는 작품별 사진 질문 대신 [F-025](../features/F-025-exhibition-chat-interview.md) 전시 대화형 인터뷰다(10개 생성, 5개 필수, 이후 5개씩 선생성). 인터뷰 답변은 작가 본인의 말이라 저장 즉시 승인 전시 근거가 된다. 이는 F-024의 "명시 승인" 기준과 다르며, 이 지시에 따른 예외로 기록한다. 검토 허브는 작품 기본 소개·여운 답변 미리보기·관람객 예상 질문과 "수정한 내용으로 다시 학습하기"(학습 화면 `?next=review`), "학습 마무리하기"(게시 관리)를 둔다. Figma에 없는 단계 표시는 인터뷰·검토 화면에서 뺀다.
+

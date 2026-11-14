@@ -46,6 +46,18 @@ function result(data: Record<string, unknown>, name: string) {
       "작품을 시작하게 된 계기는 무엇인가요?", "제작 중 가장 오래 고민한 부분은 무엇인가요?", "관람객이 눈여겨볼 부분은 어디인가요?"];
     return { questions: questions.filter(question => !previous.includes(question)).slice(0, Number(data.maxQuestions)) };
   }
+  if (name === "yeobek_exhibition_interview") {
+    const previous = Array.isArray(data.priorQuestions) ? data.priorQuestions.map(item => String((item as { question?: unknown }).question)) : [];
+    const pool = ["이번 전시를 기획하게 된 계기는 무엇인가요?", "전시 제목에 담고 싶었던 의미는 무엇인가요?",
+      "작품을 배치할 때 가장 신경 쓴 부분은 무엇인가요?", "관람객이 전시를 보고 무엇을 느끼길 바라시나요?",
+      "이번 전시에서 가장 오래 고민한 작품은 무엇인가요?", "작품들을 하나로 묶는 공통된 이야기는 무엇인가요?",
+      "작업하면서 새롭게 시도한 재료나 기법이 있나요?", "전시를 준비하며 기억에 남는 순간이 있었나요?",
+      "관람객이 먼저 봐 주었으면 하는 작품은 무엇인가요?", "이전 전시와 비교해 달라진 점은 무엇인가요?",
+      "작품을 만들 때 영감을 준 장소가 있나요?", "전시의 색감을 정할 때 기준은 무엇이었나요?",
+      "관람 동선에 담긴 의도는 무엇인가요?", "가장 개인적인 이야기가 담긴 작품은 무엇인가요?",
+      "다음 작업에서 이어가고 싶은 주제는 무엇인가요?"];
+    return { questions: pool.filter(question => !previous.includes(question)).slice(0, Number(data.maxQuestions)) };
+  }
   if (name === "yeobek_material_pages") {
     if (!Number.isInteger(data.pageCount) || Number(data.pageCount) < 1 || Number(data.pageCount) > 20) throw new AiError("invalid_input");
     return { pages: Array.from({ length: Number(data.pageCount) }, (_, index) => ({

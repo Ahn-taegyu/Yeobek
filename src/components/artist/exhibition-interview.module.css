@@ -1,0 +1,18 @@
+/* Figma 114/115: exhibition chat interview. Shares the visitor chat shell; these are the interview-only parts. */
+.toolbar { grid-template-columns: 54px minmax(0, 1fr) 54px; min-height: 84px; }
+.intro { display: grid; justify-items: center; align-content: center; gap: 0; flex: 1; text-align: center; padding: 0 8px; }
+.intro p { margin: 0; color: #888a7a; font-size: 16px; line-height: 20px; letter-spacing: -.4px; white-space: pre-line; }
+.start { align-self: center; width: min(350px, calc(100% - 40px)); min-height: 52px; margin: 0 auto max(26px, env(safe-area-inset-bottom));
+  border-radius: 80px; background: #734120; color: #fff; font-size: 16px; font-weight: 500; letter-spacing: -.4px; justify-content: center; }
+.log { display: grid; gap: 20px; padding: 40px 20px 20px; align-content: start; }
+.question { margin: 0; font-size: 14px; line-height: 20px; letter-spacing: -.35px; color: #121215; white-space: pre-wrap; }
+.answer { justify-self: end; max-width: min(299px, 85%); margin: 0; border-radius: 20px; padding: 13.5px 12.5px;
+  background: #734120; color: #fff3de; font-size: 14px; line-height: 17px; letter-spacing: -.35px; white-space: pre-wrap; }
+.choice { display: grid; gap: 19px; border-top: 1px solid #eaeaeb; padding-top: 15px; }
+.choice p { margin: 0; font-size: 14px; font-weight: 500; line-height: 17px; letter-spacing: -.35px; color: #121215; }
+.choice div { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choice button { min-height: 32px; border-radius: 20px; font-size: 12px; font-weight: 500; letter-spacing: -.3px; justify-content: center; padding: 0 8px; }
+.more { background: #fff3de; color: #612f2f; }
+.review { background: #fff; color: #121215; border: 1px solid #eaeaeb; }
+.thinking { justify-self: center; }
+.status { margin: 0; font-size: 13px; color: #68686d; }
