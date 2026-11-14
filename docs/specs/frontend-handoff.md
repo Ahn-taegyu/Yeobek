@@ -183,7 +183,7 @@ PR #13은 main9c6efbf로 병합됐다(최종 head351156f App·Knowledge 성공).
 
 # 파일 읽기 — A 담당
 
-feat/material-extraction 구현·CI 대기다. `materialExtraction` 기본off. 업로드 완료 후 학습 버튼의 명시적 POST만 파일을 읽는다. `extractMaterial`·`getMaterialRead`의 정확한 입력과 상태는 [API 계약](api-contract.md#파일-읽기와-w2-후보)을 따른다. 조회 경로의 id는 클라이언트 requestId이며 read.id가 아니다.
+PR #28 main4f7faee에 병합됐으며 최종 head04facaa App·Knowledge CI가 성공했다. `materialExtraction` 기본off. 업로드 완료 후 학습 버튼의 명시적 POST만 파일을 읽는다. `extractMaterial`·`getMaterialRead`의 정확한 입력과 상태는 [API 계약](api-contract.md#파일-읽기와-w2-후보)을 따른다. 조회 경로의 id는 클라이언트 requestId이며 read.id가 아니다.
 
 - 안내: “학습시키기를 누르면 참고 파일의 글을 읽어 정리 후보를 만듭니다. 스캔 PDF·참고 이미지는 AI 제공사로 전송됩니다. 후보를 확인하고 적용해야 설명 근거로 사용할 수 있습니다.”
 - 텍스트 PDF 로컬 추출도 후속 W2 분류는 모델 호출이다. 파일 읽기와 분류는 각각 작가 일일 한도를 사용한다. 후보 문맥12개/8,000자 한도로 전체 도록 반영을 보장하지 않는다.

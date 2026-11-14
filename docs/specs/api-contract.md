@@ -524,7 +524,7 @@ PR #13은 최종 head351156f의 App·Knowledge 성공 후 main9c6efbf로 병합�
 
 # 파일 읽기와 W2 후보
 
-feat/material-extraction의 구현 계약이며 최신 CI·병합 전이다. [요청 SRC-054](../references/user-backend-author-parallel-plan.md), [제공사 조사](../research/material-reader.md)가 근거다. 생성 결과의 자동 적용·승인·게시는 없다.
+PR #28은 main4f7faee로 병합됐다. 최종 head04facaa의 App43571147499·Knowledge43571147654 성공을 확인했다. [요청 SRC-054](../references/user-backend-author-parallel-plan.md), [제공사 조사](../research/material-reader.md)가 근거다. 생성 결과의 자동 적용·승인·게시는 없다.
 
 | requestApi | 경로·요청 | 응답 |
 | --- | --- | --- |
