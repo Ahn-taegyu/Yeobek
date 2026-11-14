@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const root = new URL("../ai/yeobek/", import.meta.url);
 const target = new URL("../src/lib/ai/plugin.generated.ts", import.meta.url);
-const names = ["retrieve-wiki", "review-visitor-evidence", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa", "read-material", "artwork-interview"];
+const names = ["retrieve-wiki", "review-visitor-evidence", "speak-docent", "draft-narration", "organize-artist", "evaluate-narration", "ops-notify", "support-reply", "author-qa", "read-material", "artwork-interview", "exhibition-interview"];
 const tools = ["support.read", "status.read", "voice.read", "voice.store", "voice.reserve", "voice.complete", "audio.read", "audio.store", "request.reserve", "answer.store", "gap.record", "job.reserve", "job.complete", "publication.list", "publication.read", "publication.recheck", "author.read", "proposal.store", "proposal.read", "proposal.apply", "qa.reserve", "qa.complete", "preview.reserve", "preview.complete", "rewrite.reserve", "rewrite.complete"];
 const step = z.strictObject({
   id: z.string().regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$/),
@@ -18,13 +18,13 @@ const task = z.strictObject({
 });
 const schema = z.strictObject({ id: z.literal("yeobek"), version: z.string().regex(/^\d+\.\d+\.\d+$/),
   instructions: z.literal("instructions.md"), messages: z.literal("messages.json"), skills: z.array(z.enum(names)).length(names.length),
-  playbooks: z.strictObject({ "artwork-interview": task, "material-read": task, "ops-notify": task, "ops-support-reply": task, "visitor-transcribe": task, "visitor-speech": task, "narration-audio": task, "visitor-answer": task, "narration-draft": task, "narration-evaluate": task, "artist-organize": task, "artist-apply": task, "expected-qa-draft": task, "artist-preview": task, "artist-qa-rewrite": task }) });
+  playbooks: z.strictObject({ "artwork-interview": task, "exhibition-interview": task, "material-read": task, "ops-notify": task, "ops-support-reply": task, "visitor-transcribe": task, "visitor-speech": task, "narration-audio": task, "visitor-answer": task, "narration-draft": task, "narration-evaluate": task, "artist-organize": task, "artist-apply": task, "expected-qa-draft": task, "artist-preview": task, "artist-qa-rewrite": task }) });
 const normalize = text => text.replace(/\r\n?/g, "\n").trimEnd() + "\n";
 const read = path => normalize(readFileSync(new URL(path, root), "utf8"));
 export function validateManifest(input) {
   const manifest = schema.parse(input);
   if (new Set(manifest.skills).size !== names.length) throw new Error("Duplicate plugin skill");
-  const capabilities = { "artwork-interview": [], "material-read": [], "ops-support-reply": ["support.read"], "ops-notify": ["status.read"],
+  const capabilities = { "artwork-interview": [], "exhibition-interview": [], "material-read": [], "ops-support-reply": ["support.read"], "ops-notify": ["status.read"],
     "visitor-transcribe": ["voice.reserve", "voice.complete"], "visitor-speech": ["voice.read", "voice.store", "voice.reserve", "voice.complete"], "narration-audio": ["job.reserve", "audio.read", "audio.store", "job.complete"], "visitor-answer": ["request.reserve", "answer.store", "gap.record", "publication.list", "publication.read", "publication.recheck"], "narration-draft": ["author.read", "job.reserve", "job.complete"], "narration-evaluate": ["author.read"],
     "artist-organize": ["author.read", "proposal.store", "job.reserve", "job.complete"], "artist-apply": ["author.read", "proposal.read", "proposal.apply"],
     "expected-qa-draft": ["qa.reserve", "qa.complete"], "artist-preview": ["preview.reserve", "preview.complete"],

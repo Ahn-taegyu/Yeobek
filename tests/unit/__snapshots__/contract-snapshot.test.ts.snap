@@ -852,6 +852,187 @@ exports[`HTTP route contracts > snapshots advanceExhibition 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots answerExhibitionInterview 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "oneOf": [
+      {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "save",
+            "type": "string",
+          },
+          "answer": {
+            "type": "string",
+          },
+          "expectedVersion": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "action",
+          "expectedVersion",
+          "answer",
+        ],
+        "type": "object",
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "skip",
+            "type": "string",
+          },
+          "expectedVersion": {
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "action",
+          "expectedVersion",
+        ],
+        "type": "object",
+      },
+    ],
+  },
+  "method": "PATCH",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+      "questionId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+      "questionId",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/exhibitions/{id}/interview/answers/{questionId}",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "batchSize": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "exhibitionId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "generating": {
+            "type": "boolean",
+          },
+          "questions": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "answer": {
+                  "anyOf": [
+                    {
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "question": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "seq": {
+                  "maximum": 100,
+                  "minimum": 1,
+                  "type": "integer",
+                },
+                "status": {
+                  "enum": [
+                    "pending",
+                    "answered",
+                    "skipped",
+                  ],
+                  "type": "string",
+                },
+                "version": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 2147483647,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "id",
+                "seq",
+                "question",
+                "answer",
+                "status",
+                "version",
+              ],
+              "type": "object",
+            },
+            "maxItems": 100,
+            "type": "array",
+          },
+          "requiredCount": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "exhibitionId",
+          "requiredCount",
+          "batchSize",
+          "generating",
+          "questions",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots applyProposal 1`] = `
 {
   "body": {
@@ -7959,6 +8140,197 @@ exports[`HTTP route contracts > snapshots generateAudio 1`] = `
 }
 `;
 
+exports[`HTTP route contracts > snapshots generateExhibitionInterview 1`] = `
+{
+  "body": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "method": "POST",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/exhibitions/{id}/interview/generations",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "interview": {
+            "additionalProperties": false,
+            "properties": {
+              "batchSize": {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer",
+              },
+              "exhibitionId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "generating": {
+                "type": "boolean",
+              },
+              "questions": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "answer": {
+                      "anyOf": [
+                        {
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        {
+                          "type": "null",
+                        },
+                      ],
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "question": {
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    "seq": {
+                      "maximum": 100,
+                      "minimum": 1,
+                      "type": "integer",
+                    },
+                    "status": {
+                      "enum": [
+                        "pending",
+                        "answered",
+                        "skipped",
+                      ],
+                      "type": "string",
+                    },
+                    "version": {
+                      "exclusiveMinimum": 0,
+                      "maximum": 2147483647,
+                      "type": "integer",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "seq",
+                    "question",
+                    "answer",
+                    "status",
+                    "version",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 100,
+                "type": "array",
+              },
+              "requiredCount": {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "exhibitionId",
+              "requiredCount",
+              "batchSize",
+              "generating",
+              "questions",
+            ],
+            "type": "object",
+          },
+          "job": {
+            "additionalProperties": false,
+            "properties": {
+              "attempt": {
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647,
+                "type": "integer",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "resultCode": {
+                "type": [
+                  "string",
+                  "null",
+                ],
+              },
+              "status": {
+                "enum": [
+                  "running",
+                  "succeeded",
+                  "failed",
+                  "cancelled",
+                  "abstained",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "attempt",
+              "status",
+              "resultCode",
+            ],
+            "type": "object",
+          },
+        },
+        "required": [
+          "job",
+          "interview",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
 exports[`HTTP route contracts > snapshots generateExpectedQa 1`] = `
 {
   "body": {
@@ -10395,6 +10767,135 @@ exports[`HTTP route contracts > snapshots getExhibition 1`] = `
           "artistId",
           "title",
           "state",
+        ],
+        "type": "object",
+      },
+      "requestId": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "data",
+      "requestId",
+    ],
+    "type": "object",
+  },
+  "statuses": [
+    200,
+  ],
+}
+`;
+
+exports[`HTTP route contracts > snapshots getExhibitionInterview 1`] = `
+{
+  "body": null,
+  "method": "GET",
+  "params": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+        "type": "string",
+      },
+    },
+    "required": [
+      "id",
+    ],
+    "type": "object",
+  },
+  "path": "/api/admin/exhibitions/{id}/interview",
+  "response": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+      "data": {
+        "additionalProperties": false,
+        "properties": {
+          "batchSize": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+          "exhibitionId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "generating": {
+            "type": "boolean",
+          },
+          "questions": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "answer": {
+                  "anyOf": [
+                    {
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "question": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "seq": {
+                  "maximum": 100,
+                  "minimum": 1,
+                  "type": "integer",
+                },
+                "status": {
+                  "enum": [
+                    "pending",
+                    "answered",
+                    "skipped",
+                  ],
+                  "type": "string",
+                },
+                "version": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 2147483647,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "id",
+                "seq",
+                "question",
+                "answer",
+                "status",
+                "version",
+              ],
+              "type": "object",
+            },
+            "maxItems": 100,
+            "type": "array",
+          },
+          "requiredCount": {
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "exhibitionId",
+          "requiredCount",
+          "batchSize",
+          "generating",
+          "questions",
         ],
         "type": "object",
       },

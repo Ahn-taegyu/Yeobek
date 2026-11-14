@@ -1,6 +1,7 @@
 import { previewChatSchema, previewAnswerResponse, previewEvaluationSchema, previewEvaluationResponse, qaRewriteSchema, qaRewriteJobResponse, qaCorrectionEvidenceSchema } from "./qa";
 import { materialReadRequest, materialReadResponse, materialExtractionResponse } from "./material-extraction";
 import { interviewGenerationResponse, interviewResponse, startInterview, writeInterviewAnswer } from "./interview";
+import { exhibitionInterviewGenerationResponse, exhibitionInterviewResponse, writeExhibitionInterviewAnswer } from "./exhibition-interview";
 import { createTrainingBatchSchema, runTrainingTargetSchema, trainingBatchResponse } from "./qa";
 import { expectedQaGenerateSchema, expectedQaJobResponse, qaListQuery, qaItemsResponse, qaItemResponse, approveQaItemSchema, withdrawQaItemSchema } from "./qa";
 import { createExhibitionBody, updateExhibitionBody, createArtworkBody, updateArtworkBody,
@@ -69,6 +70,9 @@ export const routes = {
   getArtworkInterview: { method: "GET", path: "/api/admin/artworks/{id}/interview", params: byId, response: successEnvelope(interviewResponse), statuses: [200] },
   generateArtworkInterview: { method: "POST", path: "/api/admin/artworks/{id}/interview/generations", params: byId, body: startInterview, response: successEnvelope(interviewGenerationResponse), statuses: [200] },
   updateArtworkInterviewAnswer: { method: "PATCH", path: "/api/admin/artworks/{id}/interview/answers/{questionId}", params: byId.extend({ questionId: uuid }), body: writeInterviewAnswer, response: successEnvelope(interviewResponse), statuses: [200] },
+  getExhibitionInterview: { method: "GET", path: "/api/admin/exhibitions/{id}/interview", params: byId, response: successEnvelope(exhibitionInterviewResponse), statuses: [200] },
+  generateExhibitionInterview: { method: "POST", path: "/api/admin/exhibitions/{id}/interview/generations", params: byId, body: startInterview, response: successEnvelope(exhibitionInterviewGenerationResponse), statuses: [200] },
+  answerExhibitionInterview: { method: "PATCH", path: "/api/admin/exhibitions/{id}/interview/answers/{questionId}", params: byId.extend({ questionId: uuid }), body: writeExhibitionInterviewAnswer, response: successEnvelope(exhibitionInterviewResponse), statuses: [200] },
   getTrainingBatch: { method: "GET", path: "/api/admin/training/{id}", params: byId, response: successEnvelope(trainingBatchResponse), statuses: [200] },
   runTrainingTarget: { method: "POST", path: "/api/admin/training/{id}/targets/{targetId}/run", params: byId.extend({ targetId: uuid }), body: runTrainingTargetSchema, response: successEnvelope(trainingBatchResponse), statuses: [200] },
   generateExpectedQa: { method: "POST", path: "/api/admin/exhibitions/{id}/qa/generations", params: byId, body: expectedQaGenerateSchema, response: successEnvelope(expectedQaJobResponse), statuses: [200, 201] },

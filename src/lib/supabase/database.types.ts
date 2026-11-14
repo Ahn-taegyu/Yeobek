@@ -367,6 +367,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"exhibition_interview_questions": {
+                  Row: {
+                    "answer": string | null,"answered_at": string | null,"created_at": string,"evidence_id": string | null,"exhibition_id": string,"id": string,"owner_id": string,"question": string,"seq": number,"status": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "answer"?: string | null,"answered_at"?: string | null,"created_at"?: string,"evidence_id"?: string | null,"exhibition_id": string,"id"?: string,"owner_id": string,"question": string,"seq": number,"status"?: string,"version"?: number
+                  }
+                  Update: {
+                    "answer"?: string | null,"answered_at"?: string | null,"created_at"?: string,"evidence_id"?: string | null,"exhibition_id"?: string,"id"?: string,"owner_id"?: string,"question"?: string,"seq"?: number,"status"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "exhibition_interview_questions_owner_id_exhibition_id_fkey"
+      columns: ["owner_id","exhibition_id"]
+isOneToOne: false
+      referencedRelation: "exhibitions"
+      referencedColumns: ["owner_id","id"]
+    }
+                  ]
                 },"exhibitions": {
                   Row: {
                     "artist_id": string,"authoring_step": string | null,"create_fingerprint": string,"created_at": string,"deleted_at": string | null,"end_date": string | null,"end_time": string | null,"id": string,"intro_evidence": NonNullable<Json>,"owner_id": string,"place": string | null,"poster_material_id": string | null,"public_artist_bio": string | null,"public_artist_display_name": string | null,"public_end_date": string | null,"public_end_time": string | null,"public_introduction": string | null,"public_place": string | null,"public_poster_material_id": string | null,"public_start_date": string | null,"public_start_time": string | null,"public_theme": string | null,"public_title": string | null,"revision": number,"start_date": string | null,"start_time": string | null,"state": string,"title": string | null,"updated_at": string
@@ -852,6 +872,9 @@ isOneToOne: false
 "complete_channel_token":
 { Args: { "p_app_id": string,"p_channel_id": string,"p_claim": string,"p_expires_in": number,"p_sealed": string }; Returns: boolean
                            },
+"complete_exhibition_interview":
+{ Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
+                           },
 "complete_expected_qa_job":
 { Args: { "p_attempt": number,"p_job_id": string,"p_owner": string,"p_result": Json }; Returns: Json
                            },
@@ -1032,6 +1055,9 @@ isOneToOne: false
 "list_document_history":
 { Args: { "p_before_revision": number,"p_document_id": string,"p_limit": number }; Returns: Json
                            },
+"list_exhibition_interview":
+{ Args: { "p_exhibition_id": string }; Returns: Json
+                           },
 "list_exhibitions":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -1124,6 +1150,9 @@ isOneToOne: false
 "reserve_automation_job":
 { Args: { "p_event_attempt": number,"p_event_id": string,"p_mock": boolean }; Returns: Json
                            },
+"reserve_exhibition_interview":
+{ Args: { "p_exhibition_id": string,"p_mock": boolean,"p_owner": string,"p_request_id": string }; Returns: Json
+                           },
 "reserve_expected_qa_job":
 { Args: { "p_artwork_id": string,"p_exhibition_id": string,"p_expected_document_revision": number,"p_expected_revision": number,"p_mock": boolean,"p_owner": string,"p_request_id": string }; Returns: Json
                            },
@@ -1176,6 +1205,9 @@ isOneToOne: false
                            },
 "save_artwork_interview_answer":
 { Args: { "p_answer": string,"p_approve": boolean,"p_artwork_id": string,"p_expected_version": number,"p_question_id": string,"p_skip": boolean }; Returns: Json
+                           },
+"save_exhibition_interview_answer":
+{ Args: { "p_answer": string,"p_exhibition_id": string,"p_expected_version": number,"p_question_id": string,"p_skip": boolean }; Returns: Json
                            },
 "save_narration_draft":
 { Args: { "p_artwork_id": string,"p_expected_revision": number,"p_source_job_id"?: string,"p_text": string }; Returns: Json
