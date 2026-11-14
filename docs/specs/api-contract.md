@@ -13,6 +13,12 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
 - id: artist-questionnaire
   resource: /references/user-artist-questionnaire.md
   title: 작가 기본 작품 세계 세부 질문지
@@ -392,7 +398,7 @@ OP-23 가입의 확정 정책은 이메일 인증 필수·비밀번호 최소 8�
 
 # v3 변경분 연결
 
-v3 추가 경로/필드는 W13→W10→W9→W11→W12 순서로 확정한다. 기존 계약을 소급 변경하지 않는다. W10 v2 입력 계약은 Draft PR #15에 보존되어 main에는 아직 없다. v3 온보딩·포스터·미리보기 지시문 수정 API와 공개 포스터/채팅 이미지 필드는 아직 미구현이다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md), [진행 계획](backend-completion.md)을 따른다.
+v3 추가 경로/필드는 W13→W10→W9→W11→W12 순서로 확정한다. 기존 계약을 소급 변경하지 않는다. W10 v2 입력 계약은 Draft PR #15에 보존되어 main에는 아직 없다. v3 온보딩·비공개 포스터는 아래 W10 계약으로 구현·검증 중이다. 미리보기 지시문 수정 API와 공개 포스터/채팅 이미지 필드는 아직 미구현이다. [요청 원문 SRC-044](../references/user-backend-plan-v3.md), [진행 계획](backend-completion.md)을 따른다.
 
 
 # W13 네트워크·업로드·오류 계약
@@ -404,3 +410,22 @@ v3 추가 경로/필드는 W13→W10→W9→W11→W12 순서로 확정한다. �
 `AI_INVALID_CONTEXT`(500)는 retryable=false이며 운영자가 승인 근거/문맥을 복구할 오류다. `SERVER_CONFIGURATION_ERROR`(503)도 자동 재시도 대상이 아니다. 기존 모호한 AI_FAILED와 구분한다.
 
 업로드 응답의 bucket은 이미지 `artist-material-staging` 또는 PDF `artist-material-pdf-staging`이다. 클라이언트는 이름을 하드코딩하지 않고 응답을 사용한다. Storage 자체가 각각3MiB/6MiB 실제 전송을 제한한다. 기존 bucket의 작은 PDF는 완료 호환을 유지하며 큰 PDF 대기 예약은 새 URL을 요청해야 한다. 이미 ready인 자료는 그대로 조회할 수 있다. 본문 PDF가 Next.js를 거치지 않는 signed upload를 사용한다.
+
+## W10 v3 온보딩·사진·홈 계약
+
+[Figma 직접 대조 SRC-049](../references/figma-authoring-v3.md)의 문구/키워드를 사용한다. 활동 이력 5개는 선택 section이며 `artWorldRegistered`를 켜지 않는다. 프런트는 `sectionDefinitions`와 `onboardingKeywordOptions`를 가져와 사용한다.
+
+| 경로 | 요청과 동작 |
+| --- | --- |
+| `PATCH /api/admin/profile/onboarding` | `{expectedRevision, fullName, displayName, keywords:{fields,moods,topics}, complete}`. 이름은 각 100 Unicode 코드 포인트 이내. complete:false는 이름 null과 빈 키워드를 허용. complete:true는 보이는 이름·작가명과 현재 Auth의 인증된 이메일 필요 |
+| `PATCH /api/admin/profile/avatar` | `{expectedRevision, materialId}`. 작가 범위 ready 이미지 연결, null은 해제 |
+| `PATCH /api/admin/exhibitions/{id}/poster` | `{expectedRevision, materialId}`. 해당 전시 범위 ready 이미지 연결, null은 해제 |
+| `GET /api/admin/exhibitions` | 기존 items + `{counts:{all,preparing,ongoing,ended}}`. 동일 조회의 dashboardStatus를 집계 |
+
+프로필은 fullName, keywords, onboardingCompletedAt, onboardingComplete, avatarMaterialId를 추가한다. 이메일은 기존 GET의 accountEmail로 읽으며 body로 수정하거나 별도 복제하지 않는다. 완료 시각은 최초 완료 이력이고 완료 여부는 현재 이름·작가명·이메일 인증 상태를 다시 검사한다. 기존 프로필 PATCH가 작가명을 지우면 완료 여부도 false가 된다. 온보딩 PATCH는 지식 문서를 수정하지 않는다.
+
+전시에는 posterMaterialId, periodState(unknown/upcoming/ongoing/ended), dashboardStatus(preparing/ongoing/ended)를 추가한다. [SRC-048](../references/user-dashboard-status-precedence.md)에 따라 draft/paused는 기간과 무관하게 preparing이다. published는 기간 내 ongoing, 종료 후 ended, 시작 전/기간 미완성은 preparing이다. 구현 정책: 현재 편집본의 날짜·시각을 Asia/Seoul로 계산하고 시작/종료 시각은 포함한다. 기존 날짜만 있는 전시는 해당 날짜 00:00부터 23:59:59.999999까지다. 상태 분류는 자동 게시·중지를 실행하지 않는다.
+
+사진·포스터는 기존 image 업로드를 각각 artist/exhibition 범위로 예약·전송·완료한 뒤 연결한다. ready/소유권/범위/해시/3MiB 및 더 낮은 정책 상한을 검사하며, 연결된 자료 삭제는 409 MATERIAL_IN_USE다. 해제 후 기존 삭제 API를 사용한다. 타인 또는 잘못된 범위는 404, CAS 충돌은 409다. W10은 소유자 비공개 경로이며 공개 포스터 snapshot/조회는 W12에서 연결한다.
+
+호환·배포: 새 응답 필드는 optional로 선언하여 새 클라이언트가 이전 서버를 읽게 하되 새 서버는 항상 반환한다. DB migration→서버→같은 section 카탈로그의 프런트 배포/새로고침 순서다. 기존 section ID는 유지하지만 새 ID를 모르는 구형 클라이언트는 새 section 응답을 거부할 수 있어 이 MVP에서는 동시 갱신이 필요하다. 기존 문서 저장은 전체 대체이며 생략된 section을 서버가 임의 보존하지 않는다. 배포 롤백도 이미 저장된 새 section을 읽을 수 있는 계약을 유지하고 DB 삭제/리셋은 하지 않는다.

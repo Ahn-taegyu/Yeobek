@@ -69,3 +69,6 @@
 - [v3 범위와 배포 답변](user-v3-decisions.md) — SRC-045, 온보딩·입력·QR·서버 계약·Vercel Hobby.
 - [v3 검수·미리보기·시험용 해설의 후속 결정](user-v3-review-decisions.md) — SRC-046.
 - [서브에이전트 추론 강도 조정 지시](user-agent-reasoning-levels.md) — SRC-047.
+
+- [미공개 전시 준비중 우선](user-dashboard-status-precedence.md) — SRC-048.
+- [Figma 작가 입력 화면 직접 대조](figma-authoring-v3.md) — SRC-049, W10 개별 화면8개와 키워드/질문.

@@ -13,6 +13,12 @@ generated:
   at: '2026-11-12T14:38:57+09:00'
 decision_status: proposed
 sources:
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
 - id: v3-answers
   resource: /references/user-v3-decisions.md
   title: v3 범위와 Vercel Hobby 답변
@@ -89,7 +95,7 @@ mode 값은 각각 text/voice이며 하나를 바꿔 다른 하나를 덮어쓰�
 
 # 저장하지 않는 것
 
-온보딩 완료는 탭의 전시별 임시 상태이며 관람 분석이나 개인 기록 기능이 아니다.
+관람객 온보딩 완료는 탭의 전시별 임시 상태이며 관람 분석이나 개인 기록 기능이 아니다. 작가 온보딩 완료 이력은 별도 프로필 필드다.
 
 MVP 관람객 계정, 결제·주문·재고, 실시간 그룹 방, 추적용 세션 장기 보관은 이 모델에 포함하지 않는다. 대화에 필요한 임시 인식문·문맥과 원음/질문 장기 보관은 별개다. P2 질문/행동 수집은 별도 결정 후 추가한다. 파일·원문·키를 기획 저장소의 RAG 인덱스에 넣지 않는다.
 
@@ -117,3 +123,9 @@ v3에서 프로필의 이름·작가명·키워드/온보딩 상태·사진, 활
 160000의 private 네트워크 원장은 network_hash·session_hash(각32바이트), request UUID, 전시 UUID, kind, 예약시각만 저장한다. 원본 IP/질문은 없다. 네트워크 advisory lock과 service-only RPC로 합산을 직렬화한다. purge는 전 UTC일 시작 이전 행을 최대1000개씩 정리하므로 대상이 되기까지24~48시간이고 배치 적체/cron 미연결이면 더 오래 남는다. 스케줄은 W7에서 연결하며 현재 삭제 완료로 보지 않는다.
 
 R1 설계(미구현): 서비스 역할 전용 RPC가 권한 확인된 삭제 요청 ID와 대상/예상 버전을 받고 현재 공개 연결을 먼저 끊은 뒤 publication의 본문·근거·파생 답변/미디어 참조를 비운다. 식별자·버전·삭제시각·최소 감사 이력은 남긴다. 현재 불변 trigger를 우회하는 일반 UPDATE 권한은 주지 않고 전용 경로에서만 비우며 동일 요청은 멱등 처리한다. 관련 원자료·캐시·Storage의 실제 삭제와 보존 의무 범위는 별도 검증 후 구현한다. 이 설계로 현재 삭제 요청 처리가 가능해졌다고 주장하지 않는다.
+
+## W10 v3 저장 구조
+
+170000은 artist_profiles에 full_name, keywords, onboarding_completed_at, avatar_material_id를, exhibitions에 poster_material_id를 추가한다. 이름은 소유자 전용이고 이메일은 Auth가 원본이다. 성별은 수집하지 않는다. 사진 FK는 owner·subject·material의 복합 참조로 다른 작가/전시 연결을 차단한다. ready 상태·검증 해시·크기는 RPC에서 확인한다. 사진 연결과 삭제는 기존 작가별 게시 잠금을 먼저 취해 직렬화한다. 새 RPC 3개는 authenticated만 실행하며 전체 public RPC 권한 대조 목록을 확장한다.
+
+171000은 기존 catalog에 활동 이력 5개를 추가하고 기간/홈 상태를 조회 시 계산한다. 활동 이력만 입력한 상태는 작품 세계 등록으로 보지 않는다. 비공개 이름/키워드/사진 필드를 공개 snapshot·운영 자동화에 자동 복사하지 않는다. 공개 포스터와 예상 Q&A 저장은 각각 W12/W11의 후속이다. 배포·구버전 클라이언트 경계는 [API 계약](api-contract.md#w10-v3-온보딩사진홈-계약)을 따른다.

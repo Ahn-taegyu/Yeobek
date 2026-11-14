@@ -2,6 +2,7 @@ import { z } from "zod";
 import { publicMediaReferences } from "./media";
 import { revision, section, sourceRefSchema } from "./requests";
 import { narrationText } from "./jobs";
+import { onboardingKeywordsSchema } from "./onboarding";
 
 const id = z.guid();
 const nullableText = z.string().nullable();
@@ -41,17 +42,36 @@ export const documentResponse = z.object({
 const resource = {
   id, revision, createdAt: timestamp, updatedAt: timestamp, document: documentResponse,
 };
-export const profileResponse = z.object({ ...resource, displayName: nullableText, artWorldRegistered: z.boolean().optional() });
+export const profileResponse = z.object({
+  ...resource, displayName: nullableText, artWorldRegistered: z.boolean().optional(),
+  fullName: nullableText.optional(), keywords: onboardingKeywordsSchema.optional(),
+  onboardingCompletedAt: timestamp.nullable().optional(), onboardingComplete: z.boolean().optional(),
+  avatarMaterialId: id.nullable().optional(),
+});
 export const accountProfileResponse = profileResponse.extend({ accountEmail: nullableText });
 
+const dashboardStatus = z.enum(["preparing", "ongoing", "ended"]);
 export const exhibitionResponse = z.object({
   ...resource, ...dateRange, artistId: id, title: z.string(), state,
   draftTitle: nullableText.optional(), startTime: nullableText.optional(), endTime: nullableText.optional(),
   authoringStep: z.enum(["basic", "world", "artworks"]).nullable().optional(),
+  posterMaterialId: id.nullable().optional(),
+  periodState: z.enum(["unknown", "upcoming", "ongoing", "ended"]).optional(),
+  dashboardStatus: dashboardStatus.optional(),
 });
-export const exhibitionListResponse = z.object({
+const count = z.number().int().nonnegative();
+export const exhibitionListItems = z.object({
   items: z.array(exhibitionResponse.extend({ artworkCount: z.number().int().nonnegative() })),
 });
+export const exhibitionListResponse = exhibitionListItems.extend({
+  counts: z.object({ all: count, preparing: count, ongoing: count, ended: count }).optional(),
+});
+
+export function countExhibitions(items: readonly { dashboardStatus?: z.infer<typeof dashboardStatus> }[]) {
+  const counts = { all: items.length, preparing: 0, ongoing: 0, ended: 0 };
+  for (const item of items) counts[item.dashboardStatus ?? "preparing"] += 1;
+  return counts;
+}
 
 const artwork = {
   id, number, title: z.string(), creationYear: nullableText, medium: nullableText, dimensions: nullableText,

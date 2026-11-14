@@ -13,6 +13,12 @@ generated:
 decision_status: proposed
 work_status: in_progress
 sources:
+- id: figma-authoring
+  resource: /references/figma-authoring-v3.md
+  title: Figma 작가 입력 화면 직접 대조
+- id: status-precedence
+  resource: /references/user-dashboard-status-precedence.md
+  title: 미공개 전시 준비중 우선
 - id: v3-answers
   resource: /references/user-v3-decisions.md
   title: v3 범위와 Vercel Hobby 답변
@@ -203,3 +209,7 @@ v3 전환: main은 861d27a, W10 v2 입력 계약은 Draft PR #15 b950557에 보�
 ## W13 로컬 구현 경계
 
 네트워크 HMAC 한도·개인정보 플래그 기본off·3MiB/6MiB Storage 전송 제한·invalid_context 재시도 불가·전체 RPC 권한 검사·임대보다 짧은 경로 실행 시간과 Fluid 설정을 추가했다. 새 migration150000/160000은 소유 로컬 DB에 전진 적용했다. 직접 검사와 CI 상태는 [작업 추적](backend-completion.md#w13-구현검증-기록-병합-전)에 기록한다. W13은 최신 CI 성공 후 PR #16/main44bf7d3으로 병합됐다. Vercel Hobby 배포 실제 점검과 외부 호출은 남았다.
+
+## W10 v3 구현 경계
+
+온보딩 정형 정보와 활동 이력, 소유자 전용 사진/포스터 연결, 홈 기간·공개 상태와 집계 API를 구현했다. Figma 8개 화면을 대조했으나 프런트 화면 구현은 포함하지 않는다. 새 DB forward 적용과 DB147·단위/계약78·HTTP6 검사는 통과했고 최신 전체 CI/병합은 대기다. [상세 검증](backend-completion.md#w10-v3-직접-검증과-병합-대기), [API/배포 계약](api-contract.md#w10-v3-온보딩사진홈-계약)을 따른다. W9 직접 가입과 W11/W12 새 검수·공개는 후속이다.
